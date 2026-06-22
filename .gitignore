@@ -41,6 +41,9 @@ tools/
 # Landing page (marketing site)
 landing-page/
 
+# Internal planning docs
+AI_workflow_Automation_PRD.md
+
 # IDE / config (local)
 .claude/
 
