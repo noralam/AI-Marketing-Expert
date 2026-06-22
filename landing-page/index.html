@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Marketing Expert — Boost Traffic, Leads &amp; Sales with AI | All-in-One WordPress Plugin</title>
+  <meta name="description" content="AI Marketing Expert brings email marketing, AI content generation, chatbot, social media scheduling, and SEO tools inside one WordPress plugin. Boost Traffic, Leads &amp; Sales with AI — unlimited subscribers, free forever." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#" class="nav-logo">
+      <span class="logo-icon">✦</span>
+      <span>AI Marketing <strong>Expert</strong></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#comparison">Free vs Pro</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="#pricing" class="btn btn-outline btn-sm">See Plans</a>
+      <a href="https://wordpress.org/plugins/ai-marketing-expert" target="_blank" class="btn btn-primary btn-sm">Install Free</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ========== MOBILE DRAWER ========== -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+  <div class="drawer-header">
+    <span class="drawer-logo"><span class="logo-icon">✦</span> AI Marketing <strong>Expert</strong></span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M15 5L5 15M5 5l10 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="#features" class="drawer-link"><span class="drawer-link-icon">✦</span>Features</a>
+    <a href="#comparison" class="drawer-link"><span class="drawer-link-icon">⚡</span>Free vs Pro</a>
+    <a href="#pricing" class="drawer-link"><span class="drawer-link-icon">💎</span>Pricing</a>
+    <a href="#faq" class="drawer-link"><span class="drawer-link-icon">❓</span>FAQ</a>
+  </nav>
+  <div class="drawer-cta">
+    <a href="#pricing" class="btn btn-outline" style="width:100%;text-align:center;">See Plans</a>
+    <a href="https://wordpress.org/plugins/ai-marketing-expert" target="_blank" class="btn btn-primary" style="width:100%;text-align:center;">Install Free</a>
+  </div>
+  <div class="drawer-badges">
+    <span>♾️ Unlimited Subscribers</span>
+    <span>🔌 WordPress Native</span>
+    <span>🆓 Free Forever</span>
+  </div>
+</aside>
+
+<!-- ========== HERO ========== -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="particles" id="particles"></div>
+  </div>
+  <div class="container hero-content">
+    <div class="hero-badge reveal-up" data-delay="0">
+      <span class="badge-dot"></span>
+      WordPress-Native AI Marketing Plugin
+    </div>
+    <h1 class="hero-headline">
+      <span class="word-reveal">One Plugin.</span>
+      <span class="word-reveal gradient-text">Every Marketing Channel.</span>
+      <span class="word-reveal">Inside WordPress.</span>
+    </h1>
+    <p class="hero-tagline reveal-up" data-delay="200">Boost Traffic, Leads &amp; Sales with AI</p>
+    <p class="hero-sub reveal-up" data-delay="400">
+      AI Marketing Expert combines email marketing, content generation, AI chatbot, social scheduling, and SEO into a single powerful WordPress plugin — with <strong>unlimited email subscribers, free forever.</strong>
+    </p>
+
+    <!-- Power-user callout cards -->
+    <div class="hero-power-cards reveal-up" data-delay="500">
+      <div class="power-card power-card--ai">
+        <div class="power-card-icon">⚡</div>
+        <div class="power-card-body">
+          <strong>Use AI Completely Free</strong>
+          <span>Add unlimited providers — Google AI Studio, OpenRouter, and more. Rotate free API keys across providers with no paid plan needed. Automatic fallback if one goes down.</span>
+        </div>
+        <div class="power-card-badge">♾️ Free AI</div>
+      </div>
+      <div class="power-card power-card--smtp">
+        <div class="power-card-icon">📬</div>
+        <div class="power-card-body">
+          <strong>Send Email at Zero Cost</strong>
+          <span>12+ built-in SMTP presets — Gmail, SendGrid, Mailgun, and more. Connect multiple free accounts, spread sends across providers, stay under each free limit — pay nothing per email.</span>
+        </div>
+        <div class="power-card-badge">♾️ Free SMTP</div>
+      </div>
+    </div>
+
+    <div class="hero-cta reveal-up" data-delay="600">
+      <a href="https://wordpress.org/plugins/ai-marketing-expert" target="_blank" class="btn btn-primary btn-lg pulse-once">Install Free — No Credit Card</a>
+      <a href="#pricing" class="btn btn-glass btn-lg">See Pro Features</a>
+    </div>
+    <div class="hero-modules reveal-up" data-delay="900">
+      <div class="module-pill float-1">📧 Email</div>
+      <div class="module-pill float-2">✍️ Content</div>
+      <div class="module-pill float-3">🤖 Chatbot</div>
+      <div class="module-pill float-4">📱 Social</div>
+      <div class="module-pill float-5">🔍 SEO</div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-mouse"><div class="scroll-dot"></div></div>
+  </div>
+</section>
+
+<!-- ========== TRUST STRIP ========== -->
+<section class="trust-strip">
+  <div class="container">
+    <div class="trust-grid">
+      <div class="trust-item reveal-left" data-delay="0"><span class="trust-icon">🔌</span><span>WordPress Native</span></div>
+      <div class="trust-item reveal-left" data-delay="100"><span class="trust-icon">🧠</span><span>OpenAI · Claude · Gemini · OpenRouter</span></div>
+      <div class="trust-item reveal-left" data-delay="200"><span class="trust-icon">🛒</span><span>WooCommerce Ready</span></div>
+      <div class="trust-item reveal-left" data-delay="300"><span class="trust-icon">📬</span><span>SMTP Delivery &amp; Tracking</span></div>
+      <div class="trust-item reveal-left" data-delay="400"><span class="trust-icon">📈</span><span>Yoast · Rank Math · AIOSEO</span></div>
+      <div class="trust-item reveal-left" data-delay="500"><span class="trust-icon">♾️</span><span>Unlimited Subscribers</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PROBLEM ========== -->
+<section class="section problem-section" id="problem">
+  <div class="container">
+    <div class="section-label reveal-up">The Problem</div>
+    <h2 class="section-title reveal-up">Running WordPress Marketing Shouldn't Feel Like This</h2>
+    <p class="section-subtitle reveal-up">Most site owners juggle 5+ disconnected tools — and pay for each one separately.</p>
+    <div class="problem-grid">
+      <div class="problem-card reveal-flip" data-delay="0">
+        <div class="problem-icon">😩</div>
+        <h3>Tool Overload</h3>
+        <p>Email tool here, content tool there, SEO somewhere else. Your workflow is fragmented across dashboards that don't talk to each other.</p>
+      </div>
+      <div class="problem-card reveal-flip" data-delay="100">
+        <div class="problem-icon">💸</div>
+        <h3>Subscriber Tax</h3>
+        <p>Most email platforms charge you more the bigger your list gets. Growth becomes expensive before you even start monetizing.</p>
+      </div>
+      <div class="problem-card reveal-flip" data-delay="200">
+        <div class="problem-icon">⏳</div>
+        <h3>Time Waste</h3>
+        <p>Switching context between tools, re-logging in, copy-pasting data. Real marketing time gets eaten by tool management.</p>
+      </div>
+      <div class="problem-card reveal-flip" data-delay="300">
+        <div class="problem-icon">📉</div>
+        <h3>Missed Opportunities</h3>
+        <p>When your chat, email, SEO, and content aren't connected, insights get lost and campaigns don't compound.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SOLUTION ========== -->
+<section class="section solution-section" id="solution">
+  <div class="container">
+    <div class="section-label reveal-up">The Solution</div>
+    <h2 class="section-title reveal-up">Everything Under One Roof, Inside WordPress</h2>
+    <p class="section-subtitle reveal-up">AI Marketing Expert unifies all your marketing workflows into one clean, powerful WordPress plugin — so you can <strong>boost traffic, leads, and sales with AI</strong>, all from one dashboard.</p>
+    <div class="solution-modules">
+      <div class="solution-module reveal-up" data-delay="0"><div class="sol-icon sol-email">📧</div><span>Email Marketing</span></div>
+      <div class="solution-module reveal-up" data-delay="100"><div class="sol-icon sol-content">✍️</div><span>Content Generator</span></div>
+      <div class="solution-module reveal-up" data-delay="200"><div class="sol-icon sol-chat">🤖</div><span>AI Chatbot</span></div>
+      <div class="solution-module reveal-up" data-delay="300"><div class="sol-icon sol-social">📱</div><span>Social Media</span></div>
+      <div class="solution-module reveal-up" data-delay="400"><div class="sol-icon sol-seo">🔍</div><span>SEO Intelligence</span></div>
+    </div>
+    <div class="solution-plus reveal-up" data-delay="500">
+      + SMTP Delivery · AI Provider Hub · Analytics · WooCommerce Integration
+    </div>
+  </div>
+</section>
+
+<!-- ========== FEATURE GRID ========== -->
+<section class="section features-section" id="features">
+  <div class="container">
+    <div class="section-label reveal-up">Features</div>
+    <h2 class="section-title reveal-up">A Full Marketing Stack, Built for WordPress</h2>
+    <div class="features-grid">
+      <div class="feature-card reveal-up" data-delay="0">
+        <div class="fc-icon">📧</div>
+        <h3>Email Marketing CRM</h3>
+        <p>Unlimited subscribers, list management, campaign builder, automations, open &amp; click tracking, double opt-in, and SMTP delivery — all inside WordPress.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="80">
+        <div class="fc-icon">✍️</div>
+        <h3>AI Content Generator</h3>
+        <p>Generate SEO-friendly blog posts, meta tags, and structured articles with one click. Brand voice presets, version history, and direct publish to WordPress.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="160">
+        <div class="fc-icon">🤖</div>
+        <h3>AI Chatbot</h3>
+        <p>Deploy a smart product-aware chatbot on any page. Capture leads, answer questions, share files, and support WooCommerce shoppers 24/7 — with a public Q&amp;A discussions page.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="240">
+        <div class="fc-icon">📱</div>
+        <h3>Social Media Scheduler</h3>
+        <p>Schedule and publish to Facebook, Instagram, and X. AI captions, AI image generation, and content repurposing included.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="320">
+        <div class="fc-icon">🔍</div>
+        <h3>SEO Intelligence</h3>
+        <p>Keyword research, on-page audits, rank tracking, topical authority maps, link building with AI outreach, and competitor gap analysis in one place.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="400">
+        <div class="fc-icon">🧠</div>
+        <h3>Multi-AI Provider Hub</h3>
+        <p>Connect OpenAI, Anthropic Claude, Google Gemini, and OpenRouter. Automatic fallback with circuit breaker health monitoring — if one provider goes down, the next takes over instantly.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="480">
+        <div class="fc-icon">📬</div>
+        <h3>SMTP &amp; Site Mail</h3>
+        <p>SMTP &amp; Site Mail</h2>
+        <p>12+ built-in provider presets — Gmail, Outlook, SendGrid, Mailgun, Amazon SES, Brevo, Postmark, and more. Manage multiple connections with auto-fallback and test deliverability from one control panel.</p>
+      </div>
+      <div class="feature-card reveal-up" data-delay="560">
+        <div class="fc-icon">📊</div>
+        <h3>Analytics &amp; Reporting</h3>
+        <p>Track email opens, clicks, chatbot conversations, content performance, and social reach — with daily aggregation and per-module dashboards from one reporting hub.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== MODULE SECTIONS ========== -->
+<section class="section modules-section" id="modules">
+  <div class="container">
+
+    <!-- Email -->
+    <div class="module-detail reveal-row" id="mod-email">
+      <div class="mod-text">
+        <div class="mod-badge email-badge">📧 Email Marketing</div>
+        <h2>Unlimited Subscribers.<br/><span class="gradient-text">Free. Forever.</span></h2>
+        <p>Most email tools charge as your list grows. AI Marketing Expert doesn't. Bring your entire audience — no caps, no penalties, no surprise invoices.</p>
+        <ul class="mod-list">
+          <li>✦ Unlimited subscriber management (Free &amp; Pro)</li>
+          <li>✦ Campaign creation, scheduling, and AI content generation</li>
+          <li>✦ Open, click, and unsubscribe tracking with HMAC signatures</li>
+          <li>✦ Double opt-in with signed confirmation links</li>
+          <li>✦ Embeddable subscribe form shortcode with AJAX &amp; GDPR</li>
+          <li>✦ Multi-layer email validation (format, disposable, MX, spam)</li>
+          <li>✦ 12+ SMTP provider presets with auto-fallback</li>
+          <li>✦ Email automations / drip sequences (Pro)</li>
+          <li>✦ A/B testing subject lines and content (Pro)</li>
+          <li>✦ Gutenberg-powered visual email editor with AI content blocks (Pro)</li>
+          <li>✦ SMTP management with testing and error visibility</li>
+          <li>✦ AI-powered send time optimization (Pro)</li>
+        </ul>
+        <div class="mod-free-badge">♾️ Unlimited subscribers on the free plan — no catch.</div>
+      </div>
+      <div class="mod-visual email-visual">
+        <div class="visual-card vc-1">
+          <div class="vc-row"><span class="vc-dot green"></span>Campaign: Summer Sale</div>
+          <div class="vc-row"><span class="vc-dot blue"></span>Open rate: 42.1%</div>
+          <div class="vc-row"><span class="vc-dot purple"></span>Subscribers: <strong>Unlimited ♾️</strong></div>
+        </div>
+        <div class="visual-card vc-2">
+          <div class="vc-label">AI Subject Line</div>
+          <div class="vc-content">"Your summer deal expires tonight 🔥"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="module-detail reveal-row reverse" id="mod-content">
+      <div class="mod-text">
+        <div class="mod-badge content-badge">✍️ Content Generator</div>
+        <h2>Publish Faster with<br/><span class="gradient-text">AI-Written Content</span></h2>
+        <p>Generate full blog posts, meta descriptions, and social snippets from a single prompt. One-click publishing directly to WordPress — with SEO plugin support built in.</p>
+        <ul class="mod-list">
+          <li>✦ Full article generation with headings and structure</li>
+          <li>✦ Meta title and meta description generation</li>
+          <li>✦ One-click publish to WordPress</li>
+          <li>✦ Yoast, Rank Math, and AIOSEO meta support</li>
+          <li>✦ Quick SEO + readability scoring</li>
+          <li>✦ Brand voice system with 3 built-in voices</li>
+          <li>✦ Article version history and rollback</li>
+          <li>✦ AI featured image generation (Pro)</li>
+          <li>✦ Content presets for your niche or brand</li>
+          <li>✦ Scheduled content publishing</li>
+        </ul>
+      </div>
+      <div class="mod-visual content-visual">
+        <div class="visual-card vc-1">
+          <div class="vc-label">Generating article…</div>
+          <div class="vc-content typing-text">10 Proven Email Subject Lines That Get Opened…</div>
+          <div class="vc-bar"><div class="vc-progress"></div></div>
+        </div>
+        <div class="visual-card vc-2">
+          <div class="vc-row"><span class="vc-dot green"></span>SEO Score: 91</div>
+          <div class="vc-row"><span class="vc-dot blue"></span>Readability: Good</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chatbot -->
+    <div class="module-detail reveal-row" id="mod-chatbot">
+      <div class="mod-text">
+        <div class="mod-badge chatbot-badge">🤖 AI Chatbot</div>
+        <h2>Convert Visitors with a<br/><span class="gradient-text">Product-Aware Chatbot</span></h2>
+        <p>Deploy an intelligent chatbot that knows your products, captures leads, and answers customer questions — powered by your own AI provider, embedded directly on any page.</p>
+        <ul class="mod-list">
+          <li>✦ Visual bot builder inside WordPress admin</li>
+          <li>✦ WooCommerce product-aware knowledge base</li>
+          <li>✦ Lead capture inside the chat window</li>
+          <li>✦ Page display rules</li>
+          <li>✦ File &amp; image sharing in chat (Pro)</li>
+          <li>✦ Public discussions page with searchable Q&amp;A (Pro)</li>
+          <li>✦ Business hours &amp; offline messages (Pro)</li>
+          <li>✦ Appearance, position, and offset controls</li>
+          <li>✦ Response tone and behavior customization</li>
+          <li>✦ Full conversation history and tracking</li>
+        </ul>
+      </div>
+      <div class="mod-visual chatbot-visual">
+        <div class="chat-widget">
+          <div class="chat-header"><span class="chat-avatar">🤖</span> AI Assistant</div>
+          <div class="chat-body">
+            <div class="chat-msg bot">👋 Hi! How can I help you today?</div>
+            <div class="chat-msg user">Do you have this in size M?</div>
+            <div class="chat-msg bot">Yes! The Classic Tee is available in M. Want me to add it to your cart? 🛒</div>
+          </div>
+          <div class="chat-input-bar"><span>Type a message…</span><button>➤</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social -->
+    <div class="module-detail reveal-row reverse" id="mod-social">
+      <div class="mod-text">
+        <div class="mod-badge social-badge">📱 Social Media</div>
+        <h2>Schedule, Create &amp;<br/><span class="gradient-text">Repurpose at Scale</span></h2>
+        <p>Connect Facebook, Instagram, and X. Write captions with AI, generate images, and repurpose your best blog content into social posts — without leaving WordPress.</p>
+        <ul class="mod-list">
+          <li>✦ Multi-platform post scheduling</li>
+          <li>✦ AI caption and hashtag generation</li>
+          <li>✦ AI-generated social images</li>
+          <li>✦ Blog-to-social content repurposing (Pro)</li>
+          <li>✦ Social queue with analytics</li>
+          <li>✦ Bulk scheduling and approval workflow (Pro)</li>
+        </ul>
+        <div class="social-logos">
+          <span class="social-chip">📘 Facebook</span>
+          <span class="social-chip">📸 Instagram</span>
+          <span class="social-chip">𝕏 Twitter/X</span>
+        </div>
+      </div>
+      <div class="mod-visual social-visual">
+        <div class="visual-card vc-1">
+          <div class="vc-label">Scheduled Posts</div>
+          <div class="vc-row"><span class="vc-dot green"></span>📘 Facebook · Today 10:00am</div>
+          <div class="vc-row"><span class="vc-dot blue"></span>📸 Instagram · Today 2:00pm</div>
+          <div class="vc-row"><span class="vc-dot purple"></span>💼 LinkedIn · Tomorrow 9:00am</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEO -->
+    <div class="module-detail reveal-row" id="mod-seo">
+      <div class="mod-text">
+        <div class="mod-badge seo-badge">🔍 SEO Intelligence</div>
+        <h2>Rank Higher with<br/><span class="gradient-text">AI-Powered SEO</span></h2>
+        <p>Research keywords, audit pages, track rankings, map topical authority, and analyze competitors — all from inside your WordPress dashboard.</p>
+        <ul class="mod-list">
+          <li>✦ Keyword research with opportunity scoring</li>
+          <li>✦ Keyword vault and saved keyword sets</li>
+          <li>✦ On-page SEO audits and fix suggestions</li>
+          <li>✦ Rank tracking with daily auto-checks (Pro)</li>
+          <li>✦ Topical authority mapping (Pro)</li>
+          <li>✦ Content calendar planning (Pro)</li>
+          <li>✦ Link building pipeline with AI outreach emails (Pro)</li>
+          <li>✦ Competitor gap analysis (Pro)</li>
+          <li>✦ Entity SEO + schema suggestions (Pro)</li>
+          <li>✦ Export reports as CSV/PDF (Pro)</li>
+        </ul>
+      </div>
+      <div class="mod-visual seo-visual">
+        <div class="visual-card vc-1">
+          <div class="vc-label">Keyword Research</div>
+          <div class="vc-row"><span class="vc-dot green"></span>"wordpress email plugin" · Vol: 4.4K</div>
+          <div class="vc-row"><span class="vc-dot blue"></span>"ai marketing plugin" · Vol: 1.2K</div>
+          <div class="vc-row"><span class="vc-dot purple"></span>"woocommerce chatbot" · Vol: 2.8K</div>
+        </div>
+        <div class="visual-card vc-2">
+          <div class="vc-row"><span class="vc-dot green"></span>Audit Score: 87/100</div>
+          <div class="vc-row"><span class="vc-dot blue"></span>Rank #4 → #2 this week</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== WHY DIFFERENT ========== -->
+<section class="section why-section" id="why">
+  <div class="container">
+    <div class="section-label reveal-up">Why Different</div>
+    <h2 class="section-title reveal-up">Why Not Just Use Separate Plugins?</h2>
+    <p class="section-subtitle reveal-up">You could. But every extra plugin is another bill, another login, another learning curve — and none of them share data. AI Marketing Expert lets you <strong>boost traffic, leads, and sales with AI</strong> from one unified plugin.</p>
+    <div class="why-grid">
+      <div class="why-card reveal-up" data-delay="0">
+        <div class="why-num">01</div>
+        <h3>One Workflow</h3>
+        <p>Create content, send it by email, post it on social, and track SEO results — all from the same dashboard, same session, same plugin.</p>
+      </div>
+      <div class="why-card reveal-up" data-delay="100">
+        <div class="why-num">02</div>
+        <h3>Your Data, Your Server</h3>
+        <p>No third-party SaaS storing your subscriber list or chat logs. Everything lives in your WordPress database — encrypted API keys, HMAC-signed tracking, and full GDPR compliance.</p>
+      </div>
+      <div class="why-card reveal-up" data-delay="200">
+        <div class="why-num">03</div>
+        <h3>Unlimited Subscribers Free</h3>
+        <p>No other tool offers this. Your list grows with you at zero cost — and you upgrade Pro for power features, not to hold more contacts. Plus, use Google AI Studio or OpenRouter for free AI generation.</p>
+      </div>
+      <div class="why-card reveal-up" data-delay="300">
+        <div class="why-num">04</div>
+        <h3>WooCommerce First</h3>
+        <p>Product-aware chatbot, WooCommerce email marketing, and store-specific SEO workflows built specifically for store owners.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FREE VS PRO ========== -->
+<section class="section comparison-section" id="comparison">
+  <div class="container">
+    <div class="section-label reveal-up">Free vs Pro</div>
+    <h2 class="section-title reveal-up">Powerful Enough Free.<br/>Unstoppable with Pro.</h2>
+    <div class="plan-headlines reveal-up">
+      <div class="plan-hl pro-hl">Single Site — <em>For personal projects &amp; small sites</em></div>
+      <div class="plan-hl pro-hl">5 Sites — <em>Best value for growing businesses</em></div>
+      <div class="plan-hl pro-hl">Unlimited — <em>For agencies &amp; multi-site owners</em></div>
+    </div>
+
+    <div class="comp-tables">
+
+      <!-- General -->
+      <div class="comp-group reveal-up">
+        <div class="comp-group-title">⚙️ General</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td><strong>AI Provider connections</strong> <span class="tip">OpenAI, Claude, Gemini, OpenRouter — set fallback.</span></td>
+              <td>2</td>
+              <td class="pro-val"><span class="badge-unlimited">♾️ Unlimited</span></td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>SMTP connections</strong> <span class="tip">12+ presets — Gmail, SendGrid, Mailgun, SES &amp; more.</span></td>
+              <td>2</td>
+              <td class="pro-val"><span class="badge-unlimited">♾️ Unlimited</span></td>
+            </tr>
+            <tr><td>Plugin updates</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>WordPress dashboard</td><td>✅</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Email -->
+      <div class="comp-group reveal-up" data-delay="50">
+        <div class="comp-group-title">📧 Email Marketing</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td><strong>Subscribers</strong> <span class="tip">No caps. Ever.</span></td>
+              <td><span class="badge-unlimited">♾️ Unlimited</span></td>
+              <td class="pro-val"><span class="badge-unlimited">♾️ Unlimited</span></td>
+            </tr>
+            <tr><td>Subscriber lists</td><td>10</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Email templates</td><td>3</td><td class="pro-val">Unlimited + premium</td></tr>
+            <tr><td>Scheduled campaigns / month</td><td>3</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>SMTP connections</td><td>2</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>AI email generation</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Open &amp; click tracking</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Double opt-in</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Subscribe form shortcode</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Email validation (format, MX, disposable)</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Smart segmentation</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>A/B testing</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Email automations</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Gutenberg-powered visual email editor</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Export contacts CSV</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Custom contact fields</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>AI-powered email intelligence</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Advanced analytics & reports</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Content -->
+      <div class="comp-group reveal-up" data-delay="100">
+        <div class="comp-group-title">✍️ Content Generator</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr><td>Articles per month</td><td>20</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Max words per article</td><td>2,000</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Content presets</td><td>4</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Scheduled posts</td><td>3</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>One-click WP publish</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>SEO meta generation</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Brand voice system (3 built-in)</td><td>✅</td><td class="pro-val">✅ + custom</td></tr>
+            <tr><td>Article version history</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Detailed AI SEO rewrites</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Custom generation presets</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Multi-language content (20+ languages)</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>AI image prompt generation</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>AI Featured Image generation</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Brand Voice management</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Chatbot -->
+      <div class="comp-group reveal-up" data-delay="150">
+        <div class="comp-group-title">🤖 AI Chatbot</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr><td>Active chatbots</td><td>1</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Monthly conversations</td><td>100</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Knowledge base Q&amp;A</td><td>50</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>WooCommerce knowledge</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Lead capture in chat</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Chatbot themes</td><td>3</td><td class="pro-val">Unlimited + branding</td></tr>
+            <tr><td>Conversation history</td><td>7 days</td><td class="pro-val">Extended</td></tr>
+            <tr><td>Custom branding &amp; color</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Advanced prompt controls</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Knowledge base pages</td><td>50</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Human takeover</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Document & URL indexing</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>File & image sharing in chat</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>AI provider fallback</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Public discussions page</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Social -->
+      <div class="comp-group reveal-up" data-delay="200">
+        <div class="comp-group-title">📱 Social Media</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr><td>Connected accounts</td><td>2</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Posts per month</td><td>30</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>AI captions</td><td>30/month</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>AI-generated social images</td><td>✅</td><td class="pro-val">✅</td></tr>
+            <tr><td>Bulk scheduling</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Approval workflow</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Blog → social repurpose</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Visual scheduling calendar</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>AI image captions</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Cross-posting to multiple accounts</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SEO -->
+      <div class="comp-group reveal-up" data-delay="250">
+        <div class="comp-group-title">🔍 SEO Intelligence</div>
+        <table class="comp-table">
+          <thead><tr><th>Feature</th><th class="free-col">Free</th><th class="pro-col">Pro ⚡</th></tr></thead>
+          <tbody>
+            <tr><td>Keyword research</td><td>10/month</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Keywords in vault</td><td>50</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>SEO audits</td><td>5/month</td><td class="pro-val">Unlimited</td></tr>
+            <tr><td>Site-wide audit</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Rank tracking</td><td>5 manual</td><td class="pro-val">Unlimited + daily</td></tr>
+            <tr><td>Competitor gap analysis</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Topical authority maps</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>CSV/PDF export</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Link building pipeline + AI outreach</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>Niche analysis & opportunity scoring</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+            <tr><td>SEO automation</td><td class="no-val">❌</td><td class="pro-val">✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="comp-cta reveal-up">
+      <a href="#" class="btn btn-primary btn-lg">Upgrade to Pro</a>
+      <a href="#" class="btn btn-ghost btn-lg">Start Free — No Credit Card Required</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PRICING ========== -->
+<section class="section pricing-section" id="pricing">
+  <div class="pricing-bg">
+    <div class="pricing-orb pricing-orb-1"></div>
+    <div class="pricing-orb pricing-orb-2"></div>
+  </div>
+  <div class="container">
+    <div class="section-label reveal-up">Pricing</div>
+    <h2 class="section-title reveal-up">Simple, Honest Pricing</h2>
+    <p class="section-subtitle reveal-up">Start free. Upgrade when you're ready. Pay once with Lifetime.</p>
+
+    <div class="pricing-toggle reveal-up">
+      <button class="toggle-btn active" data-plan="yearly">Yearly <span class="save-tag">Best Value</span></button>
+      <button class="toggle-btn" data-plan="lifetime">Lifetime <span class="save-tag">Own It Forever</span></button>
+    </div>
+
+    <div class="pricing-cards">
+
+      <!-- Single Site -->
+      <div class="price-card reveal-up" data-delay="0">
+        <div class="price-card-label">Single Site</div>
+        <div class="price-card-audience">For personal projects &amp; small sites</div>
+        <div class="price-amount">
+          <span class="price-dollar">$</span>
+          <span class="price-num" id="singlePrice">49</span>
+          <span class="price-period" id="singlePeriod">/year</span>
+        </div>
+        <div class="price-savings" id="singleSavings">Save $250 vs lifetime</div>
+        <ul class="price-features">
+          <li><span class="pf-check">✦</span> <strong>Unlimited email subscribers</strong></li>
+          <li><span class="pf-check">✦</span> <strong>Unlimited</strong> email lists, campaigns &amp; SMTP</li>
+          <li><span class="pf-check">✦</span> <strong>Email automations</strong> &amp; A/B testing</li>
+          <li><span class="pf-check">✦</span> <strong>AI email builder</strong> with Gutenberg blocks</li>
+          <li><span class="pf-check">✦</span> <strong>Unlimited chatbots</strong> + custom branding</li>
+          <li><span class="pf-check">✦</span> <strong>Unlimited social accounts</strong> + AI captions</li>
+          <li><span class="pf-check">✦</span> <strong>Unlimited keyword research</strong> &amp; SEO audits</li>
+          <li><span class="pf-check">✦</span> <strong>Competitor gap analysis</strong> &amp; rank tracking</li>
+          <li><span class="pf-check">✦</span> <strong>Link building</strong> with AI outreach</li>
+          <li><span class="pf-check">✦</span> <strong>Priority support</strong></li>
+        </ul>
+        <a href="https://wpthemespace.com/product/ai-marketing-expert" class="btn btn-outline btn-block">Get Single Site</a>
+      </div>
+
+      <!-- 5 Sites (Featured) -->
+      <div class="price-card price-card-featured reveal-up" data-delay="100">
+        <div class="featured-badge">⚡ Most Popular</div>
+        <div class="price-card-label">5 Sites</div>
+        <div class="price-card-audience">For growing businesses &amp; multiple projects</div>
+        <div class="price-amount">
+          <span class="price-dollar">$</span>
+          <span class="price-num" id="fivePrice">149</span>
+          <span class="price-period" id="fivePeriod">/year</span>
+        </div>
+        <div class="price-savings" id="fiveSavings">Save $350 vs lifetime</div>
+        <ul class="price-features">
+          <li><span class="pf-check">✦</span> Everything in Single Site</li>
+          <li><span class="pf-check">✦</span> <strong>Use on up to 5 WordPress sites</strong></li>
+          <li><span class="pf-check">✦</span> <strong>Save $200+ vs buying 5 singles</strong></li>
+          <li><span class="pf-check">✦</span> <strong>All Pro features included</strong></li>
+          <li><span class="pf-check">✦</span> <strong>Priority support</strong> for all sites</li>
+          <li><span class="pf-check">✦</span> <strong>All future updates</strong> included</li>
+        </ul>
+        <a href="https://wpthemespace.com/product/ai-marketing-expert" class="btn btn-primary btn-block">Get 5 Sites — Best Deal</a>
+      </div>
+
+      <!-- Unlimited -->
+      <div class="price-card reveal-up" data-delay="200">
+        <div class="price-card-label">Unlimited</div>
+        <div class="price-card-audience">For agencies &amp; multi-site owners</div>
+        <div class="price-amount">
+          <span class="price-dollar">$</span>
+          <span class="price-num" id="unlimitedPrice">399</span>
+          <span class="price-period" id="unlimitedPeriod">/year</span>
+        </div>
+        <div class="price-savings" id="unlimitedSavings">Unlimited sites — no limits</div>
+        <ul class="price-features">
+          <li><span class="pf-check">✦</span> Everything in 5 Sites</li>
+          <li><span class="pf-check">✦</span> <strong>Use on unlimited WordPress sites</strong></li>
+          <li><span class="pf-check">✦</span> <strong>White-label options</strong> for client work</li>
+          <li><span class="pf-check">✦</span> <strong>Agency priority support</strong></li>
+          <li><span class="pf-check">✦</span> <strong>All future updates</strong> included free</li>
+          <li><span class="pf-check">✦</span> <strong>Perfect for agencies</strong> managing clients</li>
+        </ul>
+        <a href="https://wpthemespace.com/product/ai-marketing-expert" class="btn btn-outline btn-block">Get Unlimited</a>
+      </div>
+
+    </div>
+
+    <div class="pricing-guarantee reveal-up">
+      <span class="guarantee-badge">🛡️</span>
+      <span>30-Day Money-Back Guarantee · No Hidden Fees · Cancel Anytime · Instant WordPress Activation</span>
+    </div>
+
+    <div class="pricing-faq reveal-up">
+      <div class="pfaq-item"><strong>Can I upgrade later?</strong> Yes — upgrade anytime. Your data carries over seamlessly.</div>
+      <div class="pfaq-item"><strong>Is the free plan really free?</strong> Forever free. No trial. No expiry. No credit card.</div>
+      <div class="pfaq-item"><strong>Do I need coding skills?</strong> No. Install from WordPress admin and start in minutes.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== REVIEWS ========== -->
+<section class="section reviews-section" id="reviews">
+  <div class="container">
+    <div class="section-label reveal-up">Reviews</div>
+    <h2 class="section-title reveal-up">Loved by WordPress Site Owners</h2>
+   
+    <div class="reviews-carousel-wrap">
+      <div class="reviews-carousel" id="reviewsCarousel">
+
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>"The unlimited subscriber model alone sold me. I moved from Mailchimp and my email costs dropped to zero. The AI content generator is a huge bonus on top."</p>
+          <div class="review-author"><div class="review-avatar">TM</div><div><strong>Tyler Morgan</strong><br/>WooCommerce Store Owner</div></div>
+        </div>
+
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>"The AI chatbot handles 80% of my customer questions automatically. My WooCommerce store gets add-to-cart nudges and product recommendations without any code."</p>
+          <div class="review-author"><div class="review-avatar">SL</div><div><strong>Sophia Lee</strong><br/>Online Store Owner</div></div>
+        </div>
+
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>"I went from writing 2 posts a week to 10. The content generator understands my niche, hits the right keywords, and the one-click publish to Yoast is brilliant."</p>
+          <div class="review-author"><div class="review-avatar">AK</div><div><strong>Amir Khan</strong><br/>Niche Blogger</div></div>
+        </div>
+
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>"Managing social for 8 clients from one WordPress plugin is a game changer. The AI caption tool alone saves me 3+ hours per week across all accounts."</p>
+          <div class="review-author"><div class="review-avatar">RD</div><div><strong>Rachel Davis</strong><br/>Digital Marketing Agency</div></div>
+        </div>
+
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>"The SEO keyword vault and audit tools are genuinely useful. I tracked a 30% increase in organic traffic in the first two months of using the rank tracker consistently."</p>
+          <div class="review-author"><div class="review-avatar">NW</div><div><strong>Nathan Williams</strong><br/>Marketing Consultant</div></div>
+        </div>
+
+      </div>
+    </div>
+    <!-- <div class="reviews-rating reveal-up">⭐⭐⭐⭐⭐ <em>[X.X/5 from X reviews — replace with real WordPress.org rating]</em></div> -->
+  </div>
+</section>
+
+<!-- ========== USE CASES ========== -->
+<section class="section usecases-section" id="usecases">
+  <div class="container">
+    <div class="section-label reveal-up">Use Cases</div>
+    <h2 class="section-title reveal-up">Built for Every WordPress Business</h2>
+    <div class="usecases-grid">
+      <div class="usecase-card reveal-up" data-delay="0">
+        <div class="uc-icon">🛒</div>
+        <h3>WooCommerce Stores</h3>
+        <p>Product-aware chatbot, unlimited email marketing, post-purchase sequences, and social promotion — all synced to your store data.</p>
+      </div>
+      <div class="usecase-card reveal-up" data-delay="100">
+        <div class="uc-icon">📝</div>
+        <h3>Bloggers &amp; Publishers</h3>
+        <p>Scale content output with AI, grow an email list for free, track keyword rankings, and automate social sharing — from one plugin.</p>
+      </div>
+      <div class="usecase-card reveal-up" data-delay="200">
+        <div class="uc-icon">🎯</div>
+        <h3>Coaches &amp; Service Businesses</h3>
+        <p>Capture leads via chatbot, nurture them with AI email sequences, and build authority with consistent AI-generated content.</p>
+      </div>
+      <div class="usecase-card reveal-up" data-delay="300">
+        <div class="uc-icon">🏢</div>
+        <h3>Agencies</h3>
+        <p>Manage email, social, chatbot, SEO, and content for multiple client sites from one familiar WordPress environment.</p>
+      </div>
+      <div class="usecase-card reveal-up" data-delay="400">
+        <div class="uc-icon">💼</div>
+        <h3>Small Businesses</h3>
+        <p>Run professional email campaigns, publish SEO content, and stay active on social — without hiring a marketing team.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section class="section howitworks-section" id="howitworks">
+  <div class="container">
+    <div class="section-label reveal-up">How It Works</div>
+    <h2 class="section-title reveal-up">Up and Running in Minutes</h2>
+    <div class="steps">
+      <div class="step reveal-up" data-delay="0">
+        <div class="step-num counter" data-target="1">1</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Install the Plugin</h3>
+          <p>Upload and activate from your WordPress dashboard. No server changes or coding required.</p>
+        </div>
+      </div>
+      <div class="step reveal-up" data-delay="150">
+        <div class="step-num counter" data-target="2">2</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Connect Your AI &amp; Channels</h3>
+          <p>Link your AI provider — OpenAI, Claude, Gemini, or OpenRouter (free). Then connect your SMTP service and social accounts.</p>
+        </div>
+      </div>
+      <div class="step reveal-up" data-delay="300">
+        <div class="step-num counter" data-target="3">3</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Create Your First Campaign</h3>
+          <p>Build an email campaign, generate a blog post, deploy a chatbot, or run a keyword audit.</p>
+        </div>
+      </div>
+      <div class="step reveal-up" data-delay="450">
+        <div class="step-num counter" data-target="4">4</div>
+        <div class="step-line last-line"></div>
+        <div class="step-content">
+          <h3>Publish, Automate &amp; Grow</h3>
+          <p>Let AI handle the heavy lifting. Your content, email, SEO, and social all compound from one dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section class="section faq-section" id="faq">
+  <div class="container faq-container">
+    <div class="section-label reveal-up">FAQ</div>
+    <h2 class="section-title reveal-up">Frequently Asked Questions</h2>
+    <p class="section-subtitle reveal-up">Everything you need to know about how AI Marketing Expert helps you <strong>boost traffic, leads, and sales with AI</strong>.</p>
+    <div class="faq-list">
+
+      <!-- Email Marketing -->
+      <div class="faq-item reveal-up" data-delay="0">
+        <button class="faq-q" aria-expanded="false">Are email subscribers really unlimited — even on the free plan?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. There is no subscriber cap on any plan. Collect as many contacts as your site can grow and send campaigns without worrying about hitting a list limit.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="50">
+        <button class="faq-q" aria-expanded="false">How does SMTP fallback work?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Connect multiple SMTP providers (e.g. SendGrid + Mailgun). If the primary provider fails, the plugin automatically retries through the next configured connection — so your emails still reach inboxes. Free plan supports 2 SMTP connections; Pro unlocks unlimited.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="100">
+        <button class="faq-q" aria-expanded="false">Can I build automated email sequences?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. The email module includes a visual automation builder with double opt-in support. Set triggers (new subscriber, purchase, link click) and build multi-step drip sequences. A/B testing and advanced segmentation are available in Pro.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="150">
+        <button class="faq-q" aria-expanded="false">Does the email module work with WooCommerce?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. Segment subscribers by purchase history, trigger automations on order events, and send product-specific campaigns directly from your WordPress dashboard without any third-party email SaaS.</p></div>
+      </div>
+
+      <!-- Content Generator -->
+      <div class="faq-item reveal-up" data-delay="200">
+        <button class="faq-q" aria-expanded="false">Can it create SEO-friendly blog posts?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. The content generator creates structured articles with headings, meta title, meta description, and readability scoring. It includes a brand voice system with 3 built-in voices (Expert Advisor, Friendly Educator, Conversion Focused) and integrates with Yoast SEO, Rank Math, and All in One SEO for direct meta field support.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="250">
+        <button class="faq-q" aria-expanded="false">What types of content can the generator produce?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Blog posts, product descriptions, landing page copy, email templates, social captions, and ad creatives. Pro adds bulk generation and content repurposing — turn one article into emails, tweets, and a LinkedIn post automatically.</p></div>
+      </div>
+
+      <!-- Chatbot -->
+      <div class="faq-item reveal-up" data-delay="300">
+        <button class="faq-q" aria-expanded="false">Can the chatbot answer product and support questions?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. Feed the chatbot knowledge from WooCommerce products, custom Q&amp;A pairs, and WordPress pages. It guides shoppers to relevant products, handles FAQ-style support, and can facilitate add-to-cart interactions. Pro adds a public discussions page where visitors can browse and search past conversations.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="350">
+        <button class="faq-q" aria-expanded="false">Can I have multiple chatbots for different pages?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Pro users can deploy unlimited chatbot instances, each with its own knowledge base, persona, and trigger rules — useful for separating a support bot from a sales bot on different parts of the site.</p></div>
+      </div>
+
+      <!-- Social Media -->
+      <div class="faq-item reveal-up" data-delay="400">
+        <button class="faq-q" aria-expanded="false">Which social networks are supported?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Facebook, Instagram, and X (Twitter). The social scheduler handles post creation, AI captions, image generation, queue management, and per-platform analytics — all from WordPress.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="450">
+        <button class="faq-q" aria-expanded="false">Can I schedule posts in advance for multiple platforms?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. Write once, customise per platform, then schedule for any date and time. Pro adds bulk scheduling and a content calendar view so you can plan an entire month of social posts at once.</p></div>
+      </div>
+
+      <!-- SEO -->
+      <div class="faq-item reveal-up" data-delay="500">
+        <button class="faq-q" aria-expanded="false">What does the SEO Analyzer actually check?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>It audits on-page factors: keyword density, title tags, meta descriptions, heading structure, image alt text, internal links, and readability. Pro adds a full site audit, competitor gap analysis, daily keyword rank tracking, and a link building pipeline with AI-generated outreach emails.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="550">
+        <button class="faq-q" aria-expanded="false">Does it work alongside Yoast or Rank Math?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. The SEO module writes its AI suggestions directly into Yoast SEO, Rank Math, and All in One SEO meta fields. You keep your existing SEO plugin and gain AI-assisted optimisation on top of it.</p></div>
+      </div>
+
+      <!-- General / AI -->
+      <div class="faq-item reveal-up" data-delay="600">
+        <button class="faq-q" aria-expanded="false">Which AI providers are supported, and can I switch?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>OpenAI (GPT-5.x), Anthropic Claude (Sonnet 4.6, Opus 4.6, Haiku 4.5), Google Gemini (3.x), and OpenRouter (which gives access to hundreds of models including free tiers). Connect up to 2 providers on the free plan, unlimited on Pro. You can set a fallback provider so generation continues even if one API is unavailable.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="650">
+        <button class="faq-q" aria-expanded="false">Is it beginner-friendly? Do I need to code anything?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>No coding required. Everything is inside the standard WordPress dashboard. If you can install a plugin and write a post, you can use every feature this plugin offers.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="675">
+        <button class="faq-q" aria-expanded="false">Can I use AI for free — do I need a paid OpenAI or Claude plan?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>No paid plan needed. Connect Google AI Studio or OpenRouter for free API access. Rotate free tiers across providers to keep costs at zero. OpenAI and Claude are also supported if you prefer paid providers.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="700">
+        <button class="faq-q" aria-expanded="false">Does the plugin track email opens and clicks?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. Every campaign includes HMAC-signed tracking pixels for opens and encrypted redirect links for clicks. You get per-subscriber open/click counts, deduplication (first-open only), and a full activity log — all stored in your WordPress database.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="725">
+        <button class="faq-q" aria-expanded="false">What happens if my AI provider goes down mid-generation?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>The plugin has a built-in circuit breaker. If a provider returns auth errors, rate limits, or temporary failures, it automatically switches to your next configured connection — with configurable cooldown periods and retry logic. Your content generation keeps running.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="750">
+        <button class="faq-q" aria-expanded="false">Can I embed a subscribe form on my site?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. Use the <code>[aime_subscribe]</code> shortcode to embed a GDPR-ready subscribe form on any page or post. It supports double opt-in, honeypot spam protection, AJAX submission, and custom fields. A webhook endpoint is also available for external integrations.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="775">
+        <button class="faq-q" aria-expanded="false">Can agencies use it across multiple client sites?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Yes. The Agency plan covers multi-site usage. Manage email, social, chatbot, SEO, and content for each client site independently — from the same familiar WordPress interface.</p></div>
+      </div>
+
+      <div class="faq-item reveal-up" data-delay="750">
+        <button class="faq-q" aria-expanded="false">What do I get when I upgrade to Pro?<span class="faq-arrow">›</span></button>
+        <div class="faq-a"><p>Pro unlocks: unlimited email automations, A/B testing, Gutenberg-powered visual email editor, unlimited SMTP connections, unlimited AI provider connections, unlimited chatbots with custom branding &amp; public discussions, unlimited social accounts with visual calendar &amp; content repurposing, site-wide SEO audit, competitor gap analysis, daily rank tracking, link building with AI outreach, bulk content scheduling, brand voice management, and priority support.</p></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========== FINAL CTA ========== -->
+<section class="section cta-section" id="cta">
+  <div class="cta-bg">
+    <div class="cta-orb cta-orb-1"></div>
+    <div class="cta-orb cta-orb-2"></div>
+  </div>
+  <div class="container cta-content reveal-up">
+    <h2>Boost Traffic, Leads &amp; Sales with AI.<br/><span class="gradient-text">One WordPress Plugin.</span></h2>
+    <p>Stop paying for five tools. Stop switching between dashboards. Start growing smarter with AI marketing that lives inside WordPress — and scales with you from your first subscriber to your hundred thousandth.</p>
+    <div class="cta-bullets">
+      <span>✦ Unlimited subscribers free</span>
+      <span>✦ No credit card to start</span>
+      <span>✦ Instant WordPress activation</span>
+    </div>
+    <div class="cta-buttons">
+      <a href="https://wordpress.org/plugins/ai-marketing-expert" target="_blank" class="btn btn-primary btn-xl shimmer">Install Free — Start Today</a>
+      <a href="https://wpthemespace.com/product/ai-marketing-expert" class="btn btn-glass btn-xl">Upgrade to Pro →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-logo">
+      <span class="logo-icon">✦</span>
+      <span>AI Marketing <strong>Expert</strong></span>
+    </div>
+    <p class="footer-tagline">Boost Traffic, Leads &amp; Sales with AI — Email, content, chatbot, social, and SEO inside WordPress.</p>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://wpthemespace.com/product/ai-marketing-expert">Pro</a>
+    </div>
+    <p class="footer-note">© 2026 AI Marketing Expert. All rights reserved. Built for WordPress.</p>
+    <p class="footer-placeholder">⚠️ Replace Before Publish: pricing · testimonials · screenshots · trust badges · usage stats · CTA destination URLs</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

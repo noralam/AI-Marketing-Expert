@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Marketing Expert Documentation</title>
+  <meta name="description" content="Official documentation for AI Marketing Expert WordPress Plugin: installation, quick start, modules, best practices, and troubleshooting." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="reading-progress" id="readingProgress"></div>
+
+  <header class="topbar">
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <div class="brand">
+      <div class="brand-badge">AI</div>
+      <div>
+        <h1>AI Marketing Expert Docs</h1>
+        <p>Complete User Guide + Growth Playbook</p>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input id="docSearch" type="search" placeholder="Search docs, features, settings..." aria-label="Search documentation" />
+      <div id="searchResults" class="search-results" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <nav>
+        <h2>Documentation</h2>
+        <a href="#introduction" class="nav-link">Getting Started</a>
+        <a href="#installation" class="nav-link">Installation</a>
+        <a href="#quick-start" class="nav-link">Quick Start</a>
+        <a href="#dashboard-overview" class="nav-link">Dashboard Overview</a>
+
+        <button class="feature-toggle" type="button" aria-expanded="true">Features</button>
+        <div class="feature-group expanded">
+          <a href="#feature-email-marketing" class="nav-link">Email Marketing</a>
+          <a href="#feature-content-generator" class="nav-link">AI Content Generator</a>
+          <a href="#feature-seo" class="nav-link">SEO Optimization</a>
+          <a href="#feature-social-media" class="nav-link">Social Media Automation</a>
+          <a href="#feature-campaign-manager" class="nav-link">Campaign Manager</a>
+          <a href="#feature-chatbot" class="nav-link">Lead Generation Chatbot</a>
+          <a href="#feature-ai-recommendations" class="nav-link">AI Recommendations</a>
+          <a href="#feature-woocommerce" class="nav-link">WooCommerce Marketing</a>
+          <a href="#feature-reports" class="nav-link">Analytics & Reports</a>
+        </div>
+
+        <a href="#settings" class="nav-link">Settings</a>
+        <a href="#integrations" class="nav-link">Integrations</a>
+        <a href="#analytics" class="nav-link">Analytics</a>
+        <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <a href="#changelog" class="nav-link">Changelog</a>
+      </nav>
+    </aside>
+
+    <main class="content" id="content">
+      <div class="breadcrumb" id="breadcrumb">Home / Introduction</div>
+
+      <section id="introduction" class="doc-section reveal">
+        <div class="hero-card">
+          <span class="eyebrow">All-in-One AI Marketing Toolkit</span>
+          <h2>Introduction</h2>
+          <p>AI Marketing Expert helps you run content, SEO, social, email, and chatbot workflows from one WordPress dashboard. It is built for non-technical users who want measurable growth without complex tool stacks.</p>
+          <div class="hero-grid">
+            <article>
+              <h3>What It Does</h3>
+              <p>Combines five core modules: Email Marketing CRM, AI Content Generator, SEO Intelligence, Social Media Automation, and AI Chatbot with lead capture.</p>
+            </article>
+            <article>
+              <h3>Why Use It</h3>
+              <p>Replace disconnected plugins, reduce manual work, and move faster with AI-assisted decisions, templates, and automations.</p>
+            </article>
+            <article>
+              <h3>What Makes It Different</h3>
+              <p>Unified dashboard, shared AI provider management, module-level controls, and built-in workflows designed for practical marketing results.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="callout info">
+          <h4>Target Users</h4>
+          <p>Bloggers, content marketers, agencies, WooCommerce store owners, SaaS teams, and small businesses needing a central marketing command center.</p>
+        </div>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>Main Features Summary</h3>
+            <ul>
+              <li>Email campaigns, automations, lists, tags, AI optimization tools, and SMTP controls.</li>
+              <li>Article generation, presets, brand voices, SEO optimization, and scheduled publishing.</li>
+              <li>Keyword research, audits, topic maps, rank tracking, and content planning.</li>
+              <li>Multi-account social posting, scheduling calendar, and AI caption/hashtag generation.</li>
+              <li>Chatbot setup, conversation inbox, knowledge base indexing, and lead capture.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Expected Business Benefits</h3>
+            <ul>
+              <li>Faster campaign execution with fewer tools.</li>
+              <li>Better consistency in brand messaging across channels.</li>
+              <li>Higher content velocity with AI-assisted production.</li>
+              <li>Improved lead response with chatbot and automation flows.</li>
+              <li>Data-backed decisions using module analytics and dashboard KPIs.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="installation" class="doc-section reveal">
+        <h2>Installation Guide</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>System Requirements</h3>
+            <ul>
+              <li>WordPress 6.0 or higher (plugin tested up to 6.9).</li>
+              <li>PHP 8.0 or higher.</li>
+              <li>Administrator access to your WordPress dashboard.</li>
+              <li>Optional: WooCommerce for commerce-triggered automations.</li>
+              <li>Optional: AI provider API credentials for AI generation features.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Install Steps</h3>
+            <ol>
+              <li>Go to <strong>Plugins → Add New</strong> in WordPress.</li>
+              <li>Upload the plugin ZIP or install from your plugin source.</li>
+              <li>Activate <strong>AI Marketing Expert</strong>.</li>
+              <li>Open <strong>AI Marketing</strong> from the admin sidebar.</li>
+              <li>Connect AI provider in <strong>AI Providers</strong>.</li>
+            </ol>
+          </article>
+        </div>
+
+        <article class="card">
+          <h3>License Activation (Pro)</h3>
+          <p>If you use Pro, activate your license in the Pro addon settings page to unlock limits and advanced tools. Free mode works immediately with module limits.</p>
+        </article>
+
+        <article class="card">
+          <h3>Initial Setup Wizard (Recommended First-Run Flow)</h3>
+          <ol>
+            <li>Open <strong>AI Providers</strong> and add your provider/model.</li>
+            <li>Open <strong>Settings → Modules</strong> and enable only modules you plan to use first.</li>
+            <li>Review <strong>Settings → System Status</strong> to confirm background jobs are healthy.</li>
+            <li>Create your first workflow: campaign, article, social post, or chatbot.</li>
+          </ol>
+        </article>
+
+        <article class="card code-card">
+          <h3>Shortcode Example</h3>
+          <pre><code id="code-shortcode">[aime_subscribe]</code></pre>
+          <button class="copy-btn" data-copy-target="code-shortcode">Copy code</button>
+        </article>
+
+        <div class="callout warning">
+          <h4>Common Installation Issues</h4>
+          <ul>
+            <li><strong>Plugin page blank:</strong> verify PHP version is 8.0+ and disable conflicting plugins temporarily.</li>
+            <li><strong>AI actions fail:</strong> check AI API key, model, and provider test status.</li>
+            <li><strong>Automations delayed:</strong> verify WordPress cron health in System Status.</li>
+            <li><strong>Permission error:</strong> ensure your user has <strong>manage_options</strong> capability.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="quick-start" class="doc-section reveal">
+        <h2>Quick Start Guide</h2>
+        <div class="timeline">
+          <div><span>1</span><p>Connect your AI provider and model.</p></div>
+          <div><span>2</span><p>Enable needed modules in Settings.</p></div>
+          <div><span>3</span><p>Create your first content or email campaign.</p></div>
+          <div><span>4</span><p>Review analytics and optimize.</p></div>
+        </div>
+        <div class="callout success">
+          <h4>Recommended First Configuration</h4>
+          <p>Start with Content Generator + Email Marketing + Analytics. This gives the fastest path to publishing and promotion with measurable outcomes.</p>
+        </div>
+      </section>
+
+      <section id="dashboard-overview" class="doc-section reveal">
+        <h2>Dashboard Overview</h2>
+        <div class="visual-placeholder">
+          <p>Dashboard Screenshot Placeholder</p>
+        </div>
+        <div class="workflow">
+          <div>Data Ingestion</div><span>→</span>
+          <div>Module KPIs</div><span>→</span>
+          <div>Quick Actions</div><span>→</span>
+          <div>Optimization Loop</div>
+        </div>
+        <p>The dashboard is your command center. It aggregates high-level stats from active modules and gives direct links to key actions, such as creating content, launching campaigns, or checking conversation load.</p>
+      </section>
+
+      <section id="feature-email-marketing" class="doc-section reveal feature-section">
+        <h2>Email Marketing Module</h2>
+        <p class="feature-intro">Manage contacts, campaigns, templates, automations, and SMTP in one place.</p>
+        <div class="feature-layout">
+          <article class="card">
+            <h3>Feature Overview</h3>
+            <p><strong>What:</strong> Full email CRM with segmentation, campaign builder, automations, and AI tools.</p>
+            <p><strong>Why:</strong> Grow and retain subscribers with personalized communication at scale.</p>
+            <p><strong>Benefits:</strong> Better open rates, less manual sending, and clearer campaign performance visibility.</p>
+            <p><strong>Time Saving:</strong> Reusable templates, triggers, and AI-assisted optimization reduce repetitive setup.</p>
+          </article>
+          <article class="card">
+            <h3>Visual Preview</h3>
+            <div class="visual-placeholder small"><p>Email Dashboard Screenshot</p></div>
+            <div class="visual-placeholder small"><p>Campaign Builder Screenshot</p></div>
+            <div class="workflow compact">
+              <div>Contacts</div><span>→</span><div>Campaign</div><span>→</span><div>Send</div><span>→</span><div>Analytics</div>
+            </div>
+          </article>
+        </div>
+        <article class="card">
+          <h3>How It Works</h3>
+          <p>The module combines subscriber data, campaign rules, and AI-generated suggestions. You create a campaign, select target audience, run send/test, and review opens/clicks/conversions from analytics. Automations run on triggers such as new subscriber, tag/list changes, email opens, link clicks, or WooCommerce order completion.</p>
+        </article>
+        <article class="card">
+          <h3>Step-by-Step Usage</h3>
+          <ol>
+            <li>Go to <strong>AI Marketing → Email Marketing</strong>.</li>
+            <li>Set lists/tags and import contacts.</li>
+            <li>Create campaign or automation.</li>
+            <li>Run test send and launch.</li>
+            <li>Review analytics and apply AI recommendations.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <h3>Practical Examples</h3>
+          <ul>
+            <li><strong>Welcome sequence:</strong> New subscribers receive onboarding email series automatically.</li>
+            <li><strong>Abandoned cart follow-up:</strong> WooCommerce trigger starts reminder flow.</li>
+            <li><strong>Re-engagement:</strong> Segment inactive contacts and send personalized reactivation offer.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Best Practices</h3>
+          <ul>
+            <li>Warm up new sender domain and monitor SMTP errors regularly.</li>
+            <li>Use A/B variants for subject lines and track winner metrics.</li>
+            <li>Keep list hygiene strong: remove bounces and inactive contacts.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="feature-content-generator" class="doc-section reveal feature-section">
+        <h2>AI Content Generator</h2>
+        <div class="feature-layout">
+          <article class="card">
+            <h3>Feature Overview</h3>
+            <p>Generate SEO-ready articles, outlines, sections, meta content, and image prompts. Save presets and brand voices for consistency.</p>
+            <p><strong>Business benefit:</strong> Publish faster while maintaining quality and brand tone.</p>
+          </article>
+          <article class="card">
+            <h3>Visual Preview</h3>
+            <div class="visual-placeholder small"><p>Article Editor Screenshot</p></div>
+            <div class="visual-placeholder small"><p>Analytics Screenshot</p></div>
+          </article>
+        </div>
+        <article class="card">
+          <h3>How It Works</h3>
+          <p>You define topic, tone, keywords, and target length. AI creates draft structure and content, then you refine sections, apply SEO optimization, and publish or schedule to WordPress.</p>
+        </article>
+        <article class="card">
+          <h3>Step-by-Step Usage</h3>
+          <ol>
+            <li>Open <strong>Content Generator → New Article</strong>.</li>
+            <li>Choose preset and brand voice.</li>
+            <li>Generate outline and article content.</li>
+            <li>Review SEO/meta suggestions and edit.</li>
+            <li>Publish immediately or schedule.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <h3>Before vs After</h3>
+          <p><strong>Before:</strong> 4-6 hours for draft + optimization. <strong>After:</strong> 45-90 minutes with AI-assisted creation and built-in iteration tools.</p>
+        </article>
+      </section>
+
+      <section id="feature-seo" class="doc-section reveal feature-section">
+        <h2>SEO Optimization Module</h2>
+        <article class="card">
+          <h3>Feature Overview</h3>
+          <p>Covers keyword research, keyword vault, topic map, on-page audits, content calendar, link building, rank tracking, and automation.</p>
+        </article>
+        <div class="workflow">
+          <div>Research</div><span>→</span><div>Plan</div><span>→</span><div>Publish</div><span>→</span><div>Track</div><span>→</span><div>Improve</div>
+        </div>
+        <article class="card">
+          <h3>Step-by-Step Usage</h3>
+          <ol>
+            <li>Start in <strong>Keyword Research</strong> to find opportunities.</li>
+            <li>Organize winning terms in <strong>Keyword Vault</strong>.</li>
+            <li>Build internal cluster strategy in <strong>Topic Map</strong>.</li>
+            <li>Run <strong>On-Page Audit</strong> for quality checks.</li>
+            <li>Track rankings and automate recurring tasks.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <h3>Best Practices</h3>
+          <ul>
+            <li>Prioritize intent-aligned keywords, not only search volume.</li>
+            <li>Use topic clusters for authority growth over single-post optimization.</li>
+            <li>Audit older pages quarterly and refresh declining content.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="feature-social-media" class="doc-section reveal feature-section">
+        <h2>Social Media Automation</h2>
+        <article class="card">
+          <h3>Feature Overview</h3>
+          <p>Connect accounts, compose posts, schedule content, and repurpose long-form content into platform-ready social updates.</p>
+        </article>
+        <div class="cards-2">
+          <article class="card">
+            <h3>Workflow Diagram</h3>
+            <div class="workflow compact">
+              <div>Connect</div><span>→</span><div>Compose</div><span>→</span><div>Schedule</div><span>→</span><div>Publish</div><span>→</span><div>Analyze</div>
+            </div>
+          </article>
+          <article class="card">
+            <h3>Usage Steps</h3>
+            <ol>
+              <li>Add social account connections.</li>
+              <li>Create post or AI repurpose existing content.</li>
+              <li>Set publish time in calendar.</li>
+              <li>Review post status and performance.</li>
+              <li>Repeat top-performing formats.</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section id="feature-campaign-manager" class="doc-section reveal feature-section">
+        <h2>Campaign Manager</h2>
+        <article class="card">
+          <h3>What It Does</h3>
+          <p>Campaign management spans Email Campaigns, Automations, and Social Post Scheduling. It enables planning, execution, and performance tracking from one plugin ecosystem.</p>
+        </article>
+        <article class="card">
+          <h3>Use Cases</h3>
+          <ul>
+            <li>Product launch sequence: article + email + social wave.</li>
+            <li>Seasonal sales campaign with audience segmentation.</li>
+            <li>Weekly newsletter + repurposed social snippets.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="feature-chatbot" class="doc-section reveal feature-section">
+        <h2>Lead Generation Chatbot</h2>
+        <div class="feature-layout">
+          <article class="card">
+            <h3>Feature Overview</h3>
+            <p>Deploy chatbots, answer visitor questions with AI + knowledge base, capture leads, and escalate to human takeover when needed.</p>
+            <p><strong>Why use it:</strong> Convert high-intent visitors instantly instead of losing them to response delays.</p>
+          </article>
+          <article class="card">
+            <h3>Visual Preview</h3>
+            <div class="visual-placeholder small"><p>Widget Screenshot</p></div>
+            <div class="visual-placeholder small"><p>Conversation Inbox Screenshot</p></div>
+          </article>
+        </div>
+        <article class="card">
+          <h3>How It Works</h3>
+          <p>Visitors start conversations from the site widget. The chatbot uses indexed knowledge and AI responses, logs interactions, and captures lead details based on configured rules.</p>
+        </article>
+        <article class="card">
+          <h3>Step-by-Step Usage</h3>
+          <ol>
+            <li>Open <strong>AI Chatbot → Chatbots</strong> and create a bot.</li>
+            <li>Configure welcome message, theme, and lead capture.</li>
+            <li>Add knowledge sources and run indexing.</li>
+            <li>Publish widget and monitor conversations.</li>
+            <li>Tune prompts based on common questions.</li>
+          </ol>
+        </article>
+      </section>
+
+      <section id="feature-ai-recommendations" class="doc-section reveal feature-section">
+        <h2>AI Recommendations</h2>
+        <article class="card">
+          <h3>Overview</h3>
+          <p>The plugin provides AI-assisted suggestions across modules, including subject line optimization, content improvement, campaign recommendations, SEO guidance, and social caption/hashtag ideas.</p>
+        </article>
+        <article class="card">
+          <h3>Best Settings</h3>
+          <ul>
+            <li>Use one consistent model for repeatable output style.</li>
+            <li>Store high-performing prompts in module presets/templates.</li>
+            <li>Review AI output before publishing in customer-facing workflows.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="feature-woocommerce" class="doc-section reveal feature-section">
+        <h2>WooCommerce Marketing</h2>
+        <article class="card">
+          <h3>Overview</h3>
+          <p>If WooCommerce is active, Email Marketing can trigger automations from completed orders and Chatbot Pro can index product knowledge for smarter responses.</p>
+        </article>
+        <article class="card">
+          <h3>Practical Example</h3>
+          <p>Create post-purchase flow: order completed trigger → thank-you email → cross-sell follow-up after 7 days → social retargeting post sequence.</p>
+        </article>
+      </section>
+
+      <section id="feature-reports" class="doc-section reveal feature-section">
+        <h2>Analytics & Reports</h2>
+        <article class="card">
+          <h3>What You Can Measure</h3>
+          <ul>
+            <li>Dashboard-wide module KPIs.</li>
+            <li>Email campaign and subscriber activity metrics.</li>
+            <li>Content output and quality trends.</li>
+            <li>Social posting throughput and publish outcomes.</li>
+            <li>Chatbot conversations, lead capture, and response patterns.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Result Expectations</h3>
+          <p>Within 30 days, teams typically improve content frequency, campaign consistency, and response speed while reducing manual execution time.</p>
+        </article>
+      </section>
+
+      <section id="settings" class="doc-section reveal">
+        <h2>Settings</h2>
+        <p>Use Settings to manage general preferences, module activation, system status, API/webhook access, and debug logs.</p>
+        <div class="visual-placeholder"><p>Settings Screenshot Placeholder</p></div>
+      </section>
+
+      <section id="integrations" class="doc-section reveal">
+        <h2>Integrations</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>AI Providers</h3>
+            <p>Add provider connections, test credentials, fetch models, and assign active model by use case.</p>
+          </article>
+          <article class="card">
+            <h3>SMTP Providers</h3>
+            <p>Configure and test mail transport to improve deliverability and monitor errors.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="analytics" class="doc-section reveal">
+        <h2>Analytics Best Practices</h2>
+        <ul>
+          <li>Review module KPIs weekly, not only monthly.</li>
+          <li>Annotate major campaign dates for cleaner trend analysis.</li>
+          <li>Iterate one variable at a time for reliable optimization insights.</li>
+        </ul>
+
+        <div class="related">
+          <h3>Related Articles</h3>
+          <a href="#feature-email-marketing">How to Improve Email Open Rates</a>
+          <a href="#feature-seo">SEO Topic Clustering Playbook</a>
+          <a href="#feature-social-media">Social Scheduling Strategy Guide</a>
+        </div>
+      </section>
+
+      <section id="troubleshooting" class="doc-section reveal">
+        <h2>Troubleshooting</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>Background Jobs Not Running</h3>
+            <p>Open <strong>Settings → System Status</strong>, verify cron delay, then trigger due automations manually for recovery.</p>
+          </article>
+          <article class="card">
+            <h3>AI Output Not Generated</h3>
+            <p>Check AI provider connection, model selection, token limits, and API errors. Test connection from AI Providers page.</p>
+          </article>
+          <article class="card">
+            <h3>Email Sending Issues</h3>
+            <p>Review SMTP setup and test mail endpoint, then inspect error logs in module settings.</p>
+          </article>
+          <article class="card">
+            <h3>Chatbot Responses Off-Topic</h3>
+            <p>Re-index knowledge sources and tighten system prompt instructions with explicit business context.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="faq" class="doc-section reveal">
+        <h2>FAQ</h2>
+        <div class="faq-item">
+          <button class="faq-question">Do I need technical skills to use this plugin?</button>
+          <div class="faq-answer"><p>No. The interface is designed for marketers and business users with guided workflows.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Can I use only one module?</button>
+          <div class="faq-answer"><p>Yes. You can enable or disable modules in Settings and run only what your team needs.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">What is the best first feature to start with?</button>
+          <div class="faq-answer"><p>Most teams start with Content Generator and Email Marketing for the fastest measurable impact.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">How can I improve AI output quality?</button>
+          <div class="faq-answer"><p>Use clear prompts, define audience and tone, and keep model/provider settings consistent across workflows.</p></div>
+        </div>
+      </section>
+
+      <section id="changelog" class="doc-section reveal">
+        <h2>Changelog</h2>
+        <article class="card">
+          <h3>Latest Stable Updates</h3>
+          <ul>
+            <li>v1.0.3.5: Core plugin update and compatibility improvements.</li>
+            <li>v1.0.3.3: Installation, migration, and Plugin Check enhancements.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="support" class="doc-section reveal">
+        <h2>Video & Support</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>Video Tutorial Placeholder</h3>
+            <div class="visual-placeholder small"><p>Embed Training Video Here</p></div>
+          </article>
+          <article class="card">
+            <h3>Contact Support</h3>
+            <p>Need help with setup or optimization? Contact your plugin support channel and include your module name, error message, and steps you already tried.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <script src="script.js"></script>
+</body>
+</html>

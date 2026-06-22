@@ -1,0 +1,747 @@
+/**
+ * Chatbot Widget Styles
+ *
+ * Heavily scoped via .aime-chat-widget to prevent theme conflicts.
+ * Uses CSS custom properties for theming.
+ */
+
+/* ── Variables ─────────────────────────────────── */
+.aime-chat-widget {
+	--aime-chat-primary: #4f46e5;
+	--aime-chat-primary-hover: #4338ca;
+	--aime-chat-bg: #ffffff;
+	--aime-chat-surface: #f8fafc;
+	--aime-chat-border: #e2e8f0;
+	--aime-chat-text: #1e293b;
+	--aime-chat-text-muted: #64748b;
+	--aime-chat-radius: 12px;
+	--aime-chat-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+	--aime-chat-bubble-size: 60px;
+	--aime-chat-window-width: 380px;
+	--aime-chat-window-height: 520px;
+	--aime-chat-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+	--aime-chat-offset-y: 0px;
+	--aime-chat-offset-x: 0px;
+
+	position: fixed;
+	z-index: 99999;
+	font-family: var(--aime-chat-font);
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--aime-chat-text);
+	box-sizing: border-box;
+	transform: translate(var(--aime-chat-offset-x), var(--aime-chat-offset-y));
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	/* ── Positions ─────────────────────────────────── */
+	&--bottom-right {
+		bottom: 20px;
+		right: 20px;
+	}
+
+	&--bottom-left {
+		bottom: 20px;
+		left: 20px;
+	}
+
+	&--top-right {
+		top: 20px;
+		right: 20px;
+	}
+
+	&--top-left {
+		top: 20px;
+		left: 20px;
+	}
+}
+
+/* ── Bubble ──────────────────────────────────────── */
+.aime-chat-bubble {
+	position: relative;
+	width: var(--aime-chat-bubble-size);
+	height: var(--aime-chat-bubble-size);
+	border-radius: 50%;
+	background: var(--aime-chat-bubble-bg, var(--aime-chat-primary));
+	color: var(--aime-chat-bubble-text, #fff);
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	outline: none;
+    padding: 0;
+
+	&:hover {
+		transform: scale(1.08);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+	}
+
+	&:focus-visible {
+		box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+	}
+
+	svg {
+		width: 28px;
+		height: 28px;
+		transition: transform 0.2s ease;
+	}
+
+	&-badge {
+		position: absolute;
+		top: -4px;
+		right: -4px;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 6px;
+		border-radius: 10px;
+		background: #ef4444;
+		color: #fff;
+		font-size: 11px;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
+		animation: aime-chat-badge-pop 0.3s ease;
+	}
+}
+
+@keyframes aime-chat-badge-pop {
+	0% { transform: scale(0); }
+	70% { transform: scale(1.2); }
+	100% { transform: scale(1); }
+}
+
+/* ── Chat Window ─────────────────────────────────── */
+.aime-chat-window {
+	position: absolute;
+	bottom: calc(var(--aime-chat-bubble-size) + 16px);
+	right: 0;
+	width: var(--aime-chat-window-width);
+	height: var(--aime-chat-window-height);
+	background: var(--aime-chat-bg);
+	border-radius: var(--aime-chat-radius);
+	box-shadow: var(--aime-chat-shadow);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	animation: aime-chat-window-in 0.25s ease;
+
+	.aime-chat-widget--bottom-left & {
+		right: auto;
+		left: 0;
+	}
+
+	.aime-chat-widget--top-right &,
+	.aime-chat-widget--top-left & {
+		bottom: auto;
+		top: calc(var(--aime-chat-bubble-size) + 16px);
+	}
+
+	.aime-chat-widget--top-left & {
+		right: auto;
+		left: 0;
+	}
+}
+
+@keyframes aime-chat-window-in {
+	0% {
+		opacity: 0;
+		transform: translateY(10px) scale(0.95);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ── Header ──────────────────────────────────────── */
+.aime-chat-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px;
+	background: var(--aime-chat-header-bg, var(--aime-chat-primary));
+	color: var(--aime-chat-header-text, #fff);
+	flex-shrink: 0;
+
+	&-info {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	&-name {
+		font-weight: 600;
+		font-size: 15px;
+	}
+
+	&-status {
+		font-size: 12px;
+		opacity: 0.85;
+	}
+
+	&-close {
+		background: none;
+		border: none;
+		color: inherit;
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background 0.15s;
+		outline: none;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.15);
+		}
+
+		&:focus-visible {
+			box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+		}
+	}
+}
+
+.aime-chat-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+/* ── GDPR Consent ────────────────────────────────── */
+.aime-chat-consent {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 24px;
+	text-align: center;
+
+	p {
+		font-size: 13px;
+		color: var(--aime-chat-text-muted);
+		margin: 0 0 20px;
+		line-height: 1.6;
+	}
+
+	&-btn {
+		background: var(--aime-chat-primary);
+		color: #fff;
+		border: none;
+		border-radius: 8px;
+		padding: 10px 24px;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+
+		&:hover {
+			background: var(--aime-chat-primary-hover);
+		}
+	}
+}
+
+/* ── Messages ────────────────────────────────────── */
+.aime-chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	scroll-behavior: smooth;
+
+	/* Custom scrollbar */
+	&::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--aime-chat-border);
+		border-radius: 4px;
+	}
+}
+
+/* ── Message Bubble ──────────────────────────────── */
+.aime-chat-msg {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	max-width: 85%;
+
+	&--visitor {
+		align-self: flex-end;
+		flex-direction: row-reverse;
+
+		.aime-chat-msg-bubble {
+			background: var(--aime-chat-user-bubble-bg, var(--aime-chat-primary));
+			color: var(--aime-chat-user-bubble-text, #fff);
+			border-radius: 16px 16px 4px 16px;
+		}
+
+		.aime-chat-msg-time {
+			text-align: right;
+			color: rgba(255, 255, 255, 0.7);
+		}
+
+		.aime-chat-msg-status {
+			color: rgba(255, 255, 255, 0.7);
+
+			&--read {
+				color: #93c5fd;
+			}
+		}
+
+		.aime-chat-msg-meta {
+			justify-content: flex-end;
+		}
+	}
+
+	&--bot {
+		align-self: flex-start;
+
+		.aime-chat-msg-bubble {
+			background: var(--aime-chat-ai-bubble-bg, var(--aime-chat-surface));
+			color: var(--aime-chat-ai-bubble-text, var(--aime-chat-text));
+			border-radius: 16px 16px 16px 4px;
+			border: 1px solid var(--aime-chat-border);
+		}
+	}
+
+	&--system {
+		align-self: center;
+		max-width: 90%;
+	}
+
+	&-avatar {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: var(--aime-chat-surface);
+		border: 1px solid var(--aime-chat-border);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		color: var(--aime-chat-text-muted);
+	}
+
+	&-bubble {
+		padding: 10px 14px;
+		transition: background 0.15s;
+	}
+
+	&-text {
+		font-size: 14px;
+		line-height: 1.5;
+		word-break: break-word;
+		white-space: pre-wrap;
+
+		.aime-msg-link {
+			display: inline-block;
+			margin: 2px 0;
+			padding: 6px 14px;
+			background: var(--aime-chat-primary);
+			color: #fff;
+			border-radius: 8px;
+			text-decoration: none;
+			font-weight: 600;
+			font-size: 13px;
+			line-height: 1.4;
+
+			&:hover {
+				opacity: 0.9;
+			}
+		}
+
+		ul {
+			margin: 6px 0;
+			padding-left: 18px;
+		}
+
+		strong {
+			font-weight: 600;
+		}
+
+		code {
+			background: rgba(0, 0, 0, 0.06);
+			padding: 1px 4px;
+			border-radius: 4px;
+			font-size: 12px;
+		}
+	}
+
+	&-time {
+		font-size: 11px;
+		color: var(--aime-chat-text-muted);
+	}
+
+	&-meta {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 4px;
+		margin-top: 4px;
+	}
+
+	&-status {
+		display: inline-flex;
+		align-items: center;
+		color: var(--aime-chat-text-muted);
+		line-height: 1;
+
+		&--read {
+			color: #3b82f6;
+		}
+	}
+
+	&-system {
+		background: var(--aime-chat-surface);
+		border: 1px solid var(--aime-chat-border);
+		border-radius: 8px;
+		padding: 8px 14px;
+		font-size: 12px;
+		color: var(--aime-chat-text-muted);
+		text-align: center;
+	}
+}
+
+/* ── Typing Indicator ────────────────────────────── */
+.aime-chat-typing {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+
+	&-dots {
+		display: flex;
+		gap: 4px;
+		background: var(--aime-chat-surface);
+		border: 1px solid var(--aime-chat-border);
+		border-radius: 16px;
+		padding: 10px 14px;
+	}
+
+	&-dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--aime-chat-text-muted);
+		animation: aime-chat-typing-bounce 1.2s infinite ease-in-out;
+
+		&:nth-child(2) {
+			animation-delay: 0.15s;
+		}
+
+		&:nth-child(3) {
+			animation-delay: 0.3s;
+		}
+	}
+}
+
+@keyframes aime-chat-typing-bounce {
+	0%, 60%, 100% {
+		transform: translateY(0);
+		opacity: 0.4;
+	}
+	30% {
+		transform: translateY(-6px);
+		opacity: 1;
+	}
+}
+
+/* ── Input Bar ───────────────────────────────────── */
+.aime-chat-input {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	padding: 12px 16px;
+	border-top: 1px solid var(--aime-chat-border);
+	background: var(--aime-chat-bg);
+	flex-shrink: 0;
+
+	&-field {
+		flex: 1;
+		border: 1px solid var(--aime-chat-border);
+		border-radius: 10px;
+		padding: 10px 14px;
+		font-family: var(--aime-chat-font);
+		font-size: 14px;
+		line-height: 1.4;
+		resize: none;
+		outline: none;
+		color: var(--aime-chat-text);
+		background: var(--aime-chat-input-bg, var(--aime-chat-bg));
+		transition: border-color 0.15s;
+		max-height: 100px;
+		overflow-y: auto;
+
+		&::placeholder {
+			color: var(--aime-chat-text-muted);
+		}
+
+		&:focus {
+			border-color: var(--aime-chat-primary);
+		}
+
+		&:disabled {
+			background: var(--aime-chat-surface);
+			cursor: not-allowed;
+		}
+	}
+
+	&-send {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		border: none;
+		padding: 0;
+		background: var(--aime-chat-primary);
+		color: #fff;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		transition: background 0.15s, transform 0.1s;
+		outline: none;
+
+		&:hover:not(:disabled) {
+			background: var(--aime-chat-primary-hover);
+			transform: scale(1.05);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		&:focus-visible {
+			box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+		}
+
+		svg {
+			width: 18px;
+			height: 18px;
+		}
+	}
+}
+
+/* ── Lead Form ───────────────────────────────────── */
+.aime-chat-lead {
+	padding: 16px;
+	border-top: 1px solid var(--aime-chat-border);
+	background: var(--aime-chat-surface);
+	flex-shrink: 0;
+	animation: aime-chat-slide-up 0.25s ease;
+
+	&-heading {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--aime-chat-text);
+		margin: 0 0 12px;
+	}
+
+	&-form {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&-input {
+		width: 100%;
+		border: 1px solid var(--aime-chat-border);
+		border-radius: 8px;
+		padding: 8px 12px;
+		font-family: var(--aime-chat-font);
+		font-size: 13px;
+		color: var(--aime-chat-text);
+		background: var(--aime-chat-bg);
+		outline: none;
+		transition: border-color 0.15s;
+
+		&::placeholder {
+			color: var(--aime-chat-text-muted);
+		}
+
+		&:focus {
+			border-color: var(--aime-chat-primary);
+		}
+	}
+
+	&-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	&-submit {
+		flex: 1;
+		background: var(--aime-chat-primary);
+		color: #fff;
+		border: none;
+		border-radius: 8px;
+		padding: 8px 16px;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+
+		&:hover:not(:disabled) {
+			background: var(--aime-chat-primary-hover);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	&-dismiss {
+		background: none;
+		border: 1px solid var(--aime-chat-border);
+		border-radius: 8px;
+		padding: 8px 12px;
+		font-size: 13px;
+		color: var(--aime-chat-text-muted);
+		cursor: pointer;
+		transition: background 0.15s;
+
+		&:hover {
+			background: var(--aime-chat-border);
+		}
+	}
+}
+
+@keyframes aime-chat-slide-up {
+	0% {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ── Powered By ──────────────────────────────────── */
+.aime-chat-powered {
+	padding: 6px 16px 8px;
+	text-align: center;
+	flex-shrink: 0;
+	border-top: 1px solid var(--aime-chat-border);
+
+	a {
+		font-size: 11px;
+		color: var(--aime-chat-text-muted);
+		text-decoration: none;
+		transition: color 0.15s;
+
+		&:hover {
+			color: var(--aime-chat-primary);
+		}
+
+		strong {
+			font-weight: 600;
+		}
+	}
+}
+
+/* ── Theme: Modern ───────────────────────────────── */
+.aime-chat-theme--modern {
+	--aime-chat-radius: 16px;
+	--aime-chat-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+
+	.aime-chat-bubble {
+		border-radius: 18px;
+		width: 64px;
+		height: 64px;
+	}
+
+	.aime-chat-header {
+		padding: 16px 18px;
+	}
+
+	.aime-chat-msg--bot .aime-chat-msg-bubble {
+		background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+	}
+}
+
+/* ── Theme: Minimal ──────────────────────────────── */
+.aime-chat-theme--minimal {
+	--aime-chat-radius: 8px;
+	--aime-chat-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+	.aime-chat-bubble {
+		border-radius: 12px;
+		width: 52px;
+		height: 52px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.aime-chat-header {
+		background: var(--aime-chat-bg);
+		color: var(--aime-chat-text);
+		border-bottom: 1px solid var(--aime-chat-border);
+
+		.aime-chat-avatar {
+			background: var(--aime-chat-primary);
+			color: #fff;
+		}
+
+		&-close {
+			color: var(--aime-chat-text-muted);
+
+			&:hover {
+				background: var(--aime-chat-surface);
+			}
+		}
+	}
+
+	.aime-chat-msg--visitor .aime-chat-msg-bubble {
+		border-radius: 8px 8px 2px 8px;
+	}
+
+	.aime-chat-msg--bot .aime-chat-msg-bubble {
+		border-radius: 8px 8px 8px 2px;
+	}
+}
+
+/* ── Responsive: Full-screen on mobile ───────────── */
+@media screen and (max-width: 767px) {
+	.aime-chat-window {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		width: 100%;
+		height: 100%;
+		border-radius: 0;
+		z-index: 100000;
+	}
+}

@@ -1,0 +1,988 @@
+<?php
+/**
+ * REST API base controller.
+ *
+ * @package WPSpace\AiMarketingExpert
+ */
+
+namespace WPSpace\AiMarketingExpert;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+class RestApi {
+	private const CACHE_GROUP = 'aime_rest_api';
+	private const CACHE_TTL   = 30;
+
+	/**
+	 * Module Manager.
+	 *
+	 * @var ModuleManager
+	 */
+	private ModuleManager $modules;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param ModuleManager $modules Module manager instance.
+	 */
+	public function __construct( ModuleManager $modules ) {
+		$this->modules = $modules;
+	}
+
+	private static function get_cache_version(): string {
+		$version = wp_cache_get( 'version', self::CACHE_GROUP );
+		if ( false === $version ) {
+			$version = '1';
+			wp_cache_set( 'version', $version, self::CACHE_GROUP, self::CACHE_TTL );
+		}
+
+		return (string) $version;
+	}
+
+	private static function bump_cache_version(): void {
+		wp_cache_set( 'version', (string) microtime( true ), self::CACHE_GROUP, self::CACHE_TTL );
+	}
+
+	private static function build_cache_key( string $prefix, array $parts = array() ): string {
+		return $prefix . ':' . md5( wp_json_encode( $parts ) . ':' . self::get_cache_version() );
+	}
+
+	/**
+	 * Register all REST routes.
+	 */
+	public function register_routes(): void {
+		$namespace = aime_rest_namespace();
+
+		// Core routes.
+		$this->register_core_routes( $namespace );
+
+		// Module routes.
+		foreach ( $this->modules->get_active() as $module ) {
+			$module->register_routes();
+		}
+	}
+
+	/**
+	 * Register core API routes.
+	 *
+	 * @param string $namespace REST namespace.
+	 */
+	private function register_core_routes( string $namespace ): void {
+		// GET /aime/v1/modules - List all modules.
+		register_rest_route(
+			$namespace,
+			'/modules',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_modules' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// POST /aime/v1/modules/{id}/toggle - Toggle module active state.
+		register_rest_route(
+			$namespace,
+			'/modules/(?P<id>[a-z0-9-]+)/toggle',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'toggle_module' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					),
+				),
+			)
+		);
+
+		// GET /aime/v1/settings - Get global settings.
+		register_rest_route(
+			$namespace,
+			'/settings',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_settings' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// POST /aime/v1/settings - Update global settings.
+		register_rest_route(
+			$namespace,
+			'/settings',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'update_settings' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// GET /aime/v1/debug-log - Fetch plugin logs (only when WP_DEBUG is on).
+		register_rest_route(
+			$namespace,
+			'/debug-log',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_debug_log' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// DELETE /aime/v1/debug-log - Clear plugin logs.
+		register_rest_route(
+			$namespace,
+			'/debug-log',
+			array(
+				'methods'             => \WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'clear_debug_log' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// GET /aime/v1/system/cron-status - Cron health for background jobs.
+		register_rest_route(
+			$namespace,
+			'/system/cron-status',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_cron_status' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// POST /aime/v1/system/run-due-automations - Process due automation jobs now.
+		register_rest_route(
+			$namespace,
+			'/system/run-due-automations',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'run_due_automations' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// GET /aime/v1/pro/status - Pro license status.
+		register_rest_route(
+			$namespace,
+			'/pro/status',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_pro_status' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// GET /aime/v1/dashboard/stats - Overview stats.
+		register_rest_route(
+			$namespace,
+			'/dashboard/stats',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_dashboard_stats' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// GET /aime/v1/dashboard/activity-trends - Per-module daily activity for the line chart.
+		register_rest_route(
+			$namespace,
+			'/dashboard/activity-trends',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_dashboard_activity_trends' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'days' => array(
+						'default'           => 30,
+						'sanitize_callback' => static function ( $value ) {
+							return min( 90, max( 7, absint( $value ) ) );
+						},
+					),
+				),
+			)
+		);
+
+		// ── AI Provider Connections (connection-based repeater) ───────
+		register_rest_route(
+			$namespace,
+			'/ai/connections',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'get_ai_connections' ),
+					'permission_callback' => array( $this, 'admin_permission_check' ),
+				),
+				array(
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'save_ai_connection' ),
+					'permission_callback' => array( $this, 'admin_permission_check' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			$namespace,
+			'/ai/connections/(?P<id>[a-z0-9_]+)',
+			array(
+				'methods'             => \WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'delete_ai_connection' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$namespace,
+			'/ai/connections/(?P<id>[a-z0-9_]+)/test',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'test_ai_connection' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					),
+				),
+			)
+		);
+
+		// POST /aime/v1/ai/fetch-models — Fetch available models from provider API.
+		register_rest_route(
+			$namespace,
+			'/ai/fetch-models',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'fetch_ai_models' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// POST /aime/v1/api-key/generate — Generate or regenerate the global API key.
+		register_rest_route(
+			$namespace,
+			'/api-key/generate',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'generate_api_key' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		// DELETE /aime/v1/api-key — Revoke the API key.
+		register_rest_route(
+			$namespace,
+			'/api-key',
+			array(
+				'methods'             => \WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'revoke_api_key' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+	}
+
+	/**
+	 * Permission check: must be admin.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return bool|\WP_Error
+	 */
+	public function admin_permission_check( \WP_REST_Request $request ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to access this endpoint.', 'ai-marketing-expert' ),
+				array( 'status' => 403 )
+			);
+		}
+		return true;
+	}
+
+	/**
+	 * GET /modules - List all modules.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_modules( \WP_REST_Request $request ): \WP_REST_Response {
+		return new \WP_REST_Response(
+			array(
+				'modules' => $this->modules->get_dashboard_configs(),
+			)
+		);
+	}
+
+	/**
+	 * POST /modules/{id}/toggle - Toggle module.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function toggle_module( \WP_REST_Request $request ) {
+		$module_id = $request->get_param( 'id' );
+		$module    = $this->modules->get( $module_id );
+
+		if ( ! $module ) {
+			return new \WP_Error(
+				'module_not_found',
+				__( 'Module not found.', 'ai-marketing-expert' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( $this->modules->is_active( $module_id ) ) {
+			$this->modules->deactivate( $module_id );
+			$is_active = false;
+		} else {
+			$this->modules->activate( $module_id );
+			$is_active = true;
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'module_id' => $module_id,
+				'is_active' => $is_active,
+				'message'   => $is_active
+					? __( 'Module activated.', 'ai-marketing-expert' )
+					: __( 'Module deactivated.', 'ai-marketing-expert' ),
+			)
+		);
+	}
+
+	/**
+	 * GET /system/cron-status - Background job health.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function get_cron_status(): \WP_REST_Response {
+		$hooks = array(
+			'aime_process_email_queue'  => __( 'Email queue', 'ai-marketing-expert' ),
+			'aime_process_automations'  => __( 'Email automations', 'ai-marketing-expert' ),
+		);
+
+		$now   = time();
+		$items = array();
+
+		foreach ( $hooks as $hook => $label ) {
+			$next_run     = wp_next_scheduled( $hook );
+			$delay        = $next_run ? $now - $next_run : null;
+			$is_overdue   = null !== $delay && $delay > 5 * MINUTE_IN_SECONDS;
+			$items[]      = array(
+				'hook'            => $hook,
+				'label'           => $label,
+				'next_run'        => $next_run ? gmdate( 'Y-m-d H:i:s', $next_run ) : null,
+				'next_run_local'  => $next_run ? get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $next_run ), 'Y-m-d H:i:s' ) : null,
+				'delay_seconds'   => $delay,
+				'is_scheduled'    => (bool) $next_run,
+				'is_overdue'      => $is_overdue,
+				'status'          => ! $next_run ? 'missing' : ( $is_overdue ? 'overdue' : 'scheduled' ),
+			);
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'wp_cron_disabled' => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
+				'server_time'      => current_time( 'mysql' ),
+				'gmt_time'         => current_time( 'mysql', true ),
+				'items'            => $items,
+				'has_overdue'      => (bool) array_filter( $items, static function ( $item ) {
+					return ! empty( $item['is_overdue'] ) || 'missing' === $item['status'];
+				} ),
+				'documentation'    => __( 'For accurate automation timing, configure real server cron.', 'ai-marketing-expert' ),
+			)
+		);
+	}
+
+	/**
+	 * POST /system/run-due-automations - Run due automation jobs now.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function run_due_automations(): \WP_REST_Response {
+		do_action( 'aime_process_automations' );
+
+		return new \WP_REST_Response(
+			array(
+				'message' => __( 'Due automations processed.', 'ai-marketing-expert' ),
+				'cron'    => $this->get_cron_status()->get_data(),
+			)
+		);
+	}
+
+	/**
+	 * GET /settings - Get global settings.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_settings( \WP_REST_Request $request ): \WP_REST_Response {
+		$defaults = array(
+			'from_name'        => get_bloginfo( 'name' ),
+			'from_email'       => get_option( 'admin_email' ),
+			'unsubscribe_page' => 0,
+			'double_optin'     => (bool) get_option( 'aime_double_optin', true ),
+			'track_opens'      => true,
+			'track_clicks'     => true,
+			'sending_method'   => 'wp_mail',
+			'batch_size'       => 50,
+			'batch_interval'   => 60,
+			'gdpr_enabled'     => true,
+			'delete_data_on_uninstall' => false,
+		);
+		$settings = wp_parse_args( aime_get_db_option( 'aime_settings', array() ), $defaults );
+
+		// Remove sensitive data from response.
+		unset( $settings['smtp_password'] );
+
+		// Expose API key status (has key or not) and masked version.
+		$settings['has_api_key'] = ! empty( $settings['webhook_api_key'] );
+		if ( ! empty( $settings['webhook_api_key'] ) ) {
+			$key = $settings['webhook_api_key'];
+			$settings['api_key_masked'] = substr( $key, 0, 8 ) . str_repeat( '•', max( 0, strlen( $key ) - 12 ) ) . substr( $key, -4 );
+		}
+		unset( $settings['webhook_api_key'] );
+
+		// Include the webhook URL for display.
+		$settings['webhook_url'] = rest_url( aime_rest_namespace() . '/email/webhook/subscribe' );
+
+		return new \WP_REST_Response( array( 'settings' => $settings ) );
+	}
+
+	/**
+	 * POST /settings - Update global settings.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function update_settings( \WP_REST_Request $request ): \WP_REST_Response {
+		$params   = $request->get_json_params();
+		$settings = get_option( 'aime_settings', array() );
+
+		// Whitelist allowed settings.
+		$allowed = array(
+			'from_name',
+			'from_email',
+			'sending_method',
+			'smtp_host',
+			'smtp_port',
+			'smtp_encryption',
+			'smtp_username',
+			'smtp_password',
+			'batch_size',
+			'batch_interval',
+			'double_optin',
+			'track_opens',
+			'track_clicks',
+			'gdpr_enabled',
+			'delete_data_on_uninstall',
+			'unsubscribe_page',
+		);
+
+		foreach ( $allowed as $key ) {
+			if ( isset( $params[ $key ] ) ) {
+				$settings[ $key ] = $this->sanitize_setting( $key, $params[ $key ] );
+			}
+		}
+
+		if ( isset( $params['double_optin'] ) ) {
+			update_option( 'aime_double_optin', (bool) $settings['double_optin'], false );
+		}
+
+		update_option( 'aime_settings', $settings, false );
+		aime_clear_settings_cache( array( 'aime_settings', 'aime_double_optin' ) );
+
+		aime_log( 'Global settings updated.', 'info', 'core' );
+
+		return new \WP_REST_Response(
+			array(
+				'message'  => __( 'Settings saved successfully.', 'ai-marketing-expert' ),
+				'settings' => $settings,
+			)
+		);
+	}
+
+	/**
+	 * GET /pro/status - Pro license status.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_pro_status( \WP_REST_Request $request ): \WP_REST_Response {
+		return new \WP_REST_Response(
+			array(
+				'has_pro'      => aime_has_pro(),
+				'license_info' => apply_filters( 'aime_pro_license_info', array() ),
+				'pro_url'      => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert' ),
+			)
+		);
+	}
+
+	/**
+	 * GET /dashboard/stats - Overview dashboard stats.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_dashboard_stats( \WP_REST_Request $request ): \WP_REST_Response {
+		$stats = array(
+			'modules' => array(),
+		);
+
+		// Collect stats from each active module.
+		foreach ( $this->modules->get_active() as $module ) {
+			$stats['modules'][ $module->get_id() ] = apply_filters(
+				"aime_{$module->get_id()}_dashboard_stats",
+				array()
+			);
+		}
+
+		return new \WP_REST_Response( $stats );
+	}
+
+	/**
+	 * GET /dashboard/activity-trends - Per-module daily activity time-series.
+	 *
+	 * Returns an array of objects, one per day in the requested range, shaped:
+	 * { date: "M/D", email: int, content: int, seo: int, chatbot: int, social: int }
+	 *
+	 * Only queries tables that actually exist to avoid errors on fresh installs.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_dashboard_activity_trends( \WP_REST_Request $request ): \WP_REST_Response {
+		global $wpdb;
+
+		$days      = (int) $request->get_param( 'days' );
+		$cache_key = self::build_cache_key( 'activity_trends', array( 'days' => $days ) );
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return new \WP_REST_Response( $cached );
+		}
+
+		$p     = $wpdb->prefix;
+		$start = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
+		$end   = gmdate( 'Y-m-d' );
+
+		// Build a full date scaffold so every day is represented even with zero counts.
+		$scaffold = array();
+		$cursor   = strtotime( $start );
+		$end_ts   = strtotime( $end );
+		while ( $cursor <= $end_ts ) {
+			$key              = gmdate( 'Y-m-d', $cursor );
+			$scaffold[ $key ] = array(
+				'date'    => gmdate( 'n/j', $cursor ),
+				'email'   => 0,
+				'content' => 0,
+				'seo'     => 0,
+				'chatbot' => 0,
+				'social'  => 0,
+			);
+			$cursor += DAY_IN_SECONDS;
+		}
+
+		/**
+		 * Table definitions: table name (without prefix), column to group by date, optional WHERE clause.
+		 * Key in scaffold array matches the module key we store.
+		 */
+		$queries = array(
+			'email'   => array(
+				'table'  => 'aime_campaign_emails',
+				'col'    => 'created_at',
+				'where'  => "status = 'sent'",
+			),
+			'content' => array(
+				'table'  => 'aime_content_articles',
+				'col'    => 'created_at',
+				'where'  => '',
+			),
+			'seo'     => array(
+				'table'  => 'aime_seo_audits',
+				'col'    => 'created_at',
+				'where'  => '',
+			),
+			'chatbot' => array(
+				'table'  => 'aime_chatbot_conversations',
+				'col'    => 'created_at',
+				'where'  => '',
+			),
+			'social'  => array(
+				'table'  => 'aime_social_posts',
+				'col'    => 'created_at',
+				'where'  => '',
+			),
+		);
+
+		foreach ( $queries as $module_key => $def ) {
+			$table = $p . $def['table'];
+
+			// Guard: skip if the table does not exist (module not installed/activated).
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+			if ( $table_exists !== $table ) {
+				continue;
+			}
+
+			$col   = sanitize_key( $def['col'] );
+			$where = '';
+			if ( ! empty( $def['where'] ) ) {
+				// The where clause is hardcoded above (not user input) — safe to use directly.
+				$where = 'AND ' . $def['where'];
+			}
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT DATE({$col}) AS day, COUNT(*) AS total FROM %i WHERE DATE({$col}) BETWEEN %s AND %s {$where} GROUP BY DATE({$col})",
+					$table,
+					$start,
+					$end
+				),
+				ARRAY_A
+			);
+
+			if ( is_array( $rows ) ) {
+				foreach ( $rows as $row ) {
+					if ( isset( $scaffold[ $row['day'] ] ) ) {
+						$scaffold[ $row['day'] ][ $module_key ] = (int) $row['total'];
+					}
+				}
+			}
+		}
+
+		$result = array_values( $scaffold );
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return new \WP_REST_Response( $result );
+	}
+
+	/**
+	 * Sanitize a setting value based on key.
+	 *
+	 * @param string $key   Setting key.
+	 * @param mixed  $value Raw value.
+	 * @return mixed Sanitized value.
+	 */
+	/**
+	 * GET /debug-log - Fetch plugin logs (only when WP_DEBUG is on).
+	 */
+	public function get_debug_log( \WP_REST_Request $request ): \WP_REST_Response {
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+			return new \WP_REST_Response( array( 'enabled' => false, 'logs' => array(), 'total' => 0 ) );
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'aime_log';
+		$table_cache_key = self::build_cache_key( 'debug_log_table', array( 'table' => $table ) );
+		$table_exists    = wp_cache_get( $table_cache_key, self::CACHE_GROUP );
+		if ( false === $table_exists ) {
+			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+			wp_cache_set( $table_cache_key, $table_exists ?: '', self::CACHE_GROUP, self::CACHE_TTL );
+		}
+
+		if ( $table_exists !== $table ) {
+			return new \WP_REST_Response( array( 'enabled' => true, 'logs' => array(), 'total' => 0 ) );
+		}
+
+		$page     = max( 1, (int) $request->get_param( 'page' ) ?: 1 );
+		$per_page = min( 100, max( 10, (int) $request->get_param( 'per_page' ) ?: 30 ) );
+		$level    = sanitize_key( $request->get_param( 'level' ) ?: '' );
+		$module   = sanitize_key( $request->get_param( 'module' ) ?: '' );
+		$offset   = ( $page - 1 ) * $per_page;
+		$cache_key = self::build_cache_key( 'debug_log_page', array(
+			'page'     => $page,
+			'per_page' => $per_page,
+			'level'    => $level,
+			'module'   => $module,
+		) );
+		$cached = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return new \WP_REST_Response( $cached );
+		}
+
+		if ( $level && $module ) {
+			$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE level = %s AND module_id = %s', $table, $level, $module ) );
+			$logs = $wpdb->get_results( $wpdb->prepare( 'SELECT id, module_id, level, message, context, created_at FROM %i WHERE level = %s AND module_id = %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $table, $level, $module, $per_page, $offset ), ARRAY_A );
+		} elseif ( $level ) {
+			$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE level = %s', $table, $level ) );
+			$logs = $wpdb->get_results( $wpdb->prepare( 'SELECT id, module_id, level, message, context, created_at FROM %i WHERE level = %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $table, $level, $per_page, $offset ), ARRAY_A );
+		} elseif ( $module ) {
+			$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE module_id = %s', $table, $module ) );
+			$logs = $wpdb->get_results( $wpdb->prepare( 'SELECT id, module_id, level, message, context, created_at FROM %i WHERE module_id = %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $table, $module, $per_page, $offset ), ARRAY_A );
+		} else {
+			$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
+			$logs = $wpdb->get_results( $wpdb->prepare( 'SELECT id, module_id, level, message, context, created_at FROM %i ORDER BY created_at DESC LIMIT %d OFFSET %d', $table, $per_page, $offset ), ARRAY_A );
+		}
+
+		$response = array( 'enabled' => true, 'logs' => $logs ?: array(), 'total' => $total );
+		wp_cache_set( $cache_key, $response, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return new \WP_REST_Response( $response );
+	}
+
+	/**
+	 * DELETE /debug-log - Clear all plugin logs.
+	 */
+	public function clear_debug_log( \WP_REST_Request $request ): \WP_REST_Response {
+		global $wpdb;
+		$table = $wpdb->prefix . 'aime_log';
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) );
+		self::bump_cache_version();
+		return new \WP_REST_Response( array( 'message' => __( 'Logs cleared.', 'ai-marketing-expert' ) ) );
+	}
+
+	private function sanitize_setting( string $key, $value ) {
+		switch ( $key ) {
+			case 'from_email':
+				return sanitize_email( $value );
+
+			case 'smtp_username':
+				return sanitize_text_field( $value );
+
+			case 'smtp_port':
+			case 'batch_size':
+				return max( 1, min( 500, absint( $value ) ) );
+
+			case 'batch_interval':
+				return max( 0, min( DAY_IN_SECONDS, absint( $value ) ) );
+
+			case 'unsubscribe_page':
+				return absint( $value );
+
+			case 'double_optin':
+			case 'track_opens':
+			case 'track_clicks':
+			case 'gdpr_enabled':
+				return (bool) $value;
+
+			case 'sending_method':
+				$valid = array( 'wp_mail', 'smtp', 'api', 'gmail', 'outlook', 'amazon_ses', 'sendgrid', 'mailgun', 'sparkpost', 'custom' );
+				return in_array( $value, $valid, true ) ? $value : 'wp_mail';
+
+			case 'smtp_encryption':
+				return in_array( $value, array( 'none', 'ssl', 'tls' ), true )
+					? $value
+					: 'tls';
+
+			default:
+				return sanitize_text_field( $value );
+		}
+	}
+
+	// ─── AI Settings ──────────────────────────────────────────────────
+
+	/**
+	 * GET /ai/connections — Get all AI connections + provider definitions.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_ai_connections( \WP_REST_Request $request ): \WP_REST_Response {
+		return new \WP_REST_Response( AiProvider::get_settings_for_api() );
+	}
+
+	/**
+	 * POST /ai/connections — Create or update an AI connection.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function save_ai_connection( \WP_REST_Request $request ): \WP_REST_Response {
+		$params = $request->get_json_params();
+		$params = is_array( $params ) ? $params : array();
+		$id     = ! empty( $params['id'] ) ? sanitize_key( $params['id'] ) : '';
+		$is_update = false;
+
+		$connections = AiProvider::get_connections();
+		if ( '' !== $id ) {
+			foreach ( $connections as $connection ) {
+				if ( $id === ( $connection['id'] ?? '' ) ) {
+					$is_update = true;
+					break;
+				}
+			}
+		}
+
+		if ( ! \aime_has_pro() && ! $is_update ) {
+			$limits      = \aime_free_limits();
+			$limit       = (int) ( $limits['ai_provider_connections'] ?? 2 );
+
+			if ( count( $connections ) >= $limit ) {
+				return new \WP_REST_Response(
+					array(
+						'message' => sprintf(
+							/* translators: %d: number of free AI provider connections */
+							__( 'AI provider limit reached. Free plan allows %d AI provider connections. Upgrade to Pro for unlimited providers.', 'ai-marketing-expert' ),
+							$limit
+						),
+					),
+					403
+				);
+			}
+		}
+
+		$conn = AiProvider::save_connection( $params );
+
+		return new \WP_REST_Response( array(
+			'message' => __( 'AI connection saved successfully.', 'ai-marketing-expert' ),
+			'data'    => AiProvider::get_settings_for_api(),
+		) );
+	}
+
+	/**
+	 * DELETE /ai/connections/{id} — Delete an AI connection.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function delete_ai_connection( \WP_REST_Request $request ): \WP_REST_Response {
+		$id = $request->get_param( 'id' );
+
+		AiProvider::delete_connection( $id );
+
+		return new \WP_REST_Response( array(
+			'message' => __( 'AI connection deleted.', 'ai-marketing-expert' ),
+			'data'    => AiProvider::get_settings_for_api(),
+		) );
+	}
+
+	/**
+	 * POST /ai/connections/{id}/test — Test an AI connection.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function test_ai_connection( \WP_REST_Request $request ): \WP_REST_Response {
+		$id = $request->get_param( 'id' );
+
+		$result = AiProvider::test_connection( $id );
+
+		return new \WP_REST_Response( $result, $result['success'] ? 200 : 400 );
+	}
+
+	/**
+	 * POST /ai/fetch-models — Fetch available models from a provider's API.
+	 *
+	 * Accepts either a raw api_key or a connection_id to look up the stored key.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function fetch_ai_models( \WP_REST_Request $request ): \WP_REST_Response {
+		$params        = $request->get_json_params();
+		$provider      = sanitize_key( $params['provider'] ?? '' );
+		$api_key       = sanitize_text_field( $params['api_key'] ?? '' );
+		$connection_id = sanitize_key( $params['connection_id'] ?? '' );
+		$base_url      = ! empty( $params['base_url'] ) ? esc_url_raw( trim( $params['base_url'] ) ) : '';
+		$api_format    = in_array( $params['api_format'] ?? '', array( 'openai', 'anthropic' ), true ) ? $params['api_format'] : '';
+
+		// If no api_key supplied, try to use the stored key from an existing connection.
+		if ( empty( $api_key ) && ! empty( $connection_id ) ) {
+			$connections = AiProvider::get_connections();
+			foreach ( $connections as $conn ) {
+				if ( ( $conn['id'] ?? '' ) === $connection_id ) {
+					$api_key = ! empty( $conn['api_key'] ) ? Encryption::decrypt( $conn['api_key'] ) : '';
+					if ( empty( $provider ) ) {
+						$provider = $conn['provider'] ?? '';
+					}
+					if ( empty( $base_url ) ) {
+						$base_url = $conn['base_url'] ?? '';
+					}
+					if ( empty( $api_format ) ) {
+						$api_format = $conn['api_format'] ?? '';
+					}
+					break;
+				}
+			}
+		}
+
+		if ( empty( $provider ) || empty( $api_key ) ) {
+			return new \WP_REST_Response(
+				array( 'success' => false, 'message' => __( 'Provider and API key are required.', 'ai-marketing-expert' ) ),
+				400
+			);
+		}
+
+		$result = AiProvider::fetch_remote_models( $provider, $api_key, $base_url, $api_format );
+
+		return new \WP_REST_Response( $result, $result['success'] ? 200 : 400 );
+	}
+
+	/* ── API Key Management ────────────────────────────────────────── */
+
+	/**
+	 * POST /api-key/generate — Generate or regenerate the global webhook API key.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function generate_api_key(): \WP_REST_Response {
+		$key      = 'aime_' . wp_generate_password( 32, false );
+		$settings = get_option( 'aime_settings', array() );
+		$settings['webhook_api_key'] = $key;
+		update_option( 'aime_settings', $settings, false );
+		aime_clear_settings_cache( array( 'aime_settings' ) );
+
+		aime_log( 'Webhook API key generated.', 'info', 'core' );
+
+		$masked = substr( $key, 0, 8 ) . str_repeat( '•', 21 ) . substr( $key, -4 );
+
+		return new \WP_REST_Response( array(
+			'message'    => __( 'API key generated.', 'ai-marketing-expert' ),
+			'api_key'    => $key, // Show full key once on generation.
+			'masked'     => $masked,
+			'webhook_url' => rest_url( aime_rest_namespace() . '/email/webhook/subscribe' ),
+		) );
+	}
+
+	/**
+	 * DELETE /api-key — Revoke the API key.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function revoke_api_key(): \WP_REST_Response {
+		$settings = get_option( 'aime_settings', array() );
+		unset( $settings['webhook_api_key'] );
+		update_option( 'aime_settings', $settings, false );
+		aime_clear_settings_cache( array( 'aime_settings' ) );
+
+		aime_log( 'Webhook API key revoked.', 'info', 'core' );
+
+		return new \WP_REST_Response( array(
+			'message' => __( 'API key revoked.', 'ai-marketing-expert' ),
+		) );
+	}
+
+	/**
+	 * Validate a webhook API key from a request header or body param.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return bool True if the key is valid.
+	 */
+	public static function validate_api_key( \WP_REST_Request $request ): bool {
+		$settings   = get_option( 'aime_settings', array() );
+		$stored_key = $settings['webhook_api_key'] ?? '';
+
+		if ( empty( $stored_key ) ) {
+			return false;
+		}
+
+		// Check Authorization header first, then body param.
+		$auth_header = $request->get_header( 'X-API-Key' );
+		$body_key    = sanitize_text_field( $request->get_param( 'api_key' ) ?? '' );
+		$provided    = ! empty( $auth_header ) ? sanitize_text_field( $auth_header ) : $body_key;
+
+		if ( empty( $provided ) ) {
+			return false;
+		}
+
+		return hash_equals( $stored_key, $provided );
+	}
+}

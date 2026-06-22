@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "wordpress-official-agent-skills@wordpress-official-agent-skills": true,
+    "wp-dev-skills@wp-dev-skills": true
+  }
+}
