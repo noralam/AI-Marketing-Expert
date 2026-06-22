@@ -8,10 +8,11 @@
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![Version](https://img.shields.io/badge/Version-1.0.3.12-purple)](https://github.com/noralam/AI-Marketing-Expert)
+[![Live Demo](https://img.shields.io/badge/Live-Plugin_Site-brightgreen?logo=wordpress)](https://wpthemespace.com/ai-marketing-expert/)
 
 **Email Marketing · Content Generation · SEO · Social Media · AI Chatbot — All from Your WordPress Dashboard.**
 
-[Features](#-features) • [Modules](#-modules) • [Installation](#-installation) • [Usage](#-usage) • [AI Providers](#-ai-providers) • [Contributing](#-contributing) • [Changelog](#-changelog)
+[Features](#-features) • [Modules](#-modules) • [Installation](#-installation) • [Usage](#-usage) • [AI Providers](#-ai-providers) • [Live Demo](https://wpthemespace.com/ai-marketing-expert/) • [Contributing](#-contributing) • [Changelog](#-changelog)
 
 </div>
 
@@ -49,8 +50,8 @@ Full-featured CRM and email automation built inside WordPress.
 
 | Feature | Free | Pro |
 |---------|------|-----|
-| Subscribers | 500 | Unlimited |
-| Campaigns/month | 10 | Unlimited |
+| Subscribers | Unlimited | Unlimited |
+| Campaigns/month | 30 | Unlimited |
 | Automations | 1 funnel | Unlimited |
 | Segmentation | Basic (lists/tags) | Advanced (custom fields, behavior) |
 | A/B Testing | — | ✓ |
