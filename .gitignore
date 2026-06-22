@@ -32,8 +32,17 @@ npm-debug.log*
 wp-content/uploads/
 wp-content/cache/
 
-# OAuth proxy
-oauth-proxy/node_modules/
+# OAuth proxy (separate deployment)
+oauth-proxy/
+
+# Tools (dev utilities)
+tools/
+
+# Landing page (marketing site)
+landing-page/
+
+# IDE / config (local)
+.claude/
 
 # Plugin zip
 *.zip
