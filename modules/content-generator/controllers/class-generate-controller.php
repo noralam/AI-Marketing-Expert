@@ -353,7 +353,8 @@ class GenerateController {
 	 * Clean up AI-generated body content.
 	 *
 	 * Strips leftover JSON wrappers, converts literal \n to real newlines,
-	 * removes blank lines, and ensures proper HTML.
+	 * removes blank lines, strips AI safety-classification lines (e.g.
+	 * "User Safety: safe"), and ensures proper HTML.
 	 */
 	public static function clean_ai_body( string $body ): string {
 		$body = trim( $body );
@@ -382,6 +383,13 @@ class GenerateController {
 		// Strip Google Translate injected divs.
 		$body = preg_replace( '/<div\b[^>]*id\s*=\s*["\']gtx-trans["\'][^>]*>.*?<\/div>/si', '', $body );
 		$body = preg_replace( '/<div\b[^>]*class\s*=\s*["\']gtx-[^"\']*["\'][^>]*>.*?<\/div>/si', '', $body );
+
+		// Strip AI safety-classification lines that some Gemini-family models
+		// append to the response (e.g. "User Safety: safe", "Safety: safe",
+		// "Category: ..."). Match anywhere in the body — these are not
+		// legitimate user content and should never be saved into the post.
+		$body = preg_replace( '/^[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*[\n\r]?/im', '', $body );
+		$body = preg_replace( '/(?:\n|\r)[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*/i', '', $body );
 
 		// Convert double-newline separated blocks into paragraphs if not already wrapped in tags.
 		$body = trim( $body );

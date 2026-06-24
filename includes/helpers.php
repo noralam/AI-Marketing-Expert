@@ -335,7 +335,9 @@ function aime_get_sender_email(): string {
 
 /**
  * Strip chain-of-thought / reasoning text that some AI models prepend
- * before the actual JSON output.
+ * before the actual JSON output, plus AI safety-classification lines
+ * (e.g. "User Safety: safe", "Category: ...") that some Gemini-family
+ * models append to the response.
  *
  * Finds the first plausible JSON start ( { or [ ) and strips everything
  * before it when the leading text looks like natural-language reasoning.
@@ -352,6 +354,56 @@ function aime_strip_thinking_text( string $raw ): string {
 
 	// Strip <think>…</think> blocks (DeepSeek, Qwen, and other open models).
 	$raw = preg_replace( '/<think>[\s\S]*?<\/think>\s*/i', '', $raw );
+	$raw = trim( $raw );
+
+	if ( '' === $raw ) {
+		return $raw;
+	}
+
+	// Strip standalone AI safety-classification lines that some Gemini-family
+	// models append to the response (e.g. "User Safety: safe", "Safety: safe",
+	// "Category: ..."). Match the line anywhere — start, middle, or end.
+	$raw = preg_replace( '/^[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*[\n\r]?/im', '', $raw );
+	$raw = preg_replace( '/(?:\n|\r)[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*/i', '', $raw );
+	// Trailing safety line at the very end of the string (no following newline
+	// — common in short excerpt-style responses).
+	$raw = preg_replace( '/[ \t]+(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r<]*$/i', '', $raw );
+	$raw = trim( $raw );
+
+	if ( '' === $raw ) {
+		return $raw;
+	}
+
+	// Strip lines that look like model-reasoning metadata
+	// (e.g. "Plan: - Step 1 ...", "Reasoning: ...", "Note: ...", or
+	// bullet-point planning paragraphs that some models emit before content).
+	$raw = preg_replace( '/^[ \t]*(?:Plan|Reasoning|Reasoning Steps?|Thought Process|Steps?|Approach|Strategy|My approach|My plan|Internal reasoning|Thinking)[ \t]*:[ \t]*[^\n\r]*[\n\r]+/im', '', $raw );
+
+	// Strip leading <analysis>...</analysis>, <scratchpad>...</scratchpad> style blocks.
+	$raw = preg_replace( '/<(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)[\s\S]*?<\/(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)>\s*/iu', '', $raw );
+
+	// Strip leading "Here is the JSON:" / "Here is the HTML:" / "Here is the article:" preambles
+	// when they precede a JSON or HTML body.
+	$raw = preg_replace( '/^[ \t]*Here\s+(?:is|are)\s+(?:the\s+)?(?:JSON|HTML|article|response|output|revised|improved|rewritten|updated|humanized|final)\s*:[ \t]*\n+/i', '', $raw );
+
+	// Strip leading "Sure, ..." / "Of course, ..." / "Certainly, ..." chatty preambles.
+	$raw = preg_replace( '/^[ \t]*(?:Sure|Of course|Certainly|Absolutely|Okay|Ok|Alright|Great)[ \t,]+\S.*?\n+/i', '', $raw );
+
+	// Strip unlabeled chain-of-thought prose that some reasoning models
+	// (notably MiniMax M3 via custom provider, and other models that don't wrap
+	// reasoning in <think> tags) emit as natural-language paragraphs before
+	// the actual JSON/HTML. Common openings include "The user wants...",
+	// "Let me think...", "I need to write...". The regex matches such openings
+	// and walks forward to the first { [ or HTML tag, dropping everything in
+	// between. Conservative: requires the opening phrase + ≥20 chars of text
+	// before the closing boundary, and only strips when the text is multi-line
+	// (≥2 newlines) — avoids false positives on short legitimate text.
+	$raw = preg_replace(
+		'/^[ \t]*(?:The user wants|Let me (?:think|create|draft|analyze|review|plan|write|start)|I need to (?:write|create|plan|consider|think|generate|draft|figure)|I (?:will|\'ll) (?:write|create|generate|start|produce|build|make|now )|First,? I (?:need|should|will)|Now (?:let me|I need|I should|I will)|Looking at the (?:requirements|request|prompt|task)|I should (?:create|write|generate|make)|Let\'?s (?:write|create|make|build))[^\n\r]{20,}[\s\S]*?(?=(?:\{|\[|<[a-zA-Z!\\/]|\Z))/iu',
+		'',
+		$raw
+	);
+
 	$raw = trim( $raw );
 
 	if ( '' === $raw ) {
@@ -386,6 +438,64 @@ function aime_strip_thinking_text( string $raw ): string {
 	if ( preg_match( '/[a-zA-Z]{3,}/', $prefix ) ) {
 		return substr( $raw, $json_start );
 	}
+
+	return $raw;
+}
+
+/**
+ * Strip chain-of-thought / reasoning text from HTML output (used by
+ * improve_content and generate_section, where the AI returns raw HTML
+ * without a JSON wrapper).
+ *
+ * Strategy: if the response starts with an HTML tag (<p>, <h2>, <div>, etc.)
+ * we trust it's pure HTML. Otherwise, we look for the first HTML start tag
+ * and strip everything before it when the prefix looks like reasoning.
+ *
+ * @param string $raw Raw AI HTML response.
+ * @return string Cleaned HTML.
+ */
+function aime_strip_thinking_from_html( string $raw ): string {
+	$raw = trim( $raw );
+
+	if ( '' === $raw ) {
+		return $raw;
+	}
+
+	// First, apply the JSON-aware stripper (handles think tags,
+	// safety lines, preambles, JSON-prefix cleanup).
+	$raw = aime_strip_thinking_text( $raw );
+
+	if ( '' === $raw ) {
+		return $raw;
+	}
+
+	// If the response starts with an HTML tag, it's already clean HTML.
+	$first_char = $raw[0];
+	if ( '<' === $first_char ) {
+		return $raw;
+	}
+
+	// Otherwise, look for the first HTML opening tag. If found and the prefix
+	// looks like natural-language reasoning, drop the prefix.
+	$html_start = preg_match( '/<\s*(?:p|h[1-6]|div|section|article|ul|ol|li|blockquote|figure|table|nav|header|footer|main|aside|strong|em|br)\b/i', $raw, $m, PREG_OFFSET_CAPTURE );
+	if ( $html_start && isset( $m[0][1] ) && $m[0][1] > 0 ) {
+		$prefix = substr( $raw, 0, $m[0][1] );
+		// Only strip if the prefix contains natural-language reasoning
+		// (at least 20 chars of word characters — avoids stripping short
+		// legitimate prefixes).
+		$letters = preg_replace( '/[^a-zA-Z]/', '', $prefix );
+		if ( strlen( $letters ) >= 20 ) {
+			$raw = substr( $raw, $m[0][1] );
+			$raw = ltrim( $raw );
+		}
+	}
+
+	// Strip safety-classification lines from HTML output (e.g. trailing
+	// "User Safety: safe" line, or ones embedded anywhere in the body).
+	$raw = preg_replace( '/^[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*[\n\r]?/im', '', $raw );
+	$raw = preg_replace( '/(?:\n|\r)[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*/i', '', $raw );
+	$raw = preg_replace( '/[\s\n\r]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r<]*$/i', '', $raw );
+	$raw = trim( $raw );
 
 	return $raw;
 }

@@ -42,7 +42,7 @@ const AppLayout = ( { children, sidebar, subHeading, module } ) => {
 				<div className="aime-top-bar-right">
 					{ ! hasPro && <ProUpgradeButton /> }
 					<a
-						href="https://wpthemespace.com/docs/ai-marketing-expert/"
+						href="https://wpthemespace.com/ai-marketing-expert-documentation/"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="aime-top-bar-link"
@@ -51,7 +51,7 @@ const AppLayout = ( { children, sidebar, subHeading, module } ) => {
 						{ __( 'Documentation', 'ai-marketing-expert' ) }
 					</a>
 					<a
-						href="https://wpthemespace.com/support/"
+						href="https://wordpress.org/support/plugin/ai-marketing-expert/"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="aime-top-bar-link"

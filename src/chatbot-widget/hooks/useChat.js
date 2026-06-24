@@ -15,12 +15,59 @@ import {
 	setConsent,
 } from '../utils/storage';
 
+// Single shared AudioContext, created lazily. Browsers cap the number of
+// contexts per page, so we must never create a new one per beep.
+let sharedAudioCtx = null;
+
+/**
+ * Lazily create the shared AudioContext and arm a one-time user-gesture
+ * listener to resume it. Browsers block an AudioContext from starting until
+ * the user has interacted with the page (autoplay policy), so creating/resuming
+ * it on the first gesture avoids the "AudioContext was not allowed to start"
+ * console warning.
+ */
+const getAudioCtx = () => {
+	if ( sharedAudioCtx ) {
+		return sharedAudioCtx;
+	}
+	const Ctx = window.AudioContext || window.webkitAudioContext;
+	if ( ! Ctx ) {
+		return null;
+	}
+	try {
+		sharedAudioCtx = new Ctx();
+	} catch ( e ) {
+		return null;
+	}
+
+	// Resume the context on the first user gesture, then stop listening.
+	const unlock = () => {
+		if ( sharedAudioCtx && sharedAudioCtx.state === 'suspended' ) {
+			sharedAudioCtx.resume().catch( () => {} );
+		}
+		document.removeEventListener( 'pointerdown', unlock );
+		document.removeEventListener( 'keydown', unlock );
+	};
+	document.addEventListener( 'pointerdown', unlock, { once: true } );
+	document.addEventListener( 'keydown', unlock, { once: true } );
+
+	return sharedAudioCtx;
+};
+
 /**
  * Play a short notification beep using the Web Audio API.
+ *
+ * Silently no-ops if the AudioContext is still suspended (no user gesture yet),
+ * which both prevents the autoplay-policy warning and avoids leaking contexts.
  */
 const playNotificationSound = () => {
 	try {
-		const ctx = new ( window.AudioContext || window.webkitAudioContext )();
+		const ctx = getAudioCtx();
+		// Without a prior user gesture the context stays suspended; skip the
+		// beep rather than trigger a blocked-autoplay warning.
+		if ( ! ctx || ctx.state !== 'running' ) {
+			return;
+		}
 		const osc = ctx.createOscillator();
 		const gain = ctx.createGain();
 		osc.connect( gain );

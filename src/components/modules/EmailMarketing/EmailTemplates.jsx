@@ -191,6 +191,11 @@ const EmailTemplates = ( { onNavigate } ) => {
 					<p style={ { marginTop: 12, color: 'var(--aime-text-light)' } }>
 						{ __( 'No templates found. Create one or install defaults.', 'ai-marketing-expert' ) }
 					</p>
+					<div style={ { marginTop: 16 } }>
+						<Button variant="primary" onClick={ handleInstallDefaults }>
+							{ __( 'Install Defaults', 'ai-marketing-expert' ) }
+						</Button>
+					</div>
 				</div>
 			) }
 

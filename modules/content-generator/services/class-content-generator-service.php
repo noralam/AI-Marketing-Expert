@@ -66,15 +66,30 @@ class ContentGeneratorService {
 
 		$parsed = $this->parse_json_response( $result['content'] );
 
+		// Strip any safety-classification lines (e.g. "User Safety: safe") that
+		// some Gemini-family models append to the body or excerpt, and remove
+		// any reasoning prefix that slipped in before the body HTML.
+		if ( is_array( $parsed ) ) {
+			if ( ! empty( $parsed['body'] ) ) {
+				$parsed['body'] = self::strip_reasoning_before_html( (string) $parsed['body'] );
+				$parsed['body'] = self::strip_safety_lines( $parsed['body'] );
+			}
+			if ( ! empty( $parsed['excerpt'] ) ) {
+				$parsed['excerpt'] = self::strip_safety_lines( (string) $parsed['excerpt'] );
+			}
+		}
+
 		if ( ! $parsed ) {
 			// Check if the raw response contains real HTML content (not thinking text).
 			$has_html = preg_match( '/<(p|h[1-6]|ul|ol|div|article|section)\b/i', $result['content'] );
 
 			if ( $has_html ) {
 				// Model returned HTML directly without JSON wrapper — use it.
-				$parsed = array(
+				// Strip any reasoning prefix the model emitted before the first tag.
+				$raw_html = self::strip_reasoning_before_html( $result['content'] );
+				$parsed   = array(
 					'title'   => $topic,
-					'body'    => $result['content'],
+					'body'    => self::strip_safety_lines( $raw_html ),
 					'excerpt' => '',
 					'outline' => array(),
 				);
@@ -142,7 +157,8 @@ class ContentGeneratorService {
 
 		$prompt .= "Write 2-4 paragraphs for this section. Use HTML tags (p, ul, ol, li, strong, em). "
 			. "Do NOT include the section heading itself — just the body content. "
-			. "Return ONLY the HTML content, no JSON wrapper.";
+			. "Return ONLY the HTML content, no JSON wrapper. Do NOT include any thinking, reasoning, planning, or commentary, "
+			. "and do NOT append any safety-classification lines (e.g. \"User Safety: safe\").";
 
 		$result = AiProvider::generate( $prompt, 'text', 2048 );
 
@@ -152,7 +168,7 @@ class ContentGeneratorService {
 
 		return array(
 			'success' => true,
-			'content' => aime_strip_thinking_text( $result['content'] ),
+			'content' => aime_strip_thinking_from_html( $result['content'] ),
 		);
 	}
 
@@ -169,7 +185,8 @@ class ContentGeneratorService {
 			. "IMPORTANT: The original content has approximately {$word_count} words. "
 			. "Your output MUST have approximately the same word count. Do NOT shorten, truncate, or remove any sections. "
 			. "Return the improved content in HTML format using p, h2, h3, ul, ol, li, strong, em tags. "
-			. "Return ONLY the improved HTML content.";
+			. "Return ONLY the improved HTML content. Do NOT include any thinking, reasoning, planning, or commentary — "
+			. "do NOT prefix with phrases like \"Sure, here is...\", \"Here is the improved HTML:\", or any safety classification lines.";
 
 		$result = AiProvider::generate( $prompt, 'text', $max_tokens );
 
@@ -179,7 +196,7 @@ class ContentGeneratorService {
 
 		return array(
 			'success' => true,
-			'content' => aime_strip_thinking_text( $result['content'] ),
+			'content' => aime_strip_thinking_from_html( $result['content'] ),
 		);
 	}
 
@@ -262,6 +279,14 @@ class ContentGeneratorService {
 			}
 		}
 
+		// Final cleanup: strip any safety-classification lines (e.g. "User Safety: safe")
+		// that some Gemini-family models append even to short responses, and trim.
+		if ( ! empty( $excerpt_text ) ) {
+			$excerpt_text = preg_replace( '/^[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*[\n\r]?/im', '', $excerpt_text );
+			$excerpt_text = preg_replace( '/(?:\n|\r)[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*/i', '', $excerpt_text );
+			$excerpt_text = trim( $excerpt_text );
+		}
+
 		return array(
 			'success' => true,
 			'excerpt' => $excerpt_text,
@@ -311,5 +336,79 @@ class ContentGeneratorService {
 		}
 
 		return $system;
+	}
+
+	/**
+	 * Strip AI safety-classification lines that some Gemini-family models
+	 * append to the response (e.g. "User Safety: safe", "Category: ...").
+	 * These are not legitimate user content and should never be saved into
+	 * the post body or excerpt.
+	 *
+	 * @param string $text Raw AI-generated text.
+	 * @return string Cleaned text.
+	 */
+	public static function strip_safety_lines( string $text ): string {
+		if ( '' === $text ) {
+			return $text;
+		}
+
+		// Match standalone classification lines at the start of a line, anywhere
+		// in the body. Handles both Unix and Windows line endings.
+		$text = preg_replace( '/^[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*[\n\r]?/im', '', $text );
+		$text = preg_replace( '/(?:\n|\r)[ \t]*(?:User\s+Safety|Safety|Harm\s+Category|Harm_Policy|Category|Severity)[ \t]*:[ \t]*[^\n\r]*/i', '', $text );
+
+		return trim( $text );
+	}
+
+	/**
+	 * Strip chain-of-thought / reasoning text that some models emit BEFORE
+	 * the actual HTML body. Used when the model returns HTML directly
+	 * (no JSON wrapper) so the long reasoning prefix never reaches the editor.
+	 *
+	 * Heuristic: if the first character is "<" we leave it alone. Otherwise
+	 * we keep trimming leading reasoning prefixes (the standard
+	 * aime_strip_thinking_text rules — <think> blocks, "Sure, …" preambles,
+	 * analysis tags, etc.) until we reach a real HTML tag, or we return
+	 * whatever the global helper produced if no tag is found.
+	 *
+	 * @param string $text Raw AI-generated HTML.
+	 * @return string HTML with any reasoning prefix removed.
+	 */
+	public static function strip_reasoning_before_html( string $text ): string {
+		if ( '' === $text ) {
+			return $text;
+		}
+
+		$text = trim( $text );
+		if ( '' === $text ) {
+			return $text;
+		}
+
+		// Already starts with an HTML tag — nothing to strip.
+		if ( '<' === $text[0] ) {
+			return $text;
+		}
+
+		// Apply the global thinking-strip helper first.
+		$cleaned = aime_strip_thinking_text( $text );
+
+		// If cleaning leaves us with text that now starts with "<", we're done.
+		if ( '' !== $cleaned && '<' === $cleaned[0] ) {
+			return $cleaned;
+		}
+
+		// Otherwise, walk forward: find the first <tag that looks like real
+		// body content and slice from there. This catches reasoning prefixes
+		// the helper didn't strip (e.g. multi-paragraph plans with no <think>).
+		$pos = -1;
+		if ( preg_match( '/<(?:p|h[1-6]|ul|ol|article|section|div|main|blockquote)\b/i', $cleaned, $matches, PREG_OFFSET_CAPTURE ) ) {
+			$pos = (int) $matches[0][1];
+		}
+
+		if ( $pos > 0 ) {
+			$cleaned = substr( $cleaned, $pos );
+		}
+
+		return $cleaned;
 	}
 }

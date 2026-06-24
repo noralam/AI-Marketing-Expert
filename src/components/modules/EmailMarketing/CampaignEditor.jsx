@@ -324,6 +324,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	const [ tags, setTags ] = useState( [] );
 	const [ lists, setLists ] = useState( [] );
 	const [ templates, setTemplates ] = useState( [] );
+	const [ installingDefaults, setInstallingDefaults ] = useState( false );
 	const [ emailSettings, setEmailSettings ] = useState( {} );
 	const [ recipientMode, setRecipientMode ] = useState( 'all' );
 	const [ recipientType, setRecipientType ] = useState( 'lists' );
@@ -429,6 +430,17 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 			setEmailSettings( settings || {} );
 		} catch ( e ) { /* */ }
 	}, [ get ] );
+
+	const handleInstallDefaults = useCallback( async () => {
+		setInstallingDefaults( true );
+		try {
+			await post( '/email/templates/install-defaults' );
+			const tp = await get( '/email/templates', { per_page: 100 } );
+			setTemplates( ( tp?.items || tp || [] ) );
+		} catch ( e ) { /* */ } finally {
+			setInstallingDefaults( false );
+		}
+	}, [ post, get ] );
 
 	useEffect( () => { fetchCampaign(); }, [ fetchCampaign ] );
 	useEffect( () => { fetchMeta(); }, [ fetchMeta ] );
@@ -915,9 +927,26 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 									} ) }
 								</div>
 							) : (
-								<p className="aime-muted" style={ { margin: '4px 0' } }>
-									{ __( 'No templates found.', 'ai-marketing-expert' ) }
-								</p>
+								<div className="aime-template-picker-empty" style={ { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: '4px 0' } }>
+									<p className="aime-muted" style={ { margin: 0 } }>
+										{ __( 'No templates yet. Install our ready-made designs to start in one click.', 'ai-marketing-expert' ) }
+									</p>
+									<Button
+										variant="primary"
+										onClick={ handleInstallDefaults }
+										isBusy={ installingDefaults }
+										disabled={ installingDefaults }
+									>
+										{ installingDefaults
+											? __( 'Installing…', 'ai-marketing-expert' )
+											: __( 'Install Default Templates', 'ai-marketing-expert' ) }
+									</Button>
+									{ typeof onNavigate === 'function' && (
+										<Button variant="link" onClick={ () => onNavigate( 'templates' ) }>
+											{ __( 'Manage templates', 'ai-marketing-expert' ) }
+										</Button>
+									) }
+								</div>
 							) }
 						</div>
 					) }

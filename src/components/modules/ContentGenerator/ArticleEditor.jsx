@@ -143,6 +143,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	const [ imageError, setImageError ] = useState( '' );
 	const [ generateError, setGenerateError ] = useState( '' );
 	const [ errors, setErrors ] = useState( {} );
+	const [ showThinkingHint, setShowThinkingHint ] = useState( true );
 	const editorId = 'aime-tinymce-editor';
 	const editorReady = useRef( false );
 	const editorWrapRef = useRef( null );
@@ -999,6 +1000,31 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 									</Button>
 								) }
 								{ ! hasPro && <ProUpgradeButton /> }
+							</div>
+						) }
+						{ article.content && showThinkingHint && (
+							<div className="aime-ai-thinking-hint" role="status">
+								<span className="aime-ai-thinking-hint__icon" aria-hidden="true">{ '💡' }</span>
+								<div className="aime-ai-thinking-hint__body">
+									<strong>{ __( 'Auto-cleaned model reasoning', 'ai-marketing-expert' ) }</strong>
+									<p>
+										{ __( 'Some AI models (such as MiniMax M3 used via a custom provider) emit internal reasoning before the actual article. The plugin automatically strips this reasoning, but for cleaner output consider switching to a model that does not emit chain-of-thought:', 'ai-marketing-expert' ) }
+									</p>
+									<p className="aime-ai-thinking-hint__models">
+										{ __( 'Recommended: GPT-5.2, Claude Sonnet 4.6, or Gemini 2.5 Flash (Stable).', 'ai-marketing-expert' ) }
+										<a href={ `${ window.aimeData?.adminUrl || '/wp-admin/' }admin.php?page=ai-marketing-expert-ai-providers` }>
+											{ __( 'Change AI provider →', 'ai-marketing-expert' ) }
+										</a>
+									</p>
+								</div>
+								<button
+									type="button"
+									className="aime-ai-thinking-hint__dismiss"
+									onClick={ () => setShowThinkingHint( false ) }
+									aria-label={ __( 'Dismiss', 'ai-marketing-expert' ) }
+								>
+									{ '×' }
+								</button>
 							</div>
 						) }
 					</Card>

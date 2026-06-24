@@ -532,16 +532,31 @@ class PublicController {
 	}
 
 	private function check_rate_limit( string $scope, int $limit, int $window ) {
-		$key = 'aime_chatbot_public_' . md5( $scope . '|' . $this->get_request_ip() );
-		$hit = (int) get_transient( $key );
+		$key  = 'aime_chatbot_public_' . md5( $scope . '|' . $this->get_request_ip() );
+		$now  = time();
+		$data = get_transient( $key );
 
-		if ( $hit >= $limit ) {
+		// Start a fresh fixed window if none exists or the current one has elapsed.
+		// Storing the window's reset timestamp lets us cap the transient TTL to the
+		// time remaining in the window, so incrementing the counter never extends it
+		// (a plain set_transient() rewrites the full TTL on every call, which would
+		// turn this into a never-resetting counter under continuous polling).
+		if ( ! is_array( $data ) || empty( $data['reset'] ) || $data['reset'] <= $now ) {
+			$data = array(
+				'count' => 0,
+				'reset' => $now + $window,
+			);
+		}
+
+		if ( $data['count'] >= $limit ) {
 			return new \WP_REST_Response( array(
 				'message' => __( 'Too many requests. Please try again later.', 'ai-marketing-expert' ),
 			), 429 );
 		}
 
-		set_transient( $key, $hit + 1, $window );
+		$data['count']++;
+		$remaining = max( 1, $data['reset'] - $now );
+		set_transient( $key, $data, $remaining );
 		return null;
 	}
 
