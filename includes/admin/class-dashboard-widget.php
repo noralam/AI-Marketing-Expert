@@ -382,7 +382,7 @@ class DashboardWidget {
 				</div>
 			</div>
 			<div class="aime-dw__section-footer">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-marketing-expert-automation' ) ); ?>" class="aime-dw__link">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-marketing-expert-workflow-automation' ) ); ?>" class="aime-dw__link">
 					<?php esc_html_e( 'Manage', 'ai-marketing-expert' ); ?> &rarr;
 				</a>
 			</div>

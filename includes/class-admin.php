@@ -164,9 +164,9 @@ class Admin {
 				'menu_title' => __( 'Social Media', 'ai-marketing-expert' ),
 			),
 			'workflow-automation' => array(
-				'slug'       => 'ai-marketing-expert-automation',
-				'page_title' => __( 'Automation', 'ai-marketing-expert' ),
-				'menu_title' => __( 'Automation', 'ai-marketing-expert' ),
+				'slug'       => 'ai-marketing-expert-workflow-automation',
+				'page_title' => __( 'Workflow Automation', 'ai-marketing-expert' ),
+				'menu_title' => __( 'Workflow Automation', 'ai-marketing-expert' ),
 			),
 		);
 	}

@@ -57,7 +57,7 @@ const App = () => {
 	}
 
 	// ── Workflow Automation (with internal sidebar) ─────────
-	if ( currentPage === 'ai-marketing-expert-automation' ) {
+	if ( currentPage === 'ai-marketing-expert-workflow-automation' ) {
 		return <WorkflowAutomationPage />;
 	}
 
