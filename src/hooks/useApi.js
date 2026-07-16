@@ -2,12 +2,22 @@
  * Custom hook for API calls with loading and error states.
  */
 
-import { useState, useCallback } from '@wordpress/element';
+import { useState, useCallback, useRef, useEffect } from '@wordpress/element';
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api';
+import { toast } from '../components/common/Toast';
 
-const useApi = () => {
+const useApi = ( { toastErrors = false } = {} ) => {
 	const [ loading, setLoading ] = useState( false );
 	const [ error, setError ] = useState( null );
+
+	// Guard against setState after unmount (e.g. user navigates away mid-request).
+	const mountedRef = useRef( true );
+	useEffect( () => {
+		mountedRef.current = true;
+		return () => {
+			mountedRef.current = false;
+		};
+	}, [] );
 
 	const request = useCallback( async ( method, endpoint, dataOrParams ) => {
 		setLoading( true );
@@ -34,12 +44,19 @@ const useApi = () => {
 			return response;
 		} catch ( err ) {
 			const message = err?.message || 'An error occurred.';
-			setError( message );
+			if ( mountedRef.current ) {
+				setError( message );
+			}
+			if ( toastErrors ) {
+				toast( message, 'error' );
+			}
 			throw err;
 		} finally {
-			setLoading( false );
+			if ( mountedRef.current ) {
+				setLoading( false );
+			}
 		}
-	}, [] );
+	}, [ toastErrors ] );
 
 	const get = useCallback(
 		( endpoint, params ) => request( 'GET', endpoint, params ),

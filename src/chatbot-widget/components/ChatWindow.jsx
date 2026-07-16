@@ -11,22 +11,53 @@ import PoweredBy from './PoweredBy';
 const ChatWindow = ( { config, chat, onClose } ) => {
 	const windowRef = useRef( null );
 
-	// Focus trap
+	// Initial focus + keyboard handling (Esc to close, Tab focus trap).
 	useEffect( () => {
 		const el = windowRef.current;
-		if ( el ) {
-			const focusable = el.querySelector( 'input, textarea, button' );
-			focusable?.focus();
-		}
-	}, [] );
+		if ( ! el ) return;
+
+		const focusable = el.querySelector( 'input, textarea, button' );
+		focusable?.focus();
+
+		const handleKeyDown = ( e ) => {
+			if ( e.key === 'Escape' ) {
+				e.stopPropagation();
+				onClose();
+				return;
+			}
+			if ( e.key !== 'Tab' ) return;
+			const nodes = el.querySelectorAll(
+				'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+			);
+			if ( ! nodes.length ) return;
+			const first = nodes[ 0 ];
+			const last = nodes[ nodes.length - 1 ];
+			if ( e.shiftKey && document.activeElement === first ) {
+				e.preventDefault();
+				last.focus();
+			} else if ( ! e.shiftKey && document.activeElement === last ) {
+				e.preventDefault();
+				first.focus();
+			}
+		};
+
+		el.addEventListener( 'keydown', handleKeyDown );
+		return () => el.removeEventListener( 'keydown', handleKeyDown );
+	}, [ onClose ] );
 
 	return (
-		<div className="aime-chat-window" ref={ windowRef } role="dialog" aria-label="Chat">
+		<div
+			className="aime-chat-window"
+			ref={ windowRef }
+			role="dialog"
+			aria-modal="true"
+			aria-label={ config.bot_name || 'Chat' }
+		>
 			{ /* Header */ }
 			<div className="aime-chat-header">
 				<div className="aime-chat-header-info">
 					<div className="aime-chat-avatar">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
 							<path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
 						</svg>
 					</div>
@@ -37,8 +68,8 @@ const ChatWindow = ( { config, chat, onClose } ) => {
 						</div>
 					</div>
 				</div>
-				<button className="aime-chat-header-close" onClick={ onClose } aria-label="Close" type="button">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+				<button className="aime-chat-header-close" onClick={ onClose } aria-label="Close chat" type="button">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">
 						<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
 					</svg>
 				</button>

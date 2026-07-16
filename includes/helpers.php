@@ -91,10 +91,19 @@ function aime_get_db_option( string $option_name, $default = array() ) {
 /**
  * Clear plugin settings caches after writes.
  *
- * @param array $option_names Option names to clear.
+ * Always clears the WordPress options object cache for the given option
+ * names. Full page-cache purging (LiteSpeed, WP Rocket, W3TC, …) is opt-in:
+ * almost no plugin setting affects public page HTML, so purging the whole
+ * site's page cache on every settings save needlessly destroys cache hit
+ * rates. Pass $purge_page_cache = true only for settings that change
+ * front-end output (e.g. the public chatbot widget's appearance/enabled
+ * state, or enabling/disabling a module with a front-end footprint).
+ *
+ * @param array $option_names     Option names to clear.
+ * @param bool  $purge_page_cache Also purge site page caches. Default false.
  * @return void
  */
-function aime_clear_settings_cache( array $option_names = array() ): void {
+function aime_clear_settings_cache( array $option_names = array(), bool $purge_page_cache = false ): void {
 	$option_names = array_values( array_unique( array_filter( array_merge(
 		$option_names,
 		array( 'aime_settings' )
@@ -104,7 +113,14 @@ function aime_clear_settings_cache( array $option_names = array() ): void {
 		wp_cache_delete( $option_name, 'options' );
 	}
 
-	wp_cache_delete( 'alloptions', 'options' );
+	// Note: the 'alloptions' cache entry is deliberately NOT deleted here.
+	// WordPress core keeps it in sync on every update_option()/delete_option(),
+	// and evicting it wholesale forces every subsequent request to reload all
+	// autoloaded options from the database (audit P-2).
+
+	if ( ! $purge_page_cache ) {
+		return;
+	}
 
 	if ( has_action( 'litespeed_purge_all' ) ) {
 		do_action( 'litespeed_purge_all' );
@@ -151,10 +167,16 @@ function aime_rest_namespace(): string {
 function aime_log( string $message, string $level = 'info', string $module = 'core', array $context = array() ): void {
 	global $wpdb;
 
+	static $table_exists = null;
+
 	$table = $wpdb->prefix . 'aime_log';
 
-	// Check if table exists before logging.
-	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+	// Check table existence once per request, not per log call (audit P-3).
+	if ( null === $table_exists ) {
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
+	}
+
+	if ( ! $table_exists ) {
 		// Fallback to error_log.
 		error_log( sprintf( '[AIME][%s][%s] %s', strtoupper( $level ), $module, $message ) );
 		return;
@@ -171,30 +193,51 @@ function aime_log( string $message, string $level = 'info', string $module = 'co
 		),
 		array( '%s', '%s', '%s', '%s', '%s' )
 	);
+	// Pruning happens on the aime_daily_cleanup cron (aime_prune_logs), not
+	// per-write — see audit P-3.
+}
 
-	// Cleanup: 1% chance per insert to prune old/excess logs.
-	if ( wp_rand( 1, 100 ) === 1 ) {
-		// Remove entries older than 30 days.
+/**
+ * Prune the plugin log table. Hooked to the aime_daily_cleanup cron.
+ *
+ * Removes entries older than 30 days, then trims the table to the newest
+ * 2,000 rows so the debug-log UI stays useful without unbounded growth.
+ */
+function aime_prune_logs(): void {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'aime_log';
+
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+		return;
+	}
+
+	/**
+	 * Filter the maximum number of log rows kept after pruning.
+	 *
+	 * @param int $max_rows Row cap. Default 2000.
+	 */
+	$max_rows = max( 100, (int) apply_filters( 'aime_log_max_rows', 2000 ) );
+
+	// Remove entries older than 30 days.
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM %i WHERE created_at < %s',
+			$table,
+			gmdate( 'Y-m-d H:i:s', time() - ( 30 * DAY_IN_SECONDS ) )
+		)
+	);
+
+	$count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
+	if ( $count > $max_rows ) {
 		$wpdb->query(
 			$wpdb->prepare(
-				'DELETE FROM %i WHERE created_at < %s',
+				'DELETE FROM %i WHERE id NOT IN ( SELECT id FROM ( SELECT id FROM %i ORDER BY created_at DESC LIMIT %d ) AS keep_rows )',
 				$table,
-				gmdate( 'Y-m-d H:i:s', time() - ( 30 * DAY_IN_SECONDS ) )
+				$table,
+				$max_rows
 			)
 		);
-
-		// Keep max 50 entries — delete oldest beyond limit.
-		$count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
-		if ( $count > 50 ) {
-			$wpdb->query(
-				$wpdb->prepare(
-					'DELETE FROM %i WHERE id NOT IN ( SELECT id FROM ( SELECT id FROM %i ORDER BY created_at DESC LIMIT %d ) AS keep_rows )',
-					$table,
-					$table,
-					50
-				)
-			);
-		}
 	}
 }
 
@@ -210,6 +253,7 @@ function aime_free_limits(): array {
 		'email_templates'            => 3,
 		'email_template_imports_free' => 4,
 		'email_scheduled_campaigns'  => 3,
+		'email_funnels'              => 2,
 		'email_smtp_connections'     => 2,
 		'ai_provider_connections'     => 2,
 		'csv_import_rows'            => 100,
@@ -235,6 +279,10 @@ function aime_free_limits(): array {
 		'seo_keywords_saved'              => 50,
 		'seo_audits_monthly'              => 5,
 		'seo_rank_keywords'               => 5,
+		// Workflow Automation.
+		'workflows_active'                => 2,
+		'workflow_steps'                  => 3,
+		'workflow_runs_monthly'           => 30,
 	) );
 }
 
@@ -342,10 +390,21 @@ function aime_get_sender_email(): string {
  * Finds the first plausible JSON start ( { or [ ) and strips everything
  * before it when the leading text looks like natural-language reasoning.
  *
- * @param string $raw Raw AI response.
+ * Modes:
+ * - 'json' (default): full cleanup, including chatty-preamble removal and
+ *   the walk-to-first-{/[ prefix strip. Only safe when the caller expects
+ *   a JSON (or HTML) payload, never conversational prose.
+ * - 'text': conversational output (e.g. chatbot replies). Only strips
+ *   reasoning that must never render (<think> blocks, scratchpad tags,
+ *   safety-classification lines). The JSON-prefix heuristics are skipped —
+ *   a plain-text reply containing "[LEAD_CAPTURE]", a markdown link, or a
+ *   "{" would otherwise lose everything before that character.
+ *
+ * @param string $raw  Raw AI response.
+ * @param string $mode 'json' (default) or 'text'.
  * @return string Cleaned text.
  */
-function aime_strip_thinking_text( string $raw ): string {
+function aime_strip_thinking_text( string $raw, string $mode = 'json' ): string {
 	$raw = trim( $raw );
 
 	if ( '' === $raw ) {
@@ -354,6 +413,34 @@ function aime_strip_thinking_text( string $raw ): string {
 
 	// Strip <think>…</think> blocks (DeepSeek, Qwen, and other open models).
 	$raw = preg_replace( '/<think>[\s\S]*?<\/think>\s*/i', '', $raw );
+	$raw = trim( $raw );
+
+	// Strip an orphan closing </think> (model emitted reasoning without an
+	// opening tag, or the opening tag was truncated). Drop everything up to
+	// and including the last closing tag so leaked reasoning never renders.
+	if ( false !== stripos( $raw, '</think>' ) ) {
+		$raw = preg_replace( '/^[\s\S]*<\/think>\s*/i', '', $raw );
+		$raw = trim( $raw );
+	}
+	// Strip an orphan opening <think> with no close (reasoning ran to the end).
+	if ( false !== stripos( $raw, '<think>' ) ) {
+		$raw = preg_replace( '/<think>[\s\S]*$/i', '', $raw );
+		$raw = trim( $raw );
+	}
+
+	// Bracket-style reasoning markers some models emit instead of XML tags:
+	// "[think] … [/think]" pairs first.
+	$raw = preg_replace( '/\[(think|thinking|reasoning|analysis)\][\s\S]*?\[\/\1\]\s*/i', '', $raw );
+	// A standalone "[think]"-style marker line starts a reasoning block that
+	// runs until the next standalone "[marker]" line (channel switch — the
+	// marker itself is noise and is dropped too) or to the end of the text.
+	if ( preg_match( '/^\s*\[(?:think|thinking|reasoning|analysis)\]\s*$/im', $raw ) ) {
+		$raw = preg_replace(
+			'/^[ \t]*\[(?:think|thinking|reasoning|analysis)\][ \t]*\r?\n[\s\S]*?(?:^[ \t]*\[[a-z0-9_\/-]+\][ \t]*(?:\r?\n|\z)|\z)/im',
+			'',
+			$raw
+		);
+	}
 	$raw = trim( $raw );
 
 	if ( '' === $raw ) {
@@ -374,13 +461,22 @@ function aime_strip_thinking_text( string $raw ): string {
 		return $raw;
 	}
 
+	// Strip <analysis>...</analysis>, <scratchpad>...</scratchpad> style blocks.
+	// Leaked reasoning must never render, so this runs in every mode.
+	$raw = preg_replace( '/<(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)[\s\S]*?<\/(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)>\s*/iu', '', $raw );
+	$raw = trim( $raw );
+
+	// Conversational mode stops here: everything below assumes the payload is
+	// JSON/HTML and would truncate a plain-text reply at its first "{" or "["
+	// (e.g. an action tag like [LEAD_CAPTURE] or a markdown link).
+	if ( 'text' === $mode || '' === $raw ) {
+		return $raw;
+	}
+
 	// Strip lines that look like model-reasoning metadata
 	// (e.g. "Plan: - Step 1 ...", "Reasoning: ...", "Note: ...", or
 	// bullet-point planning paragraphs that some models emit before content).
 	$raw = preg_replace( '/^[ \t]*(?:Plan|Reasoning|Reasoning Steps?|Thought Process|Steps?|Approach|Strategy|My approach|My plan|Internal reasoning|Thinking)[ \t]*:[ \t]*[^\n\r]*[\n\r]+/im', '', $raw );
-
-	// Strip leading <analysis>...</analysis>, <scratchpad>...</scratchpad> style blocks.
-	$raw = preg_replace( '/<(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)[\s\S]*?<\/(?:analysis|scratchpad|internal_reasoning|reasoning_steps?|cot)>\s*/iu', '', $raw );
 
 	// Strip leading "Here is the JSON:" / "Here is the HTML:" / "Here is the article:" preambles
 	// when they precede a JSON or HTML body.
@@ -498,6 +594,64 @@ function aime_strip_thinking_from_html( string $raw ): string {
 	$raw = trim( $raw );
 
 	return $raw;
+}
+
+/**
+ * Per-IP rate limiting for public endpoints.
+ *
+ * Uses a transient counter keyed on a hash of the visitor IP and the action
+ * name. Returns true while the caller is within the limit, false once the
+ * limit for the current window is exceeded.
+ *
+ * @param string $action Unique action key (e.g. 'subscribe').
+ * @param int    $limit  Max requests allowed per window.
+ * @param int    $window Window length in seconds.
+ * @return bool True if allowed, false if rate-limited.
+ */
+function aime_check_ip_rate_limit( string $action, int $limit, int $window ): bool {
+	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	if ( '' === $ip ) {
+		// No IP available (CLI/cron context) — do not rate-limit.
+		return true;
+	}
+
+	/**
+	 * Filter the rate limit for a public action.
+	 *
+	 * @param int    $limit  Max requests per window.
+	 * @param string $action Action key.
+	 * @param int    $window Window in seconds.
+	 */
+	$limit = (int) apply_filters( 'aime_ip_rate_limit', $limit, $action, $window );
+	if ( $limit <= 0 ) {
+		// A non-positive limit disables rate limiting for this action.
+		return true;
+	}
+
+	$key   = 'aime_rl_' . md5( $action . '|' . $ip );
+	$count = (int) get_transient( $key );
+
+	if ( $count >= $limit ) {
+		return false;
+	}
+
+	if ( 0 === $count ) {
+		set_transient( $key, 1, max( 1, $window ) );
+	} else {
+		// Increment without resetting the window (transient TTL persists).
+		$count++;
+		$updated = false;
+		if ( wp_using_ext_object_cache() ) {
+			$updated = wp_cache_set( $key, $count, 'transient', max( 1, $window ) );
+		} else {
+			$updated = update_option( '_transient_' . $key, $count, false );
+		}
+		if ( ! $updated ) {
+			set_transient( $key, $count, max( 1, $window ) );
+		}
+	}
+
+	return true;
 }
 
 function aime_parse_ai_json( string $raw ): ?array {

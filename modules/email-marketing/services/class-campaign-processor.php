@@ -143,35 +143,34 @@ class CampaignProcessor {
 			return;
 		}
 
-		// Build insert rows.
+		// Build insert rows. INSERT IGNORE + the unique (campaign_id, subscriber_id) index guarantees
+		// no duplicate is enqueued even if two workers race here concurrently.
 		$now = current_time( 'mysql', true );
 		foreach ( $subscriber_ids as $sid ) {
 			$hash = md5( $campaign->id . '_' . $sid . '_' . wp_generate_uuid4() );
-			$wpdb->insert(
-				$campaign_emails_table,
-				array(
-					'campaign_id'   => $campaign->id,
-					'email_type'    => 'campaign',
-					'subscriber_id' => $sid,
-					'email_subject' => $campaign->email_subject,
-					'status'        => 'pending',
-					'email_hash'    => $hash,
-					'created_at'    => $now,
-				),
-				array(
-					'%d',
-					'%s',
-					'%d',
-					'%s',
-					'%s',
-					'%s',
-					'%s',
+			$wpdb->query(
+				$wpdb->prepare(
+					"INSERT IGNORE INTO {$campaign_emails_table}
+						(campaign_id, email_type, subscriber_id, email_subject, status, email_hash, created_at)
+					 VALUES (%d, %s, %d, %s, %s, %s, %s)",
+					$campaign->id,
+					'campaign',
+					$sid,
+					$campaign->email_subject,
+					'pending',
+					$hash,
+					$now
 				)
 			);
 		}
 
-		// Update counts.
-		$count = count( $subscriber_ids ) + count( $existing );
+		// Set recipients_count from the actual distinct enqueued rows, never additively.
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$campaign_emails_table} WHERE campaign_id = %d",
+				$campaign->id
+			)
+		);
 		$wpdb->update(
 			$campaigns_table,
 			array(
@@ -491,6 +490,7 @@ class CampaignProcessor {
 			'Content-Type: text/html; charset=UTF-8',
 			"From: {$from_name} <{$from_email}>",
 			"List-Unsubscribe: <" . $this->get_unsubscribe_url( $email ) . ">",
+			'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
 		);
 		if ( is_email( $reply_to ) ) {
 			$headers[] = "Reply-To: {$reply_to}";
@@ -637,7 +637,7 @@ class CampaignProcessor {
 					}
 
 					// Skip mailto/tel/anchor links for UTM.
-					$scheme = strtolower( (string) parse_url( $original, PHP_URL_SCHEME ) );
+					$scheme = strtolower( (string) wp_parse_url( $original, PHP_URL_SCHEME ) );
 					$with_utm = $original;
 					if ( ! empty( $utm_params ) && in_array( $scheme, array( 'http', 'https', '' ), true ) ) {
 						$with_utm = add_query_arg( $utm_params, $original );

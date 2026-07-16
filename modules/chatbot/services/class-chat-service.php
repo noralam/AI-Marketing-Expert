@@ -62,11 +62,25 @@ class ChatService {
 			return array( 'success' => false );
 		}
 
-		$ai_content = trim( aime_strip_thinking_text( $ai_result['content'] ) );
+		// 'text' mode: chat replies are conversational prose — only leaked
+		// reasoning/safety lines are stripped, never JSON-prefix heuristics
+		// (those would truncate a reply at its first "[" or "{").
+		$ai_content = trim( aime_strip_thinking_text( $ai_result['content'], 'text' ) );
 
 		// 5. Parse action intents from AI response.
 		$actions    = $this->parse_actions( $ai_content );
 		$ai_content = $this->strip_action_tags( $ai_content );
+
+		// Never store/show an empty bubble. If the model replied with only an
+		// action tag, substitute a short lead-in; with no actions either, treat
+		// it as a failed generation so the widget shows its error state.
+		if ( '' === $ai_content ) {
+			if ( empty( $actions ) ) {
+				aime_log( 'Chatbot AI returned empty content after stripping.', 'error', 'chatbot' );
+				return array( 'success' => false );
+			}
+			$ai_content = __( 'Please share your details below and we\'ll get back to you.', 'ai-marketing-expert' );
+		}
 
 		// 6. Save AI response to DB.
 		$now = current_time( 'mysql', true );
@@ -79,6 +93,9 @@ class ChatService {
 				'provider'     => $ai_result['provider'] ?? '',
 				'model'        => $ai_result['model'] ?? '',
 				'response_ms'  => $response_ms,
+				// Persist actions (e.g. product cards) so they survive
+				// polling and history reloads in the widget.
+				'actions'      => $actions,
 			) ),
 			'created_at'      => $now,
 		) );
@@ -391,15 +408,64 @@ class ChatService {
 
 		// Product recommendation: [PRODUCT:42]
 		if ( preg_match_all( '/\[PRODUCT:(\d+)\]/', $content, $matches ) ) {
-			foreach ( $matches[1] as $product_id ) {
-				$actions[] = array(
-					'type'       => 'product',
-					'product_id' => (int) $product_id,
-				);
+			foreach ( array_unique( $matches[1] ) as $product_id ) {
+				$product = $this->hydrate_product_action( (int) $product_id );
+				if ( $product ) {
+					$actions[] = $product;
+				}
 			}
 		}
 
 		return $actions;
+	}
+
+	/**
+	 * Build a product action payload with everything the widget needs to
+	 * render a product card: title, price, image, product page link, and a
+	 * Buy Now (add-to-cart → checkout) link.
+	 *
+	 * @param int $product_id Product post ID.
+	 * @return array|null Null when the ID doesn't resolve to a published product.
+	 */
+	private function hydrate_product_action( int $product_id ): ?array {
+		$post = get_post( $product_id );
+		if ( ! $post || 'publish' !== $post->post_status ) {
+			return null;
+		}
+
+		$action = array(
+			'type'       => 'product',
+			'product_id' => $product_id,
+			'title'      => get_the_title( $product_id ),
+			'url'        => get_permalink( $product_id ),
+			'image'      => get_the_post_thumbnail_url( $product_id, 'medium' ) ?: '',
+			'price_html' => '',
+			'buy_url'    => '',
+		);
+
+		// WooCommerce enrichment when available.
+		if ( function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( $product_id );
+			if ( ! $product || ! $product->is_visible() ) {
+				return null;
+			}
+			$action['title']      = $product->get_name();
+			$action['url']        = $product->get_permalink();
+			$action['price_html'] = wp_strip_all_tags( wc_price( (float) $product->get_price() ) );
+
+			// Buy Now: add to cart and jump straight to checkout. Variable
+			// products need option selection, so link to the product page.
+			if ( $product->is_type( 'simple' ) && $product->is_purchasable() && $product->is_in_stock() ) {
+				$action['buy_url'] = add_query_arg( 'add-to-cart', $product_id, wc_get_checkout_url() );
+			} else {
+				$action['buy_url'] = $product->get_permalink();
+			}
+		} else {
+			// Non-Woo fallback: Buy Now just opens the product/page link.
+			$action['buy_url'] = $action['url'];
+		}
+
+		return $action;
 	}
 
 	/* ── Strip action tags from displayed response ─── */

@@ -263,6 +263,30 @@ class ContentRestController {
 				'article_id' => array( 'type' => 'integer', 'default' => 0, 'sanitize_callback' => 'absint' ),
 			),
 		) );
+
+		// GET /content/stock-images/search — search Pexels/Pixabay.
+		register_rest_route( $this->ns, '/content/stock-images/search', array(
+			'methods'             => 'GET',
+			'callback'            => array( $c, 'stock_search' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+			'args'                => array(
+				'query'    => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
+				'page'     => array( 'type' => 'integer', 'default' => 1, 'sanitize_callback' => 'absint' ),
+				'per_page' => array( 'type' => 'integer', 'default' => 12, 'sanitize_callback' => 'absint' ),
+			),
+		) );
+
+		// POST /content/stock-images/import — sideload a stock image into the media library.
+		register_rest_route( $this->ns, '/content/stock-images/import', array(
+			'methods'             => 'POST',
+			'callback'            => array( $c, 'stock_import' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+			'args'                => array(
+				'url'        => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'esc_url_raw' ),
+				'alt'        => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+				'article_id' => array( 'type' => 'integer', 'default' => 0, 'sanitize_callback' => 'absint' ),
+			),
+		) );
 	}
 
 	/* ══════════════════════════════════════════════════════

@@ -71,9 +71,11 @@ class PublisherService {
 	 *
 	 * @param int    $article_id   Row ID in aime_content_articles.
 	 * @param string $post_status  WP post status: draft | publish | pending | private.
+	 * @param string $scheduled_at Scheduled datetime for 'future' status.
+	 * @param int    $author_id    Optional WP user ID to set as post author (0 = current user).
 	 * @return array {success, wp_post_id|error}
 	 */
-	public function publish( int $article_id, string $post_status = 'draft', string $scheduled_at = '' ): array {
+	public function publish( int $article_id, string $post_status = 'draft', string $scheduled_at = '', int $author_id = 0 ): array {
 		global $wpdb;
 
 		$table   = $wpdb->prefix . 'aime_content_articles';
@@ -121,6 +123,12 @@ class PublisherService {
 			'post_type'    => $post_type,
 			'post_name'    => $article->slug ?: sanitize_title( $article->title ),
 		);
+
+		// Explicit author (workflow runs have no logged-in user, which would
+		// otherwise leave the post authorless). Only accept a real user.
+		if ( $author_id > 0 && get_userdata( $author_id ) ) {
+			$post_data['post_author'] = $author_id;
+		}
 
 		if ( 'future' === $post_status ) {
 			$post_data['post_date']     = $scheduled_at;

@@ -5977,6 +5977,7 @@ input.aime-premium-input[type=color]
 // Page header
 .aime-page-header {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
@@ -5990,11 +5991,19 @@ input.aime-premium-input[type=color]
 	}
 }
 
+.aime-header-left {
+	flex-wrap: wrap;
+	min-width: 0;
+}
+
 .aime-header-actions,
 .aime-page-header-actions {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
+	min-width: 0;
+	max-width: 100%;
 }
 
 // KPI Grid
@@ -6536,6 +6545,12 @@ input.aime-premium-input[type=color]
 	gap: 16px;
 	margin-bottom: 16px;
 	align-items: end;
+
+	// Top-aligned variant: rows with mixed help-text heights keep their
+	// labels and inputs on the same line.
+	&--top {
+		align-items: start;
+	}
 }
 
 .aime-automation-editor .aime-form-grid > div,
@@ -7744,6 +7759,7 @@ input.aime-premium-input[type=color]
 .aime-campaign-editor {
 	.aime-page-header {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 24px;
@@ -8988,6 +9004,7 @@ input.aime-premium-input[type=color]
 .aime-template-library {
 	.aime-page-header {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 24px;
@@ -11235,6 +11252,79 @@ input.aime-premium-input[type=color]
 		color: var(--aime-text-light);
 	}
 
+	.aime-stock-search {
+		display: flex;
+		gap: 8px;
+		align-items: flex-start;
+
+		> div:first-child {
+			flex: 1;
+		}
+	}
+
+	.aime-stock-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+
+		&__item {
+			position: relative;
+			padding: 0;
+			border: 2px solid transparent;
+			border-radius: 4px;
+			overflow: hidden;
+			cursor: pointer;
+			background: none;
+			aspect-ratio: 4 / 3;
+
+			img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+			}
+
+			&:hover:not(:disabled) {
+				border-color: var(--aime-primary);
+			}
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.7;
+			}
+
+			&.is-importing {
+				opacity: 1;
+				border-color: var(--aime-primary);
+			}
+		}
+
+		&__busy {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(255, 255, 255, 0.6);
+		}
+
+		&__credit {
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			padding: 2px 6px;
+			font-size: 10px;
+			line-height: 1.4;
+			color: #fff;
+			background: rgba(0, 0, 0, 0.45);
+			text-align: left;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
 	.aime-char-count {
 		display: block;
 		text-align: right;
@@ -13031,4 +13121,561 @@ input.aime-premium-input[type=color]
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+// ============================================
+// WORKFLOW AUTOMATION — VISUAL BUILDER (.aime-wf-*)
+// Patterned after .aime-flow-canvas / .aime-auto-node. All colors use the
+// aime CSS variables so per-module accents and theme overrides (incl. dark
+// variable sets) cascade automatically.
+// ============================================
+
+.aime-wf-builder {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.aime-wf-topbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	box-shadow: var(--aime-shadow);
+
+	&__left,
+	&__right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.components-base-control {
+		margin-bottom: 0;
+	}
+}
+
+#aime-app .aime-wf-topbar__right .components-base-control {
+	margin-bottom: 0;
+}
+
+.aime-wf-name-input {
+	border: 1px solid transparent;
+	border-radius: var(--aime-radius-sm);
+	background: transparent;
+	color: var(--aime-text);
+	font-size: 16px;
+	font-weight: 600;
+	padding: 4px 8px;
+	min-width: 240px;
+
+	&:hover {
+		border-color: var(--aime-border);
+	}
+
+	&:focus {
+		border-color: var(--aime-primary);
+		background: var(--aime-white);
+		outline: none;
+	}
+}
+
+.aime-wf-dirty-dot {
+	color: var(--aime-warning);
+	font-size: 11px;
+}
+
+.aime-wf-layout {
+	display: grid;
+	grid-template-columns: 1fr 300px;
+	gap: 12px;
+	align-items: stretch;
+	min-height: 480px;
+
+	@media (max-width: 900px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+// Canvas wrapper
+.aime-wf-canvas {
+	position: relative;
+	height: calc(100vh - 350px);
+	min-height: 480px;
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	background: var(--aime-bg);
+	overflow: hidden;
+
+	.react-flow {
+		width: 100%;
+		height: 100%;
+	}
+
+	.react-flow__background {
+		background: var(--aime-bg);
+	}
+}
+
+// Node cards
+.aime-wf-node {
+	position: relative;
+	padding: 10px 14px;
+	background: var(--aime-white);
+	border: 2px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	min-width: 190px;
+	max-width: 260px;
+	cursor: pointer;
+	transition: border-color var(--aime-transition), box-shadow var(--aime-transition);
+
+	&:hover {
+		border-color: var(--aime-primary);
+		box-shadow: var(--aime-shadow);
+	}
+
+	&.is-selected {
+		border-color: var(--aime-primary);
+		box-shadow: 0 0 0 3px var(--aime-primary-light);
+	}
+}
+
+.aime-wf-node--trigger {
+	border-color: var(--aime-success);
+	background: var(--aime-success-light);
+}
+
+.aime-wf-node--condition {
+	border-color: var(--aime-warning);
+	background: var(--aime-warning-light);
+	padding-bottom: 22px;
+}
+
+.aime-wf-node__icon {
+	font-size: 20px;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.aime-wf-node__body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+
+	strong {
+		font-size: 13px;
+		color: var(--aime-text);
+	}
+}
+
+.aime-wf-node__summary {
+	font-size: 11px;
+	color: var(--aime-text-light);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 180px;
+}
+
+.aime-wf-node__badge {
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+
+	&--invalid {
+		background: var(--aime-danger, #c62828);
+		color: var(--aime-white);
+	}
+}
+
+// Run-status ring overlays (Run Now polling)
+.aime-wf-node--run-pending {
+	opacity: 0.65;
+}
+
+.aime-wf-node--run-running {
+	border-color: var(--aime-info);
+	box-shadow: 0 0 0 3px var(--aime-info-light);
+	animation: aime-wf-pulse 1.4s ease-in-out infinite;
+}
+
+.aime-wf-node--run-success {
+	border-color: var(--aime-success);
+	box-shadow: 0 0 0 3px var(--aime-success-light);
+}
+
+.aime-wf-node--run-failed {
+	border-color: var(--aime-danger, #c62828);
+	box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.15);
+}
+
+.aime-wf-node--run-skipped {
+	opacity: 0.5;
+}
+
+@keyframes aime-wf-pulse {
+	0%, 100% { box-shadow: 0 0 0 3px var(--aime-info-light); }
+	50% { box-shadow: 0 0 0 6px var(--aime-info-light); }
+}
+
+// Condition yes/no handles + labels
+.aime-wf-handle-yes {
+	background: var(--aime-success) !important;
+}
+
+.aime-wf-handle-no {
+	background: var(--aime-danger, #c62828) !important;
+}
+
+.aime-wf-branch-label {
+	position: absolute;
+	bottom: 4px;
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+
+	&--yes {
+		left: 22%;
+		color: var(--aime-success);
+	}
+
+	&--no {
+		right: 22%;
+		color: var(--aime-danger, #c62828);
+	}
+}
+
+// Palette (left column)
+// Horizontal step palette above the canvas
+.aime-wf-palette {
+	display: flex;
+	align-items: stretch;
+	gap: 16px;
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	padding: 10px 14px;
+
+	&__intro {
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding-right: 16px;
+		border-right: 1px solid var(--aime-border);
+		max-width: 150px;
+	}
+
+	&__title {
+		margin: 0 0 2px;
+		font-size: 14px;
+		color: var(--aime-text);
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: 11px;
+		line-height: 1.3;
+		color: var(--aime-text-muted);
+	}
+
+	&__groups {
+		display: flex;
+		align-items: stretch;
+		gap: 16px;
+		overflow-x: auto;
+		flex: 1;
+		min-width: 0;
+		padding-bottom: 2px;
+	}
+
+	&__group {
+		flex-shrink: 0;
+
+		& + & {
+			padding-left: 16px;
+			border-left: 1px dashed var(--aime-border);
+		}
+	}
+
+	&__group-label {
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--aime-text-muted);
+		margin-bottom: 6px;
+		white-space: nowrap;
+	}
+
+	&__group-items {
+		display: flex;
+		gap: 6px;
+	}
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 10px;
+		border: 1px solid var(--aime-border);
+		border-radius: var(--aime-radius-sm);
+		background: var(--aime-white);
+		color: var(--aime-text);
+		font-size: 12px;
+		white-space: nowrap;
+		cursor: grab;
+		transition: border-color var(--aime-transition), background var(--aime-transition);
+
+		&:hover {
+			border-color: var(--aime-primary);
+			background: var(--aime-primary-light);
+		}
+
+		&.is-unavailable {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+
+		&.is-locked {
+			cursor: pointer;
+			opacity: 0.75;
+		}
+	}
+
+	&__icon {
+		font-size: 15px;
+		line-height: 1;
+	}
+
+	&__label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	@media (max-width: 782px) {
+		flex-direction: column;
+		gap: 10px;
+
+		&__intro {
+			border-right: 0;
+			border-bottom: 1px solid var(--aime-border);
+			padding-right: 0;
+			padding-bottom: 8px;
+			max-width: none;
+		}
+	}
+}
+
+// Config panel (right column)
+.aime-wf-config {
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	padding: 14px;
+	overflow-y: auto;
+	max-height: calc(100vh - 350px);
+	min-height: 480px;
+
+	&__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	&__title {
+		margin: 0 0 8px;
+		font-size: 14px;
+		color: var(--aime-text);
+	}
+
+	&__desc {
+		font-size: 12px;
+		color: var(--aime-text-light);
+		margin-top: 0;
+	}
+
+	&__hint {
+		font-size: 12px;
+		color: var(--aime-text-muted);
+		margin-top: 12px;
+	}
+
+	// RangeControl's companion number input is too narrow for 4-digit
+	// values (e.g. word count 1200 renders clipped as "120").
+	.components-range-control__number,
+	.components-range-control .components-input-control__container,
+	.components-range-control .components-number-control {
+		min-width: 70px;
+	}
+
+	.components-range-control .components-input-control__input {
+		min-width: 70px;
+		padding-right: 4px;
+	}
+}
+
+.aime-wf-field-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+}
+
+.aime-wf-weekdays {
+	margin: 8px 0;
+
+	&__label {
+		display: block;
+		margin-bottom: 6px;
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--aime-text);
+	}
+
+	&__chips {
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+}
+
+.aime-wf-chip {
+	padding: 4px 10px;
+	border-radius: 14px;
+	border: 1px solid var(--aime-border);
+	background: var(--aime-white);
+	color: var(--aime-text);
+	cursor: pointer;
+	font-size: 12px;
+	transition: all var(--aime-transition);
+
+	&.is-active {
+		background: var(--aime-primary);
+		border-color: var(--aime-primary);
+		color: var(--aime-white);
+	}
+}
+
+// Template picker cards
+.aime-wf-template-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 16px;
+}
+
+.aime-wf-template-card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	padding: 16px;
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	background: var(--aime-white);
+	color: var(--aime-text);
+	text-align: left;
+	cursor: pointer;
+	transition: border-color var(--aime-transition), box-shadow var(--aime-transition);
+
+	&:hover {
+		border-color: var(--aime-primary);
+		box-shadow: var(--aime-shadow-md);
+	}
+
+	&--blank {
+		border-style: dashed;
+	}
+
+	&.is-unavailable {
+		opacity: 0.5;
+	}
+
+	strong {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 14px;
+	}
+}
+
+.aime-wf-template-card__icon {
+	font-size: 24px;
+	line-height: 1;
+}
+
+.aime-wf-template-card__desc {
+	font-size: 12px;
+	color: var(--aime-text-light);
+}
+
+.aime-wf-template-card__meta {
+	font-size: 11px;
+	color: var(--aime-text-muted);
+}
+
+// Run-status chip (workflow list) + branch chip (history)
+.aime-wf-run-chip {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	background: var(--aime-bg-subtle);
+	color: var(--aime-text-light);
+
+	&--queued,
+	&--running {
+		background: var(--aime-info-light);
+		color: var(--aime-info);
+	}
+
+	&--success {
+		background: var(--aime-success-light);
+		color: var(--aime-success);
+	}
+
+	&--partial {
+		background: var(--aime-warning-light);
+		color: var(--aime-warning);
+	}
+
+	&--failed {
+		background: rgba(198, 40, 40, 0.1);
+		color: var(--aime-danger, #c62828);
+	}
+}
+
+.aime-wf-branch-chip {
+	display: inline-flex;
+	margin-left: 8px;
+	padding: 1px 6px;
+	border-radius: 8px;
+	font-size: 10px;
+	font-weight: 600;
+	background: var(--aime-warning-light);
+	color: var(--aime-warning);
+}
+
+.aime-wf-settings {
+	margin-top: 20px;
+	max-width: 560px;
 }

@@ -98,10 +98,10 @@ const EmailAnalytics = () => {
 				<Card title={ __( 'Subscriber Growth', 'ai-marketing-expert' ) }>
 					{ data?.subscriber_growth && data.subscriber_growth.length > 0 ? (
 						<ResponsiveContainer width="100%" height={ 260 }>
-							<AreaChart data={ data.subscriber_growth }>
+							<AreaChart data={ data.subscriber_growth.map( ( d ) => ( { ...d, count: Number( d.count ) || 0 } ) ) }>
 								<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
 								<XAxis dataKey="date" tick={ { fontSize: 11 } } />
-								<YAxis tick={ { fontSize: 11 } } />
+								<YAxis tick={ { fontSize: 11 } } allowDecimals={ false } domain={ [ 0, 'dataMax' ] } />
 								<Tooltip />
 								<Area type="monotone" dataKey="count" stroke="#3858e9" fill="#3858e9" fillOpacity={ 0.15 } />
 							</AreaChart>

@@ -85,11 +85,25 @@ class FunnelController {
 	/* ── CREATE ───────────────────────────────────────── */
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
+		global $wpdb;
+
+		// Free tier: limited number of automation funnels.
 		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Saving automations is available in Pro.', 'ai-marketing-expert' ) ), 403 );
+			$limits   = aime_free_limits();
+			$max_free = (int) ( $limits['email_funnels'] ?? 2 );
+			$count    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}aime_funnels" );
+			if ( $count >= $max_free ) {
+				return new \WP_REST_Response( array(
+					'message'       => sprintf(
+						/* translators: %d: number of automation funnels allowed on the free plan. */
+						__( 'Free sites can create %d automation funnels. Upgrade to Pro for unlimited automations.', 'ai-marketing-expert' ),
+						$max_free
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
 		}
 
-		global $wpdb;
 		$data = $this->sanitize( $request );
 		$data['created_by'] = get_current_user_id();
 		$data['created_at'] = current_time( 'mysql', true );
@@ -101,10 +115,6 @@ class FunnelController {
 	/* ── UPDATE ───────────────────────────────────────── */
 
 	public function update( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Saving automations is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$id  = absint( $request->get_param( 'id' ) );
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}aime_funnels WHERE id = %d", $id ) );
@@ -153,6 +163,23 @@ class FunnelController {
 		$p  = $wpdb->prefix;
 		$id = absint( $request->get_param( 'id' ) );
 
+		// Duplicating creates a new funnel — same free-tier limit as store().
+		if ( ! aime_has_pro() ) {
+			$limits   = aime_free_limits();
+			$max_free = (int) ( $limits['email_funnels'] ?? 2 );
+			$count    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_funnels" );
+			if ( $count >= $max_free ) {
+				return new \WP_REST_Response( array(
+					'message'       => sprintf(
+						/* translators: %d: number of automation funnels allowed on the free plan. */
+						__( 'Free sites can create %d automation funnels. Upgrade to Pro for unlimited automations.', 'ai-marketing-expert' ),
+						$max_free
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
+		}
+
 		$funnel = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$p}aime_funnels WHERE id = %d", $id ), ARRAY_A );
 		if ( ! $funnel ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Automation not found.', 'ai-marketing-expert' ) ), 404 );
@@ -182,10 +209,6 @@ class FunnelController {
 	/* ─── SEQUENCES ────────────────────────────────────── */
 
 	public function save_sequences( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Saving automation steps is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$p         = $wpdb->prefix;
 		$funnel_id = absint( $request->get_param( 'id' ) );

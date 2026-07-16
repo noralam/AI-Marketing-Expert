@@ -19,7 +19,7 @@ const STATUS_OPTIONS = [
 ];
 
 const SubscriberProfile = ( { id, onBack, onNavigate } ) => {
-	const { get, put, post, del, loading } = useApi();
+	const { get, put, post, del, loading } = useApi( { toastErrors: true } );
 	const [ sub, setSub ] = useState( null );
 	const [ editing, setEditing ] = useState( false );
 	const [ form, setForm ] = useState( {} );

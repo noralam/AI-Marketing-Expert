@@ -15,6 +15,7 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 		company: '',
 	} );
 	const [ submitting, setSubmitting ] = useState( false );
+	const [ submitError, setSubmitError ] = useState( '' );
 
 	const set = ( key, val ) => setForm( ( p ) => ( { ...p, [ key ]: val } ) );
 
@@ -22,8 +23,11 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 		e.preventDefault();
 		if ( fields.includes( 'email' ) && ! form.email ) return;
 		setSubmitting( true );
+		setSubmitError( '' );
 		try {
 			await onSubmit( form );
+		} catch ( err ) {
+			setSubmitError( err?.message || 'Something went wrong. Please try again.' );
 		} finally {
 			setSubmitting( false );
 		}
@@ -33,6 +37,11 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 		<div className="aime-chat-lead">
 			<p className="aime-chat-lead-heading">{ heading }</p>
 			<form className="aime-chat-lead-form" onSubmit={ handleSubmit }>
+				{ submitError && (
+					<p className="aime-chat-lead-error" role="alert">
+						{ submitError }
+					</p>
+				) }
 				{ fields.includes( 'name' ) && (
 					<input
 						id={ `aime-lead-name-${ uid }` }
@@ -41,6 +50,7 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 						className="aime-chat-lead-input"
 						type="text"
 						placeholder="Your name"
+						aria-label="Your name"
 						value={ form.name }
 						onChange={ ( e ) => set( 'name', e.target.value ) }
 					/>
@@ -53,6 +63,7 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 						className="aime-chat-lead-input"
 						type="email"
 						placeholder="Your email *"
+						aria-label="Your email (required)"
 						required
 						value={ form.email }
 						onChange={ ( e ) => set( 'email', e.target.value ) }
@@ -66,6 +77,7 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 						className="aime-chat-lead-input"
 						type="tel"
 						placeholder="Phone number"
+						aria-label="Phone number"
 						value={ form.phone }
 						onChange={ ( e ) => set( 'phone', e.target.value ) }
 					/>
@@ -78,6 +90,7 @@ const LeadForm = ( { config, onSubmit, onDismiss } ) => {
 						className="aime-chat-lead-input"
 						type="text"
 						placeholder="Company"
+						aria-label="Company"
 						value={ form.company }
 						onChange={ ( e ) => set( 'company', e.target.value ) }
 					/>

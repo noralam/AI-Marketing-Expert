@@ -47,5 +47,8 @@ AI_workflow_Automation_PRD.md
 # IDE / config (local)
 .claude/
 
+# Playwright MCP test artifacts (console logs, page dumps)
+.playwright-mcp/
+
 # Plugin zip
 *.zip

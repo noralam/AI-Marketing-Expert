@@ -258,6 +258,11 @@
 		&:hover {
 			background: var(--aime-chat-primary-hover);
 		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-chat-primary);
+			outline-offset: 2px;
+		}
 	}
 }
 
@@ -428,6 +433,121 @@
 		color: var(--aime-chat-text-muted);
 		text-align: center;
 	}
+
+	&-products {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}
+
+/* ── Product Recommendation Card ─────────────────── */
+.aime-chat-product-card {
+	display: flex;
+	gap: 10px;
+	background: var(--aime-chat-bg);
+	border: 1px solid var(--aime-chat-border);
+	border-radius: 10px;
+	padding: 8px;
+	overflow: hidden;
+
+	&__media {
+		flex-shrink: 0;
+		width: 64px;
+		height: 64px;
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--aime-chat-surface);
+		display: block;
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__title {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--aime-chat-text);
+		text-decoration: none;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+
+		&:hover {
+			color: var(--aime-chat-primary);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-chat-primary);
+			outline-offset: 2px;
+			border-radius: 4px;
+		}
+	}
+
+	&__price {
+		font-size: 13px;
+		font-weight: 700;
+		color: var(--aime-chat-primary);
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 6px;
+	}
+
+	&__buy {
+		display: inline-block;
+		padding: 6px 14px;
+		background: var(--aime-chat-primary);
+		color: #fff;
+		border-radius: 8px;
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 13px;
+		line-height: 1.4;
+
+		&:hover {
+			background: var(--aime-chat-primary-hover);
+			color: #fff;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-chat-primary);
+			outline-offset: 2px;
+		}
+	}
+
+	&__view {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--aime-chat-text-muted);
+		text-decoration: underline;
+
+		&:hover {
+			color: var(--aime-chat-primary);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-chat-primary);
+			outline-offset: 2px;
+			border-radius: 4px;
+		}
+	}
 }
 
 /* ── Typing Indicator ────────────────────────────── */
@@ -572,6 +692,12 @@
 		gap: 8px;
 	}
 
+	&-error {
+		font-size: 12px;
+		color: #dc2626;
+		margin: 0;
+	}
+
 	&-input {
 		width: 100%;
 		border: 1px solid var(--aime-chat-border);
@@ -613,6 +739,11 @@
 
 		&:hover:not(:disabled) {
 			background: var(--aime-chat-primary-hover);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-chat-primary);
+			outline-offset: 2px;
 		}
 
 		&:disabled {

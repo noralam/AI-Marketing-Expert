@@ -85,14 +85,18 @@ class Activator {
 
 	/**
 	 * Schedule cron events.
+	 *
+	 * A single minutely dispatcher (aime_minutely_tasks) fires the email-queue
+	 * and automations actions under an overlap lock — see Plugin::run_minutely_tasks().
+	 * Consolidated from two separate every-minute schedules (audit P-4).
 	 */
 	private static function schedule_cron(): void {
-		if ( ! wp_next_scheduled( 'aime_process_email_queue' ) ) {
-			wp_schedule_event( time(), 'every_minute', 'aime_process_email_queue' );
-		}
+		// Clean up the pre-consolidation schedules if this is a re-activation.
+		wp_clear_scheduled_hook( 'aime_process_email_queue' );
+		wp_clear_scheduled_hook( 'aime_process_automations' );
 
-		if ( ! wp_next_scheduled( 'aime_process_automations' ) ) {
-			wp_schedule_event( time(), 'every_minute', 'aime_process_automations' );
+		if ( ! wp_next_scheduled( 'aime_minutely_tasks' ) ) {
+			wp_schedule_event( time(), 'every_minute', 'aime_minutely_tasks' );
 		}
 
 		if ( ! wp_next_scheduled( 'aime_daily_cleanup' ) ) {

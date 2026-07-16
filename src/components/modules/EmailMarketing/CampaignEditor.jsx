@@ -20,6 +20,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import WPEditor from '../../common/WPEditor';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
+import sanitizeHtml from '../../../utils/sanitizeHtml';
 
 /* --------- constants --------- */
 
@@ -301,7 +302,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	const sendingRef = useRef( false );
 	const isNew = campaignId === 'new';
 	const id = campaignId;
-	const { get, post, put, loading } = useApi();
+	const { get, post, put, loading } = useApi( { toastErrors: true } );
 	const slowWarning = useSlowWarning();
 	const hasPro = isProActive();
 	const freeLimits = window.aimeData?.freeLimits || {};
@@ -319,6 +320,31 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 		settings: {},
 	} );
 	const [ notice, setNotice ] = useState( null );
+	/* ---- unsaved-changes tracking: snapshot of the last loaded/saved form ---- */
+	const savedFormRef = useRef( null );
+	useEffect( () => {
+		if ( savedFormRef.current === null ) {
+			savedFormRef.current = JSON.stringify( form );
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [] );
+	const isDirty = savedFormRef.current !== null && JSON.stringify( form ) !== savedFormRef.current;
+	useEffect( () => {
+		const handler = ( e ) => {
+			if ( isDirty ) {
+				e.preventDefault();
+				e.returnValue = '';
+			}
+		};
+		window.addEventListener( 'beforeunload', handler );
+		return () => window.removeEventListener( 'beforeunload', handler );
+	}, [ isDirty ] );
+	const handleBack = () => {
+		if ( isDirty && ! window.confirm( __( 'You have unsaved changes. Leave without saving?', 'ai-marketing-expert' ) ) ) {
+			return;
+		}
+		onBack();
+	};
 	const [ savingDraft, setSavingDraft ] = useState( false );
 	const [ sendingCampaign, setSendingCampaign ] = useState( false );
 	const [ tags, setTags ] = useState( [] );
@@ -370,14 +396,16 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 		try {
 			const data = await get( `/email/campaigns/${ id }` );
 			setCampaign( data );
-			setForm( {
+			const loadedForm = {
 				title: data.title || '',
 				email_subject: data.email_subject || '',
 				email_pre_header: data.email_pre_header || '',
 				email_body: data.email_body || '',
 				template_id: data.template_id || 0,
 				settings: data.settings || {},
-			} );
+			};
+			setForm( loadedForm );
+			savedFormRef.current = JSON.stringify( loadedForm );
 			const s = typeof data.settings === 'string' ? JSON.parse( data.settings || '{}' ) : ( data.settings || {} );
 				if ( s.all ) { setRecipientMode( 'all' ); }
 			else if ( s.lists ) { setRecipientMode( 'specific' ); setRecipientType( 'lists' ); setSelectedRecipients( s.lists ); }
@@ -596,6 +624,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 					setAbVariantId( vRes.id );
 				}
 			}
+			savedFormRef.current = JSON.stringify( form );
 		} catch ( e ) {
 			setNotice( { type: 'error', message: e.message } );
 		} finally {
@@ -1624,7 +1653,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 						</div>
 						<div
 							className="aime-email-preview-body"
-							dangerouslySetInnerHTML={ { __html: previewEmailBody || `<p style="color:#999;text-align:center">${ __( 'No content.', 'ai-marketing-expert' ) }</p>` } }
+							dangerouslySetInnerHTML={ { __html: sanitizeHtml( previewEmailBody ) || `<p style="color:#999;text-align:center">${ __( 'No content.', 'ai-marketing-expert' ) }</p>` } }
 						/>
 					</div>
 					<div className="aime-preview-edit-bar">
@@ -1754,7 +1783,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 			{ /* Header */ }
 			<div className="aime-page-header">
 				<div>
-					<Button variant="link" onClick={ onBack }>{ __( '\u2190 Back to Campaigns', 'ai-marketing-expert' ) }</Button>
+					<Button variant="link" onClick={ handleBack }>{ __( '\u2190 Back to Campaigns', 'ai-marketing-expert' ) }</Button>
 					<h2>{ isNew ? __( 'New Campaign', 'ai-marketing-expert' ) : ( form.title || __( 'Edit Campaign', 'ai-marketing-expert' ) ) }</h2>
 				</div>
 				<div className="aime-header-actions">

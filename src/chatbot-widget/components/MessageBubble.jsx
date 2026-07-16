@@ -3,6 +3,8 @@
  */
 
 import { renderMarkdown } from '../../utils/renderMessage';
+import sanitizeHtml from '../../utils/sanitizeHtml';
+import ProductCard from './ProductCard';
 
 /**
  * Parse a created_at timestamp. Server sends MySQL UTC datetime
@@ -22,6 +24,14 @@ const MessageBubble = ( { message, readReceiptId } ) => {
 	const { sender_type, content, created_at } = message;
 	const isVisitor = sender_type === 'visitor';
 	const isSystem = sender_type === 'system';
+
+	// Product recommendation cards: live responses carry `actions` on the
+	// message itself; messages restored from history/polling carry them in
+	// persisted `metadata.actions`.
+	const actions = message.actions || message.metadata?.actions || [];
+	const products = Array.isArray( actions )
+		? actions.filter( ( a ) => a && a.type === 'product' && a.title )
+		: [];
 
 	if ( isSystem ) {
 		return (
@@ -46,8 +56,18 @@ const MessageBubble = ( { message, readReceiptId } ) => {
 				<div
 					className="aime-chat-msg-text"
 					/* eslint-disable-next-line react/no-danger */
-					dangerouslySetInnerHTML={ { __html: renderMarkdown( content ) } }
+					dangerouslySetInnerHTML={ { __html: sanitizeHtml( renderMarkdown( content ) ) } }
 				/>
+				{ ! isVisitor && products.length > 0 && (
+					<div className="aime-chat-msg-products">
+						{ products.map( ( product ) => (
+							<ProductCard
+								key={ product.product_id }
+								product={ product }
+							/>
+						) ) }
+					</div>
+				) }
 				<div className="aime-chat-msg-meta">
 					{ created_at && (
 						<span className="aime-chat-msg-time">

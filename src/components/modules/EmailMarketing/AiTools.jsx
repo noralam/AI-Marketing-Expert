@@ -23,7 +23,7 @@ const AiTools = () => {
 		navigator.clipboard.writeText( text ).then( () => {
 			setCopied( true );
 			setTimeout( () => setCopied( false ), 2000 );
-		} );
+		} ).catch( () => {} );
 	}, [] );
 
 	/* Template generator */

@@ -5,7 +5,7 @@
  * Fires when the plugin is deleted from Plugins page.
  * Removes all data if the user opted in.
  *
- * @package JEHAN\AiMarketingExpert
+ * @package WPSpace\AiMarketingExpert
  */
 
 // Abort if not called by WordPress.
@@ -61,6 +61,7 @@ if ( $delete_data ) {
 	);
 
 	// Clear scheduled cron hooks.
+	wp_clear_scheduled_hook( 'aime_minutely_tasks' );
 	wp_clear_scheduled_hook( 'aime_process_email_queue' );
 	wp_clear_scheduled_hook( 'aime_run_email_queue' );
 	wp_clear_scheduled_hook( 'aime_process_automations' );

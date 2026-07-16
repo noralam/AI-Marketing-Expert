@@ -56,7 +56,37 @@ class EmailRestController {
 		return new \WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to do that.', 'ai-marketing-expert' ), array( 'status' => 403 ) );
 	}
 
-	public function public_permission(): bool {
+	/**
+	 * Permission callback for the public subscribe endpoint.
+	 *
+	 * Applies a per-IP rate limit (default 10 requests per 5 minutes) before
+	 * allowing the request through. Limits are filterable via
+	 * 'aime_ip_rate_limit'.
+	 */
+	public function subscribe_rate_limit_permission(): bool|\WP_Error {
+		if ( ! aime_check_ip_rate_limit( 'email_subscribe', 10, 5 * MINUTE_IN_SECONDS ) ) {
+			return new \WP_Error(
+				'aime_rate_limited',
+				__( 'Too many requests. Please try again later.', 'ai-marketing-expert' ),
+				array( 'status' => 429 )
+			);
+		}
+		return true;
+	}
+
+	/**
+	 * Permission callback for public webhook endpoints (API-key auth happens
+	 * in the handlers). Generous per-IP cap to blunt brute-force attempts on
+	 * the API key.
+	 */
+	public function webhook_rate_limit_permission(): bool|\WP_Error {
+		if ( ! aime_check_ip_rate_limit( 'email_webhook', 120, MINUTE_IN_SECONDS ) ) {
+			return new \WP_Error(
+				'aime_rate_limited',
+				__( 'Too many requests. Please try again later.', 'ai-marketing-expert' ),
+				array( 'status' => 429 )
+			);
+		}
 		return true;
 	}
 
@@ -195,7 +225,7 @@ class EmailRestController {
 		register_rest_route( $this->ns, '/email/subscribe', array(
 			'methods'             => 'POST',
 			'callback'            => array( $c, 'public_subscribe' ),
-			'permission_callback' => array( $this, 'public_permission' ),
+			'permission_callback' => array( $this, 'subscribe_rate_limit_permission' ),
 			'args'                => array(
 				'email'      => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_email' ),
 				'first_name' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
@@ -210,7 +240,7 @@ class EmailRestController {
 		register_rest_route( $this->ns, '/email/webhook/subscribe', array(
 			'methods'             => 'POST',
 			'callback'            => array( $c, 'webhook_subscribe' ),
-			'permission_callback' => array( $this, 'public_permission' ),
+			'permission_callback' => array( $this, 'webhook_rate_limit_permission' ),
 			'args'                => array(
 				'email'      => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_email' ),
 				'first_name' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
@@ -218,6 +248,28 @@ class EmailRestController {
 				'list_id'    => array( 'type' => 'integer', 'default' => 0, 'sanitize_callback' => 'absint' ),
 				'tag_ids'    => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'integer' ) ),
 				'status'     => array( 'type' => 'string', 'default' => 'subscribed', 'sanitize_callback' => 'sanitize_text_field' ),
+			),
+		) );
+
+		// POST /email/webhook/complaint (public — API key auth; Pro). ESP feedback-loop endpoint.
+		register_rest_route( $this->ns, '/email/webhook/complaint', array(
+			'methods'             => 'POST',
+			'callback'            => array( $c, 'webhook_complaint' ),
+			'permission_callback' => array( $this, 'webhook_rate_limit_permission' ),
+			'args'                => array(
+				'email'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
+				'emails' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string' ) ),
+			),
+		) );
+
+		// POST /email/webhook/bounce (public — API key auth; Pro). ESP bounce-notification endpoint.
+		register_rest_route( $this->ns, '/email/webhook/bounce', array(
+			'methods'             => 'POST',
+			'callback'            => array( $c, 'webhook_bounce' ),
+			'permission_callback' => array( $this, 'webhook_rate_limit_permission' ),
+			'args'                => array(
+				'email'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
+				'emails' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string' ) ),
 			),
 		) );
 	}

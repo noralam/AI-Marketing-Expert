@@ -28,6 +28,8 @@ class SettingsController {
 		'rate_limit_per_minute'     => 20,
 		'enable_typing_indicator'   => true,
 		'enable_read_receipts'      => true,
+		'notify_new_chat'           => false,
+		'notify_email'              => '',
 	);
 
 	private const THEMES = array( 'default', 'modern', 'minimal' );
@@ -37,6 +39,9 @@ class SettingsController {
 	public function get_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$settings = get_option( self::OPTION_KEY, array() );
 		$merged   = array_merge( self::DEFAULTS, $settings );
+
+		// Read-only context for the UI: default notification recipient.
+		$merged['admin_email'] = get_option( 'admin_email' );
 
 		return new \WP_REST_Response( $merged );
 	}
@@ -88,6 +93,7 @@ class SettingsController {
 			'gdpr_enabled',
 			'enable_typing_indicator',
 			'enable_read_receipts',
+			'notify_new_chat',
 		);
 		foreach ( $bool_fields as $field ) {
 			if ( isset( $params[ $field ] ) ) {
@@ -95,12 +101,23 @@ class SettingsController {
 			}
 		}
 
+		if ( isset( $params['notify_email'] ) ) {
+			$email = sanitize_email( $params['notify_email'] );
+			// Empty means "use the site admin email"; anything else must be valid.
+			$current['notify_email'] = is_email( $email ) ? $email : '';
+		}
+
 		update_option( self::OPTION_KEY, $current, false );
-		aime_clear_settings_cache( array( self::OPTION_KEY ) );
+		// Chatbot settings affect the public widget — purge page caches too.
+		aime_clear_settings_cache( array( self::OPTION_KEY ), true );
+
+		$merged = array_merge( self::DEFAULTS, $current );
+		// Read-only context for the UI: default notification recipient.
+		$merged['admin_email'] = get_option( 'admin_email' );
 
 		return new \WP_REST_Response( array(
 			'message'  => __( 'Settings saved.', 'ai-marketing-expert' ),
-			'settings' => array_merge( self::DEFAULTS, $current ),
+			'settings' => $merged,
 		) );
 	}
 

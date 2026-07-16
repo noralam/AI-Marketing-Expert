@@ -30,17 +30,29 @@ const ICONS = {
 	),
 };
 
-const Bubble = ( { isOpen, onClick, unreadCount, icon } ) => {
+const Bubble = ( { isOpen, onClick, unreadCount, icon, buttonRef } ) => {
+	let label = 'Open chat';
+	if ( isOpen ) {
+		label = 'Close chat';
+	} else if ( unreadCount > 0 ) {
+		label = `Open chat, ${ unreadCount } unread message${ unreadCount === 1 ? '' : 's' }`;
+	}
+
 	return (
 		<button
+			ref={ buttonRef }
 			className={ `aime-chat-bubble${ isOpen ? ' aime-chat-bubble--open' : '' }` }
 			onClick={ onClick }
-			aria-label={ isOpen ? 'Close chat' : 'Open chat' }
+			aria-label={ label }
+			aria-expanded={ isOpen }
+			aria-haspopup="dialog"
 			type="button"
 		>
-			{ isOpen ? ICONS.close : ( ICONS[ icon ] || ICONS.chat ) }
+			<span aria-hidden="true" style={ { display: 'contents' } }>
+				{ isOpen ? ICONS.close : ( ICONS[ icon ] || ICONS.chat ) }
+			</span>
 			{ ! isOpen && unreadCount > 0 && (
-				<span className="aime-chat-bubble-badge">{ unreadCount }</span>
+				<span className="aime-chat-bubble-badge" aria-hidden="true">{ unreadCount }</span>
 			) }
 		</button>
 	);

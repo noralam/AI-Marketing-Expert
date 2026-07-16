@@ -68,6 +68,10 @@ const SettingsPage = () => {
 	const [ logModule, setLogModule ] = useState( '' );
 	const [ logsLoading, setLogsLoading ] = useState( false );
 
+	/* Import / Export */
+	const [ exporting, setExporting ] = useState( false );
+	const [ importing, setImporting ] = useState( false );
+
 	useEffect( () => {
 		loadData();
 	}, [] );
@@ -175,7 +179,7 @@ const SettingsPage = () => {
 		navigator.clipboard.writeText( text ).then( () => {
 			setter( true );
 			setTimeout( () => setter( false ), 2000 );
-		} );
+		} ).catch( () => {} );
 	};
 
 	const handleClearLogs = async () => {
@@ -189,6 +193,54 @@ const SettingsPage = () => {
 		} catch ( err ) {
 			setNotice( { type: 'error', message: err.message } );
 		}
+	};
+
+	/* Import / Export handlers */
+	const handleExportSettings = async () => {
+		setExporting( true );
+		try {
+			const data = await get( '/settings/export' );
+			const blob = new Blob( [ JSON.stringify( data, null, 2 ) ], { type: 'application/json' } );
+			const url = URL.createObjectURL( blob );
+			const a = document.createElement( 'a' );
+			a.href = url;
+			a.download = `aime-settings-export-${ new Date().toISOString().slice( 0, 10 ) }.json`;
+			document.body.appendChild( a );
+			a.click();
+			document.body.removeChild( a );
+			URL.revokeObjectURL( url );
+			setNotice( { type: 'success', message: __( 'Settings exported. API keys and secrets are never included.', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		}
+		setExporting( false );
+	};
+
+	const handleImportSettings = ( event ) => {
+		const file = event.target.files?.[ 0 ];
+		event.target.value = '';
+		if ( ! file ) return;
+
+		const reader = new FileReader();
+		reader.onload = async () => {
+			let parsed;
+			try {
+				parsed = JSON.parse( reader.result );
+			} catch ( e ) {
+				setNotice( { type: 'error', message: __( 'Invalid file — not valid JSON.', 'ai-marketing-expert' ) } );
+				return;
+			}
+			setImporting( true );
+			try {
+				const res = await post( '/settings/import', parsed );
+				setNotice( { type: 'success', message: res.message || __( 'Settings imported.', 'ai-marketing-expert' ) } );
+				loadData();
+			} catch ( err ) {
+				setNotice( { type: 'error', message: err.message } );
+			}
+			setImporting( false );
+		};
+		reader.readAsText( file );
 	};
 
 	if ( loading ) {
@@ -248,6 +300,30 @@ const SettingsPage = () => {
 										</div>
 									) }
 								</div>
+							</Card>
+
+							<Card title={ __( 'Import / Export', 'ai-marketing-expert' ) }>
+								<p className="aime-card-description">
+									{ __( 'Export plugin settings and email templates as a JSON file, or import them on another site. API keys and other secrets are never included in exports.', 'ai-marketing-expert' ) }
+								</p>
+								<div style={ { display: 'flex', gap: 8, flexWrap: 'wrap' } }>
+									<Button variant="secondary" onClick={ handleExportSettings } isBusy={ exporting } disabled={ exporting }>
+										{ __( 'Export Settings', 'ai-marketing-expert' ) }
+									</Button>
+									<Button variant="secondary" disabled={ importing } isBusy={ importing } onClick={ () => document.getElementById( 'aime-import-file' )?.click() }>
+										{ __( 'Import Settings', 'ai-marketing-expert' ) }
+									</Button>
+									<input
+										id="aime-import-file"
+										type="file"
+										accept=".json,application/json"
+										style={ { display: 'none' } }
+										onChange={ handleImportSettings }
+									/>
+								</div>
+								<p className="aime-card-description" style={ { marginTop: 8, marginBottom: 0 } }>
+									{ __( 'Importing merges settings over your current configuration. Templates with duplicate names are skipped.', 'ai-marketing-expert' ) }
+								</p>
 							</Card>
 
 							<Card title={ __( 'Data Management', 'ai-marketing-expert' ) }>

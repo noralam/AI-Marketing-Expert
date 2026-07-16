@@ -78,17 +78,19 @@ const RECIPIENTS_PER_PAGE = 25;
 
 const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 	const hasPro = isProActive();
-	const { get, post, loading } = useApi();
+	const { get, post, loading, error, clearError } = useApi();
 	const [ data, setData ] = useState( null );
 	const [ report, setReport ] = useState( null );
 	const [ scheduleValue, setScheduleValue ] = useState( '' );
 	const [ savingSchedule, setSavingSchedule ] = useState( false );
 	const [ scheduleNotice, setScheduleNotice ] = useState( null );
 	const [ togglingQueue, setTogglingQueue ] = useState( false );
+	const [ endingQueue, setEndingQueue ] = useState( false );
 	const [ recentProcessed, setRecentProcessed ] = useState( 0 );
 	const [ activeRecipientTab, setActiveRecipientTab ] = useState( 'sent' );
 	const [ recipientPage, setRecipientPage ] = useState( 1 );
 	const [ nowTick, setNowTick ] = useState( Date.now() );
+	const [ loadFailed, setLoadFailed ] = useState( false );
 	const pollRef = useRef();
 	const processRef = useRef( false );
 	const lastCompletedRef = useRef( null );
@@ -112,7 +114,10 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 		try {
 			const res = await get( `/email/campaigns/${ id }/progress` );
 			applyProgressData( res );
-		} catch ( e ) { /* */ }
+			setLoadFailed( false );
+		} catch ( e ) {
+			setLoadFailed( true );
+		}
 	}, [ get, id, applyProgressData ] );
 
 	const fetchReport = useCallback( async () => {
@@ -146,12 +151,32 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 			const res = await post( `/email/campaigns/${ id }/process`, { action } );
 			applyProgressData( res );
 			fetchReport();
-		} finally {
+		} catch ( e ) { /* error surfaced via useApi's error state */ } finally {
 			setTogglingQueue( false );
 		}
 	};
 
+	const handleEndCampaign = async () => {
+		if ( processRef.current || togglingQueue || endingQueue ) return;
+
+		// eslint-disable-next-line no-alert
+		if ( ! window.confirm( __( 'End this campaign now? Remaining unsent emails will be cancelled and cannot be resumed.', 'ai-marketing-expert' ) ) ) {
+			return;
+		}
+
+		setEndingQueue( true );
+		try {
+			const res = await post( `/email/campaigns/${ id }/process`, { action: 'end' } );
+			applyProgressData( res );
+			fetchReport();
+		} catch ( e ) { /* error surfaced via useApi's error state */ } finally {
+			setEndingQueue( false );
+		}
+	};
+
 	useEffect( () => {
+		// Fetch immediately on mount — the interval alone would leave the
+		// page empty (and show a false "not found") for the first 15s.
 		fetchProgress();
 		fetchReport();
 		pollRef.current = setInterval( () => {
@@ -203,7 +228,10 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 	}
 
 	if ( ! data ) {
-		return <Notice type="error" message={ __( 'Campaign not found.', 'ai-marketing-expert' ) } />;
+		if ( loadFailed ) {
+			return <Notice type="error" message={ __( 'Campaign not found.', 'ai-marketing-expert' ) } />;
+		}
+		return <Loader text={ __( 'Loading campaign progress...', 'ai-marketing-expert' ) } />;
 	}
 
 	const kpis = [
@@ -252,6 +280,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 		{ key: 'opened', label: __( 'Opened', 'ai-marketing-expert' ) },
 		{ key: 'clicked', label: __( 'Clicked', 'ai-marketing-expert' ) },
 		{ key: 'unsubscribed', label: __( 'Unsubscribed', 'ai-marketing-expert' ) },
+		{ key: 'complained', label: __( 'Complained', 'ai-marketing-expert' ) },
 		{ key: 'bounced', label: __( 'Bounced', 'ai-marketing-expert' ) },
 	];
 	const recipientLists = report?.recipients || {};
@@ -276,6 +305,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 
 	return (
 		<div className="aime-campaign-progress">
+			{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 			<div className="aime-page-header">
 				<div>
 					<Button variant="link" onClick={ onBack }>{ __( '\u2190 Back to Campaigns', 'ai-marketing-expert' ) }</Button>
@@ -341,6 +371,16 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 									{ togglingQueue
 										? ( isPaused ? __( 'Resuming...', 'ai-marketing-expert' ) : __( 'Pausing...', 'ai-marketing-expert' ) )
 										: ( isPaused ? __( 'Resume', 'ai-marketing-expert' ) : __( 'Pause', 'ai-marketing-expert' ) ) }
+								</Button>
+								<Button
+									variant="secondary"
+									size="small"
+									isDestructive
+									onClick={ handleEndCampaign }
+									isBusy={ endingQueue }
+									disabled={ endingQueue || ( ! isSending && ! isPaused ) }
+								>
+									{ endingQueue ? __( 'Ending...', 'ai-marketing-expert' ) : __( 'End Campaign', 'ai-marketing-expert' ) }
 								</Button>
 								<span className="aime-send-status-pill">{ isPaused ? __( 'Paused', 'ai-marketing-expert' ) : __( 'Sending', 'ai-marketing-expert' ) }</span>
 							</div>

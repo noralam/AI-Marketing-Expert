@@ -175,7 +175,7 @@ class AnalyticsController {
 		$this->sync_bounced_subscribers( $campaign_id );
 
 		$lists = array( 'counts' => array() );
-		foreach ( array( 'sent', 'opened', 'clicked', 'unsubscribed', 'bounced' ) as $key ) {
+		foreach ( array( 'sent', 'opened', 'clicked', 'unsubscribed', 'complained', 'bounced' ) as $key ) {
 			if ( 'sent' === $key ) {
 				$rows = $wpdb->get_results( $wpdb->prepare(
 					"SELECT ce.id, ce.subscriber_id, ce.email_address, ce.status, ce.is_open, ce.click_counter, ce.note, ce.created_at, ce.updated_at,
@@ -252,7 +252,7 @@ class AnalyticsController {
 						$metrics_table
 					)
 				);
-			} else {
+			} elseif ( 'complained' === $key ) {
 				$rows = $wpdb->get_results( $wpdb->prepare(
 					"SELECT ce.id, ce.subscriber_id, ce.email_address, ce.status, ce.is_open, ce.click_counter, ce.note, ce.created_at, ce.updated_at,
 						s.email, s.first_name, s.last_name,
@@ -261,8 +261,26 @@ class AnalyticsController {
 						(SELECT COUNT(*) FROM %i um WHERE um.campaign_id = ce.campaign_id AND um.subscriber_id = ce.subscriber_id AND um.type = 'unsubscribe') AS unsubscribe_count
 					 FROM %i ce
 					 LEFT JOIN %i s ON s.id = ce.subscriber_id
-					 WHERE ce.campaign_id = %d AND ce.status = 'failed'
+					 WHERE ce.campaign_id = %d AND s.status = 'complained'
 					 ORDER BY ce.updated_at DESC, ce.id DESC",
+					$metrics_table,
+					$metrics_table,
+					$metrics_table,
+					$campaign_emails_table,
+					$subscribers_table,
+					$campaign_id
+				) );
+			} else {
+					$rows = $wpdb->get_results( $wpdb->prepare(
+						"SELECT ce.id, ce.subscriber_id, ce.email_address, ce.status, ce.is_open, ce.click_counter, ce.note, ce.created_at, ce.updated_at,
+							s.email, s.first_name, s.last_name,
+							(SELECT COUNT(*) FROM %i om WHERE om.campaign_id = ce.campaign_id AND om.subscriber_id = ce.subscriber_id AND om.type = 'open') AS open_count,
+							(SELECT COUNT(*) FROM %i cm WHERE cm.campaign_id = ce.campaign_id AND cm.subscriber_id = ce.subscriber_id AND cm.type = 'click') AS click_count,
+							(SELECT COUNT(*) FROM %i um WHERE um.campaign_id = ce.campaign_id AND um.subscriber_id = ce.subscriber_id AND um.type = 'unsubscribe') AS unsubscribe_count
+						 FROM %i ce
+						 LEFT JOIN %i s ON s.id = ce.subscriber_id
+						 WHERE ce.campaign_id = %d AND ce.status = 'failed'
+						 ORDER BY ce.updated_at DESC, ce.id DESC",
 					$metrics_table,
 					$metrics_table,
 					$metrics_table,
@@ -396,6 +414,36 @@ class AnalyticsController {
 				$offset
 			)
 		);
+
+		// Resolve legacy "campaign #N" descriptions to the campaign title when
+		// still available (name first, id fallback).
+		$campaign_ids = array();
+		foreach ( $items as $item ) {
+			if ( ! empty( $item->description ) && preg_match( '/campaign #(\d+)/', $item->description, $m ) ) {
+				$campaign_ids[ (int) $m[1] ] = true;
+			}
+		}
+		if ( $campaign_ids ) {
+			$campaigns_table = $wpdb->prefix . 'aime_campaigns';
+			$ids             = array_map( 'intval', array_keys( $campaign_ids ) );
+			$placeholders    = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$titles          = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, title FROM {$campaigns_table} WHERE id IN ({$placeholders})",
+					...$ids
+				),
+				OBJECT_K
+			);
+			foreach ( $items as $item ) {
+				if ( empty( $item->description ) || ! preg_match( '/campaign #(\d+)/', $item->description, $m ) ) {
+					continue;
+				}
+				$cid = (int) $m[1];
+				if ( isset( $titles[ $cid ] ) && '' !== (string) $titles[ $cid ]->title ) {
+					$item->description = str_replace( "campaign #{$cid}", $titles[ $cid ]->title, $item->description );
+				}
+			}
+		}
 
 		return new \WP_REST_Response( array(
 			'items' => $items,

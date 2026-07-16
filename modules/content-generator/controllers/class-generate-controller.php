@@ -90,7 +90,15 @@ class GenerateController {
 			$preset->system_instructions = trim( ( $preset->system_instructions ?? '' ) . "\n\n" . $brand_voice_prompt );
 		}
 
-		$result = $this->generator->generate_article( $topic, $keywords, $tone, $word_count, $language, $outline, $preset, $include_table_of_contents );
+		// In-body stock images (site setting): the AI embeds placeholders,
+		// which are swapped for imported stock photos after generation.
+		$cg_settings   = get_option( 'aime_content-generator_settings', array() );
+		$inline_images = min( 3, absint( $cg_settings['inline_images'] ?? 0 ) );
+		if ( $inline_images > 0 && ! \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService::is_configured() ) {
+			$inline_images = 0;
+		}
+
+		$result = $this->generator->generate_article( $topic, $keywords, $tone, $word_count, $language, $outline, $preset, $include_table_of_contents, $inline_images );
 
 		if ( ! $result['success'] ) {
 			return new \WP_REST_Response( array(
@@ -112,6 +120,11 @@ class GenerateController {
 
 		// Clean up the body: remove any residual JSON wrapper and convert literal \n to real newlines.
 		$article_body = self::clean_ai_body( $article_body );
+
+		// Swap AI image placeholders for stock photos (fail-soft; also strips
+		// any leftover placeholders when the feature is off).
+		$stock_service = new \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService();
+		$article_body  = $stock_service->embed_inline_images( $article_body, $inline_images, $topic );
 
 		$wpdb->insert( "{$p}aime_content_articles", array(
 			'title'             => sanitize_text_field( $article_title ),
@@ -221,11 +234,12 @@ class GenerateController {
 		$article = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$p}aime_content_articles WHERE id = %d", $article_id ) );
 
 		return new \WP_REST_Response( array(
-			'id'       => $article_id,
-			'article'  => $article,
-			'provider' => $result['provider'] ?? '',
-			'model'    => $result['model'] ?? '',
-			'message'  => __( 'Article generated successfully.', 'ai-marketing-expert' ),
+			'id'           => $article_id,
+			'article'      => $article,
+			'provider'     => $result['provider'] ?? '',
+			'model'        => $result['model'] ?? '',
+			'image_search' => sanitize_text_field( (string) ( $generated['image_search'] ?? '' ) ),
+			'message'      => __( 'Article generated successfully.', 'ai-marketing-expert' ),
 		), 201 );
 	}
 
@@ -453,6 +467,63 @@ class GenerateController {
 			'attachment_id' => $result['attachment_id'] ?? 0,
 			'provider'      => $result['provider'] ?? '',
 			'model'         => $result['model'] ?? '',
+		) );
+	}
+
+	/* ── STOCK IMAGES (Pexels / Pixabay) ─────────────── */
+
+	public function stock_search( \WP_REST_Request $request ): \WP_REST_Response {
+		$service = new \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService();
+
+		$result = $service->search(
+			sanitize_text_field( $request->get_param( 'query' ) ),
+			absint( $request->get_param( 'per_page' ) ?: 12 ),
+			absint( $request->get_param( 'page' ) ?: 1 )
+		);
+
+		if ( empty( $result['success'] ) ) {
+			return new \WP_REST_Response( array(
+				'message'        => $result['error'] ?? __( 'Stock image search failed.', 'ai-marketing-expert' ),
+				'not_configured' => ! empty( $result['not_configured'] ),
+			), ! empty( $result['not_configured'] ) ? 400 : 502 );
+		}
+
+		return new \WP_REST_Response( $result );
+	}
+
+	public function stock_import( \WP_REST_Request $request ): \WP_REST_Response {
+		$service = new \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService();
+
+		$url        = esc_url_raw( $request->get_param( 'url' ) );
+		$alt        = sanitize_text_field( $request->get_param( 'alt' ) ?: '' );
+		$article_id = absint( $request->get_param( 'article_id' ) );
+
+		$result = $service->import_to_media_library( $url, $alt, 0 );
+
+		if ( empty( $result['success'] ) ) {
+			return new \WP_REST_Response( array(
+				'message' => $result['error'] ?? __( 'Image import failed.', 'ai-marketing-expert' ),
+			), 400 );
+		}
+
+		// Update article if id is provided (mirrors generate_image).
+		if ( $article_id ) {
+			global $wpdb;
+			$wpdb->update(
+				$wpdb->prefix . 'aime_content_articles',
+				array(
+					'featured_image_url' => $result['url'],
+					'featured_image_id'  => $result['attachment_id'],
+				),
+				array( 'id' => $article_id ),
+				array( '%s', '%d' ),
+				array( '%d' )
+			);
+		}
+
+		return new \WP_REST_Response( array(
+			'attachment_id' => $result['attachment_id'],
+			'url'           => $result['url'],
 		) );
 	}
 }

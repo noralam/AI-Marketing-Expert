@@ -1,10 +1,20 @@
 {
 	"name": "ai-marketing-expert",
-	"version": "1.0.0",
+	"version": "1.1.1",
 	"description": "AI Marketing Expert - All-in-one AI-powered marketing toolkit for WordPress",
 	"author": "Developer Jehan",
 	"license": "GPL-2.0-or-later",
 	"private": true,
+	"files": [
+		"ai-marketing-expert.php",
+		"uninstall.php",
+		"readme.txt",
+		"includes/**",
+		"modules/**",
+		"build/**",
+		"assets/**",
+		"languages/**"
+	],
 	"scripts": {
 		"build": "wp-scripts build",
 		"start": "wp-scripts start",
@@ -23,6 +33,7 @@
 		"@wordpress/i18n": "^5.0.0",
 		"@wordpress/icons": "^10.0.0",
 		"@xyflow/react": "^12.10.1",
+		"dompurify": "^3.4.12",
 		"react-router-dom": "^6.20.0",
 		"recharts": "^2.15.4"
 	}

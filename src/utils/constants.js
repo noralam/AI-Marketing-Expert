@@ -115,6 +115,7 @@ export const FREE_LIMITS = window.aimeData?.freeLimits || {
 	email_templates: 3,
 	email_template_imports_free: 4,
 	email_scheduled_campaigns: 3,
+	email_funnels: 2,
 	email_smtp_connections: 2,
 	ai_provider_connections: 2,
 	csv_import_rows: 100,

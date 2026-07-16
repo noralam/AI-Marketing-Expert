@@ -19,7 +19,7 @@ class ContentGeneratorService {
 
 	/* ── GENERATE full article ───────────────────────── */
 
-	public function generate_article( string $topic, array $keywords, string $tone, int $word_count, string $language, string $outline = '', ?object $preset = null, bool $include_table_of_contents = false ): array {
+	public function generate_article( string $topic, array $keywords, string $tone, int $word_count, string $language, string $outline = '', ?object $preset = null, bool $include_table_of_contents = false, int $inline_images = 0 ): array {
 		$system = $this->build_system_prompt( $tone, $language, $preset );
 
 		$keywords_str = $keywords ? implode( ', ', $keywords ) : 'none specified';
@@ -46,10 +46,20 @@ class ContentGeneratorService {
 				. "- Do not include the TOC inside JSON metadata; it must be inside the body HTML only.\n\n";
 		}
 
+		if ( $inline_images > 0 ) {
+			$prompt .= "In-body image requirements:\n"
+				. "- Insert exactly {$inline_images} image placeholders inside the body HTML at visually appropriate points (after a paragraph, before or after a major h2 section — never inside a heading, list, or the first paragraph).\n"
+				. "- Placeholder format (HTML comment, exactly): <!--aime-img:2-4 word English stock photo search query-->\n"
+				. "- Each query must be distinct, concrete, and visually relevant to the surrounding section (concrete nouns, no punctuation).\n"
+				. "- Spread the placeholders evenly through the article. Do not put them in the JSON metadata keys.\n\n";
+		}
+
 		$prompt .= "Return a JSON object with these keys:\n"
 			. "- \"title\": a compelling SEO-friendly title that includes the primary keyword\n"
 			. "- \"body\": the full article in HTML format using h2, h3, p, ul, ol, li, strong, em tags\n"
 			. "- \"excerpt\": a 1-2 sentence summary (max 160 characters)\n"
+			. "- \"tags\": array of 3-5 short topical tag names (1-3 words each, lowercase, no # symbols)\n"
+			. "- \"image_search\": a 2-4 word English stock-photo search query capturing the article's main visual theme (concrete nouns, no punctuation)\n"
 			. "- \"outline\": array of {heading, level} objects representing the article structure (level should be a number: 2 or 3)\n"
 			. "Return ONLY the JSON object. No thinking, no reasoning, no commentary, no explanation before or after the JSON.\n"
 			. "The body must be valid HTML.\n"

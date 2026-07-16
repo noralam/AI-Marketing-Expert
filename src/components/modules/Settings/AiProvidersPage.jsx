@@ -69,9 +69,38 @@ const AiProvidersPage = () => {
 	const aiProviderLimit = FREE_LIMITS.ai_provider_connections || 2;
 	const aiProviderLimitReached = ! hasPro && aiConnections.length >= aiProviderLimit;
 
+	// AI usage dashboard state.
+	const [ pageTab, setPageTab ] = useState( 'providers' );
+	const [ usage, setUsage ] = useState( null );
+	const [ usageDays, setUsageDays ] = useState( 30 );
+	const [ usageLoading, setUsageLoading ] = useState( false );
+
 	useEffect( () => {
 		loadConnections();
 	}, [] );
+
+	useEffect( () => {
+		if ( pageTab !== 'usage' ) {
+			return;
+		}
+		let cancelled = false;
+		( async () => {
+			setUsageLoading( true );
+			try {
+				const res = await get( `/ai/usage?days=${ usageDays }` );
+				if ( ! cancelled ) {
+					setUsage( res.usage || res );
+				}
+			} catch ( err ) {
+				// Usage table may not exist yet — hide the section silently.
+			} finally {
+				if ( ! cancelled ) {
+					setUsageLoading( false );
+				}
+			}
+		} )();
+		return () => { cancelled = true; };
+	}, [ usageDays, pageTab ] );
 
 	const loadConnections = async () => {
 		try {
@@ -135,8 +164,6 @@ const AiProvidersPage = () => {
 		const p = aiProviders[ providerId ];
 		if ( ! p ) return;
 
-		const defText  = p.models?.text?.find( ( m ) => m.recommended )?.id  || p.models?.text?.[0]?.id  || '';
-
 		setAiFetchedModels( null );
 
 		if ( providerId === 'custom' ) {
@@ -155,7 +182,7 @@ const AiProvidersPage = () => {
 		setAiForm( ( prev ) => ( {
 			...prev,
 			provider:    providerId,
-			text_model:  defText,
+			text_model:  '',
 			image_model: '',
 			name:        prev.name || p.name,
 		} ) );
@@ -260,8 +287,8 @@ const AiProvidersPage = () => {
 		}
 	};
 
-	/* Fetch available models from provider API */
-	const aiFetchModels = async () => {
+	/* Fetch available models from provider API. silent = auto-fetch (no notices). */
+	const aiFetchModels = async ( silent = false ) => {
 		if ( ! aiForm.provider ) return;
 
 		setAiFetchingModels( true );
@@ -279,16 +306,40 @@ const AiProvidersPage = () => {
 			const res = await post( '/ai/fetch-models', payload );
 			if ( res.success ) {
 				setAiFetchedModels( res.models );
-				setNotice( { type: 'success', message: __( 'Models fetched successfully.', 'ai-marketing-expert' ) } );
-			} else {
+				// No preset lists shipped anymore — auto-select the recommended
+				// (or first) fetched text model if nothing is chosen yet.
+				const rec = ( res.models?.text || [] ).find( ( m ) => m.recommended ) || ( res.models?.text || [] )[ 0 ];
+				if ( rec ) {
+					setAiForm( ( prev ) => ( prev.text_model ? prev : { ...prev, text_model: rec.id } ) );
+				}
+				if ( ! silent ) {
+					setNotice( { type: 'success', message: __( 'Models fetched successfully.', 'ai-marketing-expert' ) } );
+				}
+			} else if ( ! silent ) {
 				setNotice( { type: 'error', message: res.message || __( 'Failed to fetch models.', 'ai-marketing-expert' ) } );
 			}
 		} catch ( err ) {
-			setNotice( { type: 'error', message: err.message } );
+			if ( ! silent ) {
+				setNotice( { type: 'error', message: err.message } );
+			}
 		} finally {
 			setAiFetchingModels( false );
 		}
 	};
+
+	/* Auto-fetch models: when a key is typed (debounced), or when editing a
+	   connection that already has a stored key. Silent — no notices while typing. */
+	useEffect( () => {
+		if ( ! aiShowModal || ! aiForm.provider ) return;
+		if ( aiForm.provider === 'custom' && ! aiForm.base_url.trim() ) return;
+
+		const hasTypedKey  = !! aiForm.api_key && aiForm.api_key.length >= 10;
+		const hasStoredKey = !! aiEditId && !! aiForm._hasStoredKey && ! aiForm.api_key;
+		if ( ! hasTypedKey && ! hasStoredKey ) return;
+
+		const timer = setTimeout( () => aiFetchModels( true ), hasTypedKey ? 800 : 100 );
+		return () => clearTimeout( timer );
+	}, [ aiShowModal, aiForm.api_key, aiForm.provider, aiForm.base_url, aiForm.api_format, aiEditId ] );
 
 	/* Get model label by id */
 	const getModelLabel = ( providerDef, type, modelId ) => {
@@ -308,6 +359,13 @@ const AiProvidersPage = () => {
 	}, [ aiConnections ] );
 
 	const getHealthBadge = ( conn ) => {
+		if ( conn.key_decrypt_failed ) {
+			return {
+				className: 'aime-ai-conn-invalid',
+				label: __( 'Re-enter API Key', 'ai-marketing-expert' ),
+			};
+		}
+
 		if ( conn.health_status === 'rate_limited' ) {
 			return {
 				className: 'aime-ai-conn-invalid',
@@ -333,6 +391,10 @@ const AiProvidersPage = () => {
 	};
 
 	const getHealthText = ( conn ) => {
+		if ( conn.key_decrypt_failed ) {
+			return __( 'The stored API key could not be decrypted — your site security keys may have changed. Edit this connection and re-enter the API key.', 'ai-marketing-expert' );
+		}
+
 		if ( ! conn.health_status || conn.health_status === 'available' ) {
 			return '';
 		}
@@ -371,7 +433,7 @@ const AiProvidersPage = () => {
 
 	return (
 		<div className="aime-settings-page">
-			{ notice && (
+			{ notice && ! aiShowModal && (
 				<Notice type={ notice.type } message={ notice.message } onDismiss={ () => setNotice( null ) } />
 			) }
 
@@ -383,15 +445,35 @@ const AiProvidersPage = () => {
 						{ __( 'Configure one or more AI provider connections. Assign different providers for text and image tasks. Unassigned connections serve as automatic fallbacks.', 'ai-marketing-expert' ) }
 					</p>
 				</div>
-				<Button variant="primary" onClick={ aiOpenCreate }>
-					<span className="aime-pro-inline-action">
-						{ __( '+ Add Provider', 'ai-marketing-expert' ) }
-						{ aiProviderLimitReached && <ProLabel>{ __( 'Pro', 'ai-marketing-expert' ) }</ProLabel> }
-					</span>
-				</Button>
+				{ pageTab === 'providers' && (
+					<Button variant="primary" onClick={ aiOpenCreate }>
+						<span className="aime-pro-inline-action">
+							{ __( '+ Add Provider', 'ai-marketing-expert' ) }
+							{ aiProviderLimitReached && <ProLabel>{ __( 'Pro', 'ai-marketing-expert' ) }</ProLabel> }
+						</span>
+					</Button>
+				) }
 			</div>
 
-			{ ! hasPro && (
+			{ /* Page tabs */ }
+			<div style={ { display: 'flex', gap: 4, marginBottom: 16, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 6, width: 'fit-content' } }>
+				{ [
+					{ id: 'providers', label: __( 'Providers', 'ai-marketing-expert' ) },
+					{ id: 'usage', label: __( 'Usage & Cost', 'ai-marketing-expert' ) },
+				].map( ( t ) => (
+					<button
+						key={ t.id }
+						type="button"
+						className={ `aime-settings-tab${ pageTab === t.id ? ' is-active' : '' }` }
+						style={ { width: 'auto' } }
+						onClick={ () => setPageTab( t.id ) }
+					>
+						{ t.label }
+					</button>
+				) ) }
+			</div>
+
+			{ pageTab === 'providers' && ! hasPro && (
 				<Notice
 					type={ aiProviderLimitReached ? 'warning' : 'info' }
 					message={ sprintf(
@@ -403,7 +485,7 @@ const AiProvidersPage = () => {
 			) }
 
 			{ /* Empty state */ }
-			{ aiConnections.length === 0 && (
+			{ pageTab === 'providers' && aiConnections.length === 0 && (
 				<Card>
 					<div style={ { textAlign: 'center', padding: '40px 20px' } }>
 						<p style={ { fontSize: 48, margin: '0 0 12px' } }>{ '\uD83E\uDD16' }</p>
@@ -419,6 +501,7 @@ const AiProvidersPage = () => {
 			) }
 
 			{ /* Connection cards */ }
+			{ pageTab === 'providers' && (
 			<div className="aime-ai-providers-list">
 				{ sortedAiConnections.map( ( conn ) => {
 					const provDef = aiProviders[ conn.provider ] || {};
@@ -538,6 +621,99 @@ const AiProvidersPage = () => {
 					);
 				} ) }
 			</div>
+			) }
+
+			{ /* AI Usage & Cost dashboard */ }
+			{ pageTab === 'usage' && (
+				<Card>
+					<div style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } }>
+						<h3 style={ { margin: 0 } }>{ __( 'AI Usage & Cost', 'ai-marketing-expert' ) }</h3>
+						<SelectControl
+							value={ String( usageDays ) }
+							options={ [
+								{ value: '7', label: __( 'Last 7 days', 'ai-marketing-expert' ) },
+								{ value: '30', label: __( 'Last 30 days', 'ai-marketing-expert' ) },
+								{ value: '90', label: __( 'Last 90 days', 'ai-marketing-expert' ) },
+							] }
+							onChange={ ( v ) => setUsageDays( parseInt( v, 10 ) || 30 ) }
+							__nextHasNoMarginBottom
+						/>
+					</div>
+
+					{ usageLoading && <Spinner /> }
+
+					{ ! usageLoading && ( ! usage?.totals || ! usage.totals.calls ) && (
+						<p style={ { color: '#94a3b8', textAlign: 'center', padding: 20, margin: 0 } }>
+							{ __( 'No AI usage recorded yet. Data appears here after your first AI generation.', 'ai-marketing-expert' ) }
+						</p>
+					) }
+
+					{ ! usageLoading && usage?.totals && usage.totals.calls > 0 && (
+						<>
+							<div style={ { display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 } }>
+								<div>
+									<strong style={ { fontSize: 20, display: 'block' } }>{ usage.totals.calls }</strong>
+									<span className="aime-card-description">{ __( 'API calls', 'ai-marketing-expert' ) }</span>
+								</div>
+								<div>
+									<strong style={ { fontSize: 20, display: 'block' } }>{ usage.totals.failures }</strong>
+									<span className="aime-card-description">{ __( 'Failures', 'ai-marketing-expert' ) }</span>
+								</div>
+								<div>
+									<strong style={ { fontSize: 20, display: 'block' } }>
+										{ Number( usage.totals.prompt_tokens + usage.totals.completion_tokens ).toLocaleString() }
+									</strong>
+									<span className="aime-card-description">{ __( 'Total tokens', 'ai-marketing-expert' ) }</span>
+								</div>
+								<div>
+									<strong style={ { fontSize: 20, display: 'block' } }>
+										{ usage.totals.estimated_cost !== null && usage.totals.estimated_cost !== undefined
+											? `$${ Number( usage.totals.estimated_cost ).toFixed( 4 ) }${ usage.totals.cost_is_partial ? '+' : '' }`
+											: '—'
+										}
+									</strong>
+									<span className="aime-card-description">
+										{ __( 'Estimated cost', 'ai-marketing-expert' ) }
+										{ usage.totals.cost_is_partial ? ' ' + __( '(some models unpriced)', 'ai-marketing-expert' ) : '' }
+									</span>
+								</div>
+							</div>
+
+							{ ( usage.by_model || [] ).length > 0 && (
+								<table className="widefat striped" style={ { marginBottom: 4 } }>
+									<thead>
+										<tr>
+											<th>{ __( 'Connection', 'ai-marketing-expert' ) }</th>
+											<th>{ __( 'Model', 'ai-marketing-expert' ) }</th>
+											<th>{ __( 'Task', 'ai-marketing-expert' ) }</th>
+											<th>{ __( 'Calls', 'ai-marketing-expert' ) }</th>
+											<th>{ __( 'Tokens (in / out)', 'ai-marketing-expert' ) }</th>
+											<th>{ __( 'Est. cost', 'ai-marketing-expert' ) }</th>
+										</tr>
+									</thead>
+									<tbody>
+										{ usage.by_model.map( ( row, i ) => (
+											<tr key={ i }>
+												<td>{ row.connection_name || row.connection_id || '—' }</td>
+												<td>{ row.model || '—' }</td>
+												<td>{ row.task || 'text' }</td>
+												<td>{ row.calls }</td>
+												<td>{ Number( row.prompt_tokens ).toLocaleString() } / { Number( row.completion_tokens ).toLocaleString() }</td>
+												<td>
+													{ row.estimated_cost !== null && row.estimated_cost !== undefined
+														? `$${ Number( row.estimated_cost ).toFixed( 4 ) }`
+														: '—'
+													}
+												</td>
+											</tr>
+										) ) }
+									</tbody>
+								</table>
+							) }
+						</>
+					) }
+				</Card>
+			) }
 
 			{ /* Add / Edit Provider Modal */ }
 			{ aiShowModal && (
@@ -547,6 +723,10 @@ const AiProvidersPage = () => {
 					className="aime-ai-modal"
 				>
 					<div className="aime-ai-modal-body">
+						{ notice && (
+							<Notice type={ notice.type } message={ notice.message } onDismiss={ () => setNotice( null ) } />
+						) }
+
 						{ /* Connection name */ }
 						<TextControl
 							label={ __( 'Connection Name', 'ai-marketing-expert' ) }
@@ -656,7 +836,7 @@ const AiProvidersPage = () => {
 										<Button
 											variant="secondary"
 											size="small"
-											onClick={ aiFetchModels }
+											onClick={ () => aiFetchModels( false ) }
 											isBusy={ aiFetchingModels }
 											disabled={ aiFetchingModels || ( ! aiForm.api_key && ! aiEditId ) }
 										>
@@ -665,7 +845,7 @@ const AiProvidersPage = () => {
 									</div>
 									<Notice
 										type="info"
-										message={ __( '💡 Enter your API key above, then click "Fetch Available Models" to load the latest models from your provider. You can also type a custom model ID manually.', 'ai-marketing-expert' ) }
+										message={ __( '💡 Models load automatically once you enter your API key. Use "Fetch Available Models" to refresh the list, or type a custom model ID manually.', 'ai-marketing-expert' ) }
 										dismissible={ false }
 									/>
 									{ aiFetchedModels && (

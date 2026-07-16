@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       AI Marketing Expert
  * Plugin URI:        https://wpthemespace.com/ai-marketing-expert
- * Description:       All-in-one AI-powered marketing toolkit for WordPress. Email marketing, content generation, social media management, chatbot, and analytics — all from your dashboard.
- * Version:           1.1.0
+ * Description:       All-in-one AI marketing toolkit: email marketing, content generation, SEO analyzer, social media, AI chatbot, and workflow automation.
+ * Version:           1.1.1
  * Requires at least: 6.2
  * Requires PHP:      8.0
  * Author:            Noor Alam
@@ -22,15 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'AIME_VERSION', '1.1.0' );
+define( 'AIME_VERSION', '1.1.1' );
 define( 'AIME_PLUGIN_FILE', __FILE__ );
 define( 'AIME_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AIME_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AIME_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Schema versions. Bump only when database tables or migrations change.
-define( 'AIME_DB_VERSION', '1.1.0' );
-define( 'AIME_EMAIL_DB_VERSION', '1.1.0' );
+define( 'AIME_DB_VERSION', '1.2.1' );
+define( 'AIME_EMAIL_DB_VERSION', '1.2.1' );
 
 define( 'AIME_MIN_PHP', '8.0' );
 define( 'AIME_MIN_WP', '6.2' );
@@ -75,7 +75,6 @@ require_once AIME_PLUGIN_DIR . 'includes/helpers.php';
  * defined so any third-party code that reads it still gets a valid number.
  */
 define( 'AIME_FREE_SUBSCRIBER_LIMIT', PHP_INT_MAX );
-define( 'AIME_FREE_CAMPAIGN_LIMIT', 10 );
 
 /**
  * Dev mode: set to true to unlock all Pro features during development.

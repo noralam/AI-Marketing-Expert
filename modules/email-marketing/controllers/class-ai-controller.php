@@ -37,6 +37,8 @@ class AiController {
 
 		$system = "You are an expert email marketing designer. Generate a complete HTML email template based on the user request. "
 			. "Style: {$style}. Layout mode: {$layout_mode}. {$layout_instruction} Make it responsive. Include placeholder merge tags: {{first_name}}, {{last_name}}, {{email}}, {{unsubscribe_url}}. "
+			. "STRICT OUTPUT RULES: Do NOT use <style> tags, CSS classes, or ids — every style must be an inline style=\"...\" attribute on the element itself. "
+			. "Do NOT include <!DOCTYPE>, <html>, <head>, <body>, or <meta> tags — return only the inner body markup. "
 			. "Do not include any footer, copyright block, company address, unsubscribe section, sent-to line, preference center, legal disclaimer, or social/footer area. The application appends its own required footer automatically. "
 			. "Return ONLY the raw HTML, no explanations.";
 
@@ -86,10 +88,143 @@ class AiController {
 		// Unwrap <style> blocks that the model (or a prior wpautop pass) wrapped in <p>.
 		$raw = preg_replace( '#<p[^>]*>\s*(<style\b[\s\S]*?</style>)\s*</p>#i', '$1', $raw ) ?? $raw;
 
-		// Strip leading empty paragraphs (<p></p>, <p> </p>, <p>&nbsp;</p>).
-		$raw = preg_replace( '#^(\s*<p[^>]*>[\s\xc2\xa0]*</p>\s*)+#i', '', $raw ) ?? $raw;
+		// Unwrap full-document output: keep only the <body> inner HTML but
+		// preserve any <head> styles so the inliner below can apply them.
+		if ( preg_match( '#<body\b[^>]*>([\s\S]*?)</body>#i', $raw, $m ) ) {
+			$head_styles = '';
+			if ( preg_match_all( '#<style\b[^>]*>[\s\S]*?</style>#i', $raw, $sm ) ) {
+				$head_styles = implode( "\n", $sm[0] );
+			}
+			$raw = $head_styles . $m[1];
+		}
+
+		// Strip leading empty paragraphs (<p></p>, <p> </p>, <p>&nbsp;</p>)
+		// before inlining so they don't get trapped inside the wrapper div.
+		$raw = preg_replace( '#^(\s*<p[^>]*>[\s\xc2\xa0]*(?:&nbsp;)?[\s\xc2\xa0]*</p>\s*)+#i', '', $raw ) ?? $raw;
+
+		// Convert <style> blocks to inline styles — TinyMCE cannot apply
+		// document-level CSS inside its content area and most email clients
+		// strip <style>, so class/element rules must live on the elements.
+		$raw = $this->inline_styles( $raw );
 
 		return trim( $raw );
+	}
+
+	/**
+	 * Inline simple CSS rules from <style> blocks onto matching elements.
+	 *
+	 * Email clients widely strip <style> blocks and the campaign TinyMCE
+	 * editor renders them as an inert "CSS" box, so class/id/element rules
+	 * must be converted to style="" attributes. Handles simple selectors
+	 * (.class, #id, element, element.class and comma lists); complex
+	 * selectors and @media blocks are dropped. Pre-existing inline styles
+	 * win over injected rules.
+	 */
+	private function inline_styles( string $html ): string {
+		if ( false === stripos( $html, '<style' ) ) {
+			return $html;
+		}
+
+		// Collect CSS, then remove the <style> blocks from the markup.
+		$css = '';
+		if ( preg_match_all( '#<style\b[^>]*>([\s\S]*?)</style>#i', $html, $m ) ) {
+			$css = implode( "\n", $m[1] );
+		}
+		$html = preg_replace( '#<style\b[^>]*>[\s\S]*?</style>#i', '', $html ) ?? $html;
+
+		// Strip comments and @media / other at-rule blocks (unusable inline).
+		$css = preg_replace( '#/\*[\s\S]*?\*/#', '', $css ) ?? $css;
+		$css = preg_replace( '/@[^{]+\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $css ) ?? $css;
+
+		if ( ! preg_match_all( '/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER ) || ! class_exists( 'DOMDocument' ) ) {
+			return trim( $html );
+		}
+
+		$dom = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$dom->loadHTML(
+			'<?xml encoding="utf-8" ?><div id="aime-inline-root">' . $html . '</div>',
+			LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+		);
+		libxml_clear_errors();
+
+		$xpath = new \DOMXPath( $dom );
+		$root  = $dom->getElementById( 'aime-inline-root' );
+		if ( ! $root ) {
+			return trim( $html );
+		}
+
+		// Bucket rules by specificity so later-applied buckets override
+		// earlier ones (element < class < id), mirroring CSS precedence.
+		$buckets = array( array(), array(), array() );
+		foreach ( $rules as $rule ) {
+			$decl = trim( $rule[2] );
+			if ( '' === $decl ) {
+				continue;
+			}
+			foreach ( explode( ',', $rule[1] ) as $sel ) {
+				$sel = trim( $sel );
+				if ( '' === $sel || preg_match( '/[\s>+~\[:]/', $sel ) ) {
+					// Skip complex selectors — except treat body/html as root.
+					if ( ! in_array( strtolower( $sel ), array( 'body', 'html' ), true ) ) {
+						continue;
+					}
+				}
+				if ( in_array( strtolower( $sel ), array( 'body', 'html' ), true ) ) {
+					$buckets[0][] = array( 'root', '', $decl );
+				} elseif ( preg_match( '/^#([\w-]+)$/', $sel, $sm ) ) {
+					$buckets[2][] = array( 'id', $sm[1], $decl );
+				} elseif ( preg_match( '/^([a-zA-Z][\w-]*)?\.([\w-]+)$/', $sel, $sm ) ) {
+					$buckets[1][] = array( 'class', array( strtolower( $sm[1] ), $sm[2] ), $decl );
+				} elseif ( preg_match( '/^[a-zA-Z][\w-]*$/', $sel ) ) {
+					$buckets[0][] = array( 'tag', strtolower( $sel ), $decl );
+				}
+			}
+		}
+
+		$apply = function ( \DOMElement $el, string $decl ): void {
+			$existing = trim( (string) $el->getAttribute( 'style' ) );
+			// Injected rules go first so pre-existing inline styles win.
+			$merged = rtrim( $decl, '; ' ) . ';' . ( $existing ? ' ' . $existing : '' );
+			$el->setAttribute( 'style', preg_replace( '/\s+/', ' ', $merged ) );
+		};
+
+		foreach ( $buckets as $bucket ) {
+			foreach ( $bucket as list( $type, $arg, $decl ) ) {
+				if ( 'root' === $type ) {
+					// body/html rules: apply font/color/background to the wrapper div.
+					$apply( $root, $decl );
+					continue;
+				}
+				if ( 'id' === $type ) {
+					$nodes = $xpath->query( ".//*[@id='" . $arg . "']", $root );
+				} elseif ( 'class' === $type ) {
+					list( $tag, $class ) = $arg;
+					$q     = ( $tag ? './/' . $tag : './/*' ) . "[contains(concat(' ', normalize-space(@class), ' '), ' " . $class . " ')]";
+					$nodes = $xpath->query( $q, $root );
+				} else {
+					$nodes = $xpath->query( './/' . $arg, $root );
+				}
+				if ( $nodes ) {
+					foreach ( $nodes as $node ) {
+						if ( $node instanceof \DOMElement ) {
+							$apply( $node, $decl );
+						}
+					}
+				}
+			}
+		}
+
+		// Serialize: keep the wrapper div only when body/html rules landed on it.
+		$root_style = trim( (string) $root->getAttribute( 'style' ) );
+		$inner      = '';
+		foreach ( $root->childNodes as $child ) {
+			$inner .= $dom->saveHTML( $child );
+		}
+		if ( '' !== $root_style ) {
+			return '<div style="' . htmlspecialchars( $root_style, ENT_QUOTES ) . '">' . $inner . '</div>';
+		}
+		return trim( $inner );
 	}
 
 	private function strip_generated_footer( string $html ): string {

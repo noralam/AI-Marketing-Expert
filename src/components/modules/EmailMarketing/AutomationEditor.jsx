@@ -19,7 +19,6 @@ import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
 /* Custom node */
 const ICON_MAP = {
@@ -375,7 +374,6 @@ const AUTOMATION_TEMPLATES = [
 const AutomationEditor = ( { id, onBack } ) => {
 	const { get, post, put, loading, error, clearError } = useApi();
 	const slowWarning = useSlowWarning();
-	const hasPro = isProActive();
 	const [ automation, setAutomation ] = useState( null );
 	const [ sequences, setSequences ] = useState( [] );
 	const [ triggers, setTriggers ] = useState( [] );
@@ -464,10 +462,6 @@ const AutomationEditor = ( { id, onBack } ) => {
 
 	/* save */
 	const handleSave = async () => {
-		if ( ! hasPro ) {
-			setSuccessMsg( __( 'Saving automations is available in Pro.', 'ai-marketing-expert' ) );
-			return;
-		}
 		setSaving( true );
 		try {
 			const payload = { title, trigger_name: triggerKey, settings: triggerSettings, status };
@@ -485,7 +479,7 @@ const AutomationEditor = ( { id, onBack } ) => {
 			} );
 			setSuccessMsg( __( 'Automation saved successfully!', 'ai-marketing-expert' ) );
 			setTimeout( () => setSuccessMsg( '' ), 4000 );
-		} catch ( e ) { /* error shown via useApi */ }
+		} catch ( e ) { /* error shown via useApi (incl. free-tier funnel limit) */ }
 		setSaving( false );
 	};
 
@@ -594,16 +588,15 @@ const AutomationEditor = ( { id, onBack } ) => {
 					<h2>{ id ? __( 'Edit Automation', 'ai-marketing-expert' ) : __( 'New Automation', 'ai-marketing-expert' ) }</h2>
 				</div>
 				<div className="aime-header-actions">
-					{ ! hasPro && <ProLabel>{ __( 'Save Automation', 'ai-marketing-expert' ) }</ProLabel> }
 					<Button variant="secondary" onClick={ () => setAiModalOpen( true ) } disabled={ ! isAiConfigured() } title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }>
 						{ __( '\u2728 AI Suggest Steps', 'ai-marketing-expert' ) }
 					</Button>
-					{ ! hasPro ? <ProUpgradeButton /> : <Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving }>
+					<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving }>
 						{ saving
 							? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
 							: __( 'Save Automation', 'ai-marketing-expert' )
 						}
-					</Button> }
+					</Button>
 				</div>
 			</div>
 

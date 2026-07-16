@@ -112,6 +112,9 @@ const useChat = ( config ) => {
 	conversationIdRef.current = conversationId;
 	// Prevent overlapping poll requests.
 	const pollInFlightRef = useRef( false );
+	// Mirror the window-open state so polls don't count messages the
+	// visitor is already looking at (set via setWindowOpen from ChatWidget).
+	const windowOpenRef = useRef( false );
 
 	/**
 	 * Generic fetch helper.
@@ -346,10 +349,12 @@ const useChat = ( config ) => {
 			);
 
 			if ( data.messages && data.messages.length ) {
+				let freshCount = 0;
 				setMessages( ( prev ) => {
 					const existingIds = new Set( prev.map( ( m ) => Number( m.id ) ).filter( Boolean ) );
 					const fresh = data.messages.filter( ( m ) => ! existingIds.has( Number( m.id ) ) );
 					if ( fresh.length ) {
+						freshCount = fresh.length;
 						// Play sound notification for new incoming messages.
 						if ( config.sound_enabled ) {
 							playNotificationSound();
@@ -359,7 +364,11 @@ const useChat = ( config ) => {
 					return prev;
 				} );
 				updateLastId( data.messages );
-				setUnreadCount( ( prev ) => prev + data.messages.length );
+				// Badge only counts genuinely new messages, and only while
+				// the window is closed (open window = already read).
+				if ( freshCount && ! windowOpenRef.current ) {
+					setUnreadCount( ( prev ) => prev + freshCount );
+				}
 			}
 
 			// Update read receipt ID from poll response.
@@ -444,6 +453,17 @@ const useChat = ( config ) => {
 		setUnreadCount( 0 );
 	}, [] );
 
+	/**
+	 * Inform the hook whether the chat window is open, so polls don't
+	 * count messages the visitor is already reading.
+	 */
+	const setWindowOpen = useCallback( ( open ) => {
+		windowOpenRef.current = open;
+		if ( open ) {
+			setUnreadCount( 0 );
+		}
+	}, [] );
+
 	return {
 		messages,
 		conversationId,
@@ -461,6 +481,7 @@ const useChat = ( config ) => {
 		giveConsent,
 		dismissLeadForm,
 		clearUnread,
+		setWindowOpen,
 	};
 };
 

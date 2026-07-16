@@ -97,7 +97,8 @@ class CampaignController {
 		if ( $needs_default_title && $new_id ) {
 			$wpdb->update(
 				"{$wpdb->prefix}aime_campaigns",
-				array( 'title' => sprintf( __( 'Draft #%d', 'ai-marketing-expert' ), $new_id ) ),
+				/* translators: %d: new campaign draft ID. */
+			array( 'title' => sprintf( __( 'Draft #%d', 'ai-marketing-expert' ), $new_id ) ),
 				array( 'id' => $new_id )
 			);
 		}
@@ -161,6 +162,25 @@ class CampaignController {
 
 	/* ── SEND / SCHEDULE ─────────────────────────────── */
 
+	/**
+	 * Number of campaigns sent or scheduled this calendar month (free-tier metering).
+	 */
+	private function get_monthly_send_count(): int {
+		$counts = get_option( 'aime_campaign_send_counts', array() );
+		$month  = gmdate( 'Ym' );
+		return (int) ( $counts[ $month ] ?? 0 );
+	}
+
+	/**
+	 * Increment the monthly send counter, pruning past months.
+	 */
+	private function increment_monthly_send_count(): void {
+		$counts = get_option( 'aime_campaign_send_counts', array() );
+		$month  = gmdate( 'Ym' );
+		$counts = array( $month => (int) ( $counts[ $month ] ?? 0 ) + 1 );
+		update_option( 'aime_campaign_send_counts', $counts, false );
+	}
+
 	public function send( \WP_REST_Request $request ): \WP_REST_Response {
 		global $wpdb;
 		$p  = $wpdb->prefix;
@@ -192,6 +212,23 @@ class CampaignController {
 
 		$scheduled_at = sanitize_text_field( $request->get_param( 'scheduled_at' ) ?? '' );
 
+		// Free-tier monthly campaign metering (draft → send/schedule transitions only,
+		// so resume/retry on the same campaign is never double-counted).
+		if ( ! aime_has_pro() ) {
+			$limits    = aime_free_limits();
+			$max_month = (int) ( $limits['campaigns_per_month'] ?? 30 );
+			if ( $this->get_monthly_send_count() >= $max_month ) {
+				return new \WP_REST_Response( array(
+					'message'       => sprintf(
+						/* translators: %d: number of campaigns allowed per month on the free plan. */
+						__( 'Free sites can send %d campaigns per month. Upgrade to Pro for unlimited campaigns.', 'ai-marketing-expert' ),
+						$max_month
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
+		}
+
 		if ( $scheduled_at ) {
 			if ( ! aime_has_pro() ) {
 				$limits    = aime_free_limits();
@@ -206,6 +243,9 @@ class CampaignController {
 				'scheduled_at' => $scheduled_at,
 				'updated_at'   => current_time( 'mysql', true ),
 			), array( 'id' => $id ) );
+			if ( 'scheduled' !== $campaign->status ) {
+				$this->increment_monthly_send_count();
+			}
 			return new \WP_REST_Response( array( 'message' => __( 'Campaign scheduled.', 'ai-marketing-expert' ) ) );
 		}
 
@@ -218,6 +258,11 @@ class CampaignController {
 			'status'     => 'working',
 			'updated_at' => current_time( 'mysql', true ),
 		), array( 'id' => $id ) );
+
+		// Scheduled campaigns were already counted when they were scheduled.
+		if ( 'draft' === $campaign->status ) {
+			$this->increment_monthly_send_count();
+		}
 
 		$this->schedule_queue_runner();
 
@@ -370,11 +415,41 @@ class CampaignController {
 		$lock_key = 'aime_email_queue_runner_lock';
 
 		if ( 'pause' === $action ) {
-			$wpdb->update(
-				"{$p}aime_campaigns",
-				array( 'status' => 'paused', 'updated_at' => current_time( 'mysql', true ) ),
-				array( 'id' => $id, 'status' => 'sending' )
+			// Match both 'working' (audience still enqueuing) and 'sending' so pause never silently fails.
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$p}aime_campaigns
+					 SET status = 'paused', updated_at = %s
+					 WHERE id = %d AND status IN ('working','sending')",
+					current_time( 'mysql', true ),
+					$id
+				)
 			);
+			return $this->progress( $request );
+		}
+
+		if ( 'end' === $action ) {
+			// Terminal stop: cancel every pending row and mark the campaign finished so the UI shows final status.
+			$now = current_time( 'mysql', true );
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$p}aime_campaign_emails
+					 SET status = 'cancelled', note = 'Campaign ended by user', updated_at = %s
+					 WHERE campaign_id = %d AND status = 'pending'",
+					$now,
+					$id
+				)
+			);
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$p}aime_campaigns
+					 SET status = 'sent', note = 'Campaign ended manually.', updated_at = %s
+					 WHERE id = %d AND status IN ('working','sending','paused')",
+					$now,
+					$id
+				)
+			);
+			$this->release_smtp_limit_waits( $id );
 			return $this->progress( $request );
 		}
 

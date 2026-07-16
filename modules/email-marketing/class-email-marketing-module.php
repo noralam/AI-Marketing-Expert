@@ -195,7 +195,22 @@ class EmailMarketingModule extends Module {
 	/* ── Cron callbacks ──────────────────────────────────── */
 
 	public function handle_email_queue(): void {
-		( new Services\CampaignProcessor() )->process();
+		$lock_key = 'aime_email_queue_runner_lock';
+		if ( get_transient( $lock_key ) ) {
+			// Another worker (browser tick or single-event runner) is processing. Skip to avoid concurrent enqueue/send.
+			if ( $this->has_active_email_queue() ) {
+				$this->schedule_email_queue_runner();
+			}
+			return;
+		}
+
+		set_transient( $lock_key, 1, MINUTE_IN_SECONDS );
+
+		try {
+			( new Services\CampaignProcessor() )->process();
+		} finally {
+			delete_transient( $lock_key );
+		}
 
 		if ( $this->has_active_email_queue() ) {
 			$this->schedule_email_queue_runner();
@@ -259,12 +274,10 @@ class EmailMarketingModule extends Module {
 	}
 
 	private function ensure_cron_events(): void {
-		if ( ! wp_next_scheduled( 'aime_process_email_queue' ) ) {
-			wp_schedule_event( time(), 'every_minute', 'aime_process_email_queue' );
-		}
-
-		if ( ! wp_next_scheduled( 'aime_process_automations' ) ) {
-			wp_schedule_event( time() + MINUTE_IN_SECONDS, 'every_minute', 'aime_process_automations' );
+		// Queue + automations run from the consolidated core dispatcher
+		// (aime_minutely_tasks, see Plugin::run_minutely_tasks — audit P-4).
+		if ( ! wp_next_scheduled( 'aime_minutely_tasks' ) ) {
+			wp_schedule_event( time(), 'every_minute', 'aime_minutely_tasks' );
 		}
 
 		if ( ! wp_next_scheduled( 'aime_daily_cleanup' ) ) {
@@ -341,15 +354,11 @@ class EmailMarketingModule extends Module {
 		}
 		list( $limit, $window ) = $limits[ $action ];
 
+		// REMOTE_ADDR only: proxy headers (X-Forwarded-For etc.) are client-controlled,
+		// so trusting them lets an attacker rotate fake IPs to bypass the rate limit.
 		$ip = '';
-		foreach ( array( 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR' ) as $h ) {
-			if ( ! empty( $_SERVER[ $h ] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$first = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $h ] ) ) );
-				$ip    = trim( $first[0] );
-				if ( '' !== $ip ) {
-					break;
-				}
-			}
+		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
 
 		$key  = 'aime_track_' . $action . '_' . md5( $ip . '|' . $bucket_key );
@@ -690,11 +699,22 @@ class EmailMarketingModule extends Module {
 			'created_at'    => current_time( 'mysql', true ),
 		) );
 
+		$campaign_label = '';
+		if ( $campaign_id ) {
+			$campaign_title = $wpdb->get_var( $wpdb->prepare(
+				"SELECT title FROM {$p}aime_campaigns WHERE id = %d",
+				$campaign_id
+			) );
+			$campaign_label = ( null !== $campaign_title && '' !== $campaign_title )
+				? $campaign_title
+				: "campaign #{$campaign_id}";
+		}
+
 		$wpdb->insert( "{$p}aime_activity_log", array(
 			'object_type' => 'subscriber',
 			'object_id'   => $subscriber_id,
 			'action'      => 'unsubscribed',
-			'description' => $campaign_id ? "Unsubscribed from campaign #{$campaign_id}" : 'Unsubscribed via link',
+			'description' => $campaign_label ? "Unsubscribed from {$campaign_label}" : 'Unsubscribed via link',
 			'created_at'  => current_time( 'mysql', true ),
 		) );
 
@@ -871,12 +891,10 @@ class EmailMarketingModule extends Module {
 	}
 
 	private function get_tracking_ip(): string {
-		$headers = array( 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR' );
-		foreach ( $headers as $h ) {
-			if ( ! empty( $_SERVER[ $h ] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$ip = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $h ] ) ) );
-				return trim( $ip[0] );
-			}
+		// REMOTE_ADDR only: proxy headers are client-controlled and trivially spoofed,
+		// which would poison per-IP tracking analytics.
+		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
 		return '';
 	}
@@ -1099,6 +1117,7 @@ class EmailMarketingModule extends Module {
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT NULL,
 			PRIMARY KEY (id),
+			UNIQUE KEY idx_unique_campaign_subscriber (campaign_id, subscriber_id),
 			KEY idx_campaign (campaign_id),
 			KEY idx_subscriber (subscriber_id),
 			KEY idx_status (status),
@@ -1300,6 +1319,7 @@ class EmailMarketingModule extends Module {
 
 		$this->migrate_legacy_meta_columns();
 		$this->migrate_campaign_note_column();
+		$this->migrate_campaign_emails_dedupe_and_index();
 	}
 
 	private function migrate_legacy_meta_columns(): void {
@@ -1336,6 +1356,43 @@ class EmailMarketingModule extends Module {
 		}
 
 		$wpdb->query( "ALTER TABLE `{$table}` ADD COLUMN `note` text NULL AFTER `design_template`" );
+	}
+
+	/**
+	 * De-duplicate aime_campaign_emails and enforce a unique (campaign_id, subscriber_id) index.
+	 *
+	 * Historically the queue had no unique constraint, so a concurrent enqueue could insert the
+	 * same audience twice — doubling recipient counts and sending duplicate emails. This removes
+	 * existing duplicates (keeping the earliest row) then adds the unique index if it is absent.
+	 */
+	private function migrate_campaign_emails_dedupe_and_index(): void {
+		global $wpdb;
+
+		$table = "{$wpdb->prefix}aime_campaign_emails";
+
+		// Bail if the table does not exist yet (fresh install already created it with the index).
+		$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+		if ( ! $exists ) {
+			return;
+		}
+
+		// Already indexed? Nothing to do.
+		$has_index = $wpdb->get_var( "SHOW INDEX FROM `{$table}` WHERE Key_name = 'idx_unique_campaign_subscriber'" );
+		if ( $has_index ) {
+			return;
+		}
+
+		// Remove duplicate rows, keeping the lowest id per (campaign_id, subscriber_id).
+		$wpdb->query(
+			"DELETE ce1 FROM `{$table}` ce1
+			 INNER JOIN `{$table}` ce2
+			   ON ce1.campaign_id = ce2.campaign_id
+			  AND ce1.subscriber_id = ce2.subscriber_id
+			  AND ce1.id > ce2.id"
+		);
+
+		// Add the unique index now that duplicates are gone.
+		$wpdb->query( "ALTER TABLE `{$table}` ADD UNIQUE KEY idx_unique_campaign_subscriber (campaign_id, subscriber_id)" );
 	}
 
 	/* ── Public Subscribe Shortcode ──────────────────────── */

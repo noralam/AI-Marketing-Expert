@@ -163,6 +163,11 @@ class Admin {
 				'page_title' => __( 'Social Media', 'ai-marketing-expert' ),
 				'menu_title' => __( 'Social Media', 'ai-marketing-expert' ),
 			),
+			'workflow-automation' => array(
+				'slug'       => 'ai-marketing-expert-automation',
+				'page_title' => __( 'Automation', 'ai-marketing-expert' ),
+				'menu_title' => __( 'Automation', 'ai-marketing-expert' ),
+			),
 		);
 	}
 

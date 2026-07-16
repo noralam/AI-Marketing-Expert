@@ -316,7 +316,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 								<button
 									className="aime-btn-primary"
 									onClick={ () => {
-										navigator.clipboard.writeText( outreach.body || outreach.email || '' );
+										navigator.clipboard.writeText( outreach.body || outreach.email || '' ).catch( () => {} );
 										toast( __( 'Copied to clipboard!', 'ai-marketing-expert' ) );
 									} }
 								>

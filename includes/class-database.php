@@ -66,6 +66,40 @@ class Database {
 			KEY idx_created (created_at)
 		) {$charset_collate};";
 
+		// AI usage log (token accounting per generation call).
+		$tables[] = "CREATE TABLE {$wpdb->prefix}aime_ai_usage (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			connection_id varchar(64) NOT NULL DEFAULT '',
+			connection_name varchar(191) NOT NULL DEFAULT '',
+			provider varchar(50) NOT NULL DEFAULT '',
+			model varchar(191) NOT NULL DEFAULT '',
+			task varchar(50) NOT NULL DEFAULT 'text',
+			prompt_tokens bigint(20) unsigned NOT NULL DEFAULT 0,
+			completion_tokens bigint(20) unsigned NOT NULL DEFAULT 0,
+			success tinyint(1) NOT NULL DEFAULT 1,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY idx_created (created_at),
+			KEY idx_connection (connection_id)
+		) {$charset_collate};";
+
+		// Background AI job queue.
+		$tables[] = "CREATE TABLE {$wpdb->prefix}aime_ai_jobs (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			type varchar(50) NOT NULL,
+			payload longtext,
+			status varchar(20) NOT NULL DEFAULT 'pending',
+			attempts tinyint(3) unsigned NOT NULL DEFAULT 0,
+			result longtext,
+			error text,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			started_at datetime DEFAULT NULL,
+			completed_at datetime DEFAULT NULL,
+			PRIMARY KEY (id),
+			KEY idx_status (status),
+			KEY idx_created (created_at)
+		) {$charset_collate};";
+
 		foreach ( $tables as $sql ) {
 			dbDelta( $sql );
 		}
@@ -73,65 +107,19 @@ class Database {
 
 	/**
 	 * Drop all plugin tables (for uninstall).
+	 *
+	 * Discovers tables by prefix ("{$wpdb->prefix}aime_%") — the same logic
+	 * uninstall.php uses — instead of a hardcoded list that fell out of date
+	 * as modules were added (audit B-5). One source of truth for teardown.
 	 */
 	public static function drop_all_tables(): void {
 		global $wpdb;
 
-		$tables = array(
-			// Core.
-			"{$wpdb->prefix}aime_modules",
-			"{$wpdb->prefix}aime_log",
-			// Email CRM — Contact & Segmentation.
-			"{$wpdb->prefix}aime_subscribers",
-			"{$wpdb->prefix}aime_subscriber_meta",
-			"{$wpdb->prefix}aime_subscriber_pivot",
-			"{$wpdb->prefix}aime_subscriber_notes",
-			"{$wpdb->prefix}aime_lists",
-			"{$wpdb->prefix}aime_tags",
-			"{$wpdb->prefix}aime_custom_fields",
-			// Email CRM — Campaigns.
-			"{$wpdb->prefix}aime_campaigns",
-			"{$wpdb->prefix}aime_campaign_emails",
-			"{$wpdb->prefix}aime_campaign_url_metrics",
-			"{$wpdb->prefix}aime_url_stores",
-			"{$wpdb->prefix}aime_templates",
-			// Email CRM — Automations.
-			"{$wpdb->prefix}aime_funnels",
-			"{$wpdb->prefix}aime_funnel_sequences",
-			"{$wpdb->prefix}aime_funnel_subscribers",
-			"{$wpdb->prefix}aime_funnel_metrics",
-			// Email CRM — Companies.
-			"{$wpdb->prefix}aime_companies",
-			"{$wpdb->prefix}aime_company_notes",
-			// Email CRM — Taxonomy & Meta.
-			"{$wpdb->prefix}aime_labels",
-			"{$wpdb->prefix}aime_label_relations",
-			"{$wpdb->prefix}aime_meta",
-			"{$wpdb->prefix}aime_activity_log",
-			// Legacy tables (cleanup from v1).
-			"{$wpdb->prefix}aime_email_lists",
-			"{$wpdb->prefix}aime_email_subscribers",
-			"{$wpdb->prefix}aime_email_subscriber_lists",
-			"{$wpdb->prefix}aime_email_tags",
-			"{$wpdb->prefix}aime_email_subscriber_tags",
-			"{$wpdb->prefix}aime_email_campaigns",
-			"{$wpdb->prefix}aime_email_templates",
-			"{$wpdb->prefix}aime_email_queue",
-			"{$wpdb->prefix}aime_email_events",
-			"{$wpdb->prefix}aime_email_automations",
-			"{$wpdb->prefix}aime_email_automation_steps",
-			"{$wpdb->prefix}aime_email_automation_logs",
-			"{$wpdb->prefix}aime_email_subscriber_notes",
-			// Chatbot.
-			"{$wpdb->prefix}aime_chatbot_bots",
-			"{$wpdb->prefix}aime_chatbot_conversations",
-			"{$wpdb->prefix}aime_chatbot_messages",
-			"{$wpdb->prefix}aime_chatbot_knowledge",
-			"{$wpdb->prefix}aime_chatbot_analytics",
-			// Social Media.
-			"{$wpdb->prefix}aime_social_accounts",
-			"{$wpdb->prefix}aime_social_posts",
-			"{$wpdb->prefix}aime_social_post_log",
+		$tables = $wpdb->get_col(
+			$wpdb->prepare(
+				'SHOW TABLES LIKE %s',
+				$wpdb->esc_like( $wpdb->prefix . 'aime_' ) . '%'
+			)
 		);
 
 		/**
@@ -142,7 +130,7 @@ class Database {
 		$tables = apply_filters( 'aime_uninstall_tables', $tables );
 
 		foreach ( $tables as $table ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names are hardcoded with $wpdb->prefix.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names come from SHOW TABLES with the plugin prefix.
 			$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
 		}
 	}

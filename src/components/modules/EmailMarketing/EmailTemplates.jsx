@@ -12,6 +12,7 @@ import { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
+import sanitizeHtml from '../../../utils/sanitizeHtml';
 
 const CATEGORY_OPTIONS = [
 	{ label: __( 'All Categories', 'ai-marketing-expert' ), value: '' },
@@ -275,7 +276,7 @@ const EmailTemplates = ( { onNavigate } ) => {
 						<div className="aime-premium-modal-body" style={ { padding: 0, overflow: 'auto' } }>
 							<div style={ { background: '#f5f5f5', padding: 24, minHeight: 400 } }>
 								<div style={ { maxWidth: 600, margin: '0 auto', background: 'white', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' } }
-									dangerouslySetInnerHTML={ { __html: previewHtml } }
+									dangerouslySetInnerHTML={ { __html: sanitizeHtml( previewHtml ) } }
 								/>
 							</div>
 						</div>

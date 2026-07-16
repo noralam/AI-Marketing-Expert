@@ -16,6 +16,7 @@ import { toast } from '../../../common/Toast';
 const TABS = [
 	{ name: 'general', title: __( 'General', 'ai-marketing-expert' ) },
 	{ name: 'behavior', title: __( 'Behavior', 'ai-marketing-expert' ) },
+	{ name: 'notifications', title: __( 'Notifications', 'ai-marketing-expert' ) },
 	{ name: 'privacy', title: __( 'Privacy & GDPR', 'ai-marketing-expert' ) },
 ];
 
@@ -179,6 +180,37 @@ const Settings = () => {
 									/>
 									</ProLock>
 									{ ! hasPro && <Notice type="info" message={ __( 'Advanced behavior controls require Pro. Free users keep the standard message length, polling, rate limit, and read receipt settings.', 'ai-marketing-expert' ) } /> }
+									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
+										{ saving
+											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+											: __( 'Save Settings', 'ai-marketing-expert' )
+										}
+									</Button>
+								</div>
+							);
+						}
+
+						/* Notifications tab */
+						if ( tab.name === 'notifications' ) {
+							return (
+								<div className="aime-settings-form">
+									<ToggleControl
+										label={ __( 'Email on New Chat', 'ai-marketing-expert' ) }
+										help={ __( 'Send an email to the site admin whenever a visitor starts a new chat conversation.', 'ai-marketing-expert' ) }
+										checked={ !! settings.notify_new_chat }
+										onChange={ ( v ) => setField( 'notify_new_chat', v ) }
+									/>
+									{ !! settings.notify_new_chat && (
+										<TextControl
+											label={ __( 'Notification Email', 'ai-marketing-expert' ) }
+											help={ __( 'Where to send new chat notifications. Leave empty to use the site admin email.', 'ai-marketing-expert' ) }
+											type="email"
+											placeholder={ settings.admin_email || __( 'Site admin email (default)', 'ai-marketing-expert' ) }
+											value={ settings.notify_email || '' }
+											onChange={ ( v ) => setField( 'notify_email', v ) }
+											__nextHasNoMarginBottom
+										/>
+									) }
 									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving
 											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>

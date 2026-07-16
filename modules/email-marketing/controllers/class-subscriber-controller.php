@@ -1435,7 +1435,9 @@ class SubscriberController {
 	/**
 	 * POST /email/webhook/subscribe — Create a subscriber via external webhook.
 	 *
-	 * Authenticated via API key (X-API-Key header or api_key body param).
+	 * Authenticated via HMAC signature (X-Aime-Timestamp + X-Aime-Signature,
+	 * preferred) or static API key (X-API-Key header only) — see
+	 * RestApi::validate_api_key().
 	 * Supports: email, first_name, last_name, list_id, tag_ids, tag_names, status, custom_fields.
 	 *
 	 * tag_names accepts an array of tag title strings (e.g. ["Click to Top"]).
@@ -1588,5 +1590,141 @@ class SubscriberController {
 	private function sanitize_limited_text( $value, int $max_length ): string {
 		$value = sanitize_text_field( wp_unslash( (string) $value ) );
 		return substr( $value, 0, $max_length );
+	}
+
+	/**
+	 * ESP feedback-loop webhook: move complaining recipients to the Complaint list.
+	 *
+	 * Spam complaints cannot be inferred from SMTP send success, so ESPs (Amazon SES via SNS,
+	 * SendGrid, Mailgun, Postmark) POST them here. Mirrors unsubscribe: status → 'complained',
+	 * metric row, activity log, status-change hook. Pro-only.
+	 */
+	public function webhook_complaint( \WP_REST_Request $request ): \WP_REST_Response {
+		return $this->handle_status_webhook( $request, 'complained', 'complaint' );
+	}
+
+	/**
+	 * ESP bounce-notification webhook: move hard-bounced recipients to the Bounced list.
+	 */
+	public function webhook_bounce( \WP_REST_Request $request ): \WP_REST_Response {
+		return $this->handle_status_webhook( $request, 'bounced', 'bounce' );
+	}
+
+	/**
+	 * Shared handler for complaint/bounce webhooks.
+	 *
+	 * @param \WP_REST_Request $request     Incoming request (API key + email|emails).
+	 * @param string           $new_status  Target subscriber status ('complained'|'bounced').
+	 * @param string           $metric_type Metric row type ('complaint'|'bounce').
+	 */
+	private function handle_status_webhook( \WP_REST_Request $request, string $new_status, string $metric_type ): \WP_REST_Response {
+		// Validate API key.
+		if ( ! \WPSpace\AiMarketingExpert\RestApi::validate_api_key( $request ) ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Invalid or missing API key.', 'ai-marketing-expert' ) ),
+				401
+			);
+		}
+
+		// Pro gate: automatic complaint/bounce handling is a Pro feature.
+		if ( ! aime_has_pro() ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Automatic complaint and bounce handling is available in Pro.', 'ai-marketing-expert' ) ),
+				403
+			);
+		}
+
+		// Rate limit: 60 requests per IP per minute (shared bucket with other webhooks).
+		$ip  = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0' ) );
+		$key = 'aime_wh_' . md5( $ip );
+		$hit = (int) get_transient( $key );
+		if ( $hit >= 60 ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Too many requests. Please try again later.', 'ai-marketing-expert' ) ),
+				429
+			);
+		}
+		set_transient( $key, $hit + 1, MINUTE_IN_SECONDS );
+
+		// Collect target emails from either `email` or `emails[]`.
+		$emails = array();
+		$single = sanitize_email( $request->get_param( 'email' ) ?? '' );
+		if ( $single ) {
+			$emails[] = $single;
+		}
+		foreach ( (array) ( $request->get_param( 'emails' ) ?? array() ) as $candidate ) {
+			$candidate = sanitize_email( $candidate );
+			if ( $candidate ) {
+				$emails[] = $candidate;
+			}
+		}
+		$emails = array_slice( array_unique( array_filter( $emails, 'is_email' ) ), 0, 500 );
+
+		if ( empty( $emails ) ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'No valid email address provided.', 'ai-marketing-expert' ) ),
+				400
+			);
+		}
+
+		global $wpdb;
+		$subscribers_table = $wpdb->prefix . 'aime_subscribers';
+		$metrics_table     = $wpdb->prefix . 'aime_campaign_url_metrics';
+		$now               = current_time( 'mysql', true );
+
+		$updated   = 0;
+		$not_found = 0;
+
+		foreach ( $emails as $email ) {
+			$sub = $wpdb->get_row(
+				$wpdb->prepare( 'SELECT id, status FROM %i WHERE email = %s', $subscribers_table, $email )
+			);
+			if ( ! $sub ) {
+				$not_found++;
+				continue;
+			}
+
+			$sub_id     = (int) $sub->id;
+			$old_status = (string) $sub->status;
+
+			// Skip if already in the target terminal state.
+			if ( $old_status === $new_status ) {
+				continue;
+			}
+
+			$wpdb->update(
+				$subscribers_table,
+				array( 'status' => $new_status, 'updated_at' => $now ),
+				array( 'id' => $sub_id )
+			);
+
+			$wpdb->insert( $metrics_table, array(
+				'url_id'        => 0,
+				'campaign_id'   => 0,
+				'subscriber_id' => $sub_id,
+				'type'          => $metric_type,
+				'ip_address'    => $ip,
+				'country'       => '',
+				'city'          => '',
+				'created_at'    => $now,
+			) );
+
+			$this->log_activity(
+				$sub_id,
+				$new_status,
+				'complained' === $new_status ? 'Marked as spam complaint via provider webhook' : 'Hard bounce reported via provider webhook'
+			);
+
+			/** Fires so automations react to the status change (same hook as manual bulk changes). */
+			do_action( 'aime_subscriber_status_change', $sub_id, $old_status, $new_status );
+
+			$updated++;
+		}
+
+		return new \WP_REST_Response( array(
+			'processed'  => count( $emails ),
+			'updated'    => $updated,
+			'not_found'  => $not_found,
+		) );
 	}
 }

@@ -32,9 +32,15 @@ class AiProvider {
 	/**
 	 * Available provider presets (definitions only — not user data).
 	 *
+	 * Model lists are intentionally empty: models change monthly, so the UI
+	 * loads the live list from each provider's API (fetch-models endpoint,
+	 * cached 6h) instead of shipping hardcoded lists that rot between
+	 * releases.
+	 *
 	 * @return array
 	 */
 	public static function get_providers(): array {
+		$no_models = array( 'text' => array(), 'image' => array() );
 		return array(
 			'google_ai'  => array(
 				'id'          => 'google_ai',
@@ -42,15 +48,15 @@ class AiProvider {
 				'description' => __( 'Google Gemini models for text, image, and multimodal tasks.', 'ai-marketing-expert' ),
 				'api_url'     => 'https://generativelanguage.googleapis.com/v1beta',
 				'docs_url'    => 'https://ai.google.dev/',
-				'models'      => self::get_google_models(),
+				'models'      => $no_models,
 			),
 			'openai'     => array(
 				'id'          => 'openai',
 				'name'        => __( 'OpenAI (ChatGPT)', 'ai-marketing-expert' ),
-				'description' => __( 'GPT-5.2, GPT Image 1.5 and more from OpenAI.', 'ai-marketing-expert' ),
+				'description' => __( 'GPT text and image models from OpenAI.', 'ai-marketing-expert' ),
 				'api_url'     => 'https://api.openai.com/v1',
 				'docs_url'    => 'https://platform.openai.com/docs',
-				'models'      => self::get_openai_models(),
+				'models'      => $no_models,
 			),
 			'openrouter' => array(
 				'id'          => 'openrouter',
@@ -58,7 +64,7 @@ class AiProvider {
 				'description' => __( 'Access multiple AI models through one API — Claude, GPT, Llama, and more.', 'ai-marketing-expert' ),
 				'api_url'     => 'https://openrouter.ai/api/v1',
 				'docs_url'    => 'https://openrouter.ai/docs',
-				'models'      => self::get_openrouter_models(),
+				'models'      => $no_models,
 			),
 			'anthropic'  => array(
 				'id'          => 'anthropic',
@@ -66,7 +72,7 @@ class AiProvider {
 				'description' => __( 'Claude models for advanced reasoning, writing, and analysis.', 'ai-marketing-expert' ),
 				'api_url'     => 'https://api.anthropic.com/v1',
 				'docs_url'    => 'https://docs.anthropic.com/',
-				'models'      => self::get_anthropic_models(),
+				'models'      => $no_models,
 			),
 			'custom'     => array(
 				'id'          => 'custom',
@@ -75,88 +81,16 @@ class AiProvider {
 				'api_url'     => '',
 				'docs_url'    => '',
 				'is_custom'   => true,
-				'models'      => array( 'text' => array(), 'image' => array() ),
+				'models'      => $no_models,
 			),
-		);
-	}
-
-	/* ================================================================
-	 *  MODEL DEFINITIONS
-	 * ============================================================= */
-
-	private static function get_google_models(): array {
-		return array(
-			'text'  => array(
-				array( 'id' => 'gemini-3-flash-preview',    'name' => 'Gemini 3 Flash (Best)',           'type' => 'text', 'recommended' => true, 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'gemini-3.1-pro-preview',    'name' => 'Gemini 3.1 Pro (Most Capable)',   'type' => 'text', 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'gemini-2.5-flash',          'name' => 'Gemini 2.5 Flash (Stable)',       'type' => 'text', 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'gemini-2.5-pro',            'name' => 'Gemini 2.5 Pro (Stable)',         'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'gemini-2.5-flash-lite',     'name' => 'Gemini 2.5 Flash Lite (Budget)',  'type' => 'text', 'capabilities' => array( 'text' ) ),
-			),
-			'image' => array(
-				array( 'id' => 'gemini-3.1-flash-image-preview', 'name' => 'Nano Banana 2 (Latest)',      'type' => 'image', 'recommended' => true, 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'gemini-3-pro-image-preview',    'name' => 'Nano Banana Pro (Studio)',     'type' => 'image', 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'gemini-2.5-flash-image',        'name' => 'Nano Banana (Stable)',         'type' => 'image', 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'imagen-4.0-generate-001',       'name' => 'Imagen 4 (Generation)',        'type' => 'image', 'capabilities' => array( 'image' ) ),
-			),
-		);
-	}
-
-	private static function get_openai_models(): array {
-		return array(
-			'text'  => array(
-				array( 'id' => 'gpt-5.2',         'name' => 'GPT-5.2 (Best)',              'type' => 'text', 'recommended' => true, 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'gpt-5-mini',      'name' => 'GPT-5 Mini (Fast)',           'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'gpt-5-nano',      'name' => 'GPT-5 Nano (Fastest)',        'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'gpt-4.1',         'name' => 'GPT-4.1 (Non-Reasoning)',     'type' => 'text', 'capabilities' => array( 'text' ) ),
-			),
-			'image' => array(
-				array( 'id' => 'gpt-image-1.5',   'name' => 'GPT Image 1.5 (Best)',        'type' => 'image', 'recommended' => true, 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'gpt-image-1',     'name' => 'GPT Image 1',                'type' => 'image', 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'gpt-5.2',         'name' => 'GPT-5.2 (Vision Input)',      'type' => 'image', 'capabilities' => array( 'image' ) ),
-			),
-		);
-	}
-
-	private static function get_openrouter_models(): array {
-		return array(
-			'text'  => array(
-				array( 'id' => 'google/gemini-2.5-flash-preview:free',       'name' => 'Gemini 2.5 Flash (Free)',            'type' => 'text', 'recommended' => true, 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'deepseek/deepseek-r1:free',                 'name' => 'DeepSeek R1 (Free / Reasoning)',     'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'meta-llama/llama-4-maverick:free',          'name' => 'Llama 4 Maverick (Free)',            'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'qwen/qwen-2.5-72b-instruct:free',          'name' => 'Qwen 2.5 72B (Free)',                'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'stepfun/step-3.5-flash:free',              'name' => 'Step 3.5 Flash (Free)',              'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'google/gemini-3-flash-preview',            'name' => 'Gemini 3 Flash (Paid)',              'type' => 'text', 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'anthropic/claude-sonnet-4-6',              'name' => 'Claude Sonnet 4.6 (Paid)',           'type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'openai/gpt-5.2',                          'name' => 'GPT-5.2 (Paid)',                     'type' => 'text', 'capabilities' => array( 'text', 'image' ) ),
-			),
-			'image' => array(
-				array( 'id' => 'google/gemini-3.1-flash-image-preview',     'name' => 'Nano Banana 2 (Cheap)',              'type' => 'image', 'recommended' => true, 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'google/gemini-2.5-flash-preview:free',     'name' => 'Gemini 2.5 Flash Vision (Free)',     'type' => 'image', 'capabilities' => array( 'text', 'image' ) ),
-				array( 'id' => 'anthropic/claude-sonnet-4-6',              'name' => 'Claude Sonnet 4.6 Vision (Paid)',    'type' => 'image', 'capabilities' => array( 'image' ) ),
-				array( 'id' => 'openai/gpt-5.2',                          'name' => 'GPT-5.2 Vision (Paid)',              'type' => 'image', 'capabilities' => array( 'image' ) ),
-			),
-		);
-	}
-
-	private static function get_anthropic_models(): array {
-		return array(
-			'text'  => array(
-				array( 'id' => 'claude-sonnet-4-6',          'name' => 'Claude Sonnet 4.6 (Best Value)',   'type' => 'text', 'recommended' => true, 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'claude-opus-4-6',            'name' => 'Claude Opus 4.6 (Most Intelligent)','type' => 'text', 'capabilities' => array( 'text' ) ),
-				array( 'id' => 'claude-haiku-4-5',           'name' => 'Claude Haiku 4.5 (Fastest)',       'type' => 'text', 'capabilities' => array( 'text' ) ),
-			),
-			// Anthropic does not currently expose a native image-generation model,
-			// so image generation is intentionally not offered for this provider.
-			// generate_image() will skip anthropic connections because the
-			// resolved model is empty and the call site already does
-			// `if ( empty( $model ) ) { continue; }`.
-			'image' => array(),
 		);
 	}
 
 	/**
 	 * Get default model IDs for a provider.
+	 *
+	 * Backend safety fallback only (connection saved without a model, image
+	 * fallback pass). Not shown in the UI — the UI uses live-fetched models.
 	 */
 	private static function get_default_models( string $provider_id ): array {
 		$map = array(
@@ -196,7 +130,9 @@ class AiProvider {
 			}
 		}
 
-		// For custom models, assume they have the requested capability.
+		// Model lists are no longer shipped hardcoded, so capability metadata
+		// is unknown here — assume capable and let the provider API reject
+		// unsupported requests.
 		return true;
 	}
 
@@ -273,11 +209,16 @@ class AiProvider {
 		return array_map( function ( $c ) {
 			$health = self::get_connection_health( $c['id'] ?? '' );
 			$c['has_key'] = ! empty( $c['api_key'] );
+			$c['key_decrypt_failed'] = false;
 			if ( ! empty( $c['api_key'] ) ) {
 				$decrypted = Encryption::decrypt( $c['api_key'] );
-				$c['api_key'] = ! empty( $decrypted )
-					? '••••••••' . substr( $decrypted, -4 )
-					: '';
+				if ( ! empty( $decrypted ) ) {
+					$c['api_key'] = '••••••••' . substr( $decrypted, -4 );
+				} else {
+					// Stored key exists but no longer decrypts (AUTH_KEY changed?).
+					$c['api_key']            = '';
+					$c['key_decrypt_failed'] = true;
+				}
 			}
 			// Ensure primary_for is always present.
 			$c['primary_for'] = $c['primary_for'] ?? array();
@@ -519,11 +460,152 @@ class AiProvider {
 		);
 
 		update_option( self::HEALTH_OPTION_KEY, $health, false );
+
+		// Alert the admin when a key stops working or quota runs out.
+		if ( 'auth_error' === $classification['type'] || 'quota_exceeded' === ( $classification['reason'] ?? '' ) ) {
+			self::maybe_notify_key_failure( $conn, $classification, $message );
+		}
 	}
 
+	/**
+	 * Send a throttled (max one per day per connection+type) admin email
+	 * when an API key fails with an auth or quota error.
+	 */
+	private static function maybe_notify_key_failure( array $conn, array $classification, string $message ): void {
+		/**
+		 * Filter to disable AI key health email notifications.
+		 *
+		 * @param bool $enabled Default true.
+		 */
+		if ( ! apply_filters( 'aime_key_health_notifications', true ) ) {
+			return;
+		}
+
+		$conn_id = $conn['id'] ?? '';
+		if ( '' === $conn_id ) {
+			return;
+		}
+
+		$throttle_key = 'aime_keyhealth_mail_' . md5( $conn_id . '|' . $classification['type'] );
+		if ( get_transient( $throttle_key ) ) {
+			return;
+		}
+
+		$to = get_option( 'admin_email' );
+		if ( ! is_email( $to ) ) {
+			return;
+		}
+
+		set_transient( $throttle_key, 1, DAY_IN_SECONDS );
+
+		$conn_name = $conn['name'] ?? ( $conn['provider'] ?? 'AI' );
+		$is_auth   = 'auth_error' === $classification['type'];
+
+		if ( $is_auth ) {
+			/* translators: 1: site name, 2: connection name */
+			$subject_tpl = __( '[%1$s] AI provider key problem: %2$s', 'ai-marketing-expert' );
+		} else {
+			/* translators: 1: site name, 2: connection name */
+			$subject_tpl = __( '[%1$s] AI provider quota exceeded: %2$s', 'ai-marketing-expert' );
+		}
+		$subject = sprintf(
+			$subject_tpl,
+			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+			$conn_name
+		);
+
+		$lines   = array();
+		$lines[] = $is_auth
+			? __( 'An AI provider connection is failing with an authentication error. Generations that rely on it will not work until the API key is fixed.', 'ai-marketing-expert' )
+			: __( 'An AI provider connection has run out of quota or hit a billing limit. Generations fall back to other connections until it recovers.', 'ai-marketing-expert' );
+		$lines[] = '';
+		/* translators: %s: connection name. */
+		$lines[] = sprintf( __( 'Connection: %s', 'ai-marketing-expert' ), $conn_name );
+		/* translators: %s: AI provider slug (e.g. openai). */
+		$lines[] = sprintf( __( 'Provider: %s', 'ai-marketing-expert' ), $conn['provider'] ?? '' );
+		/* translators: %s: API error message. */
+		$lines[] = sprintf( __( 'Error: %s', 'ai-marketing-expert' ), self::shorten_api_error( $message ) );
+		$lines[] = '';
+		$lines[] = sprintf(
+			/* translators: %s: admin URL of the AI providers settings page. */
+			__( 'Review it here: %s', 'ai-marketing-expert' ),
+			admin_url( 'admin.php?page=ai-marketing-expert-ai-providers' )
+		);
+
+		wp_mail( $to, $subject, implode( "\n", $lines ) );
+	}
+
+	/**
+	 * Build a standard failure array from an HTTP response.
+	 *
+	 * Attaches the HTTP status code (and Retry-After header when present) so
+	 * classify_failure() can classify by status instead of matching provider
+	 * error strings (audit B-3).
+	 *
+	 * @param array|\WP_Error $response     wp_remote_* response.
+	 * @param string          $message      Human-readable error message.
+	 * @param bool            $with_content Include an empty 'content' key (text-generation shape).
+	 * @return array
+	 */
+	private static function http_failure( $response, string $message, bool $with_content = true ): array {
+		$failure = array(
+			'success'     => false,
+			'message'     => $message,
+			'status_code' => (int) wp_remote_retrieve_response_code( $response ),
+		);
+		if ( $with_content ) {
+			$failure['content'] = '';
+		}
+		$retry_after = wp_remote_retrieve_header( $response, 'retry-after' );
+		if ( is_numeric( $retry_after ) && (int) $retry_after > 0 ) {
+			$failure['retry_after'] = (int) $retry_after;
+		}
+		return $failure;
+	}
+
+	/**
+	 * Classify a failed provider result for circuit-breaker cooldowns.
+	 *
+	 * Classifies by HTTP status code when the failure carries one (audit
+	 * B-3) — provider error strings change wording between releases, status
+	 * codes don't. String matching remains only as a fallback for transport
+	 * failures (WP_Error: timeout, DNS, TLS), which have no status code.
+	 */
 	private static function classify_failure( array $result ): array {
+		$code    = (int) ( $result['status_code'] ?? 0 );
 		$message = strtolower( $result['message'] ?? '' );
 
+		if ( 401 === $code || 403 === $code ) {
+			return array( 'type' => 'auth_error', 'reason' => 'invalid_key', 'cooldown' => 0 );
+		}
+
+		if ( 402 === $code ) {
+			return array( 'type' => 'rate_limited', 'reason' => 'quota_exceeded', 'cooldown' => self::QUOTA_COOLDOWN );
+		}
+
+		if ( 429 === $code ) {
+			// OpenAI reports hard quota/billing exhaustion as 429 too — the
+			// message is the only way to tell it apart from a burst limit.
+			if ( false !== strpos( $message, 'quota' ) || false !== strpos( $message, 'billing' ) ) {
+				return array( 'type' => 'rate_limited', 'reason' => 'quota_exceeded', 'cooldown' => self::QUOTA_COOLDOWN );
+			}
+			$cooldown = ! empty( $result['retry_after'] )
+				? max( 60, min( (int) $result['retry_after'], self::QUOTA_COOLDOWN ) )
+				: self::parse_provider_retry_after( $result['message'] ?? '' );
+			return array( 'type' => 'rate_limited', 'reason' => 'rate_limited', 'cooldown' => $cooldown );
+		}
+
+		if ( in_array( $code, array( 500, 502, 503, 504, 529 ), true ) ) {
+			// 529 = Anthropic "overloaded".
+			return array( 'type' => 'temporary_error', 'reason' => 'provider_unavailable', 'cooldown' => self::TEMPORARY_COOLDOWN );
+		}
+
+		if ( $code >= 400 && $code < 500 ) {
+			return array( 'type' => 'bad_request', 'reason' => 'request_or_model_error', 'cooldown' => 0 );
+		}
+
+		// No status code — transport failure or legacy caller. Fall back to
+		// string matching.
 		if ( false !== strpos( $message, 'invalid api key' ) || false !== strpos( $message, 'incorrect api key' ) || false !== strpos( $message, 'unauthorized' ) || false !== strpos( $message, '401' ) ) {
 			return array( 'type' => 'auth_error', 'reason' => 'invalid_key', 'cooldown' => 0 );
 		}
@@ -699,9 +781,14 @@ class AiProvider {
 	}
 
 	private static function test_google_ai( string $api_key ): array {
+		// API key is sent via header (never in the URL) so it cannot leak into
+		// server / proxy / CDN access logs.
 		$response = wp_remote_get(
-			'https://generativelanguage.googleapis.com/v1beta/models?key=' . $api_key,
-			array( 'timeout' => 15 )
+			'https://generativelanguage.googleapis.com/v1beta/models',
+			array(
+				'timeout' => 15,
+				'headers' => array( 'x-goog-api-key' => $api_key ),
+			)
 		);
 
 		if ( is_wp_error( $response ) ) {
@@ -714,7 +801,7 @@ class AiProvider {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		return array( 'success' => false, 'message' => $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ) );
+		return self::http_failure( $response, $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ), false );
 	}
 
 	private static function test_openrouter( string $api_key ): array {
@@ -736,25 +823,18 @@ class AiProvider {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		return array( 'success' => false, 'message' => $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ) );
+		return self::http_failure( $response, $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ), false );
 	}
 
 	private static function test_openai( string $api_key ): array {
-		$response = wp_remote_post(
-			'https://api.openai.com/v1/chat/completions',
+		// GET /models verifies the key without running a paid completion (audit P-5).
+		$response = wp_remote_get(
+			'https://api.openai.com/v1/models',
 			array(
 				'timeout' => 15,
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
 				),
-				'body'    => wp_json_encode( array(
-					'model'      => 'gpt-5-nano',
-					'max_tokens' => 10,
-					'messages'   => array(
-						array( 'role' => 'user', 'content' => 'Hi' ),
-					),
-				) ),
 			)
 		);
 
@@ -768,26 +848,19 @@ class AiProvider {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		return array( 'success' => false, 'message' => $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ) );
+		return self::http_failure( $response, $body['error']['message'] ?? __( 'Connection failed.', 'ai-marketing-expert' ), false );
 	}
 
 	private static function test_anthropic( string $api_key ): array {
-		$response = wp_remote_post(
-			'https://api.anthropic.com/v1/messages',
+		// GET /models verifies the key without running a paid completion (audit P-5).
+		$response = wp_remote_get(
+			'https://api.anthropic.com/v1/models',
 			array(
 				'timeout' => 15,
 				'headers' => array(
 					'x-api-key'         => $api_key,
 					'anthropic-version'  => '2023-06-01',
-					'Content-Type'       => 'application/json',
 				),
-				'body'    => wp_json_encode( array(
-					'model'      => 'claude-haiku-4-5',
-					'max_tokens' => 10,
-					'messages'   => array(
-						array( 'role' => 'user', 'content' => 'Hi' ),
-					),
-				) ),
 			)
 		);
 
@@ -801,7 +874,7 @@ class AiProvider {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		return array( 'success' => false, 'message' => $body['error']['message'] ?? __( 'Anthropic error.', 'ai-marketing-expert' ) );
+		return self::http_failure( $response, $body['error']['message'] ?? __( 'Anthropic error.', 'ai-marketing-expert' ), false );
 	}
 
 	/* ================================================================
@@ -837,8 +910,11 @@ class AiProvider {
 
 	private static function fetch_google_ai_models( string $api_key ): array {
 		$response = wp_remote_get(
-			'https://generativelanguage.googleapis.com/v1beta/models?key=' . urlencode( $api_key ) . '&pageSize=1000',
-			array( 'timeout' => 20 )
+			'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000',
+			array(
+				'timeout' => 20,
+				'headers' => array( 'x-goog-api-key' => $api_key ),
+			)
 		);
 
 		if ( is_wp_error( $response ) ) {
@@ -1179,24 +1255,57 @@ class AiProvider {
 	 * @return array The last result from $fn.
 	 */
 	/**
+	 * Whether we're running in a background context (cron / WP-CLI / queue),
+	 * where long waits and retries are safe. In an interactive web request,
+	 * blocking a PHP worker with sleep() or multi-minute cURL calls risks
+	 * exhausting the worker pool and taking the whole site down.
+	 */
+	private static function is_background_context(): bool {
+		return wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI );
+	}
+
+	/**
 	 * Compute a sensible HTTP timeout for an AI request based on max_tokens.
-	 * Large completions (full article, keyword research) need far more than 60 s.
-	 * Caps at 300 s (5 minutes) which handles even the slowest providers.
+	 *
+	 * Background context (cron/CLI): large completions (full article, keyword
+	 * research) need far more than 60 s — allow up to 300 s.
+	 * Web context: hard-cap at 60 s so a slow provider degrades the feature,
+	 * not the site.
 	 */
 	private static function compute_http_timeout( int $max_tokens ): int {
-		// ~30 tokens per second is conservative for large models.
-		return max( 120, min( 300, (int) ( $max_tokens / 30 ) ) );
+		if ( self::is_background_context() ) {
+			// ~30 tokens per second is conservative for large models.
+			return max( 120, min( 300, (int) ( $max_tokens / 30 ) ) );
+		}
+
+		/**
+		 * Filter the AI HTTP timeout (seconds) used for interactive web requests.
+		 *
+		 * @param int $timeout    Timeout in seconds (capped at 120).
+		 * @param int $max_tokens Requested max tokens.
+		 */
+		$timeout = (int) apply_filters( 'aime_web_http_timeout', 60, $max_tokens );
+		return max( 15, min( 120, $timeout ) );
 	}
 
 	private static function with_retry( callable $fn, string $label = '' ): array {
-		// Disable PHP max_execution_time for the entire retry sequence.
-		// Large AI generations (full articles, keyword lists) can take 2-5 minutes,
-		// and without this the PHP watchdog kills the process mid-cURL at 120-130 s.
-		if ( function_exists( 'set_time_limit' ) ) {
+		$background = self::is_background_context();
+
+		if ( $background && function_exists( 'set_time_limit' ) ) {
+			// Only in cron/CLI: large AI generations can take 2-5 minutes, and
+			// without this the PHP watchdog kills the process mid-cURL.
+			// Never in web requests — see is_background_context().
 			set_time_limit( 0 );
 		}
 
 		$result = $fn();
+
+		// Retries with sleep() are reserved for background context. In a web
+		// request we return the failure immediately: the caller's multi-
+		// connection fallback still runs, and the user can simply retry.
+		if ( ! $background ) {
+			return $result;
+		}
 
 		for ( $attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++ ) {
 			if ( ! self::is_retryable( $result ) ) {
@@ -1222,7 +1331,7 @@ class AiProvider {
 	 * @param int    $max_tokens Maximum tokens.
 	 * @return array { success: bool, content: string, provider: string, model: string }
 	 */
-	public static function generate( string $prompt, string $task = 'text', int $max_tokens = 2048 ): array {
+	public static function generate( string $prompt, string $task = 'text', int $max_tokens = 2048, array $options = array() ): array {
 		$connections = self::get_connections();
 
 		// Sort: primary for this task first.
@@ -1233,6 +1342,9 @@ class AiProvider {
 			if ( ! $a_primary && $b_primary ) return 1;
 			return 0;
 		} );
+
+		$errors = array();
+		$tried  = 0;
 
 		foreach ( $connections as $conn ) {
 			if ( empty( $conn['enabled'] ) || empty( $conn['api_key'] ) || ! self::is_connection_available( $conn ) ) {
@@ -1246,9 +1358,25 @@ class AiProvider {
 			}
 
 			$api_key = Encryption::decrypt( $conn['api_key'] );
-			if ( empty( $model ) || empty( $api_key ) ) {
+			if ( empty( $api_key ) ) {
+				$errors[] = sprintf(
+					/* translators: %s: connection name */
+					__( '[%s] Stored API key could not be decrypted — security keys may have changed. Re-enter the API key in Settings → AI Providers.', 'ai-marketing-expert' ),
+					$conn['name'] ?? $conn['provider']
+				);
 				continue;
 			}
+			if ( empty( $model ) ) {
+				$errors[] = sprintf(
+					/* translators: 1: connection name, 2: task type */
+					__( '[%1$s] No %2$s model selected for this connection.', 'ai-marketing-expert' ),
+					$conn['name'] ?? $conn['provider'],
+					$task
+				);
+				continue;
+			}
+
+			++$tried;
 
 			$result = null;
 			$provider_id = $conn['provider'];
@@ -1256,19 +1384,19 @@ class AiProvider {
 
 			switch ( $provider_id ) {
 				case 'google_ai':
-					$result = self::with_retry( fn() => self::generate_google( $api_key, $model, $prompt, $max_tokens ), $call_label );
+					$result = self::with_retry( fn() => self::generate_google( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
 					break;
 				case 'openai':
-					$result = self::with_retry( fn() => self::generate_openai( $api_key, $model, $prompt, $max_tokens ), $call_label );
+					$result = self::with_retry( fn() => self::generate_openai( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
 					break;
 				case 'openrouter':
-					$result = self::with_retry( fn() => self::generate_openrouter( $api_key, $model, $prompt, $max_tokens ), $call_label );
+					$result = self::with_retry( fn() => self::generate_openrouter( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
 					break;
 				case 'anthropic':
-					$result = self::with_retry( fn() => self::generate_anthropic( $api_key, $model, $prompt, $max_tokens ), $call_label );
+					$result = self::with_retry( fn() => self::generate_anthropic( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
 					break;
 				case 'custom':
-					$result = self::with_retry( fn() => self::generate_custom( $conn, $api_key, $model, $prompt, $max_tokens ), $call_label );
+					$result = self::with_retry( fn() => self::generate_custom( $conn, $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
 					break;
 			}
 
@@ -1276,22 +1404,36 @@ class AiProvider {
 				self::clear_connection_health( $conn['id'] ?? '' );
 				$result['provider'] = $provider_id;
 				$result['model']    = $model;
+				UsageTracker::record( $conn, $model, $task, $result['usage'] ?? array(), true );
 				return $result;
 			}
 
 			if ( $result && ! $result['success'] ) {
+				$raw_message    = $result['message'] ?? 'Unknown error';
 				$classification = self::classify_failure( $result );
-				self::mark_connection_health( $conn, $classification, $result['message'] ?? '' );
+				self::mark_connection_health( $conn, $classification, $raw_message );
+				UsageTracker::record( $conn, $model, $task, $result['usage'] ?? array(), false );
+				$errors[] = sprintf( '[%s / %s] %s', $conn['name'] ?? $provider_id, $model, self::shorten_api_error( $raw_message ) );
 			}
 
 			// Log fallback.
 			aime_log( sprintf( 'AI connection "%s" failed, trying next...', $conn['name'] ), 'warning', 'ai' );
 		}
 
+		if ( 0 === $tried && empty( $errors ) ) {
+			return array(
+				'success' => false,
+				'content' => '',
+				'message' => __( 'No AI provider is configured. Please add an AI provider connection in Settings → AI Providers.', 'ai-marketing-expert' ),
+			);
+		}
+
 		return array(
 			'success' => false,
 			'content' => '',
-			'message' => __( 'No AI provider is configured or all providers failed. Please configure an AI provider in Settings.', 'ai-marketing-expert' ),
+			'message' => ! empty( $errors )
+				? __( 'All AI providers failed:', 'ai-marketing-expert' ) . "\n" . implode( "\n", $errors )
+				: __( 'No AI provider is configured or all providers failed. Please configure an AI provider in Settings.', 'ai-marketing-expert' ),
 		);
 	}
 
@@ -1349,7 +1491,15 @@ class AiProvider {
 				$model    = $defaults['image'] ?? '';
 			}
 
-			if ( empty( $model ) || empty( $api_key ) ) {
+			if ( empty( $api_key ) ) {
+				$errors[] = sprintf(
+					/* translators: %s: connection name */
+					__( '[%s] Stored API key could not be decrypted — security keys may have changed. Re-enter the API key in Settings → AI Providers.', 'ai-marketing-expert' ),
+					$conn['name'] ?? $provider_id
+				);
+				continue;
+			}
+			if ( empty( $model ) ) {
 				continue;
 			}
 
@@ -1408,7 +1558,7 @@ class AiProvider {
 		} // end inner foreach (connections)
 		} // end outer foreach (pass)
 
-		if ( 0 === $tried ) {
+		if ( 0 === $tried && empty( $errors ) ) {
 			return array(
 				'success' => false,
 				'message' => __( 'No AI provider is configured with an image model. Please select an image model in Settings → AI Providers.', 'ai-marketing-expert' ),
@@ -1467,19 +1617,26 @@ class AiProvider {
 	/* ── Image generation per provider ──────────────── */
 
 	private static function generate_image_openai( string $api_key, string $model, string $prompt ): array {
+		$payload = array(
+			'model'  => $model,
+			'prompt' => $prompt,
+			'n'      => 1,
+			'size'   => '1024x1024',
+		);
+
+		// gpt-image-* models always return base64 and reject `response_format`;
+		// DALL·E models default to URL responses, so request base64 explicitly.
+		if ( false === strpos( strtolower( $model ), 'gpt-image' ) ) {
+			$payload['response_format'] = 'b64_json';
+		}
+
 		$response = wp_remote_post( 'https://api.openai.com/v1/images/generations', array(
 			'timeout' => 120,
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $api_key,
 				'Content-Type'  => 'application/json',
 			),
-			'body'    => wp_json_encode( array(
-				'model'           => $model,
-				'prompt'          => $prompt,
-				'n'               => 1,
-				'size'            => '1024x1024',
-				'response_format' => 'b64_json',
-			) ),
+			'body'    => wp_json_encode( $payload ),
 		) );
 
 		if ( is_wp_error( $response ) ) {
@@ -1490,7 +1647,7 @@ class AiProvider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( 200 !== $code ) {
-			return array( 'success' => false, 'message' => $body['error']['message'] ?? "OpenAI error (HTTP {$code})" );
+			return self::http_failure( $response, $body['error']['message'] ?? "OpenAI error (HTTP {$code})", false );
 		}
 
 		$b64 = $body['data'][0]['b64_json'] ?? '';
@@ -1498,7 +1655,8 @@ class AiProvider {
 			// Fallback: check for url response.
 			$url = $body['data'][0]['url'] ?? '';
 			if ( $url ) {
-				$img = wp_remote_get( $url, array( 'timeout' => 60 ) );
+				// URL comes from the AI provider response — block private/loopback targets (SSRF).
+				$img = wp_remote_get( $url, array( 'timeout' => 60, 'reject_unsafe_urls' => true ) );
 				if ( ! is_wp_error( $img ) ) {
 					return array(
 						'success'    => true,
@@ -1526,7 +1684,7 @@ class AiProvider {
 		}
 
 		// Gemini image models — try IMAGE-only first, fall back to TEXT+IMAGE.
-		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$api_key}";
+		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
 		$modality_sets = array(
 			array( 'IMAGE' ),
@@ -1547,7 +1705,10 @@ class AiProvider {
 
 			$response = wp_remote_post( $url, array(
 				'timeout' => 120,
-				'headers' => array( 'Content-Type' => 'application/json' ),
+				'headers' => array(
+					'Content-Type'   => 'application/json',
+					'x-goog-api-key' => $api_key,
+				),
 				'body'    => wp_json_encode( $body_payload ),
 			) );
 
@@ -1590,7 +1751,7 @@ class AiProvider {
 	 * Google Imagen models — use the predict endpoint.
 	 */
 	private static function generate_image_google_imagen( string $api_key, string $model, string $prompt ): array {
-		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict?key={$api_key}";
+		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict";
 
 		$body_payload = array(
 			'instances' => array(
@@ -1603,7 +1764,10 @@ class AiProvider {
 
 		$response = wp_remote_post( $url, array(
 			'timeout' => 120,
-			'headers' => array( 'Content-Type' => 'application/json' ),
+			'headers' => array(
+				'Content-Type'   => 'application/json',
+				'x-goog-api-key' => $api_key,
+			),
 			'body'    => wp_json_encode( $body_payload ),
 		) );
 
@@ -1615,7 +1779,7 @@ class AiProvider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( 200 !== $code ) {
-			return array( 'success' => false, 'message' => $body['error']['message'] ?? "Imagen error (HTTP {$code})" );
+			return self::http_failure( $response, $body['error']['message'] ?? "Imagen error (HTTP {$code})", false );
 		}
 
 		// Imagen returns predictions[].bytesBase64Encoded.
@@ -1664,7 +1828,7 @@ class AiProvider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( 200 !== $code ) {
-			return array( 'success' => false, 'message' => $body['error']['message'] ?? "OpenRouter error (HTTP {$code})" );
+			return self::http_failure( $response, $body['error']['message'] ?? "OpenRouter error (HTTP {$code})", false );
 		}
 
 		// OpenRouter may return image data inline or as a URL depending on the model.
@@ -1679,7 +1843,8 @@ class AiProvider {
 
 		// Check for URL in response.
 		if ( preg_match( '/https?:\/\/[^\s"]+\.(?:png|jpg|jpeg|webp)/i', $content, $m ) ) {
-			$img = wp_remote_get( $m[0], array( 'timeout' => 60 ) );
+			// URL parsed from AI-generated content — block private/loopback targets (SSRF).
+			$img = wp_remote_get( $m[0], array( 'timeout' => 60, 'reject_unsafe_urls' => true ) );
 			if ( ! is_wp_error( $img ) && 200 === wp_remote_retrieve_response_code( $img ) ) {
 				return array(
 					'success'    => true,
@@ -1748,21 +1913,57 @@ class AiProvider {
 	 *  GENERATE METHODS
 	 * ============================================================= */
 
-	private static function generate_google( string $api_key, string $model, string $prompt, int $max_tokens ): array {
-		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$api_key}";
+	/**
+	 * Extract normalized token usage from a provider response body.
+	 *
+	 * @param array  $body   Decoded JSON response body.
+	 * @param string $format 'openai' | 'google' | 'anthropic'.
+	 * @return array { prompt_tokens: int, completion_tokens: int }
+	 */
+	private static function extract_usage( array $body, string $format ): array {
+		switch ( $format ) {
+			case 'google':
+				return array(
+					'prompt_tokens'     => absint( $body['usageMetadata']['promptTokenCount'] ?? 0 ),
+					'completion_tokens' => absint( $body['usageMetadata']['candidatesTokenCount'] ?? 0 ),
+				);
+			case 'anthropic':
+				return array(
+					'prompt_tokens'     => absint( $body['usage']['input_tokens'] ?? 0 ),
+					'completion_tokens' => absint( $body['usage']['output_tokens'] ?? 0 ),
+				);
+			default: // openai / openrouter / custom-openai.
+				return array(
+					'prompt_tokens'     => absint( $body['usage']['prompt_tokens'] ?? 0 ),
+					'completion_tokens' => absint( $body['usage']['completion_tokens'] ?? 0 ),
+				);
+		}
+	}
+
+	private static function generate_google( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
+		$url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+
+		$generation_config = array(
+			'maxOutputTokens' => $max_tokens,
+			'temperature'     => 0.7,
+			'thinkingConfig'  => array( 'thinkingBudget' => 0 ),
+		);
+
+		if ( ! empty( $options['json_mode'] ) ) {
+			$generation_config['responseMimeType'] = 'application/json';
+		}
 
 		$response = wp_remote_post( $url, array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
-			'headers' => array( 'Content-Type' => 'application/json' ),
+			'headers' => array(
+				'Content-Type'   => 'application/json',
+				'x-goog-api-key' => $api_key,
+			),
 			'body'    => wp_json_encode( array(
 				'contents'         => array(
 					array( 'parts' => array( array( 'text' => $prompt ) ) ),
 				),
-				'generationConfig' => array(
-					'maxOutputTokens' => $max_tokens,
-					'temperature'     => 0.7,
-					'thinkingConfig'  => array( 'thinkingBudget' => 0 ),
-				),
+				'generationConfig' => $generation_config,
 			) ),
 		) );
 
@@ -1772,14 +1973,29 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'Google AI error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'Google AI error.', 'ai-marketing-expert' ) );
 		}
 
 		$text = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => $text );
+		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'google' ) );
 	}
 
-	private static function generate_openrouter( string $api_key, string $model, string $prompt, int $max_tokens ): array {
+	private static function generate_openrouter( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
+		$request = array(
+			'model'      => $model,
+			'max_tokens' => $max_tokens,
+			'messages'   => array(
+				array( 'role' => 'user', 'content' => $prompt ),
+			),
+			'provider' => array(
+				'require_parameters' => true,
+			),
+		);
+
+		if ( ! empty( $options['json_mode'] ) ) {
+			$request['response_format'] = array( 'type' => 'json_object' );
+		}
+
 		$response = wp_remote_post( 'https://openrouter.ai/api/v1/chat/completions', array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
 			'headers' => array(
@@ -1787,16 +2003,7 @@ class AiProvider {
 				'Content-Type'  => 'application/json',
 				'HTTP-Referer'  => home_url(),
 			),
-			'body'    => wp_json_encode( array(
-				'model'      => $model,
-				'max_tokens' => $max_tokens,
-				'messages'   => array(
-					array( 'role' => 'user', 'content' => $prompt ),
-				),
-				'provider' => array(
-					'require_parameters' => true,
-				),
-			) ),
+			'body'    => wp_json_encode( $request ),
 		) );
 
 		if ( is_wp_error( $response ) ) {
@@ -1805,7 +2012,7 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'OpenRouter error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'OpenRouter error.', 'ai-marketing-expert' ) );
 		}
 
 		$choice        = $body['choices'][0] ?? array();
@@ -1819,29 +2026,65 @@ class AiProvider {
 			} elseif ( 'stop' === $finish_reason || '' === $finish_reason ) {
 				$reason = __( 'Model returned empty content. Try a different model.', 'ai-marketing-expert' );
 			} else {
+				/* translators: %s: the finish_reason value returned by the AI API. */
 				$reason = sprintf( __( 'Model returned no content (finish_reason: %s).', 'ai-marketing-expert' ), $finish_reason );
 			}
 			return array( 'success' => false, 'content' => '', 'message' => $reason );
 		}
 
-		return array( 'success' => true, 'content' => $text );
+		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
 	}
 
-	private static function generate_openai( string $api_key, string $model, string $prompt, int $max_tokens ): array {
+	/* ================================================================
+	 *  OPENAI REQUEST PARAMETER HELPERS
+	 * ============================================================= */
+
+	/**
+	 * Whether an OpenAI model is a reasoning model (o-series / GPT-5 family).
+	 * Only these models accept the `reasoning_effort` parameter.
+	 */
+	private static function is_openai_reasoning_model( string $model ): bool {
+		return (bool) preg_match( '/^(o\d|gpt-5)/i', $model );
+	}
+
+	/**
+	 * Build the chat/completions request body for OpenAI with
+	 * model-appropriate parameters:
+	 * - `max_completion_tokens` (current param; `max_tokens` is rejected by
+	 *   reasoning models and deprecated on the rest).
+	 * - `reasoning_effort` only for reasoning models, using 'low' which is
+	 *   valid across the o-series and the GPT-5 family ('none' is not).
+	 */
+	private static function build_openai_chat_body( string $model, string $prompt, int $max_tokens, array $options = array() ): array {
+		$body = array(
+			'model'                 => $model,
+			'max_completion_tokens' => $max_tokens,
+			'messages'              => array(
+				array( 'role' => 'user', 'content' => $prompt ),
+			),
+		);
+
+		if ( ! empty( $options['json_mode'] ) ) {
+			$body['response_format'] = array( 'type' => 'json_object' );
+		}
+
+		if ( self::is_openai_reasoning_model( $model ) ) {
+			// Keep generations fast/cheap by default; filterable for users
+			// who want deeper reasoning.
+			$body['reasoning_effort'] = apply_filters( 'aime_openai_reasoning_effort', 'low', $model );
+		}
+
+		return $body;
+	}
+
+	private static function generate_openai( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
 		$response = wp_remote_post( 'https://api.openai.com/v1/chat/completions', array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $api_key,
 				'Content-Type'  => 'application/json',
 			),
-			'body'    => wp_json_encode( array(
-				'model'      => $model,
-				'max_tokens' => $max_tokens,
-				'messages'   => array(
-					array( 'role' => 'user', 'content' => $prompt ),
-				),
-				'reasoning_effort' => 'none',
-			) ),
+			'body'    => wp_json_encode( self::build_openai_chat_body( $model, $prompt, $max_tokens, $options ) ),
 		) );
 
 		if ( is_wp_error( $response ) ) {
@@ -1850,14 +2093,19 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'OpenAI error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'OpenAI error.', 'ai-marketing-expert' ) );
 		}
 
 		$text = $body['choices'][0]['message']['content'] ?? '';
-		return array( 'success' => true, 'content' => $text );
+		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
 	}
 
-	private static function generate_anthropic( string $api_key, string $model, string $prompt, int $max_tokens ): array {
+	private static function generate_anthropic( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
+		// Anthropic has no response_format parameter; enforce JSON via instruction.
+		if ( ! empty( $options['json_mode'] ) ) {
+			$prompt .= "\n\nRespond with a single valid JSON object only. No markdown, no code fences, no explanation.";
+		}
+
 		$response = wp_remote_post( 'https://api.anthropic.com/v1/messages', array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
 			'headers' => array(
@@ -1880,11 +2128,11 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'Anthropic error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'Anthropic error.', 'ai-marketing-expert' ) );
 		}
 
 		$text = $body['content'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => $text );
+		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'anthropic' ) );
 	}
 
 	/* ================================================================
@@ -1899,33 +2147,91 @@ class AiProvider {
 	}
 
 	/**
+	 * Whether private/local egress is explicitly allowed for a custom base URL.
+	 *
+	 * Sites running a local LLM (Ollama, LM Studio, LocalAI) can opt in:
+	 *   add_filter( 'aime_allow_private_ai_base_url', '__return_true' );
+	 */
+	private static function allow_private_base_url( string $url ): bool {
+		return (bool) apply_filters( 'aime_allow_private_ai_base_url', false, $url );
+	}
+
+	/**
+	 * SSRF guard for custom-provider base URLs (audit S-3).
+	 *
+	 * A custom base_url is admin-supplied, but on multi-admin or managed
+	 * hosting it must not become a bridge to internal services (cloud
+	 * metadata endpoints, intranet APIs). Uses WordPress' own guard,
+	 * wp_http_validate_url(), which blocks loopback/private hosts and
+	 * non-standard ports unless `http_request_host_is_external` allows them.
+	 *
+	 * @param string $url Base URL to check.
+	 * @return true|string True if allowed, otherwise an error message.
+	 */
+	private static function guard_custom_base_url( string $url ) {
+		if ( self::allow_private_base_url( $url ) ) {
+			return true;
+		}
+
+		$blocked = __( 'This base URL points to a private or local network address, which is blocked for security reasons. Please use a public API endpoint.', 'ai-marketing-expert' );
+
+		if ( ! wp_http_validate_url( $url ) ) {
+			return $blocked;
+		}
+
+		// wp_http_validate_url() misses link-local/reserved ranges (e.g.
+		// 169.254.169.254 — cloud metadata endpoints). Resolve the host and
+		// re-check with PHP's stricter private+reserved range flags.
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		$ip   = filter_var( $host, FILTER_VALIDATE_IP ) ? $host : gethostbyname( $host );
+		if ( filter_var( $ip, FILTER_VALIDATE_IP ) && ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			return $blocked;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Dispatch text generation for a custom connection based on its API format.
 	 */
-	private static function generate_custom( array $conn, string $api_key, string $model, string $prompt, int $max_tokens ): array {
+	private static function generate_custom( array $conn, string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
 		$base_url = self::normalize_base_url( $conn['base_url'] ?? '' );
 		if ( empty( $base_url ) ) {
 			return array( 'success' => false, 'content' => '', 'message' => __( 'Custom provider base URL is not configured.', 'ai-marketing-expert' ) );
 		}
 		$format = ( 'anthropic' === ( $conn['api_format'] ?? 'openai' ) ) ? 'anthropic' : 'openai';
 		return 'anthropic' === $format
-			? self::generate_custom_anthropic( $api_key, $model, $prompt, $max_tokens, $base_url )
-			: self::generate_custom_openai( $api_key, $model, $prompt, $max_tokens, $base_url );
+			? self::generate_custom_anthropic( $api_key, $model, $prompt, $max_tokens, $base_url, $options )
+			: self::generate_custom_openai( $api_key, $model, $prompt, $max_tokens, $base_url, $options );
 	}
 
-	private static function generate_custom_openai( string $api_key, string $model, string $prompt, int $max_tokens, string $base_url ): array {
-		$response = wp_remote_post( self::normalize_base_url( $base_url ) . '/chat/completions', array(
+	private static function generate_custom_openai( string $api_key, string $model, string $prompt, int $max_tokens, string $base_url, array $options = array() ): array {
+		$base_url = self::normalize_base_url( $base_url );
+		$guard    = self::guard_custom_base_url( $base_url );
+		if ( true !== $guard ) {
+			return array( 'success' => false, 'content' => '', 'message' => $guard );
+		}
+
+		$request = array(
+			'model'      => $model,
+			'max_tokens' => $max_tokens,
+			'messages'   => array(
+				array( 'role' => 'user', 'content' => $prompt ),
+			),
+		);
+
+		if ( ! empty( $options['json_mode'] ) ) {
+			$request['response_format'] = array( 'type' => 'json_object' );
+		}
+
+		$response = wp_remote_post( $base_url . '/chat/completions', array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
+			'reject_unsafe_urls' => ! self::allow_private_base_url( $base_url ),
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $api_key,
 				'Content-Type'  => 'application/json',
 			),
-			'body'    => wp_json_encode( array(
-				'model'      => $model,
-				'max_tokens' => $max_tokens,
-				'messages'   => array(
-					array( 'role' => 'user', 'content' => $prompt ),
-				),
-			) ),
+			'body'    => wp_json_encode( $request ),
 		) );
 
 		if ( is_wp_error( $response ) ) {
@@ -1934,16 +2240,27 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'Custom provider error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'Custom provider error.', 'ai-marketing-expert' ) );
 		}
 
 		$text = $body['choices'][0]['message']['content'] ?? '';
-		return array( 'success' => true, 'content' => (string) $text );
+		return array( 'success' => true, 'content' => (string) $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
 	}
 
-	private static function generate_custom_anthropic( string $api_key, string $model, string $prompt, int $max_tokens, string $base_url ): array {
-		$response = wp_remote_post( self::normalize_base_url( $base_url ) . '/messages', array(
+	private static function generate_custom_anthropic( string $api_key, string $model, string $prompt, int $max_tokens, string $base_url, array $options = array() ): array {
+		$base_url = self::normalize_base_url( $base_url );
+		$guard    = self::guard_custom_base_url( $base_url );
+		if ( true !== $guard ) {
+			return array( 'success' => false, 'content' => '', 'message' => $guard );
+		}
+
+		if ( ! empty( $options['json_mode'] ) ) {
+			$prompt .= "\n\nRespond with a single valid JSON object only. No markdown, no code fences, no explanation.";
+		}
+
+		$response = wp_remote_post( $base_url . '/messages', array(
 			'timeout' => self::compute_http_timeout( $max_tokens ),
+			'reject_unsafe_urls' => ! self::allow_private_base_url( $base_url ),
 			'headers' => array(
 				'x-api-key'         => $api_key,
 				'anthropic-version' => '2023-06-01',
@@ -1964,11 +2281,11 @@ class AiProvider {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return array( 'success' => false, 'content' => '', 'message' => $body['error']['message'] ?? __( 'Custom provider error.', 'ai-marketing-expert' ) );
+			return self::http_failure( $response, $body['error']['message'] ?? __( 'Custom provider error.', 'ai-marketing-expert' ) );
 		}
 
 		$text = $body['content'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => (string) $text );
+		return array( 'success' => true, 'content' => (string) $text, 'usage' => self::extract_usage( (array) $body, 'anthropic' ) );
 	}
 
 	private static function generate_image_custom_openai( string $api_key, string $model, string $prompt, string $base_url ): array {
@@ -1976,9 +2293,14 @@ class AiProvider {
 		if ( empty( $base_url ) ) {
 			return array( 'success' => false, 'message' => __( 'Custom provider base URL is not configured.', 'ai-marketing-expert' ) );
 		}
+		$guard = self::guard_custom_base_url( $base_url );
+		if ( true !== $guard ) {
+			return array( 'success' => false, 'message' => $guard );
+		}
 
 		$response = wp_remote_post( $base_url . '/images/generations', array(
 			'timeout' => 120,
+			'reject_unsafe_urls' => ! self::allow_private_base_url( $base_url ),
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $api_key,
 				'Content-Type'  => 'application/json',
@@ -2000,7 +2322,7 @@ class AiProvider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( 200 !== $code ) {
-			return array( 'success' => false, 'message' => $body['error']['message'] ?? "Custom provider error (HTTP {$code})" );
+			return self::http_failure( $response, $body['error']['message'] ?? "Custom provider error (HTTP {$code})", false );
 		}
 
 		$b64 = $body['data'][0]['b64_json'] ?? '';
@@ -2050,12 +2372,20 @@ class AiProvider {
 		if ( empty( $base_url ) ) {
 			return array( 'success' => false, 'message' => __( 'Enter a base URL before fetching models.', 'ai-marketing-expert' ) );
 		}
+		$guard = self::guard_custom_base_url( $base_url );
+		if ( true !== $guard ) {
+			return array( 'success' => false, 'message' => $guard );
+		}
 
 		$headers = ( 'anthropic' === $api_format )
 			? array( 'x-api-key' => $api_key, 'anthropic-version' => '2023-06-01' )
 			: array( 'Authorization' => 'Bearer ' . $api_key );
 
-		$response = wp_remote_get( $base_url . '/models', array( 'timeout' => 20, 'headers' => $headers ) );
+		$response = wp_remote_get( $base_url . '/models', array(
+			'timeout' => 20,
+			'reject_unsafe_urls' => ! self::allow_private_base_url( $base_url ),
+			'headers' => $headers,
+		) );
 
 		if ( is_wp_error( $response ) ) {
 			return array( 'success' => false, 'message' => $response->get_error_message() );

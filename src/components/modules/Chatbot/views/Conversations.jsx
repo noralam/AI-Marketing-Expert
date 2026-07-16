@@ -194,7 +194,7 @@ const Conversations = ( { onNavigate } ) => {
 		navigator.clipboard.writeText( '[aime_discussions]' ).then( () => {
 			setCopied( true );
 			setTimeout( () => setCopied( false ), 2000 );
-		} );
+		} ).catch( () => {} );
 	};
 
 	return (

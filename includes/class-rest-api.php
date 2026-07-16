@@ -266,6 +266,78 @@ class RestApi {
 			)
 		);
 
+		// ── Background AI jobs ────────────────────────────────────────
+		register_rest_route(
+			$namespace,
+			'/ai/jobs',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'list_ai_jobs' ),
+					'permission_callback' => array( $this, 'admin_permission_check' ),
+				),
+				array(
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'create_ai_job' ),
+					'permission_callback' => array( $this, 'admin_permission_check' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			$namespace,
+			'/ai/jobs/(?P<id>\d+)',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_ai_job' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
+		// ── AI usage summary ──────────────────────────────────────────
+		register_rest_route(
+			$namespace,
+			'/ai/usage',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_ai_usage' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'days' => array(
+						'default'           => 30,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
+		// ── Settings import/export ────────────────────────────────────
+		register_rest_route(
+			$namespace,
+			'/settings/export',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'export_settings' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
+		register_rest_route(
+			$namespace,
+			'/settings/import',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'import_settings' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+			)
+		);
+
 		// POST /aime/v1/api-key/generate — Generate or regenerate the global API key.
 		register_rest_route(
 			$namespace,
@@ -364,8 +436,7 @@ class RestApi {
 	 */
 	public function get_cron_status(): \WP_REST_Response {
 		$hooks = array(
-			'aime_process_email_queue'  => __( 'Email queue', 'ai-marketing-expert' ),
-			'aime_process_automations'  => __( 'Email automations', 'ai-marketing-expert' ),
+			'aime_minutely_tasks' => __( 'Background tasks (email queue + automations)', 'ai-marketing-expert' ),
 		);
 
 		$now   = time();
@@ -911,9 +982,256 @@ class RestApi {
 			);
 		}
 
+		// Cache the catalog per provider+key+endpoint; `refresh: true` bypasses.
+		$cache_key = 'aime_models_' . md5( implode( '|', array( $provider, $base_url, $api_format, md5( $api_key ) ) ) );
+		$refresh   = ! empty( $params['refresh'] );
+
+		if ( ! $refresh ) {
+			$cached = get_transient( $cache_key );
+			if ( is_array( $cached ) && ! empty( $cached['success'] ) ) {
+				$cached['cached'] = true;
+				return new \WP_REST_Response( $cached, 200 );
+			}
+		}
+
 		$result = AiProvider::fetch_remote_models( $provider, $api_key, $base_url, $api_format );
 
+		if ( ! empty( $result['success'] ) ) {
+			$result = $this->annotate_model_capabilities( $result );
+			$result['fetched_at'] = time();
+			set_transient( $cache_key, $result, 6 * HOUR_IN_SECONDS );
+			$result['cached'] = false;
+		}
+
 		return new \WP_REST_Response( $result, $result['success'] ? 200 : 400 );
+	}
+
+	/**
+	 * Add a `capabilities` array to every model entry in a fetch-models result.
+	 * A model listed under both text and image gets both capabilities.
+	 *
+	 * @param array $result fetch_remote_models() result with models.text / models.image.
+	 * @return array
+	 */
+	private function annotate_model_capabilities( array $result ): array {
+		$models = $result['models'] ?? array();
+		$caps   = array();
+
+		foreach ( array( 'text', 'image' ) as $type ) {
+			foreach ( (array) ( $models[ $type ] ?? array() ) as $entry ) {
+				$id = $entry['id'] ?? '';
+				if ( '' === $id ) {
+					continue;
+				}
+				$caps[ $id ][] = $type;
+			}
+		}
+
+		foreach ( array( 'text', 'image' ) as $type ) {
+			if ( empty( $models[ $type ] ) || ! is_array( $models[ $type ] ) ) {
+				continue;
+			}
+			foreach ( $models[ $type ] as $i => $entry ) {
+				$id = $entry['id'] ?? '';
+				$models[ $type ][ $i ]['capabilities'] = array_values( array_unique( $caps[ $id ] ?? array( $type ) ) );
+			}
+		}
+
+		$result['models'] = $models;
+		return $result;
+	}
+
+	/* ── Background AI jobs ────────────────────────────────────────── */
+
+	/**
+	 * POST /ai/jobs — Queue a background AI generation job.
+	 */
+	public function create_ai_job( \WP_REST_Request $request ) {
+		$params = $request->get_json_params();
+		$type   = sanitize_key( $params['type'] ?? 'generate' );
+
+		$payload = array(
+			'prompt'     => (string) ( $params['prompt'] ?? '' ),
+			'task'       => sanitize_key( $params['task'] ?? 'text' ),
+			'max_tokens' => absint( $params['max_tokens'] ?? 2048 ),
+			'options'    => is_array( $params['options'] ?? null ) ? $params['options'] : array(),
+			'title'      => sanitize_text_field( $params['title'] ?? '' ),
+			'post_id'    => absint( $params['post_id'] ?? 0 ),
+		);
+
+		$job_id = JobQueue::enqueue( $type, $payload );
+
+		if ( is_wp_error( $job_id ) ) {
+			return new \WP_REST_Response(
+				array( 'success' => false, 'message' => $job_id->get_error_message() ),
+				400
+			);
+		}
+
+		return new \WP_REST_Response( array(
+			'success' => true,
+			'job_id'  => $job_id,
+			'status'  => 'pending',
+		), 201 );
+	}
+
+	/**
+	 * GET /ai/jobs/{id} — Job status and result.
+	 */
+	public function get_ai_job( \WP_REST_Request $request ) {
+		$job = JobQueue::get( absint( $request->get_param( 'id' ) ) );
+
+		if ( ! $job ) {
+			return new \WP_Error( 'aime_job_not_found', __( 'Job not found.', 'ai-marketing-expert' ), array( 'status' => 404 ) );
+		}
+
+		return new \WP_REST_Response( $job );
+	}
+
+	/**
+	 * GET /ai/jobs — Recent jobs.
+	 */
+	public function list_ai_jobs( \WP_REST_Request $request ): \WP_REST_Response {
+		return new \WP_REST_Response( array(
+			'jobs' => JobQueue::get_recent( absint( $request->get_param( 'limit' ) ?: 20 ) ),
+		) );
+	}
+
+	/* ── AI usage summary ──────────────────────────────────────────── */
+
+	/**
+	 * GET /ai/usage — Aggregated usage and cost estimates.
+	 */
+	public function get_ai_usage( \WP_REST_Request $request ): \WP_REST_Response {
+		return new \WP_REST_Response( UsageTracker::get_summary( absint( $request->get_param( 'days' ) ?: 30 ) ) );
+	}
+
+	/* ── Settings import/export ────────────────────────────────────── */
+
+	/**
+	 * Option names included in export/import. Secrets (webhook API key,
+	 * AI connections with encrypted keys) are deliberately excluded.
+	 */
+	private function get_portable_options(): array {
+		return (array) apply_filters( 'aime_portable_options', array(
+			'aime_settings',
+			'aime_chatbot_settings',
+		) );
+	}
+
+	/**
+	 * GET /settings/export — Portable JSON of plugin settings and email templates.
+	 */
+	public function export_settings(): \WP_REST_Response {
+		global $wpdb;
+
+		$options = array();
+		foreach ( $this->get_portable_options() as $name ) {
+			$value = get_option( $name, null );
+			if ( null === $value ) {
+				continue;
+			}
+			if ( 'aime_settings' === $name && is_array( $value ) ) {
+				unset( $value['webhook_api_key'] ); // Never export secrets.
+			}
+			$options[ $name ] = $value;
+		}
+
+		$templates_table = $wpdb->prefix . 'aime_templates';
+		$templates       = array();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $templates_table ) ) === $templates_table ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$templates = (array) $wpdb->get_results( "SELECT * FROM {$templates_table}", ARRAY_A );
+			foreach ( $templates as $i => $row ) {
+				unset( $templates[ $i ]['id'] );
+			}
+			$templates = array_values( $templates );
+		}
+
+		return new \WP_REST_Response( array(
+			'format'      => 'aime-settings-export',
+			'version'     => 1,
+			'plugin'      => AIME_VERSION,
+			'exported_at' => gmdate( 'c' ),
+			'site'        => home_url(),
+			'options'     => $options,
+			'templates'   => $templates,
+		) );
+	}
+
+	/**
+	 * POST /settings/import — Restore settings and templates from an export file.
+	 */
+	public function import_settings( \WP_REST_Request $request ) {
+		global $wpdb;
+
+		$data = $request->get_json_params();
+
+		if ( ! is_array( $data ) || 'aime-settings-export' !== ( $data['format'] ?? '' ) ) {
+			return new \WP_Error( 'aime_invalid_import', __( 'Invalid import file. Expected an AI Marketing Expert settings export.', 'ai-marketing-expert' ), array( 'status' => 400 ) );
+		}
+
+		$allowed  = $this->get_portable_options();
+		$imported = array();
+
+		foreach ( (array) ( $data['options'] ?? array() ) as $name => $value ) {
+			if ( ! in_array( $name, $allowed, true ) || ! is_array( $value ) ) {
+				continue;
+			}
+
+			if ( 'aime_settings' === $name ) {
+				// Merge over existing so local secrets (webhook key) survive.
+				$current = get_option( $name, array() );
+				unset( $value['webhook_api_key'] );
+				$value = array_merge( is_array( $current ) ? $current : array(), $value );
+			}
+
+			update_option( $name, $value );
+			aime_clear_settings_cache( array( $name ), 'aime_chatbot_settings' === $name );
+			$imported[] = $name;
+		}
+
+		$templates_added = 0;
+		$templates_table = $wpdb->prefix . 'aime_templates';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		if ( ! empty( $data['templates'] ) && is_array( $data['templates'] )
+			&& $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $templates_table ) ) === $templates_table ) {
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$columns = (array) $wpdb->get_col( "DESCRIBE {$templates_table}", 0 );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$existing_names = (array) $wpdb->get_col( "SELECT name FROM {$templates_table}" );
+
+			foreach ( $data['templates'] as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				// Only known columns; never trust an id from the file.
+				$row = array_intersect_key( $row, array_flip( $columns ) );
+				unset( $row['id'] );
+
+				$name = (string) ( $row['name'] ?? '' );
+				if ( '' === $name || in_array( $name, $existing_names, true ) ) {
+					continue; // Skip duplicates by name.
+				}
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				if ( $wpdb->insert( $templates_table, $row ) ) {
+					$existing_names[] = $name;
+					++$templates_added;
+				}
+			}
+		}
+
+		aime_log( sprintf( 'Settings import: %d option groups, %d templates added.', count( $imported ), $templates_added ), 'info', 'core' );
+
+		return new \WP_REST_Response( array(
+			'success'          => true,
+			'message'          => __( 'Import complete.', 'ai-marketing-expert' ),
+			'options_imported' => $imported,
+			'templates_added'  => $templates_added,
+		) );
 	}
 
 	/* ── API Key Management ────────────────────────────────────────── */
@@ -939,6 +1257,12 @@ class RestApi {
 			'api_key'    => $key, // Show full key once on generation.
 			'masked'     => $masked,
 			'webhook_url' => rest_url( aime_rest_namespace() . '/email/webhook/subscribe' ),
+			'signing'    => array(
+				'description' => __( 'Recommended: sign requests instead of sending the key. Send X-Aime-Timestamp (unix seconds) and X-Aime-Signature: sha256=HEX where HEX = HMAC-SHA256("{timestamp}.{raw_body}", api_key). Plain X-API-Key header also accepted.', 'ai-marketing-expert' ),
+				'headers'     => array( 'X-Aime-Timestamp', 'X-Aime-Signature' ),
+				'algorithm'   => 'hmac-sha256',
+				'payload'     => '{timestamp}.{raw_body}',
+			),
 		) );
 	}
 
@@ -961,10 +1285,27 @@ class RestApi {
 	}
 
 	/**
-	 * Validate a webhook API key from a request header or body param.
+	 * Validate webhook authentication.
+	 *
+	 * Two accepted schemes, sharing the same secret (the webhook API key):
+	 *
+	 * 1. HMAC signature (preferred — audit §11.8). The sender includes:
+	 *      X-Aime-Timestamp: <unix seconds>
+	 *      X-Aime-Signature: sha256=<hex hmac_sha256( "{timestamp}.{raw_body}", api_key )>
+	 *    The timestamp must be within ±5 minutes and each signature is
+	 *    accepted only once (replay cache), so a captured request cannot be
+	 *    replayed and the key itself never crosses the wire.
+	 *
+	 * 2. Legacy static key via the X-API-Key header. Header-only by design:
+	 *    keys passed as query/body params leak into server access logs, proxy
+	 *    logs, and analytics, so the old body-param fallback was removed
+	 *    (audit S-1).
+	 *
+	 * If a signature header is present it is authoritative — an invalid
+	 * signature fails closed with no fallback to the static-key check.
 	 *
 	 * @param \WP_REST_Request $request Request object.
-	 * @return bool True if the key is valid.
+	 * @return bool True if the request is authenticated.
 	 */
 	public static function validate_api_key( \WP_REST_Request $request ): bool {
 		$settings   = get_option( 'aime_settings', array() );
@@ -974,15 +1315,57 @@ class RestApi {
 			return false;
 		}
 
-		// Check Authorization header first, then body param.
-		$auth_header = $request->get_header( 'X-API-Key' );
-		$body_key    = sanitize_text_field( $request->get_param( 'api_key' ) ?? '' );
-		$provided    = ! empty( $auth_header ) ? sanitize_text_field( $auth_header ) : $body_key;
+		if ( '' !== trim( (string) $request->get_header( 'X-Aime-Signature' ) ) ) {
+			return self::validate_webhook_signature( $request, $stored_key );
+		}
+
+		$provided = sanitize_text_field( $request->get_header( 'X-API-Key' ) ?? '' );
 
 		if ( empty( $provided ) ) {
 			return false;
 		}
 
 		return hash_equals( $stored_key, $provided );
+	}
+
+	/**
+	 * Verify an HMAC webhook signature (X-Aime-Signature / X-Aime-Timestamp).
+	 *
+	 * Signed payload is "{timestamp}.{raw_body}" keyed with the webhook API
+	 * key. Rejects timestamps outside a ±5 minute window and signatures seen
+	 * within the last 10 minutes (replay protection).
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @param string           $secret  Webhook API key (shared secret).
+	 * @return bool True if the signature is valid and fresh.
+	 */
+	private static function validate_webhook_signature( \WP_REST_Request $request, string $secret ): bool {
+		$timestamp = (int) $request->get_header( 'X-Aime-Timestamp' );
+		if ( $timestamp <= 0 || abs( time() - $timestamp ) > 5 * MINUTE_IN_SECONDS ) {
+			return false;
+		}
+
+		$signature = strtolower( trim( (string) $request->get_header( 'X-Aime-Signature' ) ) );
+		if ( 0 === strpos( $signature, 'sha256=' ) ) {
+			$signature = substr( $signature, 7 );
+		}
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $signature ) ) {
+			return false;
+		}
+
+		$expected = hash_hmac( 'sha256', $timestamp . '.' . $request->get_body(), $secret );
+		if ( ! hash_equals( $expected, $signature ) ) {
+			return false;
+		}
+
+		// Replay protection: a valid signature is single-use. The cache only
+		// needs to outlive the ±5 minute timestamp window above.
+		$replay_key = 'aime_wh_sig_' . md5( $signature );
+		if ( get_transient( $replay_key ) ) {
+			return false;
+		}
+		set_transient( $replay_key, 1, 10 * MINUTE_IN_SECONDS );
+
+		return true;
 	}
 }

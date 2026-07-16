@@ -1,0 +1,35 @@
+# .distignore — files excluded from the distributable plugin package.
+# Used by `wp dist-archive` and mirrored by the `files` allowlist in
+# package.json (used by `npm run plugin-zip`).
+#
+# The oauth-proxy is a separately-deployed Node service — it must never
+# ship inside the plugin zip (nor its node_modules).
+
+# VCS / editor
+.git
+.gitignore
+.claude
+.distignore
+.DS_Store
+
+# Node / build tooling (build/ output DOES ship; sources don't)
+node_modules
+package.json
+package-lock.json
+webpack.config.js
+src
+tools
+
+# Separately-deployed OAuth proxy service
+oauth-proxy
+
+# Development docs & notes
+docs
+landing-page
+tests
+README.md
+AI_workflow_Automation_PRD.md
+issues.md
+suggestion.md
+test.md
+audit.md

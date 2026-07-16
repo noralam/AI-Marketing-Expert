@@ -25,6 +25,10 @@ class SettingsController {
 		'auto_seo_optimize'     => true,
 		'auto_generate_meta'    => true,
 		'auto_generate_excerpt' => true,
+		'image_source'          => 'none',
+		'stock_provider'        => 'pexels',
+		'inline_images'         => 0,
+		'inline_image_size'     => 'large',
 	);
 
 	/* ── GET settings ────────────────────────────────── */
@@ -32,6 +36,11 @@ class SettingsController {
 	public function get_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$settings = get_option( self::OPTION_KEY, array() );
 		$merged   = array_merge( self::DEFAULTS, $settings );
+
+		// Never expose stock API keys (stored encrypted) — only report presence.
+		$merged['has_pexels_key']  = ! empty( $merged['pexels_api_key'] );
+		$merged['has_pixabay_key'] = ! empty( $merged['pixabay_api_key'] );
+		unset( $merged['pexels_api_key'], $merged['pixabay_api_key'] );
 
 		if ( ! aime_has_pro() ) {
 			$merged['auto_seo_optimize']     = false;
@@ -71,6 +80,40 @@ class SettingsController {
 			$current['default_category_id'] = absint( $params['default_category_id'] );
 		}
 
+		// Image settings.
+		if ( isset( $params['image_source'] ) ) {
+			$source = sanitize_key( $params['image_source'] );
+			$current['image_source'] = in_array( $source, array( 'none', 'stock', 'ai' ), true ) ? $source : 'none';
+		}
+
+		if ( isset( $params['stock_provider'] ) ) {
+			$provider = sanitize_key( $params['stock_provider'] );
+			$current['stock_provider'] = in_array( $provider, \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService::PROVIDERS, true ) ? $provider : 'pexels';
+		}
+
+		if ( isset( $params['inline_images'] ) ) {
+			$current['inline_images'] = min( 3, absint( $params['inline_images'] ) );
+		}
+
+		if ( isset( $params['inline_image_size'] ) ) {
+			$size = sanitize_key( $params['inline_image_size'] );
+			$current['inline_image_size'] = in_array( $size, array( 'medium', 'medium_large', 'large', 'full' ), true ) ? $size : 'large';
+		}
+
+		// Stock API keys: stored encrypted, never exported, never echoed back.
+		// Empty string clears the key; omitted param leaves it untouched.
+		foreach ( array( 'pexels_api_key', 'pixabay_api_key' ) as $key_field ) {
+			if ( ! isset( $params[ $key_field ] ) || ! is_string( $params[ $key_field ] ) ) {
+				continue;
+			}
+			$raw = trim( sanitize_text_field( $params[ $key_field ] ) );
+			if ( '' === $raw ) {
+				unset( $current[ $key_field ] );
+			} else {
+				$current[ $key_field ] = \WPSpace\AiMarketingExpert\Encryption::encrypt( $raw );
+			}
+		}
+
 		$bool_fields = array( 'auto_seo_optimize', 'auto_generate_meta', 'auto_generate_excerpt' );
 		foreach ( $bool_fields as $field ) {
 			if ( isset( $params[ $field ] ) ) {
@@ -87,9 +130,14 @@ class SettingsController {
 		update_option( self::OPTION_KEY, $current, false );
 		aime_clear_settings_cache( array( self::OPTION_KEY ) );
 
+		$response = array_merge( self::DEFAULTS, $current );
+		$response['has_pexels_key']  = ! empty( $response['pexels_api_key'] );
+		$response['has_pixabay_key'] = ! empty( $response['pixabay_api_key'] );
+		unset( $response['pexels_api_key'], $response['pixabay_api_key'] );
+
 		return new \WP_REST_Response( array(
 			'message'  => __( 'Settings saved.', 'ai-marketing-expert' ),
-			'settings' => array_merge( self::DEFAULTS, $current ),
+			'settings' => $response,
 		) );
 	}
 

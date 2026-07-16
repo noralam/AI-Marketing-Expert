@@ -10,6 +10,7 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import { ARTICLE_STATUS_LABELS, ARTICLE_STATUS_COLORS } from '../../../utils/constants';
+import sanitizeHtml from '../../../utils/sanitizeHtml';
 
 const ArticlePreview = ( { id, onBack, onNavigate } ) => {
 	const { get, loading } = useApi();
@@ -83,7 +84,7 @@ const ArticlePreview = ( { id, onBack, onNavigate } ) => {
 
 						<div
 							className="aime-preview-content"
-							dangerouslySetInnerHTML={ { __html: article.content || '<p><em>No content yet.</em></p>' } }
+							dangerouslySetInnerHTML={ { __html: sanitizeHtml( article.content ) || '<p><em>No content yet.</em></p>' } }
 						/>
 					</Card>
 				</div>

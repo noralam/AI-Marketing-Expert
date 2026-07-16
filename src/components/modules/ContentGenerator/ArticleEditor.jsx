@@ -97,7 +97,7 @@ const defaultArticle = {
 const toDateTimeLocalValue = ( value ) => ( value ? value.replace( ' ', 'T' ).slice( 0, 16 ) : '' );
 
 const ArticleEditor = ( { id, onBack, onNavigate } ) => {
-	const { get, post, put, del, loading } = useApi();
+	const { get, post, put, del, loading } = useApi( { toastErrors: true } );
 	const { hasPro, freeLimits } = usePro();
 	const slowWarning = useSlowWarning();
 	const freeMaxWords = Number( freeLimits?.content_max_words || 2000 );
@@ -138,9 +138,15 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	const [ seoResult, setSeoResult ] = useState( null );
 	const [ activeTab, setActiveTab ] = useState( 'compose' );
 	const [ generatingImage, setGeneratingImage ] = useState( false );
-	const [ imageTab, setImageTab ] = useState( 'ai' );
+	const [ imageTab, setImageTab ] = useState( 'stock' );
 	const [ imageProgress, setImageProgress ] = useState( '' );
 	const [ imageError, setImageError ] = useState( '' );
+	const [ stockQuery, setStockQuery ] = useState( '' );
+	const [ stockResults, setStockResults ] = useState( [] );
+	const [ stockSearching, setStockSearching ] = useState( false );
+	const [ stockImporting, setStockImporting ] = useState( '' );
+	const [ stockError, setStockError ] = useState( '' );
+	const [ stockSearched, setStockSearched ] = useState( false );
 	const [ generateError, setGenerateError ] = useState( '' );
 	const [ errors, setErrors ] = useState( {} );
 	const [ showThinkingHint, setShowThinkingHint ] = useState( true );
@@ -450,6 +456,52 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 		}
 	};
 
+	// Search free stock photos (Pexels / Pixabay via plugin settings).
+	const handleStockSearch = async ( queryOverride ) => {
+		const q = ( queryOverride ?? stockQuery ?? '' ).trim() || article.topic || article.title || '';
+		if ( ! q ) {
+			setStockError( __( 'Enter a search term (or set a topic/title first).', 'ai-marketing-expert' ) );
+			return;
+		}
+		setStockQuery( q );
+		setStockSearching( true );
+		setStockError( '' );
+		try {
+			const res = await get( `/content/stock-images/search?query=${ encodeURIComponent( q ) }&per_page=12` );
+			setStockResults( res?.images || [] );
+			setStockSearched( true );
+		} catch ( e ) {
+			setStockResults( [] );
+			setStockError( e?.message || __( 'Stock image search failed.', 'ai-marketing-expert' ) );
+		} finally {
+			setStockSearching( false );
+		}
+	};
+
+	// Import a chosen stock photo into the media library and set as featured.
+	const handleStockPick = async ( image ) => {
+		setStockImporting( String( image.id ) );
+		setStockError( '' );
+		try {
+			const res = await post( '/content/stock-images/import', {
+				url: image.full,
+				alt: image.alt || article.title || '',
+				article_id: id || 0,
+			} );
+			if ( res?.attachment_id ) {
+				setField( 'featured_image_url', res.url );
+				setField( 'featured_image_id', res.attachment_id );
+				toast( __( 'Featured image set from stock photo!', 'ai-marketing-expert' ) );
+			}
+		} catch ( e ) {
+			const msg = e?.message || __( 'Image import failed.', 'ai-marketing-expert' );
+			setStockError( msg );
+			toast( msg, 'error' );
+		} finally {
+			setStockImporting( '' );
+		}
+	};
+
 	// Humanize content (rewrite to sound natural)
 	const handleHumanize = async () => {
 		if ( ! hasPro ) {
@@ -627,6 +679,12 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 			if ( res?.edit_url ) {
 				setField( 'wp_edit_url', res.edit_url );
 			}
+			if ( res?.view_url ) {
+				setField( 'view_url', res.view_url );
+			}
+			if ( res?.wp_post_id ) {
+				setField( 'wp_post_id', res.wp_post_id );
+			}
 			if ( res?.status ) {
 				setField( 'status', res.status );
 			}
@@ -749,6 +807,16 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 					) }
 				</div>
 				<div className="aime-page-header-actions">
+					{ article.status === 'published' && article.view_url && (
+						<Button
+							variant="secondary"
+							href={ article.view_url }
+							target="_blank"
+							rel="noreferrer"
+						>
+							{ __( 'View Post ↗', 'ai-marketing-expert' ) }
+						</Button>
+					) }
 					{ showSchedule && (
 						<div className="aime-schedule-inline">
 							<TextControl
@@ -784,8 +852,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 						disabled={ !! publishing || saving }
 					>
 						{ publishing === 'publish'
-							? <><Spinner style={ { marginRight: 4 } } />{ __( 'Publishing...', 'ai-marketing-expert' ) }</>
-							: __( 'Publish to WP', 'ai-marketing-expert' )
+							? <><Spinner style={ { marginRight: 4 } } />{ article.status === 'published' ? __( 'Updating...', 'ai-marketing-expert' ) : __( 'Publishing...', 'ai-marketing-expert' ) }</>
+							: ( article.status === 'published' ? __( 'Update on WP', 'ai-marketing-expert' ) : __( 'Publish to WP', 'ai-marketing-expert' ) )
 						}
 					</Button>
 				</div>
@@ -1008,10 +1076,9 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								<div className="aime-ai-thinking-hint__body">
 									<strong>{ __( 'Auto-cleaned model reasoning', 'ai-marketing-expert' ) }</strong>
 									<p>
-										{ __( 'Some AI models (such as MiniMax M3 used via a custom provider) emit internal reasoning before the actual article. The plugin automatically strips this reasoning, but for cleaner output consider switching to a model that does not emit chain-of-thought:', 'ai-marketing-expert' ) }
+										{ __( 'Some AI models emit internal reasoning before the actual article. The plugin automatically stripped it from this output.', 'ai-marketing-expert' ) }
 									</p>
 									<p className="aime-ai-thinking-hint__models">
-										{ __( 'Recommended: GPT-5.2, Claude Sonnet 4.6, or Gemini 2.5 Flash (Stable).', 'ai-marketing-expert' ) }
 										<a href={ `${ window.aimeData?.adminUrl || '/wp-admin/' }admin.php?page=ai-marketing-expert-ai-providers` }>
 											{ __( 'Change AI provider →', 'ai-marketing-expert' ) }
 										</a>
@@ -1186,6 +1253,13 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								<div className="aime-image-tabs__nav">
 									<button
 										type="button"
+										className={ `aime-image-tabs__tab${ imageTab === 'stock' ? ' is-active' : '' }` }
+										onClick={ () => setImageTab( 'stock' ) }
+									>
+										{ __( '\uD83D\uDCF7 Stock Photos', 'ai-marketing-expert' ) }
+									</button>
+									<button
+										type="button"
 										className={ `aime-image-tabs__tab${ imageTab === 'ai' ? ' is-active' : '' }` }
 										onClick={ () => setImageTab( 'ai' ) }
 									>
@@ -1200,6 +1274,47 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 									</button>
 								</div>
 								<div className="aime-image-tabs__content">
+									{ imageTab === 'stock' && (
+										<div className="aime-image-tab-panel">
+											<p className="aime-image-tab-desc">
+												{ __( 'Search free stock photos and set one as the featured image. Photos are saved to your Media Library.', 'ai-marketing-expert' ) }
+											</p>
+											<div className="aime-stock-search">
+												<TextControl
+													value={ stockQuery }
+													placeholder={ article.topic || article.title || __( 'e.g. laptop coffee desk', 'ai-marketing-expert' ) }
+													onChange={ setStockQuery }
+													onKeyDown={ ( e ) => { if ( e.key === 'Enter' ) { e.preventDefault(); handleStockSearch(); } } }
+													__nextHasNoMarginBottom
+												/>
+												<Button variant="primary" isBusy={ stockSearching } disabled={ stockSearching } onClick={ () => handleStockSearch() }>
+													{ stockSearching ? __( 'Searching...', 'ai-marketing-expert' ) : __( 'Search', 'ai-marketing-expert' ) }
+												</Button>
+											</div>
+											{ stockError && <p className="aime-field-error aime-image-error">{ stockError }</p> }
+											{ ! stockError && stockSearched && stockResults.length === 0 && ! stockSearching && (
+												<p className="aime-field-hint">{ __( 'No photos found. Try a broader search term.', 'ai-marketing-expert' ) }</p>
+											) }
+											{ stockResults.length > 0 && (
+												<div className="aime-stock-grid">
+													{ stockResults.map( ( img ) => (
+														<button
+															key={ `${ img.provider }-${ img.id }` }
+															type="button"
+															className={ `aime-stock-grid__item${ stockImporting === String( img.id ) ? ' is-importing' : '' }` }
+															disabled={ !! stockImporting }
+															title={ img.alt || '' }
+															onClick={ () => handleStockPick( img ) }
+														>
+															<img src={ img.thumb } alt={ img.alt || '' } loading="lazy" />
+															{ stockImporting === String( img.id ) && <span className="aime-stock-grid__busy"><Spinner /></span> }
+															{ img.photographer && <span className="aime-stock-grid__credit">{ img.photographer }</span> }
+														</button>
+													) ) }
+												</div>
+											) }
+										</div>
+									) }
 									{ imageTab === 'ai' && (
 										<div className="aime-image-tab-panel">
 											<p className="aime-image-tab-desc">

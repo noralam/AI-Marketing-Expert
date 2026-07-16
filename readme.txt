@@ -4,15 +4,15 @@ Tags: ai marketing, email marketing, ai content generator, ai chatbot, seo analy
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: trunk
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-All-in-one AI marketing plugin: email campaigns, content generation, SEO analyzer, social media scheduling, and AI chatbot — in one dashboard.
+All-in-one AI marketing: email campaigns, content generation, SEO analyzer, social media scheduling, AI chatbot, and workflow automation.
 
 == Description ==
 
-**AI Marketing Expert** is the most complete AI-powered marketing suite for WordPress. Instead of paying for Mailchimp, Jasper, Semrush, Hootsuite, and Intercom separately, you get all five — email marketing, content generation, SEO, social media, and a live AI chatbot — built right into your WordPress admin.
+**AI Marketing Expert** is the most complete AI-powered marketing suite for WordPress. Instead of paying for Mailchimp, Jasper, Semrush, Hootsuite, Intercom, and Zapier separately, you get all six — email marketing, content generation, SEO, social media, a live AI chatbot, and workflow automation — built right into your WordPress admin.
 
 Powered by your choice of leading AI models (ChatGPT, Claude, Gemini, or OpenRouter), every module is designed to save you hours every week and help you grow your audience consistently without burnout.
 
@@ -26,7 +26,7 @@ Whether you are a blogger, a small business owner, a WooCommerce store, or a fre
 
 = ✅ Why AI Marketing Expert? =
 
-* **All-in-one** — Five complete marketing tools in a single WordPress plugin
+* **All-in-one** — Six complete marketing tools in a single WordPress plugin
 * **AI-native** — Every module uses AI to write, optimize, and automate your marketing
 * **Your AI, your keys** — Connect OpenAI, Anthropic Claude, Google Gemini, or OpenRouter
 * **Modular** — Activate only the modules you need
@@ -59,7 +59,7 @@ A complete email CRM and campaign system built inside WordPress — no Mailchimp
 
 **Email Automation & Drip Funnels**
 
-* Multi-step drip/funnel sequences with triggers (1 funnel Free, Unlimited Pro)
+* Multi-step drip/funnel sequences with triggers (2 funnels Free, Unlimited Pro)
 * Enroll and unenroll subscribers per funnel
 * Funnel performance metrics dashboard
 
@@ -78,7 +78,7 @@ A complete email CRM and campaign system built inside WordPress — no Mailchimp
 
 **Free vs Pro**
 
-* Free: Unlimited subscribers, 30 campaigns/month, 1 automation funnel, basic segmentation (lists & tags)
+* Free: Unlimited subscribers, 30 campaigns/month, 2 automation funnels, basic segmentation (lists & tags)
 * Pro: Unlimited campaigns, unlimited funnels, advanced segmentation (custom fields, behavior), A/B testing
 
 ---
@@ -97,7 +97,7 @@ Write complete, SEO-optimized blog posts with one click using the AI content gen
 
 **Free vs Pro**
 
-* Free: 10 articles/month, up to 1,500 words
+* Free: 20 articles/month, up to 2,000 words
 * Pro: Unlimited articles, up to 5,000 words, custom presets, AI image prompt generation, multi-language content
 
 ---
@@ -167,6 +167,23 @@ Add an intelligent AI chatbot to your WordPress site for 24/7 customer support, 
 
 ---
 
+= ⚙️ Workflow Automation (Free + Pro) =
+
+Chain actions from every module into scheduled, automated marketing workflows — like a built-in Zapier for your marketing stack.
+
+* Visual workflow builder with step-by-step action chains
+* Cross-module actions: generate content, send campaigns, post to social media, and more
+* Schedule triggers (hourly, daily, weekly) and event triggers (new subscriber, post published, and more)
+* Run-now manual execution with per-step run history
+* Ready-made workflow templates to start from
+
+**Free vs Pro**
+
+* Free: 2 active workflows, 3 steps per workflow, 30 runs/month
+* Pro: Unlimited workflows, unlimited steps, unlimited runs
+
+---
+
 = 🤖 Supported AI Providers =
 
 All modules share one AI provider system. Add as many connections as you need and assign them per module.
@@ -177,13 +194,13 @@ All modules share one AI provider system. Add as many connections as you need an
 * **OpenRouter** — Access 200+ models through one API key (Llama, Mistral, DeepSeek, and more)
 * **Custom Provider** — Any OpenAI-compatible or Anthropic-compatible API endpoint
 
-API keys are encrypted at rest using AES-256-CBC with WordPress salt-derived keys. Keys can also be loaded from PHP constants or environment variables for production security.
+API keys are encrypted at rest using AES-256-GCM authenticated encryption with WordPress salt-derived keys. Keys can also be loaded from PHP constants or environment variables for production security.
 
 ---
 
 = 🔒 Security & Privacy =
 
-* All API keys and SMTP credentials are encrypted at rest (AES-256-CBC)
+* All API keys and SMTP credentials are encrypted at rest (AES-256-GCM)
 * SSRF protection on all remote URL fetches
 * HMAC-signed email tracking links
 * No subscriber or visitor data is ever sent to third parties
@@ -265,7 +282,7 @@ Currently the plugin supports Facebook Pages, Instagram Business, and X/Twitter.
 
 = Is my data secure? =
 
-Yes. All API keys and SMTP credentials are encrypted at rest using AES-256-CBC. No subscriber data or conversation data is ever sent to third parties. Email tracking uses HMAC-signed URLs to prevent open redirect abuse.
+Yes. All API keys and SMTP credentials are encrypted at rest using AES-256-GCM authenticated encryption. No subscriber data or conversation data is ever sent to third parties. Email tracking uses HMAC-signed URLs to prevent open redirect abuse.
 
 = Can I import existing email subscribers? =
 
@@ -304,7 +321,7 @@ When you connect a social account and publish or schedule a post, the post conte
 **What data is stored locally?**
 
 * Subscriber records, email addresses, campaign history, conversation transcripts, and SEO reports are stored only in your WordPress database on your own server.
-* API keys and SMTP passwords are encrypted at rest (AES-256-CBC) in your WordPress database. They are never transmitted anywhere other than the respective provider API.
+* API keys and SMTP passwords are encrypted at rest (AES-256-GCM) in your WordPress database. They are never transmitted anywhere other than the respective provider API.
 
 **Data Retention**
 
@@ -322,6 +339,17 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 8. Subscriber management with segmentation
 
 == Changelog ==
+
+= 1.1.1 =
+* Fixed: campaign recipient count could double mid-send under concurrent processing (duplicate emails). Added a unique constraint on the send queue and a one-time de-duplication migration.
+* Fixed: paused campaigns that were still resolving their audience could not be paused reliably.
+* New: "End Campaign" button to fully stop an in-progress campaign and view its final status.
+* New (Pro): provider feedback-loop webhooks to auto-move spam complaints to the Complaint list and hard bounces to the Bounced list.
+  Point your ESP (Amazon SES via SNS, SendGrid, Mailgun, Postmark) at:
+  - Complaints: POST {site}/wp-json/aime/v1/email/webhook/complaint
+  - Bounces:    POST {site}/wp-json/aime/v1/email/webhook/bounce
+  Authenticate with your API key (generate under Settings → API), body: { "email": "user@example.com" } or { "emails": ["a@x.com","b@y.com"] }.
+* Improved: added List-Unsubscribe-Post (one-click unsubscribe) header for better deliverability.
 
 = 1.1.0 =
 * Initial public release on WordPress.org

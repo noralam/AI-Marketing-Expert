@@ -58,7 +58,33 @@ const POST_STATUSES = [
 const TABS = [
 	{ name: 'generation', title: __( 'Generation', 'ai-marketing-expert' ) },
 	{ name: 'publishing', title: __( 'Publishing', 'ai-marketing-expert' ) },
+	{ name: 'images', title: __( 'Images', 'ai-marketing-expert' ) },
 	{ name: 'automation', title: __( 'Automation', 'ai-marketing-expert' ) },
+];
+
+const IMAGE_SOURCES = [
+	{ label: __( 'None', 'ai-marketing-expert' ), value: 'none' },
+	{ label: __( 'Stock photo (free)', 'ai-marketing-expert' ), value: 'stock' },
+	{ label: __( 'AI-generated', 'ai-marketing-expert' ), value: 'ai' },
+];
+
+const STOCK_PROVIDERS = [
+	{ label: 'Pexels', value: 'pexels' },
+	{ label: 'Pixabay', value: 'pixabay' },
+];
+
+const INLINE_IMAGE_COUNTS = [
+	{ label: __( 'None', 'ai-marketing-expert' ), value: '0' },
+	{ label: __( '1 image', 'ai-marketing-expert' ), value: '1' },
+	{ label: __( '2 images', 'ai-marketing-expert' ), value: '2' },
+	{ label: __( '3 images', 'ai-marketing-expert' ), value: '3' },
+];
+
+const INLINE_IMAGE_SIZES = [
+	{ label: __( 'Medium (300px)', 'ai-marketing-expert' ), value: 'medium' },
+	{ label: __( 'Medium Large (768px)', 'ai-marketing-expert' ), value: 'medium_large' },
+	{ label: __( 'Large (1024px)', 'ai-marketing-expert' ), value: 'large' },
+	{ label: __( 'Full Size', 'ai-marketing-expert' ), value: 'full' },
 ];
 
 const ContentSettings = () => {
@@ -199,6 +225,80 @@ const ContentSettings = () => {
 											onChange={ ( v ) => setField( 'default_category_id', parseInt( v, 10 ) || 0 ) }
 											__nextHasNoMarginBottom
 										/>
+									</div>
+									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
+										{ saving
+											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+											: __( 'Save Settings', 'ai-marketing-expert' )
+										}
+									</Button>
+								</div>
+							);
+						}
+
+						if ( tab.name === 'images' ) {
+							const activeProvider = settings.stock_provider || 'pexels';
+							const hasKey = activeProvider === 'pixabay' ? !! settings.has_pixabay_key : !! settings.has_pexels_key;
+							const keyField = `${ activeProvider }_api_key`;
+							const keyUrl = activeProvider === 'pixabay'
+								? 'https://pixabay.com/api/docs/'
+								: 'https://www.pexels.com/api/';
+							return (
+								<div className="aime-settings-form">
+									<div className="aime-form-grid aime-form-grid--top aime-form-grid-2">
+										<SelectControl
+											label={ __( 'Default Image Source', 'ai-marketing-expert' ) }
+											help={ __( 'Preferred featured-image source in the article editor.', 'ai-marketing-expert' ) }
+											value={ settings.image_source || 'none' }
+											options={ IMAGE_SOURCES }
+											onChange={ ( v ) => setField( 'image_source', v ) }
+											__nextHasNoMarginBottom
+										/>
+										{ settings.image_source === 'stock' && (
+											<>
+												<SelectControl
+													label={ __( 'Stock Photo Provider', 'ai-marketing-expert' ) }
+													help={ __( 'Where stock photos are searched from.', 'ai-marketing-expert' ) }
+													value={ activeProvider }
+													options={ STOCK_PROVIDERS }
+													onChange={ ( v ) => setField( 'stock_provider', v ) }
+													__nextHasNoMarginBottom
+												/>
+												<TextControl
+													label={ activeProvider === 'pixabay' ? __( 'Pixabay API Key', 'ai-marketing-expert' ) : __( 'Pexels API Key', 'ai-marketing-expert' ) }
+													type="password"
+													autoComplete="new-password"
+													value={ settings[ keyField ] || '' }
+													placeholder={ hasKey ? __( 'Key saved — enter a new key to replace it', 'ai-marketing-expert' ) : __( 'Paste your free API key', 'ai-marketing-expert' ) }
+													help={
+														<>
+															{ hasKey
+																? __( 'A key is saved (stored encrypted, never exported). ', 'ai-marketing-expert' )
+																: __( 'Free instant signup. ', 'ai-marketing-expert' ) }
+															<a href={ keyUrl } target="_blank" rel="noreferrer">{ __( 'Get an API key', 'ai-marketing-expert' ) }</a>
+														</>
+													}
+													onChange={ ( v ) => setField( keyField, v ) }
+													__nextHasNoMarginBottom
+												/>
+												<SelectControl
+													label={ __( 'In-body Stock Images', 'ai-marketing-expert' ) }
+													help={ __( 'AI places relevant stock photos inside generated article text.', 'ai-marketing-expert' ) }
+													value={ String( settings.inline_images || 0 ) }
+													options={ INLINE_IMAGE_COUNTS }
+													onChange={ ( v ) => setField( 'inline_images', parseInt( v, 10 ) || 0 ) }
+													__nextHasNoMarginBottom
+												/>
+												<SelectControl
+													label={ __( 'In-body Image Size', 'ai-marketing-expert' ) }
+													help={ __( 'Display size of stock photos embedded inside articles.', 'ai-marketing-expert' ) }
+													value={ settings.inline_image_size || 'large' }
+													options={ INLINE_IMAGE_SIZES }
+													onChange={ ( v ) => setField( 'inline_image_size', v ) }
+													__nextHasNoMarginBottom
+												/>
+											</>
+										) }
 									</div>
 									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving

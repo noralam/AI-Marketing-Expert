@@ -239,7 +239,8 @@ class ModuleManager {
 			$this->active_modules = array_values( array_unique( array_merge( $this->active_modules, array( $module_id ) ) ) );
 			$this->modules[ $module_id ]->init();
 			self::bump_cache_version();
-			aime_clear_settings_cache();
+			// Module activation can add front-end output (e.g. chatbot widget).
+			aime_clear_settings_cache( array(), true );
 			return true;
 		}
 
@@ -285,7 +286,8 @@ class ModuleManager {
 		if ( false !== $result ) {
 			$this->active_modules = array_values( array_diff( $this->active_modules, array( $module_id ) ) );
 			self::bump_cache_version();
-			aime_clear_settings_cache();
+			// Module deactivation can remove front-end output (e.g. chatbot widget).
+			aime_clear_settings_cache( array(), true );
 			return true;
 		}
 

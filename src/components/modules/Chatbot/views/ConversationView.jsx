@@ -14,6 +14,7 @@ import ProGate from '../../../common/ProGate';
 import { ProUpgradeButton } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 import { renderMarkdown } from '../../../../utils/renderMessage';
+import sanitizeHtml from '../../../../utils/sanitizeHtml';
 
 const SENDER_COLORS = {
 	visitor: '#e3f2fd',
@@ -234,7 +235,7 @@ const ConversationView = ( { id, onBack } ) => {
 									className="aime-message-content"
 									style={ { fontSize: 14, lineHeight: 1.5 } }
 									/* eslint-disable-next-line react/no-danger */
-									dangerouslySetInnerHTML={ { __html: renderMarkdown( msg.content ) } }
+									dangerouslySetInnerHTML={ { __html: sanitizeHtml( renderMarkdown( msg.content ) ) } }
 								/>
 							</div>
 						) )

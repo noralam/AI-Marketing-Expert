@@ -204,6 +204,11 @@ class ArticleController {
 		$article->tag_ids      = self::decode_json_array( $article->tag_ids ?: '[]' );
 		$article->outline      = json_decode( $article->outline ?: '[]', true );
 
+		// Frontend permalink of the connected WP post (for the "View Post" button).
+		$article->view_url = ( ! empty( $article->wp_post_id ) && get_post( (int) $article->wp_post_id ) )
+			? (string) get_permalink( (int) $article->wp_post_id )
+			: '';
+
 		// Get history.
 		$article->history = $wpdb->get_results( $wpdb->prepare(
 			"SELECT * FROM {$p}aime_content_history WHERE article_id = %d ORDER BY created_at DESC LIMIT 50",

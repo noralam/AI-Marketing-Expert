@@ -40,12 +40,21 @@ const ChatWidget = ( { config } ) => {
 		}
 	}, [] ); // eslint-disable-line react-hooks/exhaustive-deps
 
+	const bubbleRef = useRef( null );
+
 	const toggle = useCallback( () => {
 		setIsOpen( ( prev ) => {
-			if ( ! prev && ! chat.conversationId ) {
+			const next = ! prev;
+			if ( next && ! chat.conversationId ) {
 				chat.startConversation();
 			}
-			return ! prev;
+			// Opening clears the unread badge; closing re-arms it.
+			chat.setWindowOpen( next );
+			if ( prev ) {
+				// Return focus to the launcher when the window closes.
+				setTimeout( () => bubbleRef.current?.focus(), 0 );
+			}
+			return next;
 		} );
 	}, [ chat ] );
 
@@ -112,6 +121,7 @@ const ChatWidget = ( { config } ) => {
 				onClick={ toggle }
 				unreadCount={ chat.unreadCount }
 				icon={ config.bubble_icon || 'chat' }
+				buttonRef={ bubbleRef }
 			/>
 		</div>
 	);

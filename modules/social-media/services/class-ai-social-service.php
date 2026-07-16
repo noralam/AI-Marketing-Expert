@@ -423,9 +423,13 @@ class AiSocialService {
 
 	/**
 	 * Strip <think>…</think> extended-thinking blocks from raw AI output.
+	 *
+	 * Delegates to the shared helper in 'text' mode: also catches orphan
+	 * think tags, scratchpad blocks, and safety-classification lines, while
+	 * never applying the JSON-prefix truncation (captions are plain text).
 	 */
 	private function strip_thinking_tags( string $content ): string {
-		return preg_replace( '/<think>.*?<\/think>/si', '', $content );
+		return aime_strip_thinking_text( $content, 'text' );
 	}
 
 	/**

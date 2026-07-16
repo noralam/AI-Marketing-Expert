@@ -15,6 +15,7 @@ import ContentGeneratorPage from './components/modules/ContentGenerator/ContentG
 import SocialMediaPage from './components/modules/SocialMedia/SocialMediaPage';
 import SeoPage from './components/modules/Seo/SeoPage';
 import ChatbotPage from './components/modules/Chatbot/ChatbotPage';
+import WorkflowAutomationPage from './components/modules/WorkflowAutomation/WorkflowAutomationPage';
 import AiProvidersPage from './components/modules/Settings/AiProvidersPage';
 import SettingsPage from './components/modules/Settings/SettingsPage';
 
@@ -53,6 +54,11 @@ const App = () => {
 	// ── Chatbot (with internal sidebar) ─────────────────────
 	if ( currentPage === 'ai-marketing-expert-chatbot' ) {
 		return <ChatbotPage />;
+	}
+
+	// ── Workflow Automation (with internal sidebar) ─────────
+	if ( currentPage === 'ai-marketing-expert-automation' ) {
+		return <WorkflowAutomationPage />;
 	}
 
 	// ── AI Providers ─────────────────────────────────────────

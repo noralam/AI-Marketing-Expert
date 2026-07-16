@@ -137,6 +137,8 @@ class PublicController {
 
 		$welcome_msg_id = (int) $wpdb->insert_id;
 
+		$this->maybe_notify_admin( $conversation_id, $bot, $params );
+
 		return new \WP_REST_Response( array(
 			'conversation_id' => $conversation_id,
 			'conversation_token' => $this->create_conversation_token( $conversation_id, $visitor_id ),
@@ -152,6 +154,53 @@ class PublicController {
 				),
 			),
 		), 201 );
+	}
+
+	/* ── ADMIN NOTIFICATION — email on new conversation ─ */
+
+	private function maybe_notify_admin( int $conversation_id, object $bot, array $params ): void {
+		$settings = get_option( 'aime_chatbot_settings', array() );
+
+		if ( empty( $settings['notify_new_chat'] ) ) {
+			return;
+		}
+
+		$to = sanitize_email( $settings['notify_email'] ?? '' );
+		if ( ! is_email( $to ) ) {
+			$to = get_option( 'admin_email' );
+		}
+		if ( ! is_email( $to ) ) {
+			return;
+		}
+
+		$site_name = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+		$page_url  = esc_url_raw( $params['page_url'] ?? '' );
+
+		/* translators: %s: site name. */
+		$subject = sprintf( __( '[%s] New chat conversation started', 'ai-marketing-expert' ), $site_name );
+
+		$lines = array(
+			/* translators: %s: site name. */
+			sprintf( __( 'A visitor just started a new chat conversation on %s.', 'ai-marketing-expert' ), $site_name ),
+			'',
+			/* translators: %s: chatbot name. */
+			sprintf( __( 'Bot: %s', 'ai-marketing-expert' ), $bot->name ?? '' ),
+			/* translators: %d: conversation ID. */
+			sprintf( __( 'Conversation ID: %d', 'ai-marketing-expert' ), $conversation_id ),
+			/* translators: %s: date and time. */
+			sprintf( __( 'Started at: %s', 'ai-marketing-expert' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ),
+		);
+
+		if ( $page_url ) {
+			/* translators: %s: page URL. */
+			$lines[] = sprintf( __( 'Page: %s', 'ai-marketing-expert' ), $page_url );
+		}
+
+		$lines[] = '';
+		/* translators: %s: admin URL of the conversations screen. */
+		$lines[] = sprintf( __( 'View the conversation: %s', 'ai-marketing-expert' ), admin_url( 'admin.php?page=ai-marketing-expert-chatbot#conversation/' . $conversation_id ) );
+
+		wp_mail( $to, $subject, implode( "\n", $lines ) );
 	}
 
 	/* ── SEND MESSAGE — visitor sends, gets AI response ─ */
