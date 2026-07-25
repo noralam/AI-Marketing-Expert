@@ -116,3 +116,22 @@ export function setConsent( botId ) {
 		// silent
 	}
 }
+
+/**
+ * Lead submitted state (persisted so the "start" lead gate doesn't reappear).
+ */
+export function hasLeadSubmitted( botId ) {
+	try {
+		return localStorage.getItem( PREFIX + 'lead_' + botId ) === '1';
+	} catch ( e ) {
+		return false;
+	}
+}
+
+export function setLeadSubmitted( botId ) {
+	try {
+		localStorage.setItem( PREFIX + 'lead_' + botId, '1' );
+	} catch ( e ) {
+		// silent
+	}
+}

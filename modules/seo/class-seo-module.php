@@ -377,6 +377,17 @@ class SeoModule extends Module {
 		update_option( $month_key, $current + 1 );
 	}
 
+	/* ── Generic monthly feature counters (for free limit checks) ── */
+
+	public static function get_monthly_feature_count( string $feature ): int {
+		return (int) get_option( 'aime_seo_' . $feature . '_' . gmdate( 'Y_m' ), 0 );
+	}
+
+	public static function increment_monthly_feature( string $feature ): void {
+		$month_key = 'aime_seo_' . $feature . '_' . gmdate( 'Y_m' );
+		update_option( $month_key, (int) get_option( $month_key, 0 ) + 1 );
+	}
+
 	/* ── Monthly audit count ────────────────────────────── */
 
 	public static function get_monthly_audit_count(): int {

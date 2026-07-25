@@ -129,6 +129,12 @@ class SeoRestController {
 			'callback'            => array( $ctrl, 'content_brief' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 		) );
+
+		register_rest_route( $this->ns, '/seo/research/usage', array(
+			'methods'             => \WP_REST_Server::READABLE,
+			'callback'            => array( $ctrl, 'research_usage' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+		) );
 	}
 
 	/* ── Topical Authority Map Routes ─────────────────────── */

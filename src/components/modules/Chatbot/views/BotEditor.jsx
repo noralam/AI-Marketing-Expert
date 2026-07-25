@@ -34,10 +34,13 @@ const POSITION_OPTIONS = [
 	{ label: 'Bottom Left', value: 'bottom-left' },
 ];
 
-const LEAD_TRIGGER_OPTIONS = [
-	{ label: 'After 3 messages', value: 'after_messages' },
-	{ label: 'On AI detection (Pro)', value: 'ai_intent' },
-	{ label: 'Manual only (Pro)', value: 'manual' },
+const FREE_LEAD_TRIGGERS = [ 'start', 'after_messages' ];
+const VALID_LEAD_TRIGGERS = [ 'start', 'after_messages', 'ai_intent' ];
+
+const getLeadTriggerOptions = ( hasPro ) => [
+	{ label: __( 'Start with lead form', 'ai-marketing-expert' ), value: 'start' },
+	{ label: __( 'After X messages', 'ai-marketing-expert' ), value: 'after_messages' },
+	{ label: hasPro ? __( 'On AI detection', 'ai-marketing-expert' ) : __( 'On AI detection (Pro)', 'ai-marketing-expert' ), value: 'ai_intent' },
 ];
 
 const RESPONSE_TONE_OPTIONS = [
@@ -283,7 +286,11 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 				},
 				lead_capture_config: {
 					...getLeadConfig(),
-					trigger: hasPro ? ( getLeadConfig().trigger || 'after_messages' ) : 'after_messages',
+					trigger: ( () => {
+						const t = getLeadConfig().trigger || 'after_messages';
+						if ( ! VALID_LEAD_TRIGGERS.includes( t ) ) return 'after_messages';
+						return hasPro || FREE_LEAD_TRIGGERS.includes( t ) ? t : 'after_messages';
+					} )(),
 					fields: normalizeLeadFields( getLeadConfig().fields || [ 'email', 'name' ] ),
 				},
 				knowledge_config: {
@@ -523,18 +530,20 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 										<>
 											<SelectControl
 												label={ __( 'Trigger', 'ai-marketing-expert' ) }
-												value={ leadConfig.trigger || 'after_messages' }
-												options={ LEAD_TRIGGER_OPTIONS }
-												onChange={ ( v ) => setLeadField( 'trigger', hasPro ? v : 'after_messages' ) }
+												value={ VALID_LEAD_TRIGGERS.includes( leadConfig.trigger ) ? leadConfig.trigger : 'after_messages' }
+												options={ getLeadTriggerOptions( hasPro ) }
+												onChange={ ( v ) => setLeadField( 'trigger', hasPro || FREE_LEAD_TRIGGERS.includes( v ) ? v : 'after_messages' ) }
 												__nextHasNoMarginBottom
 											/>
-											<TextControl
-												label={ __( 'Trigger After Messages', 'ai-marketing-expert' ) }
-												type="number"
-												value={ leadConfig.trigger_count || 3 }
-												onChange={ ( v ) => setLeadField( 'trigger_count', Math.max( 1, parseInt( v, 10 ) || 3 ) ) }
-												__nextHasNoMarginBottom
-											/>
+											{ ( leadConfig.trigger || 'after_messages' ) === 'after_messages' && (
+												<TextControl
+													label={ __( 'Trigger After Messages', 'ai-marketing-expert' ) }
+													type="number"
+													value={ leadConfig.trigger_count || 3 }
+													onChange={ ( v ) => setLeadField( 'trigger_count', Math.max( 1, parseInt( v, 10 ) || 3 ) ) }
+													__nextHasNoMarginBottom
+												/>
+											) }
 											<TextControl
 												label={ __( 'Form Heading', 'ai-marketing-expert' ) }
 												value={ leadConfig.heading || '' }

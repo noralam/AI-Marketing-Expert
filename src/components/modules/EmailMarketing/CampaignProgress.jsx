@@ -76,7 +76,7 @@ const MIN_PROGRESS_VISIBLE_MS = 2000;
 const LIVE_PROGRESS_INTERVAL_MS = 15000;
 const RECIPIENTS_PER_PAGE = 25;
 
-const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
+const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 	const hasPro = isProActive();
 	const { get, post, loading, error, clearError } = useApi();
 	const [ data, setData ] = useState( null );
@@ -86,6 +86,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 	const [ scheduleNotice, setScheduleNotice ] = useState( null );
 	const [ togglingQueue, setTogglingQueue ] = useState( false );
 	const [ endingQueue, setEndingQueue ] = useState( false );
+	const [ creatingCopy, setCreatingCopy ] = useState( false );
 	const [ recentProcessed, setRecentProcessed ] = useState( 0 );
 	const [ activeRecipientTab, setActiveRecipientTab ] = useState( 'sent' );
 	const [ recipientPage, setRecipientPage ] = useState( 1 );
@@ -172,6 +173,22 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 		} catch ( e ) { /* error surfaced via useApi's error state */ } finally {
 			setEndingQueue( false );
 		}
+	};
+
+	const handleUseForNewCampaign = async () => {
+		if ( creatingCopy ) return;
+
+		setCreatingCopy( true );
+		try {
+			// Reuse the existing duplicate endpoint: it clones the campaign as a
+			// draft ("<title> (Copy)") without touching this campaign's stats.
+			const res = await post( `/email/campaigns/${ id }/duplicate` );
+			if ( res?.id ) {
+				onNavigate?.( 'campaign-editor', { id: res.id } );
+				return;
+			}
+		} catch ( e ) { /* error surfaced via useApi's error state */ }
+		setCreatingCopy( false );
 	};
 
 	useEffect( () => {
@@ -548,6 +565,45 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack } ) => {
 							<Bar dataKey="count" fill="#10b981" radius={ [ 4, 4, 0, 0 ] } name={ __( 'Opens', 'ai-marketing-expert' ) } />
 						</BarChart>
 					</ResponsiveContainer>
+				</Card>
+			) }
+
+			{ /* Email template preview + reuse action */ }
+			{ Boolean( data.campaign?.email_body ) && (
+				<Card
+					title={
+						<span className="aime-pro-card-header" style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' } }>
+							<span>
+								{ __( 'Email Template', 'ai-marketing-expert' ) }
+								{ data.campaign?.email_subject && (
+									<span style={ { display: 'block', fontSize: 13, fontWeight: 400, color: '#6b7280', marginTop: 2 } }>
+										{ __( 'Subject:', 'ai-marketing-expert' ) } { data.campaign.email_subject }
+									</span>
+								) }
+							</span>
+							<span style={ { display: 'inline-flex', alignItems: 'center', gap: 8 } }>
+								{ ! hasPro && <ProLabel /> }
+								<Button
+									variant="primary"
+									size="small"
+									onClick={ handleUseForNewCampaign }
+									isBusy={ creatingCopy }
+									disabled={ ! hasPro || creatingCopy }
+								>
+									{ creatingCopy ? __( 'Creating draft...', 'ai-marketing-expert' ) : __( 'Use for New Campaign', 'ai-marketing-expert' ) }
+								</Button>
+							</span>
+						</span>
+					}
+				>
+					{ /* Sandboxed iframe: keeps the email's own styles from leaking into
+					     the admin UI and blocks any scripts inside stored email HTML. */ }
+					<iframe
+						title={ __( 'Sent email preview', 'ai-marketing-expert' ) }
+						sandbox=""
+						srcDoc={ data.campaign.email_body }
+						style={ { width: '100%', height: 600, border: '1px solid #e5e7eb', borderRadius: 8, background: '#ffffff' } }
+					/>
 				</Card>
 			) }
 		</div>

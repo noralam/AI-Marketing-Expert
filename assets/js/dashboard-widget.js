@@ -92,7 +92,7 @@
 			html += '<span class="aime-dw__feed-name">' + escapeHTML(c.visitor_name) + '</span>';
 			if (pagePath) html += '<span class="aime-dw__feed-page">' + escapeHTML(pagePath) + '</span>';
 			html += '<span class="aime-dw__feed-meta">' + c.msg_count + ' msg' + (c.msg_count !== 1 ? 's' : '') + '</span>';
-			html += '<span class="aime-dw__feed-time">just now</span>';
+			html += '<span class="aime-dw__feed-time">' + escapeHTML(c.time_ago || '') + '</span>';
 			html += '</div>';
 		}
 		return html;

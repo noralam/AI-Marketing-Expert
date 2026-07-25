@@ -194,6 +194,11 @@ class DashboardWidget {
 					'last_message' => $row->last_message ? $row->last_message : '',
 					'msg_count'    => (int) $row->msg_count,
 					'created_at'   => $row->created_at,
+					'time_ago'     => sprintf(
+						/* translators: %s: human-readable time difference, e.g. "15 hours". */
+						__( '%s ago', 'ai-marketing-expert' ),
+						human_time_diff( strtotime( $row->created_at . ' UTC' ), time() )
+					),
 				);
 			}
 		}
@@ -318,7 +323,7 @@ class DashboardWidget {
 								);
 								?>
 							</span>
-							<span class="aime-dw__feed-time"><?php echo esc_html( human_time_diff( strtotime( $conv['created_at'] ), current_time( 'timestamp' ) ) ); ?> ago</span>
+							<span class="aime-dw__feed-time"><?php echo esc_html( $conv['time_ago'] ); ?></span>
 						</div>
 					<?php endforeach; ?>
 				</div>
@@ -553,7 +558,7 @@ class DashboardWidget {
 				'seo'     => $this->get_compact_seo( $seo ),
 				'content' => $this->get_compact_content( $content ),
 				'social'  => $this->get_compact_social( $social ),
-				'time'    => current_time( 'timestamp' ),
+				'time'    => time(),
 			)
 		);
 	}

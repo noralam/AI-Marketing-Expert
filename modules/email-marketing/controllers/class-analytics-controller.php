@@ -52,8 +52,10 @@ class AnalyticsController {
 		// Totals.
 		$total_sent        = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'sent' AND created_at >= %s", $campaign_emails_table, $since ) );
 		$total_opened      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE is_open = 1 AND created_at >= %s", $campaign_emails_table, $since ) );
-		$total_clicks      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE type = 'click' AND created_at >= %s", $metrics_table, $since ) );
-		$total_unsubs      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE type = 'unsubscribe' AND created_at >= %s", $metrics_table, $since ) );
+		// Unique clickers per campaign, summed across campaigns — counting raw
+		// click events double-counts recipients who clicked several links.
+		$total_clicks      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM ( SELECT 1 FROM %i WHERE type = 'click' AND created_at >= %s GROUP BY campaign_id, subscriber_id ) t", $metrics_table, $since ) );
+		$total_unsubs      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM ( SELECT 1 FROM %i WHERE type = 'unsubscribe' AND created_at >= %s GROUP BY campaign_id, subscriber_id ) t", $metrics_table, $since ) );
 		$total_subscribers = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $subscribers_table ) );
 
 		return new \WP_REST_Response( array(
@@ -92,10 +94,18 @@ class AnalyticsController {
 					COUNT(*) AS total,
 					SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent,
 					SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
-					SUM(CASE WHEN is_open = 1 THEN 1 ELSE 0 END) AS opened,
-					SUM(click_counter) AS total_clicks
+					SUM(CASE WHEN is_open = 1 THEN 1 ELSE 0 END) AS opened
 				 FROM %i WHERE campaign_id = %d",
 				$campaign_emails_table,
+				$id
+			)
+		);
+
+		// Unique clickers, not click events, so click-to-open cannot exceed 100%.
+		$total_clicks = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT subscriber_id) FROM %i WHERE campaign_id = %d AND type = 'click'",
+				$metrics_table,
 				$id
 			)
 		);
@@ -140,7 +150,7 @@ class AnalyticsController {
 		);
 
 		$unsubscribes = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE campaign_id = %d AND type = 'unsubscribe'", $metrics_table, $id )
+			$wpdb->prepare( "SELECT COUNT(DISTINCT subscriber_id) FROM %i WHERE campaign_id = %d AND type = 'unsubscribe'", $metrics_table, $id )
 		);
 
 		$sent = (int) ( $stats->sent ?? 0 );
@@ -155,10 +165,10 @@ class AnalyticsController {
 			'sent'          => $sent,
 			'failed'        => (int) ( $stats->failed ?? 0 ),
 			'opened'        => (int) ( $stats->opened ?? 0 ),
-			'total_clicks'  => (int) ( $stats->total_clicks ?? 0 ),
+			'total_clicks'  => $total_clicks,
 			'unsubscribes'  => $unsubscribes,
 			'open_rate'     => $sent > 0 ? round( ( (int) $stats->opened / $sent ) * 100, 1 ) : 0,
-			'click_rate'    => $sent > 0 ? round( ( (int) $stats->total_clicks / $sent ) * 100, 1 ) : 0,
+			'click_rate'    => $sent > 0 ? round( ( $total_clicks / $sent ) * 100, 1 ) : 0,
 			'top_links'     => $top_links,
 			'opens_timeline' => $opens_timeline,
 			'countries'     => $countries,
@@ -261,14 +271,21 @@ class AnalyticsController {
 						(SELECT COUNT(*) FROM %i um WHERE um.campaign_id = ce.campaign_id AND um.subscriber_id = ce.subscriber_id AND um.type = 'unsubscribe') AS unsubscribe_count
 					 FROM %i ce
 					 LEFT JOIN %i s ON s.id = ce.subscriber_id
-					 WHERE ce.campaign_id = %d AND s.status = 'complained'
+					 WHERE ce.campaign_id = %d AND (
+						s.status = 'complained'
+						OR EXISTS (
+							SELECT 1 FROM %i xm
+							WHERE xm.subscriber_id = ce.subscriber_id AND xm.type = 'complaint'
+						)
+					 )
 					 ORDER BY ce.updated_at DESC, ce.id DESC",
 					$metrics_table,
 					$metrics_table,
 					$metrics_table,
 					$campaign_emails_table,
 					$subscribers_table,
-					$campaign_id
+					$campaign_id,
+					$metrics_table
 				) );
 			} else {
 					$rows = $wpdb->get_results( $wpdb->prepare(
@@ -307,7 +324,7 @@ class AnalyticsController {
 				"UPDATE %i s
 				 INNER JOIN %i ce ON ce.subscriber_id = s.id
 				 SET s.status = 'bounced', s.updated_at = %s
-				 WHERE ce.campaign_id = %d AND ce.status = 'failed' AND s.status <> 'bounced'",
+				 WHERE ce.campaign_id = %d AND ce.status = 'failed' AND s.status NOT IN ('bounced', 'complained')",
 				$subscribers_table,
 				$campaign_emails_table,
 				current_time( 'mysql', true ),

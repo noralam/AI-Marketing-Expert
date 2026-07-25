@@ -13,6 +13,8 @@ import {
 	setConversationToken,
 	hasConsent,
 	setConsent,
+	hasLeadSubmitted,
+	setLeadSubmitted as persistLeadSubmitted,
 } from '../utils/storage';
 
 // Single shared AudioContext, created lazily. Browsers cap the number of
@@ -98,8 +100,12 @@ const useChat = ( config ) => {
 	const [ consentGiven, setConsentGiven ] = useState(
 		() => ! config.gdpr_enabled || hasConsent( botId )
 	);
-	const [ showLeadForm, setShowLeadForm ] = useState( false );
-	const [ leadSubmitted, setLeadSubmitted ] = useState( false );
+	const [ showLeadForm, setShowLeadForm ] = useState( () => {
+		const lc = config.leadConfig || {};
+		// "start" trigger: gate the chat with the lead form as soon as it opens.
+		return !! ( lc.enabled && lc.trigger === 'start' && ! hasLeadSubmitted( botId ) );
+	} );
+	const [ leadSubmitted, setLeadSubmittedState ] = useState( () => hasLeadSubmitted( botId ) );
 	const [ readReceiptId, setReadReceiptId ] = useState( 0 );
 	const conversationTokenRef = useRef( getConversationToken( botId ) );
 
@@ -189,6 +195,9 @@ const useChat = ( config ) => {
 			setConversationToken( botId, data.conversation_token );
 			setConversationIdState( convId );
 			setConversationId( botId, convId );
+			// Update the ref immediately so callers awaiting this function
+			// (e.g. submitLead) see the new ID before the next render.
+			conversationIdRef.current = convId;
 
 			if ( data.messages && data.messages.length ) {
 				// Merge: use the server's ordered list as canonical,
@@ -222,7 +231,9 @@ const useChat = ( config ) => {
 		} catch ( err ) {
 			// eslint-disable-next-line no-console
 			console.error( '[AIME Chatbot] Start error:', err.message );
+			return null;
 		}
+		return conversationIdRef.current;
 	}, [ apiFetch, botId ] );
 	/**
 	 * Send a visitor message.
@@ -404,13 +415,21 @@ const useChat = ( config ) => {
 	 */
 	const submitLead = useCallback(
 		async ( formData ) => {
-			if ( ! conversationId ) return;
+			// The "start" lead gate can render before the conversation exists —
+			// create/resume one on demand so the lead has somewhere to attach.
+			let cid = conversationIdRef.current;
+			if ( ! cid ) {
+				cid = await startConversation();
+			}
+			if ( ! cid ) {
+				throw new Error( 'Could not start the conversation. Please try again.' );
+			}
 
 			try {
 				await apiFetch( '/lead', {
 					method: 'POST',
 					body: JSON.stringify( {
-						conversation_id: Number( conversationId ),
+						conversation_id: Number( cid ),
 						visitor_id: visitorIdRef.current,
 						conversation_token: conversationTokenRef.current,
 						email: formData.email,
@@ -420,7 +439,8 @@ const useChat = ( config ) => {
 					} ),
 				} );
 
-				setLeadSubmitted( true );
+				setLeadSubmittedState( true );
+				persistLeadSubmitted( botId );
 				setShowLeadForm( false );
 			} catch ( err ) {
 				// eslint-disable-next-line no-console
@@ -428,7 +448,7 @@ const useChat = ( config ) => {
 				throw err;
 			}
 		},
-		[ conversationId, apiFetch ]
+		[ apiFetch, botId, startConversation ]
 	);
 
 	/**

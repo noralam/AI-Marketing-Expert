@@ -670,7 +670,7 @@ class AiController {
 			$stats = $wpdb->get_row( $wpdb->prepare(
 				"SELECT COUNT(*) AS sent,
 					SUM(CASE WHEN is_open = 1 THEN 1 ELSE 0 END) AS opened,
-					SUM(click_counter) AS clicks
+					SUM(CASE WHEN click_counter > 0 THEN 1 ELSE 0 END) AS clicks
 				 FROM {$p}aime_campaign_emails WHERE campaign_id = %d AND status = 'sent'",
 				$c->id
 			) );

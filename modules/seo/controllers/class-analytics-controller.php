@@ -62,6 +62,12 @@ class AnalyticsController {
 				'keywords_limit' => aime_has_pro() ? null : ( $limits['seo_keywords_saved'] ?? 50 ),
 				'rank_tracked'   => SeoModule::get_tracked_keyword_count(),
 				'rank_limit'     => aime_has_pro() ? null : ( $limits['seo_rank_keywords'] ?? 5 ),
+				'niche_used'     => SeoModule::get_monthly_feature_count( 'niche_analysis' ),
+				'niche_limit'    => aime_has_pro() ? null : ( $limits['seo_niche_analysis_monthly'] ?? 3 ),
+				'gap_used'       => SeoModule::get_monthly_feature_count( 'competitor_gap' ),
+				'gap_limit'      => aime_has_pro() ? null : ( $limits['seo_competitor_gap_monthly'] ?? 3 ),
+				'brief_used'     => SeoModule::get_monthly_feature_count( 'content_brief' ),
+				'brief_limit'    => aime_has_pro() ? null : ( $limits['seo_content_brief_monthly'] ?? 5 ),
 			),
 			'is_pro' => aime_has_pro(),
 		) );

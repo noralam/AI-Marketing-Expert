@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, SelectControl, SearchControl, CheckboxControl } from '@aime/wp-components';
 import { trash, seen, globe, lock } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
@@ -21,6 +21,12 @@ const STATUS_OPTIONS = [
 	{ label: 'Active', value: 'active' },
 	{ label: 'Closed', value: 'closed' },
 	{ label: 'Human Takeover', value: 'human_takeover' },
+];
+
+const VISITOR_OPTIONS = [
+	{ label: 'All Visitors', value: '' },
+	{ label: 'Leads Only', value: 'lead' },
+	{ label: 'Anonymous Only', value: 'anonymous' },
 ];
 
 const STATUS_COLORS = {
@@ -44,6 +50,7 @@ const Conversations = ( { onNavigate } ) => {
 	const [ search, setSearch ] = useState( '' );
 	const [ statusFilter, setStatusFilter ] = useState( '' );
 	const [ botFilter, setBotFilter ] = useState( '' );
+	const [ visitorFilter, setVisitorFilter ] = useState( '' );
 	const [ bots, setBots ] = useState( [] );
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
 	const [ selected, setSelected ] = useState( [] );
@@ -68,13 +75,14 @@ const Conversations = ( { onNavigate } ) => {
 			if ( search ) params.search = search;
 			if ( statusFilter ) params.status = statusFilter;
 			if ( botFilter ) params.bot_id = botFilter;
+			if ( visitorFilter ) params.visitor_type = visitorFilter;
 			const res = await get( '/chatbot/conversations', params );
 			setItems( res.items || res.data || [] );
 			setTotal( res.total || 0 );
 		} catch ( e ) {
 			// silent
 		}
-	}, [ get, page, search, statusFilter, botFilter ] );
+	}, [ get, page, search, statusFilter, botFilter, visitorFilter ] );
 
 	useEffect( () => {
 		fetchItems();
@@ -102,6 +110,7 @@ const Conversations = ( { onNavigate } ) => {
 				if ( search ) params.search = search;
 				if ( statusFilter ) params.status = statusFilter;
 				if ( botFilter ) params.bot_id = botFilter;
+				if ( visitorFilter ) params.visitor_type = visitorFilter;
 				// Use apiGet directly - no loading/error state changes.
 				const res = await apiGet( '/chatbot/conversations', params );
 				const serverTotal = res.total || 0;
@@ -118,7 +127,7 @@ const Conversations = ( { onNavigate } ) => {
 		};
 		const interval = setInterval( checkForNew, 10000 );
 		return () => clearInterval( interval );
-	}, [ search, statusFilter, botFilter ] );
+	}, [ search, statusFilter, botFilter, visitorFilter ] );
 
 	const handleClose = async ( id ) => {
 		try {
@@ -176,6 +185,35 @@ const Conversations = ( { onNavigate } ) => {
 			setSelected( [] );
 			toast( __( 'Bulk action completed.', 'ai-marketing-expert' ) );
 			fetchItems();
+		} catch ( e ) {
+			toast( e.message, 'error' );
+		}
+	};
+
+	/* Export leads from selected conversations as CSV download (Pro). */
+	const handleExportLeads = async () => {
+		if ( ! selected.length ) return;
+		try {
+			const res = await post( '/chatbot/conversations/bulk', {
+				action: 'export_leads',
+				ids: selected,
+			} );
+			const blob = new Blob( [ res.csv ], { type: 'text/csv;charset=utf-8;' } );
+			const url = URL.createObjectURL( blob );
+			const a = document.createElement( 'a' );
+			a.href = url;
+			a.download = res.filename || 'chatbot-leads.csv';
+			document.body.appendChild( a );
+			a.click();
+			document.body.removeChild( a );
+			URL.revokeObjectURL( url );
+			toast(
+				sprintf(
+					/* translators: %d: number of leads exported */
+					__( '%d lead(s) exported.', 'ai-marketing-expert' ),
+					res.count || 0
+				)
+			);
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		}
@@ -251,6 +289,16 @@ const Conversations = ( { onNavigate } ) => {
 								{ __( 'Make Private', 'ai-marketing-expert' ) }
 							</Button>
 						) }
+						<Button
+							variant="secondary"
+							size="small"
+							onClick={ hasPro ? handleExportLeads : undefined }
+							disabled={ ! hasPro }
+						>
+							{ hasPro
+								? __( 'Export Leads', 'ai-marketing-expert' )
+								: __( 'Export Leads (Pro)', 'ai-marketing-expert' ) }
+						</Button>
 					</div>
 				) }
 
@@ -265,6 +313,12 @@ const Conversations = ( { onNavigate } ) => {
 						value={ statusFilter }
 						options={ STATUS_OPTIONS }
 						onChange={ ( v ) => { setStatusFilter( v ); setPage( 1 ); } }
+						__nextHasNoMarginBottom
+					/>
+					<SelectControl
+						value={ visitorFilter }
+						options={ VISITOR_OPTIONS }
+						onChange={ ( v ) => { setVisitorFilter( v ); setPage( 1 ); } }
 						__nextHasNoMarginBottom
 					/>
 					{ bots.length > 1 && (

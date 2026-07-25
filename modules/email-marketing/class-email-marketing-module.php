@@ -625,21 +625,45 @@ class EmailMarketingModule extends Module {
 			$url_id = (int) $wpdb->insert_id;
 		}
 
-		$wpdb->insert( "{$p}aime_campaign_url_metrics", array(
-			'url_id'        => $url_id,
-			'campaign_id'   => $email->campaign_id,
-			'subscriber_id' => $email->subscriber_id,
-			'type'          => 'click',
-			'ip_address'    => $this->get_tracking_ip(),
-			'country'       => '',
-			'city'          => '',
-			'created_at'    => current_time( 'mysql', true ),
+		// Record only the first click per (campaign, subscriber, url) so the click
+		// metric reflects unique clicks. Mail-security scanners and link
+		// prefetchers (Gmail, Outlook Safe Links, corporate filters) fetch *every*
+		// link in a message, which otherwise registers one click per link in the
+		// email for a recipient who clicked once — or none at all.
+		$existing_click_id = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT id FROM {$p}aime_campaign_url_metrics
+			 WHERE campaign_id = %d AND subscriber_id = %d AND url_id = %d AND type = 'click'
+			 LIMIT 1",
+			(int) $email->campaign_id,
+			(int) $email->subscriber_id,
+			$url_id
 		) );
 
-		$wpdb->query( $wpdb->prepare(
-			"UPDATE {$p}aime_campaign_emails SET click_counter = click_counter + 1 WHERE id = %d",
-			$email->id
-		) );
+		if ( $existing_click_id ) {
+			// Repeat click on the same link: bump the raw counter, leave the
+			// unique-click metric (one row per link) untouched.
+			$wpdb->query( $wpdb->prepare(
+				"UPDATE {$p}aime_campaign_url_metrics SET counter = counter + 1, updated_at = %s WHERE id = %d",
+				current_time( 'mysql', true ),
+				$existing_click_id
+			) );
+		} else {
+			$wpdb->insert( "{$p}aime_campaign_url_metrics", array(
+				'url_id'        => $url_id,
+				'campaign_id'   => $email->campaign_id,
+				'subscriber_id' => $email->subscriber_id,
+				'type'          => 'click',
+				'ip_address'    => $this->get_tracking_ip(),
+				'country'       => '',
+				'city'          => '',
+				'created_at'    => current_time( 'mysql', true ),
+			) );
+
+			$wpdb->query( $wpdb->prepare(
+				"UPDATE {$p}aime_campaign_emails SET click_counter = click_counter + 1 WHERE id = %d",
+				$email->id
+			) );
+		}
 
 		// Also mark as opened.
 		$wpdb->update( "{$p}aime_campaign_emails", array( 'is_open' => 1 ), array( 'id' => $email->id, 'is_open' => 0 ) );

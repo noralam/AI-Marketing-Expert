@@ -26,6 +26,7 @@ class ConversationController {
 		$status   = $request->get_param( 'status' );
 		$bot_id   = absint( $request->get_param( 'bot_id' ) );
 		$search   = $request->get_param( 'search' );
+		$visitor  = sanitize_key( $request->get_param( 'visitor_type' ) ?? '' );
 
 		$where = 'WHERE 1=1';
 		$args  = array();
@@ -33,6 +34,13 @@ class ConversationController {
 		if ( $status ) {
 			$where .= ' AND c.status = %s';
 			$args[] = $status;
+		}
+
+		// Visitor type filter: leads (captured / has email) vs anonymous.
+		if ( 'lead' === $visitor ) {
+			$where .= " AND (c.lead_captured = 1 OR (c.visitor_email IS NOT NULL AND c.visitor_email <> ''))";
+		} elseif ( 'anonymous' === $visitor ) {
+			$where .= " AND c.lead_captured = 0 AND (c.visitor_email IS NULL OR c.visitor_email = '')";
 		}
 
 		if ( $bot_id ) {
@@ -388,6 +396,15 @@ class ConversationController {
 			), 403 );
 		}
 
+		if ( 'export_leads' === $action ) {
+			if ( ! aime_has_pro() ) {
+				return new \WP_REST_Response( array(
+					'message' => __( 'Exporting leads requires Pro.', 'ai-marketing-expert' ),
+				), 403 );
+			}
+			return $this->export_leads_csv( $ids );
+		}
+
 		$now    = current_time( 'mysql', true );
 		$count  = count( $ids );
 		$ph     = implode( ',', array_fill( 0, $count, '%d' ) );
@@ -442,6 +459,69 @@ class ConversationController {
 		return new \WP_REST_Response( array(
 			/* translators: %d: number of conversations affected */
 			'message' => sprintf( __( '%d conversation(s) updated.', 'ai-marketing-expert' ), $count ),
+		) );
+	}
+
+	/* ── EXPORT LEADS from selected conversations (Pro) ── */
+
+	/**
+	 * Build a leads CSV from the selected conversation IDs.
+	 *
+	 * Only conversations with a captured lead (lead_captured flag or a
+	 * visitor email) are included. Phone/company come from the
+	 * conversation metadata JSON written by the public lead endpoint.
+	 *
+	 * @param int[] $ids Conversation IDs.
+	 */
+	private function export_leads_csv( array $ids ): \WP_REST_Response {
+		global $wpdb;
+		$p  = $wpdb->prefix;
+		$ph = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$conversations = $wpdb->get_results( $wpdb->prepare(
+			"SELECT c.id, c.visitor_name, c.visitor_email, c.metadata, c.page_url,
+					c.status, c.created_at, b.name AS bot_name
+			 FROM {$p}aime_chatbot_conversations c
+			 LEFT JOIN {$p}aime_chatbot_bots b ON b.id = c.bot_id
+			 WHERE c.id IN ({$ph})
+			   AND (c.lead_captured = 1 OR (c.visitor_email IS NOT NULL AND c.visitor_email <> ''))
+			 ORDER BY c.created_at DESC",
+			...$ids
+		) );
+
+		if ( empty( $conversations ) ) {
+			return new \WP_REST_Response( array(
+				'message' => __( 'No leads found in the selected conversations.', 'ai-marketing-expert' ),
+			), 400 );
+		}
+
+		$esc = static function ( $value ): string {
+			return '"' . str_replace( '"', '""', (string) $value ) . '"';
+		};
+
+		$lines   = array();
+		$lines[] = 'Conversation ID,Bot,Name,Email,Phone,Company,Page URL,Status,Captured At';
+
+		foreach ( $conversations as $conv ) {
+			$meta    = json_decode( $conv->metadata ?: '{}', true ) ?: array();
+			$lines[] = implode( ',', array(
+				(int) $conv->id,
+				$esc( $conv->bot_name ),
+				$esc( $conv->visitor_name ),
+				$esc( $conv->visitor_email ),
+				$esc( $meta['phone'] ?? '' ),
+				$esc( $meta['company'] ?? '' ),
+				$esc( $conv->page_url ),
+				$esc( $conv->status ),
+				$esc( $conv->created_at ),
+			) );
+		}
+
+		return new \WP_REST_Response( array(
+			'csv'      => implode( "\n", $lines ),
+			'filename' => 'chatbot-leads-' . gmdate( 'Y-m-d' ) . '.csv',
+			'count'    => count( $conversations ),
 		) );
 	}
 

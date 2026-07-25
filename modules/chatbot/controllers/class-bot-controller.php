@@ -226,9 +226,11 @@ class BotController {
 			$fields = array( 'email', 'name' );
 		}
 
+		$free_trigger = sanitize_key( $lead_config['trigger'] ?? 'after_messages' );
+
 		$params['lead_capture_config'] = array(
 			'enabled'       => ! empty( $lead_config['enabled'] ),
-			'trigger'       => 'after_messages',
+			'trigger'       => in_array( $free_trigger, array( 'after_messages', 'start' ), true ) ? $free_trigger : 'after_messages',
 			'trigger_count' => max( 1, absint( $lead_config['trigger_count'] ?? 3 ) ),
 			'fields'        => array_values( array_intersect( array( 'email', 'name' ), array_map( 'sanitize_key', $fields ) ) ),
 			'heading'       => sanitize_text_field( $lead_config['heading'] ?? __( 'Get in touch', 'ai-marketing-expert' ) ),

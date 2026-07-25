@@ -363,12 +363,14 @@ class CampaignController {
 			)
 		);
 
+		// Unique clickers, not click events: a recipient who clicks 3 different
+		// links is one clicker. Counting events makes click-to-open exceed 100%.
 		$clicks = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$p}aime_campaign_url_metrics WHERE campaign_id = %d AND type = 'click'", $id )
+			$wpdb->prepare( "SELECT COUNT(DISTINCT subscriber_id) FROM {$p}aime_campaign_url_metrics WHERE campaign_id = %d AND type = 'click'", $id )
 		);
 
 		$unsubscribes = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$p}aime_campaign_url_metrics WHERE campaign_id = %d AND type = 'unsubscribe'", $id )
+			$wpdb->prepare( "SELECT COUNT(DISTINCT subscriber_id) FROM {$p}aime_campaign_url_metrics WHERE campaign_id = %d AND type = 'unsubscribe'", $id )
 		);
 		$settings = get_option( 'aime_settings', array() );
 		$batch_size = max( 1, (int) ( $settings['batch_size'] ?? 50 ) );
@@ -587,7 +589,7 @@ class CampaignController {
 					SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
 					SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
 					SUM(CASE WHEN is_open = 1 THEN 1 ELSE 0 END) AS opened,
-					SUM(click_counter) AS total_clicks
+					SUM(CASE WHEN click_counter > 0 THEN 1 ELSE 0 END) AS total_clicks
 				 FROM {$p}aime_campaign_emails WHERE campaign_id = %d",
 				$campaign->id
 			)

@@ -4,17 +4,17 @@
  */
 
 import { useState, useMemo, useEffect } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, TextControl, TextareaControl, SelectControl, TabPanel, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
 import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
+import { apiGet } from '../../../../utils/api';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
 import { toast } from '../../../common/Toast';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 
@@ -83,6 +83,49 @@ const RESULT_TABS = [
 ];
 
 const RECENT_STORAGE_KEY = 'aime_seo_keyword_research_recent';
+
+const MAX_COUNTRIES = 5;
+
+const COUNTRY_OPTIONS = [
+	{ label: 'United States', value: 'US' },
+	{ label: 'Bangladesh', value: 'BD' },
+	{ label: 'India', value: 'IN' },
+	{ label: 'United Kingdom', value: 'GB' },
+	{ label: 'Canada', value: 'CA' },
+	{ label: 'Australia', value: 'AU' },
+	{ label: 'Germany', value: 'DE' },
+	{ label: 'France', value: 'FR' },
+	{ label: 'Spain', value: 'ES' },
+	{ label: 'Italy', value: 'IT' },
+	{ label: 'Brazil', value: 'BR' },
+	{ label: 'Mexico', value: 'MX' },
+	{ label: 'Japan', value: 'JP' },
+	{ label: 'South Korea', value: 'KR' },
+	{ label: 'China', value: 'CN' },
+	{ label: 'Indonesia', value: 'ID' },
+	{ label: 'Pakistan', value: 'PK' },
+	{ label: 'Russia', value: 'RU' },
+	{ label: 'Turkey', value: 'TR' },
+	{ label: 'Saudi Arabia', value: 'SA' },
+	{ label: 'UAE', value: 'AE' },
+	{ label: 'Netherlands', value: 'NL' },
+	{ label: 'Sweden', value: 'SE' },
+	{ label: 'Thailand', value: 'TH' },
+	{ label: 'Vietnam', value: 'VN' },
+	{ label: 'Malaysia', value: 'MY' },
+	{ label: 'Philippines', value: 'PH' },
+	{ label: 'Nigeria', value: 'NG' },
+	{ label: 'South Africa', value: 'ZA' },
+	{ label: 'Egypt', value: 'EG' },
+	{ label: 'Poland', value: 'PL' },
+	{ label: 'Argentina', value: 'AR' },
+	{ label: 'Colombia', value: 'CO' },
+	{ label: 'Singapore', value: 'SG' },
+	{ label: 'New Zealand', value: 'NZ' },
+	{ label: 'Ireland', value: 'IE' },
+	{ label: 'Switzerland', value: 'CH' },
+	{ label: 'Portugal', value: 'PT' },
+];
 
 const loadRecentState = () => {
 	try {
@@ -295,6 +338,58 @@ const SerpBadges = ( { features } ) => {
 	);
 };
 
+/**
+ * Free-plan usage indicator for a research feature.
+ * Shows "X of Y left this month" while quota remains, or an upgrade
+ * banner once exhausted. Renders nothing for Pro (limit == null).
+ */
+const UsageNotice = ( { usage, featureLabel, proUrl } ) => {
+	if ( ! usage || usage.limit == null ) return null;
+	const left = Math.max( 0, usage.limit - usage.used );
+
+	if ( left > 0 ) {
+		return (
+			<div style={ {
+				display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16,
+				padding: '4px 10px', borderRadius: 4, background: '#f0f6fc', border: '1px solid #c5d9ed',
+				fontSize: 12, color: '#1d2327',
+			} }>
+				<span>{ '\u{2728}' }</span>
+				<span>
+					{ sprintf(
+						/* translators: 1: remaining uses, 2: monthly limit */
+						__( 'Free plan: %1$d of %2$d uses left this month.', 'ai-marketing-expert' ),
+						left,
+						usage.limit
+					) }
+				</span>
+			</div>
+		);
+	}
+
+	return (
+		<div style={ {
+			display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+			marginBottom: 16, padding: '12px 16px', borderRadius: 6,
+			background: '#fff8e5', border: '1px solid #f0c33c',
+		} }>
+			<span style={ { fontSize: 13 } }>
+				{ sprintf(
+					/* translators: 1: feature name, 2: monthly limit */
+					__( 'You have used all %2$d free %1$s runs for this month. Upgrade to Pro for unlimited access.', 'ai-marketing-expert' ),
+					featureLabel,
+					usage.limit
+				) }
+			</span>
+			<a href={ proUrl } target="_blank" rel="noopener noreferrer">
+				<Button variant="primary" size="compact" className="aime-btn-pro">
+					{ __( 'Upgrade to Pro', 'ai-marketing-expert' ) }
+				</Button>
+			</a>
+		</div>
+	);
+};
+
 /* ================================================================
    ANALYTICS HELPERS  -  derive chart data from API responses
    ================================================================ */
@@ -358,14 +453,40 @@ const priorityDistribution = ( keywords ) => {
 
 const KeywordResearch = ( { onNavigate } ) => {
 	const { get, post, loading, error, clearError } = useApi();
-	const { hasPro, freeLimits } = usePro();
+	const { hasPro, proUrl } = usePro();
 	const slowWarning = useSlowWarning();
 	const recentState = useMemo( loadRecentState, [] );
+
+	// Free-plan per-feature usage: { keyword_research: {used, limit}, ... }.
+	const [ researchUsage, setResearchUsage ] = useState( null );
+
+	useEffect( () => {
+		if ( hasPro ) return;
+		// Raw apiGet: avoids toggling the shared useApi loading state on mount.
+		apiGet( '/seo/research/usage' )
+			.then( ( res ) => setResearchUsage( res?.usage || null ) )
+			.catch( () => {} );
+	}, [ hasPro ] );
+
+	const limitReached = ( key ) => {
+		const u = researchUsage?.[ key ];
+		return ! hasPro && !! u && u.limit != null && u.used >= u.limit;
+	};
+
+	const bumpUsage = ( key ) => {
+		setResearchUsage( ( prev ) => (
+			prev?.[ key ] ? { ...prev, [ key ]: { ...prev[ key ], used: prev[ key ].used + 1 } } : prev
+		) );
+	};
 
 	// Keyword research state.
 	const [ seed, setSeed ] = useState( recentState.keyword?.seed || '' );
 	const [ language, setLanguage ] = useState( recentState.keyword?.language || 'en' );
-	const [ country, setCountry ] = useState( recentState.keyword?.country || 'US' );
+	const [ countries, setCountries ] = useState(
+		recentState.keyword?.countries?.length
+			? recentState.keyword.countries
+			: [ recentState.keyword?.country || 'US' ]
+	);
 	const [ researchData, setResearchData ] = useState( recentState.keyword?.data || null );
 	const [ selected, setSelected ] = useState( [] );
 
@@ -402,7 +523,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 			keyword: {
 				seed,
 				language,
-				country,
+				countries,
 				data: researchData,
 				updated_at: researchData ? Date.now() : recentState.keyword?.updated_at,
 			},
@@ -423,7 +544,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 				updated_at: briefResult ? Date.now() : recentState.brief?.updated_at,
 			},
 		} );
-	}, [ activeTab, seed, language, country, researchData, niche, nicheResults, domain, competitors, gapResults, briefKeyword, briefResult, recentState ] );
+	}, [ activeTab, seed, language, countries, researchData, niche, nicheResults, domain, competitors, gapResults, briefKeyword, briefResult, recentState ] );
 
 	const handleSort = ( key ) => {
 		if ( sortKey === key ) {
@@ -500,7 +621,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 			const res = await post( '/seo/research/keywords', {
 				seed_keyword: seed.trim(),
 				language,
-				country,
+				country: hasPro ? countries.join( ', ' ) : ( countries[ 0 ] || 'US' ),
 			} );
 			if ( res && res.success === false ) {
 				toast( res.message || __( 'Research failed. Please try again.', 'ai-marketing-expert' ), 'error' );
@@ -508,6 +629,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 			}
 			const data = res?.data || res || {};
 			setResearchData( data );
+			bumpUsage( 'keyword_research' );
 			setSelected( [] );
 			setSortKey( null );
 			setActiveResultTab( 'related' );
@@ -580,6 +702,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 		try {
 			const res = await post( '/seo/research/niche-analysis', { niche: niche.trim() } );
 			setNicheResults( res.data || {} );
+			bumpUsage( 'niche_analysis' );
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -599,6 +722,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 				competitor_domains: competitors.split( '\n' ).map( ( c ) => c.trim() ).filter( Boolean ),
 			} );
 			setGapResults( res.data || {} );
+			bumpUsage( 'competitor_gap' );
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -615,6 +739,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 		try {
 			const res = await post( '/seo/research/content-brief', { keyword: briefKeyword.trim() } );
 			setBriefResult( res.data || {} );
+			bumpUsage( 'content_brief' );
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -1579,8 +1704,14 @@ const KeywordResearch = ( { onNavigate } ) => {
 						{ ( tab ) => {
 							/* -- Keyword Research Tab -------- */
 							if ( tab.name === 'keyword' ) {
+								const kwExhausted = limitReached( 'keyword_research' );
 								return (
 									<div className="aime-settings-form">
+										<UsageNotice
+											usage={ researchUsage?.keyword_research }
+											featureLabel={ __( 'Keyword Research', 'ai-marketing-expert' ) }
+											proUrl={ proUrl }
+										/>
 										<div className="aime-form-grid aime-form-grid-3">
 											<TextControl
 												label={ __( 'Seed Keyword', 'ai-marketing-expert' ) }
@@ -1620,58 +1751,60 @@ const KeywordResearch = ( { onNavigate } ) => {
 												__nextHasNoMarginBottom
 												__next40pxDefaultSize
 											/>
-											<SelectControl
-												label={ __( 'Country', 'ai-marketing-expert' ) }
-												value={ country }
-												options={ [
-													{ label: 'United States', value: 'US' },
-													{ label: 'Bangladesh', value: 'BD' },
-													{ label: 'India', value: 'IN' },
-													{ label: 'United Kingdom', value: 'GB' },
-													{ label: 'Canada', value: 'CA' },
-													{ label: 'Australia', value: 'AU' },
-													{ label: 'Germany', value: 'DE' },
-													{ label: 'France', value: 'FR' },
-													{ label: 'Spain', value: 'ES' },
-													{ label: 'Italy', value: 'IT' },
-													{ label: 'Brazil', value: 'BR' },
-													{ label: 'Mexico', value: 'MX' },
-													{ label: 'Japan', value: 'JP' },
-													{ label: 'South Korea', value: 'KR' },
-													{ label: 'China', value: 'CN' },
-													{ label: 'Indonesia', value: 'ID' },
-													{ label: 'Pakistan', value: 'PK' },
-													{ label: 'Russia', value: 'RU' },
-													{ label: 'Turkey', value: 'TR' },
-													{ label: 'Saudi Arabia', value: 'SA' },
-													{ label: 'UAE', value: 'AE' },
-													{ label: 'Netherlands', value: 'NL' },
-													{ label: 'Sweden', value: 'SE' },
-													{ label: 'Thailand', value: 'TH' },
-													{ label: 'Vietnam', value: 'VN' },
-													{ label: 'Malaysia', value: 'MY' },
-													{ label: 'Philippines', value: 'PH' },
-													{ label: 'Nigeria', value: 'NG' },
-													{ label: 'South Africa', value: 'ZA' },
-													{ label: 'Egypt', value: 'EG' },
-													{ label: 'Poland', value: 'PL' },
-													{ label: 'Argentina', value: 'AR' },
-													{ label: 'Colombia', value: 'CO' },
-													{ label: 'Singapore', value: 'SG' },
-													{ label: 'New Zealand', value: 'NZ' },
-													{ label: 'Ireland', value: 'IE' },
-													{ label: 'Switzerland', value: 'CH' },
-													{ label: 'Portugal', value: 'PT' },
-												] }
-												onChange={ setCountry }
-												__nextHasNoMarginBottom
-												__next40pxDefaultSize
-											/>
+											{ hasPro ? (
+												<SelectControl
+													label={ __( 'Countries (up to 5)', 'ai-marketing-expert' ) }
+													value=""
+													options={ [
+														{ label: __( '+ Add a country…', 'ai-marketing-expert' ), value: '' },
+														...COUNTRY_OPTIONS.filter( ( o ) => ! countries.includes( o.value ) ),
+													] }
+													onChange={ ( v ) => {
+														if ( v && countries.length < MAX_COUNTRIES ) {
+															setCountries( [ ...countries, v ] );
+														}
+													} }
+													__nextHasNoMarginBottom
+													__next40pxDefaultSize
+												/>
+											) : (
+												<SelectControl
+													label={ __( 'Country', 'ai-marketing-expert' ) }
+													value={ countries[ 0 ] || 'US' }
+													options={ COUNTRY_OPTIONS }
+													onChange={ ( v ) => setCountries( [ v ] ) }
+													__nextHasNoMarginBottom
+													__next40pxDefaultSize
+												/>
+											) }
 										</div>
+										{ hasPro ? (
+											<div className="aime-tag-list" style={ { marginTop: 4, justifyContent: 'flex-end' } }>
+												{ countries.map( ( c ) => (
+													<span key={ c } className="aime-tag" style={ { display: 'inline-flex', alignItems: 'center', gap: 4 } }>
+														{ COUNTRY_OPTIONS.find( ( o ) => o.value === c )?.label || c }
+														{ countries.length > 1 && (
+															<button
+																type="button"
+																onClick={ () => setCountries( countries.filter( ( x ) => x !== c ) ) }
+																aria-label={ __( 'Remove country', 'ai-marketing-expert' ) }
+																style={ { border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1, color: '#666' } }
+															>
+																{ '×' }
+															</button>
+														) }
+													</span>
+												) ) }
+											</div>
+										) : (
+											<p style={ { margin: '4px 0 0', fontSize: 12, color: '#757575', textAlign: 'right' } }>
+												{ __( 'Pro version can target multiple countries at once.', 'ai-marketing-expert' ) }
+											</p>
+										) }
 										<Button
 											variant="primary"
 											onClick={ handleResearch }
-											disabled={ loading || ! seed.trim() }
+											disabled={ loading || ! seed.trim() || kwExhausted }
 											isBusy={ loading }
 											style={ { marginTop: 16 } }
 										>
@@ -1727,104 +1860,116 @@ const KeywordResearch = ( { onNavigate } ) => {
 								);
 							}
 
-							/* -- Niche Analysis Tab (Pro) --- */
+							/* -- Niche Analysis Tab --------- */
 							if ( tab.name === 'niche' ) {
+								const nicheExhausted = limitReached( 'niche_analysis' );
 								return (
-									<ProGate feature={ __( 'Niche Analysis', 'ai-marketing-expert' ) }>
-										<div className="aime-settings-form">
-											<TextControl
-												label={ __( 'Niche / Industry', 'ai-marketing-expert' ) }
-												value={ niche }
-												onChange={ setNiche }
-												placeholder={ __( 'e.g. home fitness equipment', 'ai-marketing-expert' ) }
-												__nextHasNoMarginBottom
-											/>
-											{ loading ? (
-												<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Analyzing...', 'ai-marketing-expert' ) }</LoadingBtn>
-											) : (
-												<Button
-													variant="primary"
-													onClick={ handleNicheAnalysis }
-													disabled={ ! isAiConfigured() || ! niche.trim() }
-													title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
-													style={ { marginTop: 16 } }
-												>
-													{ __( 'Analyze Niche', 'ai-marketing-expert' ) }
-												</Button>
-											) }
-											{ renderNicheResults() }
-										</div>
-									</ProGate>
-								);
-							}
-
-							/* -- Competitor Gap Tab (Pro) --- */
-							if ( tab.name === 'competitor' ) {
-								return (
-									<ProGate feature={ __( 'Competitor Gap Analysis', 'ai-marketing-expert' ) }>
-										<div className="aime-settings-form">
-											<TextControl
-												label={ __( 'Your Domain', 'ai-marketing-expert' ) }
-												value={ domain }
-												onChange={ setDomain }
-												placeholder="example.com"
-												__nextHasNoMarginBottom
-											/>
-											<TextareaControl
-												label={ __( 'Competitor Domains (one per line)', 'ai-marketing-expert' ) }
-												value={ competitors }
-												className={ 'aim-competitor-domains' }
-												onChange={ setCompetitors }
-												placeholder={ 'competitor1.com\ncompetitor2.com' }
-												rows={ 3 }
-												__nextHasNoMarginBottom
-											/>
-											{ loading ? (
-												<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Analyzing...', 'ai-marketing-expert' ) }</LoadingBtn>
-											) : (
-												<Button
-													variant="primary"
-													onClick={ handleCompetitorGap }
-													disabled={ ! isAiConfigured() || ! domain.trim() || ! competitors.trim() }
-													title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
-													style={ { marginTop: 16 } }
-												>
-													{ __( 'Analyze Gap', 'ai-marketing-expert' ) }
-												</Button>
-											) }
-											{ renderGapResults() }
-										</div>
-									</ProGate>
-								);
-							}
-
-							/* -- Content Brief Tab (Pro) ---- */
-							return (
-								<ProGate feature={ __( 'AI Content Brief', 'ai-marketing-expert' ) }>
 									<div className="aime-settings-form">
+										<UsageNotice
+											usage={ researchUsage?.niche_analysis }
+											featureLabel={ __( 'Niche Analysis', 'ai-marketing-expert' ) }
+											proUrl={ proUrl }
+										/>
 										<TextControl
-											label={ __( 'Target Keyword', 'ai-marketing-expert' ) }
-											value={ briefKeyword }
-											onChange={ setBriefKeyword }
-											placeholder={ __( 'e.g. best protein powder for beginners', 'ai-marketing-expert' ) }
+											label={ __( 'Niche / Industry', 'ai-marketing-expert' ) }
+											value={ niche }
+											onChange={ setNiche }
+											placeholder={ __( 'e.g. home fitness equipment', 'ai-marketing-expert' ) }
 											__nextHasNoMarginBottom
 										/>
 										{ loading ? (
-											<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Generating...', 'ai-marketing-expert' ) }</LoadingBtn>
+											<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Analyzing...', 'ai-marketing-expert' ) }</LoadingBtn>
 										) : (
 											<Button
 												variant="primary"
-												onClick={ handleContentBrief }
-												disabled={ ! isAiConfigured() || ! briefKeyword.trim() }
+												onClick={ handleNicheAnalysis }
+												disabled={ ! isAiConfigured() || ! niche.trim() || nicheExhausted }
 												title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 												style={ { marginTop: 16 } }
 											>
-												{ __( 'Generate Brief', 'ai-marketing-expert' ) }
+												{ __( 'Analyze Niche', 'ai-marketing-expert' ) }
 											</Button>
 										) }
-										{ renderBriefResults() }
+										{ renderNicheResults() }
 									</div>
-								</ProGate>
+								);
+							}
+
+							/* -- Competitor Gap Tab --------- */
+							if ( tab.name === 'competitor' ) {
+								const gapExhausted = limitReached( 'competitor_gap' );
+								return (
+									<div className="aime-settings-form">
+										<UsageNotice
+											usage={ researchUsage?.competitor_gap }
+											featureLabel={ __( 'Competitor Gap Analysis', 'ai-marketing-expert' ) }
+											proUrl={ proUrl }
+										/>
+										<TextControl
+											label={ __( 'Your Domain', 'ai-marketing-expert' ) }
+											value={ domain }
+											onChange={ setDomain }
+											placeholder="example.com"
+											__nextHasNoMarginBottom
+										/>
+										<TextareaControl
+											label={ __( 'Competitor Domains (one per line)', 'ai-marketing-expert' ) }
+											value={ competitors }
+											className={ 'aim-competitor-domains' }
+											onChange={ setCompetitors }
+											placeholder={ 'competitor1.com\ncompetitor2.com' }
+											rows={ 3 }
+											__nextHasNoMarginBottom
+										/>
+										{ loading ? (
+											<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Analyzing...', 'ai-marketing-expert' ) }</LoadingBtn>
+										) : (
+											<Button
+												variant="primary"
+												onClick={ handleCompetitorGap }
+												disabled={ ! isAiConfigured() || ! domain.trim() || ! competitors.trim() || gapExhausted }
+												title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
+												style={ { marginTop: 16 } }
+											>
+												{ __( 'Analyze Gap', 'ai-marketing-expert' ) }
+											</Button>
+										) }
+										{ renderGapResults() }
+									</div>
+								);
+							}
+
+							/* -- Content Brief Tab ---------- */
+							const briefExhausted = limitReached( 'content_brief' );
+							return (
+								<div className="aime-settings-form">
+									<UsageNotice
+										usage={ researchUsage?.content_brief }
+										featureLabel={ __( 'AI Content Brief', 'ai-marketing-expert' ) }
+										proUrl={ proUrl }
+									/>
+									<TextControl
+										label={ __( 'Target Keyword', 'ai-marketing-expert' ) }
+										value={ briefKeyword }
+										onChange={ setBriefKeyword }
+										placeholder={ __( 'e.g. best protein powder for beginners', 'ai-marketing-expert' ) }
+										__nextHasNoMarginBottom
+									/>
+									{ loading ? (
+										<LoadingBtn primary style={ { marginTop: 16 } }>{ __( 'Generating...', 'ai-marketing-expert' ) }</LoadingBtn>
+									) : (
+										<Button
+											variant="primary"
+											onClick={ handleContentBrief }
+											disabled={ ! isAiConfigured() || ! briefKeyword.trim() || briefExhausted }
+											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
+											style={ { marginTop: 16 } }
+										>
+											{ __( 'Generate Brief', 'ai-marketing-expert' ) }
+										</Button>
+									) }
+									{ renderBriefResults() }
+								</div>
 							);
 						} }
 					</TabPanel>

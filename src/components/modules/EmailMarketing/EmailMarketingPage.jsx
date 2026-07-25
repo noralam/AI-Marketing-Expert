@@ -81,7 +81,7 @@ const EmailMarketingPage = () => {
 			case 'campaign-editor':
 				return <CampaignEditor id={ viewParams.id } templateId={ viewParams.templateId } initialStep={ viewParams.initialStep } onBack={ () => navigate( 'campaigns' ) } onNavigate={ navigate } />;
 			case 'campaign-progress':
-				return <CampaignProgress id={ viewParams.id } sendStartedAt={ viewParams.sendStartedAt } onBack={ () => navigate( 'campaigns' ) } />;
+				return <CampaignProgress id={ viewParams.id } sendStartedAt={ viewParams.sendStartedAt } onBack={ () => navigate( 'campaigns' ) } onNavigate={ navigate } />;
 			case 'automations':
 				return <Automations onNavigate={ navigate } />;
 			case 'automation-editor':

@@ -115,7 +115,7 @@ class WidgetService {
 	public static function get_default_lead_config(): array {
 		return array(
 			'enabled'         => false,
-			'trigger'         => 'after_messages',  // after_messages, ai_intent, manual.
+			'trigger'         => 'after_messages',  // start, after_messages, ai_intent.
 			'trigger_count'   => 3,                  // After N messages.
 			'fields'          => array( 'name', 'email' ),
 			'list_id'         => 0,

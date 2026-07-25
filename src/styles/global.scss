@@ -10953,6 +10953,8 @@ input.aime-premium-input[type=color]
 		font-size: 12.5px;
 		line-height: 1.5;
 		word-break: break-word;
+		display: flex;
+		gap: 8px;
 	}
 
 	.aime-ai-notice {
@@ -13159,7 +13161,9 @@ input.aime-premium-input[type=color]
 	}
 }
 
-#aime-app .aime-wf-topbar__right .components-base-control {
+#aime-app .aime-wf-topbar__right .components-base-control,
+#aime-app .aime-seo-topic-map .components-base-control ,
+#aime-app .aime-settings-form .components-base-control {
 	margin-bottom: 0;
 }
 

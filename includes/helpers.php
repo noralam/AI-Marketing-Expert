@@ -279,6 +279,9 @@ function aime_free_limits(): array {
 		'seo_keywords_saved'              => 50,
 		'seo_audits_monthly'              => 5,
 		'seo_rank_keywords'               => 5,
+		'seo_niche_analysis_monthly'      => 3,
+		'seo_competitor_gap_monthly'      => 3,
+		'seo_content_brief_monthly'       => 5,
 		// Workflow Automation.
 		'workflows_active'                => 2,
 		'workflow_steps'                  => 3,

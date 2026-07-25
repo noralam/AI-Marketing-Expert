@@ -439,6 +439,15 @@ class SubscriberController {
 					'complained'  => 'complained',
 				);
 				$status_val = $status_map[ $action ];
+
+				// Capture old statuses first so the status-change hook and the
+				// activity log only fire for contacts that actually changed.
+				$old_rows = $wpdb->get_results( $wpdb->prepare(
+					'SELECT id, status FROM %i WHERE id IN (' . $placeholders . ')',
+					$subscribers_table,
+					...$ids
+				) );
+
 				$wpdb->query( $wpdb->prepare(
 					'UPDATE %i SET status = %s, updated_at = %s WHERE id IN (' . $placeholders . ')',
 					$subscribers_table,
@@ -446,6 +455,16 @@ class SubscriberController {
 					$now,
 					...$ids
 				) );
+
+				foreach ( $old_rows as $old_row ) {
+					$old_status = (string) $old_row->status;
+					if ( $old_status === $status_val ) {
+						continue;
+					}
+					$this->log_activity( (int) $old_row->id, $status_val, sprintf( 'Status changed to %s via bulk action', $status_val ) );
+					/** Same hook single edits and provider webhooks fire, so automations react to bulk changes too. */
+					do_action( 'aime_subscriber_status_change', (int) $old_row->id, $old_status, $status_val );
+				}
 				break;
 			// phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
@@ -1010,6 +1029,12 @@ class SubscriberController {
 			if ( $r->has_param( $key ) ) {
 				$data[ $key ] = call_user_func( $sanitizer, $r->get_param( $key ) );
 			}
+		}
+
+		// Status must be one of the known values; drop anything else so an
+		// arbitrary string can't end up in the status column.
+		if ( isset( $data['status'] ) && ! in_array( $data['status'], array( 'subscribed', 'pending', 'unsubscribed', 'bounced', 'complained' ), true ) ) {
+			unset( $data['status'] );
 		}
 
 		return $data;
@@ -1698,9 +1723,20 @@ class SubscriberController {
 				array( 'id' => $sub_id )
 			);
 
+			// Attribute the event to the most recent campaign this address was sent,
+			// so the campaign report's Complained/Bounced tab can show it. Without
+			// this the metric row lands on campaign_id 0 and is unattributable.
+			$campaign_id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT campaign_id FROM %i WHERE subscriber_id = %d ORDER BY id DESC LIMIT 1',
+					$wpdb->prefix . 'aime_campaign_emails',
+					$sub_id
+				)
+			);
+
 			$wpdb->insert( $metrics_table, array(
 				'url_id'        => 0,
-				'campaign_id'   => 0,
+				'campaign_id'   => $campaign_id,
 				'subscriber_id' => $sub_id,
 				'type'          => $metric_type,
 				'ip_address'    => $ip,

@@ -11,6 +11,15 @@ import PoweredBy from './PoweredBy';
 const ChatWindow = ( { config, chat, onClose } ) => {
 	const windowRef = useRef( null );
 
+	// "start" trigger: lead form gates the chat — no dismiss, input hidden
+	// until the visitor submits the form.
+	const leadCfg = config.leadConfig || {};
+	const startGate = !! (
+		leadCfg.enabled &&
+		leadCfg.trigger === 'start' &&
+		! chat.leadSubmitted
+	);
+
 	// Initial focus + keyboard handling (Esc to close, Tab focus trap).
 	useEffect( () => {
 		const el = windowRef.current;
@@ -96,21 +105,23 @@ const ChatWindow = ( { config, chat, onClose } ) => {
 						readReceiptId={ config.enable_read_receipts !== false ? chat.readReceiptId : 0 }
 					/>
 
-					{ /* Lead form (inline) */ }
-					{ chat.showLeadForm && ! chat.leadSubmitted && (
+					{ /* Lead form (inline). Start-gate variant is required: no dismiss. */ }
+					{ ( startGate || chat.showLeadForm ) && ! chat.leadSubmitted && (
 						<LeadForm
-							config={ config.leadConfig || {} }
+							config={ leadCfg }
 							onSubmit={ chat.submitLead }
-							onDismiss={ chat.dismissLeadForm }
+							onDismiss={ startGate ? null : chat.dismissLeadForm }
 						/>
 					) }
 
-					{ /* Input */ }
-					<InputBar
-						onSend={ chat.sendMessage }
-						disabled={ chat.isSending }
-						maxLength={ config.max_message_length || 500 }
-					/>
+					{ /* Input — hidden while the start lead gate is active */ }
+					{ ! startGate && (
+						<InputBar
+							onSend={ chat.sendMessage }
+							disabled={ chat.isSending }
+							maxLength={ config.max_message_length || 500 }
+						/>
+					) }
 				</>
 			) }
 
