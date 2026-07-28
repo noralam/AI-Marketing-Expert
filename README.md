@@ -1,16 +1,16 @@
 <div align="center">
 
-# 🤖 AI Marketing Expert
+# AI Marketing Expert
 
 **All-in-One AI-Powered Marketing Suite for WordPress**
 
 [![WordPress](https://img.shields.io/badge/WordPress-6.2%2B-blue?logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.0.3.12-purple)](https://github.com/noralam/AI-Marketing-Expert)
+[![Version](https://img.shields.io/badge/Version-1.1.1-purple)](https://github.com/noralam/AI-Marketing-Expert)
 [![Live Demo](https://img.shields.io/badge/Live-Plugin_Site-brightgreen?logo=wordpress)](https://wpthemespace.com/ai-marketing-expert/)
 
-**Email Marketing · Content Generation · SEO · Social Media · AI Chatbot — All from Your WordPress Dashboard.**
+**Email Marketing · Content Generation · SEO · Social Media · AI Chatbot · Workflow Automation — All from Your WordPress Dashboard.**
 
 [Features](#-features) • [Modules](#-modules) • [Installation](#-installation) • [Usage](#-usage) • [AI Providers](#-ai-providers) • [Live Demo](https://wpthemespace.com/ai-marketing-expert/) • [Contributing](#-contributing) • [Changelog](#-changelog)
 
@@ -18,25 +18,25 @@
 
 ---
 
-## 📋 Overview
+## Overview
 
-**AI Marketing Expert** is a comprehensive, modular WordPress plugin that empowers marketers, bloggers, and business owners to automate their entire marketing operation using AI. Instead of juggling a dozen different SaaS tools, you get **email marketing, content generation, SEO intelligence, social media management, and an AI chatbot** — all inside your WordPress admin, sharing a single AI provider layer.
+**AI Marketing Expert** is a comprehensive, modular WordPress plugin that empowers marketers, bloggers, and business owners to automate their entire marketing operation using AI. Instead of juggling a dozen different SaaS tools, you get **email marketing, content generation, SEO intelligence, social media management, AI chatbot, and workflow automation** — all inside your WordPress admin, sharing a single AI provider layer.
 
 Whether you're a solo blogger, a small business owner, or an agency managing multiple client sites, AI Marketing Expert gives you enterprise-grade marketing automation without the enterprise price tag.
 
-### ✨ Why AI Marketing Expert?
+### Why AI Marketing Expert?
 
-- **🚀 All-in-One** — No more switching between Mailchimp, Jasper, Semrush, Hootsuite, and Intercom. Everything lives in one plugin.
-- **🧠 AI-Native** — Every module is built around AI from the ground up. Generate content, optimize SEO, craft social posts, and answer customer questions — all powered by your choice of AI provider.
-- **🔌 Modular Architecture** — Activate only the modules you need. Each module is independently toggleable with its own settings and REST API.
-- **💰 Generous Free Tier** — Get real value without spending a dime. Upgrade to Pro only when you need more scale or advanced features.
-- **🔒 Privacy-First** — Your API keys are encrypted at rest (AES-256-CBC). No third-party data sharing. Self-hosted OAuth proxy for social media connections.
+- **All-in-One** — No more switching between Mailchimp, Jasper, Semrush, Hootsuite, and Intercom. Everything lives in one plugin.
+- **AI-Native** — Every module is built around AI from the ground up. Generate content, optimize SEO, craft social posts, and answer customer questions — all powered by your choice of AI provider.
+- **Modular Architecture** — Activate only the modules you need. Each module is independently toggleable with its own settings and REST API.
+- **Generous Free Tier** — Get real value without spending a dime. Upgrade to Pro only when you need more scale or advanced features.
+- **Privacy-First** — Your API keys are encrypted at rest (AES-256-GCM authenticated encryption). No third-party data sharing. Self-hosted OAuth proxy for social media connections.
 
 ---
 
-## 🎯 Features
+## Features
 
-### 📧 Email Marketing Module
+### Email Marketing Module
 Full-featured CRM and email automation built inside WordPress.
 
 - **Subscriber Management** — Add, edit, bulk-manage subscribers with custom fields, tags, and list segmentation
@@ -46,17 +46,17 @@ Full-featured CRM and email automation built inside WordPress.
 - **Reusable Templates** — HTML email templates with variable placeholders and preview renderer
 - **AI Writing Assistant** — AI-generated subject lines, preview text, and copy improvement
 - **SMTP Integration** — Multi-connection SMTP with fallback support (Gmail, Outlook, SES, SendGrid, Mailgun, and more)
-- **Unsubscribe Compliance** — List-Unsubscribe headers and one-click unsubscribe
+- **Unsubscribe Compliance** — List-Unsubscribe and one-click unsubscribe headers
 
 | Feature | Free | Pro |
 |---------|------|-----|
 | Subscribers | Unlimited | Unlimited |
 | Campaigns/month | 30 | Unlimited |
-| Automations | 1 funnel | Unlimited |
+| Automations | 2 funnels | Unlimited |
 | Segmentation | Basic (lists/tags) | Advanced (custom fields, behavior) |
-| A/B Testing | — | ✓ |
+| A/B Testing | — | Yes |
 
-### 📝 Content Generator Module
+### Content Generator Module
 AI-powered blog post creation with WordPress publishing integration.
 
 - **Article Generation** — Generate full articles with title, introduction, body sections, and CTA
@@ -68,13 +68,13 @@ AI-powered blog post creation with WordPress publishing integration.
 
 | Feature | Free | Pro |
 |---------|------|-----|
-| Articles/month | 10 | Unlimited |
-| Word count | Up to 1,500 | Up to 5,000 |
-| Custom presets | — | ✓ |
-| AI image prompts | — | ✓ |
-| Multi-language | — | ✓ |
+| Articles/month | 20 | Unlimited |
+| Word count | Up to 2,000 | Up to 5,000 |
+| Custom presets | — | Yes |
+| AI image prompts | — | Yes |
+| Multi-language | — | Yes |
 
-### 🔍 SEO Module
+### SEO Analyzer Module
 Comprehensive AI-powered SEO intelligence and on-page optimization.
 
 - **Keyword Research** — AI-powered keyword analysis with a persistent keyword vault
@@ -91,10 +91,10 @@ Comprehensive AI-powered SEO intelligence and on-page optimization.
 | Keyword vault | 50 | Unlimited |
 | Audits | 5/month | Unlimited |
 | Rank tracking | — | Unlimited |
-| Topical authority | — | ✓ |
-| Competitor analysis | — | ✓ |
+| Topical authority | — | Yes |
+| Competitor analysis | — | Yes |
 
-### 📱 Social Media Module
+### Social Media Module
 Multi-platform social media scheduling and AI-powered content management.
 
 - **Account Management** — Connect Facebook, Instagram, and X/Twitter via OAuth
@@ -110,11 +110,11 @@ Multi-platform social media scheduling and AI-powered content management.
 | Connected accounts | 2 | Unlimited |
 | Posts/month | 30 | Unlimited |
 | Scheduled posts | 3 | Unlimited |
-| Visual calendar | — | ✓ |
-| AI repurposing | — | ✓ |
-| Bulk scheduling | — | ✓ |
+| Visual calendar | — | Yes |
+| AI repurposing | — | Yes |
+| Bulk scheduling | — | Yes |
 
-### 💬 Chatbot Module
+### Chatbot Module
 AI-powered customer service chatbot with knowledge base and lead capture.
 
 - **Multiple Bots** — Create different chatbots per use case (Pro: unlimited)
@@ -130,48 +130,52 @@ AI-powered customer service chatbot with knowledge base and lead capture.
 |---------|------|-----|
 | Chatbots | 1 | Unlimited |
 | Conversations/month | 100 | Unlimited |
-| Knowledge base | — | ✓ (docs, URLs, WooCommerce) |
-| Human takeover | — | ✓ |
-| Custom CSS theming | — | ✓ |
-| Business hours | — | ✓ |
+| Knowledge base | — | Yes (docs, URLs, WooCommerce) |
+| Human takeover | — | Yes |
+| Custom CSS theming | — | Yes |
+| Business hours | — | Yes |
 
-### 🔄 Workflow Automation *(Coming Soon)*
-Cross-module automation engine that chains actions from any module into scheduled workflows.
+### Workflow Automation (Free + Pro)
 
-- **Visual Workflow Builder** — Chain actions across modules (e.g., "Generate blog post → repurpose as social post → email subscribers")
-- **Calendar Scheduler** — Set one-time or recurring schedules with drag-and-drop calendar
-- **Execution Engine** — WP-Cron powered with retry logic and failure notifications
-- **Action Types** — Generate blog posts, send campaigns, publish social posts, run SEO audits, enroll funnels, custom AI prompts
+Chain actions from every module into scheduled, automated marketing workflows — like a built-in Zapier for your marketing stack.
+
+- **Visual Workflow Builder** — Canvas-based step editor with drag-and-drop branching
+- **Cross-Module Actions** — Generate content, send campaigns, post to social media, run SEO audits, enroll funnels, send notifications, and more
+- **Schedule Triggers** — Once, hourly, daily, weekly, monthly, or custom interval
+- **Event Triggers** — Fire workflows on subscriber creation, post publication, chatbot lead capture, and more
+- **Manual Run** — Execute any workflow on demand with per-step run history
+- **Conditional Logic** — Branch workflows based on step success/failure (Pro)
 - **Template Library** — Pre-built workflows for common marketing use cases (Pro)
-- **Conditional Logic** — Run steps only when previous steps succeed (Pro)
 
 | Feature | Free | Pro |
 |---------|------|-----|
-| Active workflows | 1 | Unlimited |
-| Steps per workflow | 2 | Unlimited |
-| Recurring schedules | Weekly only | Daily, weekly, monthly, custom |
-| Conditional logic | — | ✓ |
-| Templates | — | ✓ |
+| Active workflows | 2 | Unlimited |
+| Steps per workflow | 3 | Unlimited |
+| Runs/month | 30 | Unlimited |
+| Schedule types | Weekly | Daily, weekly, monthly, custom interval, once |
+| Event triggers | Subscriber created | All event triggers |
+| Conditional logic | — | Yes |
+| Templates | — | Yes |
 
 ---
 
-## 🤖 AI Providers
+## AI Providers
 
-AI Marketing Expert uses a **shared AI provider layer** — all modules connect through the same system. You can configure multiple provider connections and assign them per module.
+All modules share one AI provider system. Add multiple connections and assign them per module.
 
 | Provider | Models | Status |
 |----------|--------|--------|
-| **Anthropic Claude** | Claude 4 Sonnet, Claude 3.5 Haiku, Claude 3 Opus, and more | ✅ Live |
-| **OpenAI (ChatGPT)** | GPT-5.2, GPT-4o, GPT-4o-mini, GPT Image 1.5, o3-mini, and more | ✅ Live |
-| **Google AI Studio** | Gemini 2.5 Pro, Gemini 2.5 Flash, Gemma 3, and more | ✅ Live |
-| **OpenRouter** | Access 200+ models through one API (Claude, GPT, Llama, DeepSeek, Mistral, and more) | ✅ Live |
-| **Custom Provider** | Any OpenAI-compatible or Anthropic-compatible endpoint | ✅ Live |
+| **OpenAI (ChatGPT)** | GPT-4o, GPT-4o mini, o3-mini, GPT Image and more | Live |
+| **Anthropic Claude** | Claude 4 Sonnet, Claude 3.5 Haiku, Claude 3 Opus and more | Live |
+| **Google AI Studio** | Gemini 2.5 Pro, Gemini 2.5 Flash, Gemma 3 and more | Live |
+| **OpenRouter** | 200+ models through one API (Llama, Mistral, DeepSeek, and more) | Live |
+| **Custom Provider** | Any OpenAI-compatible or Anthropic-compatible endpoint | Live |
 
-**Security:** API keys are encrypted at rest using AES-256-CBC with WordPress salt-derived keys. Support for loading keys from PHP constants or environment variables in production.
+API keys are encrypted at rest using **AES-256-GCM authenticated encryption** with WordPress salt-derived keys. Keys can also be loaded from PHP constants or environment variables for production security.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### From WordPress Admin
 1. Go to **Plugins → Add New**
@@ -181,7 +185,7 @@ AI Marketing Expert uses a **shared AI provider layer** — all modules connect 
 
 ### Manual Installation
 1. Download the plugin and upload the `ai-marketing-expert` folder to `/wp-content/plugins/`
-2. Activate the plugin through the **Plugins** screen in WordPress
+2. Activate the plugin through the **Plugins** screen
 3. Navigate to **AI Marketing** in the admin menu to configure
 
 ### Requirements
@@ -191,7 +195,7 @@ AI Marketing Expert uses a **shared AI provider layer** — all modules connect 
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Quick Start
 1. **Activate** the plugin and go to **AI Marketing → Dashboard**
@@ -200,18 +204,18 @@ AI Marketing Expert uses a **shared AI provider layer** — all modules connect 
 4. **Start Creating** — Each module has its own submenu with full documentation inline
 
 ### Dashboard
-The main dashboard shows summary stats from all active modules, activity trend charts, and quick links to each module.
+The main dashboard shows summary stats from all active modules, activity trend charts (7–90 day range), and quick links to each module.
 
 ### Settings
-- **AI Provider Connections** — Add, test, and manage multiple AI provider connections
-- **SMTP Configuration** — Set up email sending with fallback support
+- **AI Provider Connections** — Add, test, and manage multiple AI provider connections with fallback ordering
+- **SMTP Configuration** — Set up email sending with multi-connection fallback
 - **Social Media OAuth** — Connect Facebook, Instagram, and X/Twitter accounts
 - **Global API Keys** — Manage external API access
 - **Notification Preferences** — Failure alerts and weekly summaries
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ai-marketing-expert/
@@ -225,7 +229,7 @@ ai-marketing-expert/
 │   ├── class-database.php       # Migration manager (dbDelta)
 │   ├── class-ai-provider.php    # Multi-provider AI connection layer
 │   ├── class-smtp-provider.php  # Multi-connection SMTP with fallback
-│   ├── class-encryption.php     # AES-256-CBC encryption for secrets
+│   ├── class-encryption.php     # AES-256-GCM encryption for secrets
 │   ├── class-email-validator.php# Email validation & disposable blocking
 │   ├── class-activator.php      # Activation hooks
 │   ├── class-deactivator.php    # Deactivation & cleanup
@@ -234,8 +238,9 @@ ai-marketing-expert/
 │   ├── chatbot/                 # AI Chatbot module
 │   ├── content-generator/       # Content Generation module
 │   ├── email-marketing/         # Email Marketing module
-│   ├── seo/                     # SEO module
-│   └── social-media/            # Social Media module
+│   ├── seo/                     # SEO Analyzer module
+│   ├── social-media/            # Social Media module
+│   └── workflow-automation/     # Workflow Automation module
 ├── src/                         # React frontend
 │   ├── App.jsx                  # Main React app
 │   ├── components/              # Shared UI components
@@ -256,7 +261,7 @@ ai-marketing-expert/
 
 ---
 
-## 🌐 OAuth Proxy Deployment
+## OAuth Proxy Deployment
 
 The social media module requires an OAuth proxy server for Facebook, Instagram, and X/Twitter authentication.
 
@@ -276,7 +281,7 @@ npm start  # Runs on port 3000
 
 ---
 
-## 🧪 Development
+## Development
 
 ### Prerequisites
 - Node.js 18+
@@ -310,32 +315,35 @@ npm run lint:css
 
 ---
 
-## 📄 Changelog
+## Changelog
+
+### 1.1.1
+* Fixed: campaign recipient count could double mid-send under concurrent processing (duplicate emails). Added a unique constraint on the send queue and a one-time de-duplication migration.
+* Fixed: paused campaigns that were still resolving their audience could not be paused reliably.
+* New: "End Campaign" button to fully stop an in-progress campaign and view its final status.
+* New (Pro): provider feedback-loop webhooks to auto-move spam complaints to the Complaint list and hard bounces to the Bounced list.
+* Improved: added List-Unsubscribe-Post (one-click unsubscribe) header for better deliverability.
+
+### 1.1.0
+* Initial public release on WordPress.org
+* Email Marketing module: unlimited subscribers, 30 campaigns/month on free tier
+* Content Generator module: AI article generation with SEO analysis
+* SEO Analyzer module: keyword research, vault, rank tracking, and on-page audits
+* Social Media module: Facebook, Instagram, and X/Twitter scheduling
+* Chatbot module: AI customer support with lead capture
+* Workflow Automation module: visual builder, cross-module actions, schedule and event triggers
+* Multi-provider AI layer: OpenAI, Anthropic Claude, Google Gemini, OpenRouter
+* AES-256-GCM authenticated encryption for API keys and SMTP credentials
+* Hardened security: SSRF protection, HMAC-signed tracking URLs, secure OAuth flow
+* React-based unified admin dashboard
 
 ### 1.0.3.12
 - Hardened security and reliability across tracking, OAuth proxy, encryption, and AI provider flows
 - Improved consistency between free-tier limits and Pro marketing copy
 
-### 1.0.3.9 – 1.0.3.11
-- Various improvements and bug fixes
-
-### 1.0.3.8
-- Fixed email campaign recipient resolution for list and tag audiences
-- Added campaign queue diagnostics for delayed or blocked sends
-- Migration support for campaign-level send notes
-
-### 1.0.3.5
-- Hardened credential encryption fallback when WordPress salts are unavailable
-- Added SSRF protection for remote media downloads
-- Bounded chatbot knowledge retrieval for better performance
-- Improved metadata consistency
-
-### 1.0.3.3
-- Improved installation, database migration, and Plugin Check compatibility
-
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Here's how you can help:
 
@@ -353,7 +361,7 @@ Contributions are welcome! Here's how you can help:
 
 ---
 
-## 🐛 Reporting Issues
+## Reporting Issues
 
 Found a bug? Please [open an issue](https://github.com/noralam/AI-Marketing-Expert/issues) with:
 
@@ -365,7 +373,7 @@ Found a bug? Please [open an issue](https://github.com/noralam/AI-Marketing-Expe
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **GNU General Public License v2 or later** — see the [LICENSE](https://www.gnu.org/licenses/gpl-2.0.html) file for details.
 
@@ -381,7 +389,7 @@ the Free Software Foundation; either version 2 of the License, or
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with [@wordpress/scripts](https://www.npmjs.com/package/@wordpress/scripts)
 - AI integrations powered by Anthropic, OpenAI, Google, and OpenRouter
@@ -391,8 +399,8 @@ the Free Software Foundation; either version 2 of the License, or
 
 <div align="center">
   
-**Made with ❤️ by [Noor Alam](https://wpthemespace.com)** · [WordPress Plugin](https://wpthemespace.com/ai-marketing-expert) · [Report Bug](https://github.com/noralam/AI-Marketing-Expert/issues) · [Request Feature](https://github.com/noralam/AI-Marketing-Expert/issues)
+**Made with heart by [Noor Alam](https://wpthemespace.com)** · [WordPress Plugin](https://wpthemespace.com/ai-marketing-expert) · [Report Bug](https://github.com/noralam/AI-Marketing-Expert/issues) · [Request Feature](https://github.com/noralam/AI-Marketing-Expert/issues)
 
-⭐ **Star this repository if you find it useful!** ⭐
+**Star this repository if you find it useful!**
 
 </div>
