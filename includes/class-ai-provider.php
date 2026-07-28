@@ -708,6 +708,65 @@ class AiProvider {
 	 * ============================================================= */
 
 	/**
+	 * Move a fallback connection up or down in the trying order.
+	 *
+	 * Primary connections (any primary_for assignment) always run first for
+	 * their task, so only pure-fallback connections can be reordered.
+	 *
+	 * @param string $id        Connection ID.
+	 * @param string $direction 'up' or 'down'.
+	 * @return array|null Reordered connections, or null if the move is invalid.
+	 */
+	public static function move_connection( string $id, string $direction ): ?array {
+		if ( ! in_array( $direction, array( 'up', 'down' ), true ) ) {
+			return null;
+		}
+
+		$connections = self::get_connections();
+		$primaries   = array();
+		$fallbacks   = array();
+
+		foreach ( $connections as $connection ) {
+			if ( ! empty( $connection['primary_for'] ) ) {
+				$primaries[] = $connection;
+				continue;
+			}
+
+			$fallbacks[] = $connection;
+		}
+
+		$index = null;
+		foreach ( $fallbacks as $fallback_index => $connection ) {
+			if ( ( $connection['id'] ?? '' ) === $id ) {
+				$index = $fallback_index;
+				break;
+			}
+		}
+
+		if ( null === $index ) {
+			return null;
+		}
+
+		$target = 'up' === $direction ? $index - 1 : $index + 1;
+		if ( $target < 0 || $target >= count( $fallbacks ) ) {
+			return null;
+		}
+
+		$temp                 = $fallbacks[ $target ];
+		$fallbacks[ $target ] = $fallbacks[ $index ];
+		$fallbacks[ $index ]  = $temp;
+
+		$reordered = array_values( array_merge( $primaries, $fallbacks ) );
+
+		update_option( self::OPTION_KEY, $reordered, false );
+		\aime_clear_settings_cache( array( self::OPTION_KEY ) );
+
+		aime_log( sprintf( 'AI connection "%s" moved %s.', $id, $direction ), 'info', 'ai' );
+
+		return $reordered;
+	}
+
+	/**
 	 * Get data for the REST API settings response.
 	 *
 	 * @return array

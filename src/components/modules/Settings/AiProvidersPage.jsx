@@ -62,6 +62,7 @@ const AiProvidersPage = () => {
 	const [ aiSaving, setAiSaving ] = useState( false );
 	const [ aiTesting, setAiTesting ] = useState( {} );
 	const [ aiDeleting, setAiDeleting ] = useState( null );
+	const [ aiMovingKey, setAiMovingKey ] = useState( null );
 	const [ aiFetchedModels, setAiFetchedModels ] = useState( null );
 	const [ aiFetchingModels, setAiFetchingModels ] = useState( false );
 	const [ aiTestResults, setAiTestResults ] = useState( {} );
@@ -422,10 +423,31 @@ const AiProvidersPage = () => {
 					return aPrimary ? -1 : 1;
 				}
 
-				return b.index - a.index;
+				// Stored order = fallback trying order.
+				return a.index - b.index;
 			} )
 			.map( ( item ) => item.conn );
 	}, [ aiConnections ] );
+
+	const aiFallbackIds = useMemo(
+		() => sortedAiConnections.filter( ( conn ) => ( conn.primary_for || [] ).length === 0 ).map( ( conn ) => conn.id ),
+		[ sortedAiConnections ]
+	);
+
+	const aiHandleMove = async ( conn, direction ) => {
+		const moveKey = `${ conn.id }:${ direction }`;
+		setAiMovingKey( moveKey );
+		try {
+			const res = await post( `/ai/connections/${ conn.id }/move`, { direction } );
+			setAiConnections( res.data?.connections || [] );
+			setAiProviders( res.data?.providers || aiProviders );
+			setNotice( { type: 'success', message: res.message || __( 'AI provider fallback order updated.', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		} finally {
+			setAiMovingKey( null );
+		}
+	};
 
 	if ( loading ) {
 		return <Loader text={ __( 'Loading AI providers...', 'ai-marketing-expert' ) } />;
@@ -508,6 +530,10 @@ const AiProvidersPage = () => {
 					const logo = aiProviderLogos[ conn.provider ] || '';
 					const healthBadge = getHealthBadge( conn );
 					const healthText = getHealthText( conn );
+					const fallbackIndex = aiFallbackIds.indexOf( conn.id );
+					const canMoveUp = fallbackIndex > 0;
+					const canMoveDown = fallbackIndex !== -1 && fallbackIndex < aiFallbackIds.length - 1;
+					const isMoving = aiMovingKey === `${ conn.id }:up` || aiMovingKey === `${ conn.id }:down`;
 
 					return (
 						<div
@@ -585,6 +611,29 @@ const AiProvidersPage = () => {
 											: __( 'Test', 'ai-marketing-expert' )
 										}
 									</Button>
+
+									{ fallbackIndex !== -1 && aiFallbackIds.length > 1 && (
+										<>
+											<Button
+												variant="tertiary"
+												size="small"
+												disabled={ ! canMoveUp || isMoving }
+												isBusy={ aiMovingKey === `${ conn.id }:up` }
+												onClick={ () => aiHandleMove( conn, 'up' ) }
+											>
+												{ __( 'Move Up', 'ai-marketing-expert' ) }
+											</Button>
+											<Button
+												variant="tertiary"
+												size="small"
+												disabled={ ! canMoveDown || isMoving }
+												isBusy={ aiMovingKey === `${ conn.id }:down` }
+												onClick={ () => aiHandleMove( conn, 'down' ) }
+											>
+												{ __( 'Move Down', 'ai-marketing-expert' ) }
+											</Button>
+										</>
+									) }
 
 									{ conn.enabled && ( conn.primary_for || [] ).length < 2 && (
 										<Button

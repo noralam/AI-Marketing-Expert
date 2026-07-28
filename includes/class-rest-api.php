@@ -255,6 +255,22 @@ class RestApi {
 			)
 		);
 
+		register_rest_route(
+			$namespace,
+			'/ai/connections/(?P<id>[a-z0-9_]+)/move',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'move_ai_connection' ),
+				'permission_callback' => array( $this, 'admin_permission_check' ),
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					),
+				),
+			)
+		);
+
 		// POST /aime/v1/ai/fetch-models — Fetch available models from provider API.
 		register_rest_route(
 			$namespace,
@@ -937,6 +953,33 @@ class RestApi {
 		$result = AiProvider::test_connection( $id );
 
 		return new \WP_REST_Response( $result, $result['success'] ? 200 : 400 );
+	}
+
+	/**
+	 * POST /ai/connections/{id}/move — Move a fallback connection up or down.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function move_ai_connection( \WP_REST_Request $request ): \WP_REST_Response {
+		$id        = sanitize_key( $request->get_param( 'id' ) );
+		$params    = $request->get_json_params();
+		$params    = is_array( $params ) ? $params : array();
+		$direction = sanitize_key( $params['direction'] ?? '' );
+
+		$connections = AiProvider::move_connection( $id, $direction );
+
+		if ( null === $connections ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'AI provider order could not be changed.', 'ai-marketing-expert' ) ),
+				400
+			);
+		}
+
+		return new \WP_REST_Response( array(
+			'message' => __( 'AI provider fallback order updated.', 'ai-marketing-expert' ),
+			'data'    => AiProvider::get_settings_for_api(),
+		) );
 	}
 
 	/**
