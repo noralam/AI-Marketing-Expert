@@ -60,9 +60,9 @@
 	padding: 2px 8px;
 	font-size: 11px;
 	font-weight: 600;
-	color: #2271b1;
-	background: #f0f6fc;
-	border: 1px solid #c3e4ff;
+	color: #2E7D32;
+	background: rgba(46, 125, 50, 0.08);
+	border: 1px solid rgba(46, 125, 50, 0.2);
 	border-radius: 12px;
 	line-height: 1.4;
 }
@@ -109,6 +109,29 @@
 	font-size: 16px;
 }
 
+/* ── Section color accents ──────────────────────────── */
+
+.aime-dw__section--chatbot .aime-dw__card {
+	background: rgba(46, 125, 50, 0.06);
+}
+.aime-dw__section--chatbot .aime-dw__card-value {
+	color: #2E7D32;
+}
+
+.aime-dw__section--automation .aime-dw__card {
+	background: rgba(27, 94, 32, 0.06);
+}
+.aime-dw__section--automation .aime-dw__card-value {
+	color: #1B5E20;
+}
+
+.aime-dw__section--email .aime-dw__card {
+	background: rgba(21, 101, 192, 0.06);
+}
+.aime-dw__section--email .aime-dw__card-value {
+	color: #1565C0;
+}
+
 .aime-dw__card-limit {
 	font-size: 13px;
 	font-weight: 400;
@@ -126,6 +149,18 @@
 	font-weight: 500;
 	color: #646970;
 	margin-top: 2px;
+}
+
+.aime-dw__section--seo .aime-dw__compact-stat strong {
+	color: #475569;
+}
+
+.aime-dw__section--content .aime-dw__compact-stat strong {
+	color: #B45309;
+}
+
+.aime-dw__section--social .aime-dw__compact-stat strong {
+	color: #D85929;
 }
 
 /* ── Activity feed (chatbot) ────────────────────────── */
@@ -293,16 +328,4 @@
 	to { transform: rotate(360deg); }
 }
 
-/* ── Section color accents ──────────────────────────── */
 
-.aime-dw__section--chatbot .aime-dw__card-value {
-	color: #1d2327;
-}
-
-.aime-dw__section--automation .aime-dw__card-value {
-	color: #1d2327;
-}
-
-.aime-dw__section--email .aime-dw__card-value {
-	color: #1d2327;
-}
