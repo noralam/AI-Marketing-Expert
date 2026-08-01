@@ -457,6 +457,240 @@ class WorkflowRepository {
 		) ) ?: array();
 	}
 
+	/* ── Analytics ──────────────────────────────────────── */
+
+	/*
+	 * Everything below reads `started_at`, which is stored UTC, and groups by
+	 * UTC days — the same convention the other modules' analytics use, so a
+	 * cross-module comparison never has to reconcile two calendars.
+	 *
+	 * `queued` and `running` rows are excluded throughout: a run still in
+	 * flight has no outcome, and counting it as anything but "unfinished"
+	 * would move a rate that has not been earned yet.
+	 *
+	 * `skipped` is kept apart from the reliability figures on purpose. A
+	 * skipped run is the free-plan cap refusing to start it — the automation
+	 * did not fail, it was never given the chance, and folding those into a
+	 * failure rate would tell a user their workflows are broken when the only
+	 * thing broken is their plan.
+	 */
+
+	/**
+	 * Run outcomes per UTC day, one row per (day, status) pair.
+	 *
+	 * @return array<int,object>
+	 */
+	public function runs_by_day( string $since ): array {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT DATE(started_at) AS date, status, COUNT(*) AS count
+			 FROM {$this->executions}
+			 WHERE started_at >= %s AND status IN ('success','partial','failed','skipped')
+			 GROUP BY DATE(started_at), status
+			 ORDER BY date ASC",
+			$since
+		) ) ?: array();
+	}
+
+	/**
+	 * Run counts by outcome across the whole window.
+	 *
+	 * @return array<string,int> Keyed by status.
+	 */
+	public function outcome_totals( string $since ): array {
+		global $wpdb;
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT status, COUNT(*) AS count
+			 FROM {$this->executions}
+			 WHERE started_at >= %s
+			 GROUP BY status",
+			$since
+		) ) ?: array();
+
+		$out = array();
+		foreach ( $rows as $row ) {
+			$out[ (string) $row->status ] = (int) $row->count;
+		}
+		return $out;
+	}
+
+	/**
+	 * Run counts by what started them — schedule, event, or a manual Run now.
+	 *
+	 * @return array<string,int> Keyed by trigger_type.
+	 */
+	public function trigger_totals( string $since ): array {
+		global $wpdb;
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT trigger_type, COUNT(*) AS count
+			 FROM {$this->executions}
+			 WHERE started_at >= %s AND status IN ('success','partial','failed')
+			 GROUP BY trigger_type",
+			$since
+		) ) ?: array();
+
+		$out = array();
+		foreach ( $rows as $row ) {
+			$out[ (string) $row->trigger_type ] = (int) $row->count;
+		}
+		return $out;
+	}
+
+	/**
+	 * Step-level tallies summed over every finished run in the window.
+	 *
+	 * A run-level rate cannot tell "died on step 1 of 8" apart from "seven of
+	 * eight steps landed"; this is what separates them.
+	 *
+	 * @return array<string,int>
+	 */
+	public function step_totals( string $since ): array {
+		global $wpdb;
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT COALESCE(SUM(steps_succeeded), 0) AS succeeded,
+			        COALESCE(SUM(steps_failed), 0)    AS failed,
+			        COALESCE(SUM(steps_skipped), 0)   AS skipped
+			 FROM {$this->executions}
+			 WHERE started_at >= %s AND status IN ('success','partial','failed')",
+			$since
+		) );
+
+		return array(
+			'succeeded' => (int) ( $row->succeeded ?? 0 ),
+			'failed'    => (int) ( $row->failed ?? 0 ),
+			'skipped'   => (int) ( $row->skipped ?? 0 ),
+		);
+	}
+
+	/**
+	 * How long finished runs took, in seconds.
+	 *
+	 * @return array<string,int>
+	 */
+	public function duration_totals( string $since ): array {
+		global $wpdb;
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT COALESCE(ROUND(AVG(TIMESTAMPDIFF(SECOND, started_at, finished_at))), 0) AS avg_seconds,
+			        COALESCE(MAX(TIMESTAMPDIFF(SECOND, started_at, finished_at)), 0)         AS max_seconds
+			 FROM {$this->executions}
+			 WHERE started_at >= %s
+			   AND finished_at IS NOT NULL
+			   AND status IN ('success','partial','failed')",
+			$since
+		) );
+
+		return array(
+			'avg_seconds' => (int) ( $row->avg_seconds ?? 0 ),
+			'max_seconds' => (int) ( $row->max_seconds ?? 0 ),
+		);
+	}
+
+	/**
+	 * Actions that failed at least once, with the attempt count they failed out
+	 * of — a rate, not just a tally. Five failures from a hundred attempts and
+	 * two from two are very different problems, and the raw count calls the
+	 * wrong one urgent.
+	 *
+	 * @return array<int,object>
+	 */
+	public function action_failures( string $since, int $limit = 6 ): array {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT action_type,
+			        COUNT(*) AS attempts,
+			        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failures
+			 FROM {$this->outputs}
+			 WHERE created_at >= %s
+			 GROUP BY action_type
+			 HAVING failures > 0
+			 ORDER BY failures DESC, attempts DESC
+			 LIMIT %d",
+			$since,
+			$limit
+		) ) ?: array();
+	}
+
+	/**
+	 * Per-workflow reliability over the window.
+	 *
+	 * Inner join on purpose: a workflow that did not run has no reliability to
+	 * report, and a table of dashes is not a finding. `no_run_workflows()`
+	 * counts those separately so the card can still say they exist.
+	 *
+	 * @return array<int,object>
+	 */
+	public function workflow_reliability( string $since, int $limit = 10 ): array {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT w.id, w.name, w.status,
+			        COUNT(e.id) AS runs,
+			        SUM(CASE WHEN e.status = 'success' THEN 1 ELSE 0 END) AS ok,
+			        SUM(CASE WHEN e.status = 'partial' THEN 1 ELSE 0 END) AS partial,
+			        SUM(CASE WHEN e.status = 'failed'  THEN 1 ELSE 0 END) AS failed,
+			        COALESCE(ROUND(AVG(CASE WHEN e.finished_at IS NOT NULL
+			            THEN TIMESTAMPDIFF(SECOND, e.started_at, e.finished_at) END)), 0) AS avg_seconds,
+			        MAX(e.started_at) AS last_run_at
+			 FROM {$this->workflows} w
+			 INNER JOIN {$this->executions} e
+			         ON e.workflow_id = w.id
+			        AND e.started_at >= %s
+			        AND e.status IN ('success','partial','failed')
+			 GROUP BY w.id, w.name, w.status
+			 ORDER BY runs DESC, w.name ASC
+			 LIMIT %d",
+			$since,
+			$limit
+		) ) ?: array();
+	}
+
+	/**
+	 * Workflows that did not run at all in the window, split by whether that is
+	 * expected. A paused workflow being quiet is the system working; an *active*
+	 * one being quiet is the finding.
+	 *
+	 * @return array<string,int>
+	 */
+	public function idle_workflow_counts( string $since ): array {
+		global $wpdb;
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT
+			    SUM(CASE WHEN w.status = 'active' THEN 1 ELSE 0 END) AS idle_active,
+			    COUNT(*) AS idle_total
+			 FROM {$this->workflows} w
+			 WHERE NOT EXISTS (
+			     SELECT 1 FROM {$this->executions} e
+			      WHERE e.workflow_id = w.id
+			        AND e.started_at >= %s
+			        AND e.status IN ('success','partial','failed')
+			 )",
+			$since
+		) );
+
+		return array(
+			'idle_active' => (int) ( $row->idle_active ?? 0 ),
+			'idle_total'  => (int) ( $row->idle_total ?? 0 ),
+		);
+	}
+
+	/**
+	 * Workflow counts by status, all time — the denominator for "how much of
+	 * what you built is actually switched on".
+	 *
+	 * @return array<string,int>
+	 */
+	public function workflow_status_totals(): array {
+		global $wpdb;
+		$rows = $wpdb->get_results(
+			"SELECT status, COUNT(*) AS count FROM {$this->workflows} GROUP BY status"
+		) ?: array();
+
+		$out = array();
+		foreach ( $rows as $row ) {
+			$out[ (string) $row->status ] = (int) $row->count;
+		}
+		return $out;
+	}
+
 	/* ── Maintenance ────────────────────────────────────── */
 
 	public function prune_executions( int $days ): void {

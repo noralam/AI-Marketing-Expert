@@ -126,6 +126,19 @@ class WorkflowRestController {
 			'permission_callback' => $perm,
 		) );
 
+		register_rest_route( $this->ns, $base . '/analytics', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'analytics' ),
+			'permission_callback' => $perm,
+			'args'                => array(
+				'days' => array(
+					'type'              => 'integer',
+					'default'           => 30,
+					'sanitize_callback' => 'absint',
+				),
+			),
+		) );
+
 		register_rest_route( $this->ns, $base . '/usage', array(
 			'methods'             => 'GET',
 			'callback'            => array( $this, 'usage' ),
@@ -447,6 +460,104 @@ class WorkflowRestController {
 		}
 
 		return new \WP_REST_Response( array( 'entries' => $entries ), 200 );
+	}
+
+	/**
+	 * Module analytics: run reliability, throughput, and where runs break.
+	 *
+	 * The list page already answers "did it run" — a date and a lifetime count.
+	 * The question it cannot answer is "is it working", which for unattended
+	 * automation is the only question there is. Everything here is derived from
+	 * rows the engine already writes; none of it required new instrumentation.
+	 */
+	public function analytics( \WP_REST_Request $req ): \WP_REST_Response {
+		$days  = max( 1, min( 365, absint( $req->get_param( 'days' ) ?: 30 ) ) );
+		$since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
+
+		$outcomes = $this->repo->outcome_totals( $since );
+		$steps    = $this->repo->step_totals( $since );
+		$triggers = $this->repo->trigger_totals( $since );
+
+		$succeeded = (int) ( $outcomes['success'] ?? 0 );
+		$partial   = (int) ( $outcomes['partial'] ?? 0 );
+		$failed    = (int) ( $outcomes['failed'] ?? 0 );
+		$skipped   = (int) ( $outcomes['skipped'] ?? 0 );
+		$finished  = $succeeded + $partial + $failed;
+
+		// A partly-failed run is not a success. It produced something, so it is
+		// not a total loss either — but a rate that counted it as clean would
+		// report a healthy number for a workflow silently dropping half its work.
+		$success_rate = $finished > 0 ? round( ( $succeeded / $finished ) * 100, 1 ) : 0.0;
+
+		$steps_attempted = $steps['succeeded'] + $steps['failed'];
+		$step_rate       = $steps_attempted > 0 ? round( ( $steps['succeeded'] / $steps_attempted ) * 100, 1 ) : 0.0;
+
+		$manual    = (int) ( $triggers['manual'] ?? 0 );
+		$unattended = max( 0, $finished - $manual );
+		$hands_off = $finished > 0 ? round( ( $unattended / $finished ) * 100, 1 ) : 0.0;
+
+		// Action keys are stable identifiers; the registry holds the human label,
+		// and an action removed from the registry still has failures on record.
+		$failing = array();
+		foreach ( $this->repo->action_failures( $since, 6 ) as $row ) {
+			$type      = (string) $row->action_type;
+			$attempts  = (int) $row->attempts;
+			$failures  = (int) $row->failures;
+			$failing[] = array(
+				'action_type'  => $type,
+				'action_label' => ActionRegistry::get( $type )['label'] ?? $type,
+				'attempts'     => $attempts,
+				'failures'     => $failures,
+				'failure_rate' => $attempts > 0 ? round( ( $failures / $attempts ) * 100, 1 ) : 0.0,
+			);
+		}
+
+		$workflows = array();
+		foreach ( $this->repo->workflow_reliability( $since, 10 ) as $row ) {
+			$runs        = (int) $row->runs;
+			$ok          = (int) $row->ok;
+			$workflows[] = array(
+				'id'           => (int) $row->id,
+				'name'         => (string) $row->name,
+				'status'       => (string) $row->status,
+				'runs'         => $runs,
+				'ok'           => $ok,
+				'partial'      => (int) $row->partial,
+				'failed'       => (int) $row->failed,
+				'success_rate' => $runs > 0 ? round( ( $ok / $runs ) * 100, 1 ) : 0.0,
+				'avg_seconds'  => (int) $row->avg_seconds,
+				'last_run_at'  => $row->last_run_at,
+			);
+		}
+
+		return new \WP_REST_Response( array(
+			'days'          => $days,
+			'runs_by_day'   => $this->repo->runs_by_day( $since ),
+			'totals'        => array(
+				'runs_finished' => $finished,
+				'succeeded'     => $succeeded,
+				'partial'       => $partial,
+				'failed'        => $failed,
+				'skipped'       => $skipped,
+				'success_rate'  => $success_rate,
+				'steps_succeeded' => $steps['succeeded'],
+				'steps_failed'    => $steps['failed'],
+				'steps_skipped'   => $steps['skipped'],
+				'step_rate'       => $step_rate,
+				'manual_runs'     => $manual,
+				'unattended_runs' => $unattended,
+				'hands_off_rate'  => $hands_off,
+			)
+			+ $this->repo->duration_totals( $since )
+			+ $this->repo->idle_workflow_counts( $since ),
+			'workflow_status' => $this->repo->workflow_status_totals(),
+			'action_failures' => $failing,
+			'workflows'       => $workflows,
+			// Sent with the payload so the quota card does not cost a second
+			// request on a page whose whole job is one round trip.
+			'is_pro'          => aime_has_pro(),
+			'runs_usage'      => aime_usage_payload( 'workflow_runs_monthly', $this->repo->count_runs_this_month() ),
+		), 200 );
 	}
 
 	/**

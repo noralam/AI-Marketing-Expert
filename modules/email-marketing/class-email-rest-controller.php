@@ -724,8 +724,12 @@ class EmailRestController {
 			'callback'            => array( $c, 'optimize_subject' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
-				'subject'  => array( 'type' => 'string', 'required' => true ),
-				'audience' => array( 'type' => 'string', 'default' => 'general' ),
+				// Not required: with the field empty the email body is the brief
+				// and the AI writes the subject line from it.
+				'subject'       => array( 'type' => 'string', 'default' => '' ),
+				'audience'      => array( 'type' => 'string', 'default' => 'general' ),
+				'campaign_name' => array( 'type' => 'string', 'default' => '' ),
+				'content'       => array( 'type' => 'string', 'default' => '' ),
 			),
 		) );
 
@@ -738,6 +742,7 @@ class EmailRestController {
 				'subject'       => array( 'type' => 'string', 'default' => '' ),
 				'campaign_name' => array( 'type' => 'string', 'default' => '' ),
 				'content'       => array( 'type' => 'string', 'default' => '' ),
+				'current'       => array( 'type' => 'string', 'default' => '' ),
 			),
 		) );
 

@@ -53,8 +53,16 @@ const modelTypeLabels = {
 };
 
 const AiProvidersPage = () => {
-	const { loading, get, post, del } = useApi();
+	const { get, post, del } = useApi();
 	const [ notice, setNotice ] = useState( null );
+
+	// The hook's shared `loading` flag flips on *every* request this page makes —
+	// saving a connection, testing one, fetching models from inside the modal.
+	// Gating the page render on it swapped the whole page for a loader mid-modal,
+	// which unmounted the dialog, lost the scroll position and read as a full page
+	// reload. Only the first fetch is allowed to blank the page; everything after
+	// it reports progress in the control that started it.
+	const [ booting, setBooting ] = useState( true );
 
 	// AI connections state.
 	const [ aiConnections, setAiConnections ] = useState( [] );
@@ -113,6 +121,8 @@ const AiProvidersPage = () => {
 			setAiProviders( aiData.providers || {} );
 		} catch ( err ) {
 			// AI might not exist yet.
+		} finally {
+			setBooting( false );
 		}
 	};
 
@@ -452,7 +462,7 @@ const AiProvidersPage = () => {
 		}
 	};
 
-	if ( loading ) {
+	if ( booting ) {
 		return <Loader variant="form" text={ __( 'Loading AI providers...', 'ai-marketing-expert' ) } />;
 	}
 

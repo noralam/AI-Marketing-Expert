@@ -39,8 +39,15 @@ const formatCronDelay = ( seconds ) => {
 };
 
 const SettingsPage = () => {
-	const { loading, get, post, del } = useApi();
+	const { get, post, del } = useApi();
 	const { hasPro } = usePro();
+	// `useApi` flips its shared `loading` on every request this page makes —
+	// including the debug-log fetch, the cron poll and every toggle. Gating the
+	// page render on it replaced the tab sidebar and the panel with a full-page
+	// loader each time, which read as a page reload. Only the first load blanks
+	// the page; each later request reports in its own section (`logsLoading`,
+	// `cronLoading`, `apiKeyBusy`…).
+	const [ booting, setBooting ] = useState( true );
 	const initialTab = new URLSearchParams( window.location.search ).get( 'tab' );
 	const [ tab, setTab ] = useState( TABS.some( ( item ) => item.id === initialTab ) ? initialTab : 'general' );
 	const [ settings, setSettings ] = useState( {} );
@@ -88,6 +95,8 @@ const SettingsPage = () => {
 			setCronStatus( cronData || null );
 		} catch ( err ) {
 			// Handled.
+		} finally {
+			setBooting( false );
 		}
 	};
 
@@ -243,7 +252,7 @@ const SettingsPage = () => {
 		reader.readAsText( file );
 	};
 
-	if ( loading ) {
+	if ( booting ) {
 		return <Loader variant="form" text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
 	}
 

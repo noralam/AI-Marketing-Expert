@@ -8359,6 +8359,19 @@ input.aime-premium-input[type=color]
 		display: flex;
 		gap: 10px;
 	}
+
+	// `.aime-step-content` is shared with the workflow builder, where it is a
+	// step body indented 36px under a numbered bullet. The wizard reuses the
+	// class for the panel under the stepper and inherited that indent, so the
+	// panel sat 36px right of the stepper band and stopped short of its right
+	// edge — two boxes that read as one control, misaligned. The panel is the
+	// stepper's continuation, so it takes the stepper's exact box.
+	.aime-step-content {
+		margin-left: 0;
+		padding: 24px;
+		border-radius: var(--aime-radius);
+		gap: 20px;
+	}
 }
 
 .aime-editor-compose {
@@ -11814,6 +11827,68 @@ input.aime-premium-input[type=color]
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
+}
+
+// ═══════════════════════════════════════════════════════════
+// Workflow Automation Module — Analytics
+//
+// Shares the whole vocabulary of the Content analytics page — the gauge band,
+// the ranked bar list, the pipeline headline, the wide-first chart grid — and
+// adds only what unattended automation needs on top: a note under the quota
+// explaining the grey bars in the chart, and a per-row reliability bar in the
+// workflow table.
+// ═══════════════════════════════════════════════════════════
+
+.aime-wf-analytics {
+	// Cards sitting in a grid stop being responsible for the gap under them.
+	.aime-charts-grid > .aime-card {
+		margin-bottom: 0;
+	}
+
+	// The table is the last thing on the page and the widest; it keeps its own
+	// scroll rather than forcing the layout to widen for one column.
+	.aime-table-wrap {
+		margin-bottom: 12px;
+	}
+}
+
+// Why a run was skipped, said under the bar it belongs to rather than in the
+// chart legend — the legend can only name the colour, and "skipped" without
+// "because the cap was reached" reads as the workflow's fault.
+.aime-usage-note {
+	margin: 8px 0 0;
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--aime-text-light);
+}
+
+// ── Table reliability bar ─────────────────────────────────
+// Nine rows of "94.2%" is nine numbers read in sequence; nine bars on a shared
+// baseline is one shape, and the row that dips is seen before it is read. The
+// number stays beside it because a bar alone cannot be quoted.
+.aime-minibar {
+	display: inline-block;
+	width: 72px;
+	height: 6px;
+	vertical-align: middle;
+	background: var(--aime-bg-subtle);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.aime-minibar__fill {
+	display: block;
+	height: 100%;
+	border-radius: 6px;
+	transition: width var(--aime-transition);
+}
+
+.aime-minibar__value {
+	margin-left: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
 }
 
 // ── Articles page ─────────────────────────────────────────

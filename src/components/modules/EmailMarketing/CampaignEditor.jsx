@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, Spinner } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
 import useSlowWarning from '../../../hooks/useSlowWarning';
@@ -46,6 +46,15 @@ const SMART_SEGMENT_OPTIONS = [
 ];
 
 const PRO_AI_TONES = [ 'formal', 'humorous', 'minimalist' ];
+
+// The body is HTML out of the editor. Both questions asked of it here — "is
+// there anything to work from" and "what is this email about" — are about the
+// words, not the markup, and an empty editor still ships a `<p>&nbsp;</p>`.
+const plainBody = ( html ) => ( html || '' )
+	.replace( /<[^>]*>/g, ' ' )
+	.replace( /&nbsp;/g, ' ' )
+	.replace( /\s+/g, ' ' )
+	.trim();
 
 const escapeHtml = ( value = '' ) => String( value )
 	.replace( /&/g, '&amp;' )
@@ -401,7 +410,16 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 			const data = await get( `/email/campaigns/${ id }` );
 			setCampaign( data );
 			const loadedForm = {
-				title: data.title || '',
+				// A campaign has an id before it has a name — the row exists the
+				// moment the editor opens, and saving refuses a blank name. The id
+				// stands in so the field is never empty and the required-field error
+				// never fires on a campaign the user only wanted to open; it is an
+				// ordinary editable value, not a lock.
+				title: data.title || sprintf(
+					/* translators: %s: campaign id */
+					__( 'Campaign #%s', 'ai-marketing-expert' ),
+					id
+				),
 				email_subject: data.email_subject || '',
 				email_pre_header: data.email_pre_header || '',
 				email_body: data.email_body || '',
@@ -698,14 +716,28 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	};
 
 	/* AI helpers */
+	// The button is live whether or not the field has text. Empty field: the
+	// email body is the brief and the AI writes the line. Text already there:
+	// that text is the angle and the body is the context, so the rewrite keeps
+	// what the user meant instead of ignoring it. A disabled button here only
+	// taught people to type a throwaway subject to unlock the thing that writes
+	// subjects.
 	const handleAiSubject = async ( target = 'subject_a' ) => {
 		const subject = target === 'subject_b' ? ( abSubject || form.email_subject ) : form.email_subject;
-		if ( ! subject ) return;
+		const body = plainBody( form.email_body );
+		if ( ! subject && ! body && ! form.title ) {
+			setNotice( { type: 'warning', message: __( 'Write the email body first, or type a subject line — the AI needs something to work from.', 'ai-marketing-expert' ) } );
+			return;
+		}
 		setAiSubjectTarget( target );
 		setAiLoading( target );
 		slowWarning.start();
 		try {
-			const res = await post( '/email/ai/optimize-subject', { subject } );
+			const res = await post( '/email/ai/optimize-subject', {
+				subject,
+				campaign_name: form.title,
+				content: body,
+			} );
 			setAiSubject( res );
 		} catch ( e ) { /* */ } finally {
 			slowWarning.stop();
@@ -726,14 +758,21 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 
 	const handleAiPreviewText = async () => {
 		const subject = form.email_subject || abSubject;
-		if ( ! subject && ! form.email_body && ! form.title ) return;
+		const body = plainBody( form.email_body );
+		if ( ! subject && ! body && ! form.title ) {
+			setNotice( { type: 'warning', message: __( 'Write the email body first, or type a subject line — the AI needs something to work from.', 'ai-marketing-expert' ) } );
+			return;
+		}
 		setAiLoading( 'preview_text' );
 		slowWarning.start();
 		try {
 			const res = await post( '/email/ai/generate-preview-text', {
 				subject,
 				campaign_name: form.title,
-				content: form.email_body,
+				content: body,
+				// Whatever is in the field already is the user's angle, so it
+				// goes to the AI as a starting point rather than being thrown away.
+				current: form.email_pre_header,
 			} );
 			setAiPreviewText( res );
 		} catch ( e ) { /* */ } finally {
@@ -1044,7 +1083,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 							type="button"
 							className="aime-btn-ai"
 							onClick={ () => handleAiSubject( 'subject_a' ) }
-							disabled={ ! isAiConfigured() || !! aiLoading || ! form.email_subject }
+							disabled={ ! isAiConfigured() || !! aiLoading }
 							title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 						>
 							{ aiLoading === 'subject_a' ? <><Spinner style={ { marginRight: 4 } } />{ __( '\u2728 Optimizing...', 'ai-marketing-expert' ) }</> : __( '\u2728 AI Optimize', 'ai-marketing-expert' ) }
@@ -1089,7 +1128,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 											type="button"
 											className="aime-btn-ai"
 											onClick={ () => handleAiSubject( 'subject_a' ) }
-											disabled={ ! isAiConfigured() || !! aiLoading || ! form.email_subject }
+											disabled={ ! isAiConfigured() || !! aiLoading }
 											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 										>
 											{ __( '\u2728 AI', 'ai-marketing-expert' ) }
@@ -1113,7 +1152,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 											type="button"
 											className="aime-btn-ai"
 											onClick={ () => handleAiSubject( 'subject_b' ) }
-											disabled={ ! isAiConfigured() || !! aiLoading || ! ( abSubject || form.email_subject ) }
+											disabled={ ! isAiConfigured() || !! aiLoading }
 											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 										>
 											{ __( '\u2728 AI', 'ai-marketing-expert' ) }
@@ -1140,7 +1179,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 							type="button"
 							className="aime-btn-ai"
 							onClick={ handleAiPreviewText }
-							disabled={ ! isAiConfigured() || !! aiLoading || ( ! form.email_subject && ! abSubject && ! form.email_body && ! form.title ) }
+							disabled={ ! isAiConfigured() || !! aiLoading }
 							title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 						>
 							{ aiLoading === 'preview_text' ? <><Spinner style={ { marginRight: 4 } } />{ __( '\u2728 Writing...', 'ai-marketing-expert' ) }</> : __( '\u2728 AI Write', 'ai-marketing-expert' ) }

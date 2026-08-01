@@ -8,13 +8,14 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { list, plus, calendar, cog, warning } from '@wordpress/icons';
+import { chartBar, list, plus, calendar, cog, warning } from '@wordpress/icons';
 import AppLayout from '../../Layout/AppLayout';
 import InternalSidebar from '../../Layout/InternalSidebar';
 import Card from '../../common/Card';
 import { toast } from '../../common/Toast';
 import { CheckboxControl } from '../../common/WpComponents';
 import { apiGet, apiPost } from '../../../utils/api';
+import WorkflowAnalytics from './WorkflowAnalytics';
 import WorkflowList from './WorkflowList';
 import WorkflowBuilder from './WorkflowBuilder';
 import TemplatePicker from './TemplatePicker';
@@ -25,7 +26,7 @@ import ErrorLog from './ErrorLog';
 const parseHash = () => {
 	const hash = window.location.hash.replace( '#', '' );
 	if ( ! hash ) {
-		return { key: 'workflows', params: {} };
+		return { key: 'analytics', params: {} };
 	}
 	const [ key, id ] = hash.split( '/' );
 	return { key, params: id ? { id: parseInt( id, 10 ) || id } : {} };
@@ -102,6 +103,7 @@ const WorkflowAutomationPage = () => {
 	}, [] );
 
 	const sidebarItems = [
+		{ key: 'analytics', label: __( 'Analytics', 'ai-marketing-expert' ), icon: chartBar },
 		{ key: 'workflows', label: __( 'Workflows', 'ai-marketing-expert' ), icon: list },
 		{ key: 'new-workflow', label: __( 'New Workflow', 'ai-marketing-expert' ), icon: plus },
 		{ key: 'upcoming', label: __( 'Upcoming Runs', 'ai-marketing-expert' ), icon: calendar },
@@ -141,8 +143,10 @@ const WorkflowAutomationPage = () => {
 					/>
 				);
 			case 'workflows':
-			default:
 				return <WorkflowList onNavigate={ navigate } />;
+			case 'analytics':
+			default:
+				return <WorkflowAnalytics onNavigate={ navigate } />;
 		}
 	};
 

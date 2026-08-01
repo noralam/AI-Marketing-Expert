@@ -28,6 +28,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import EmptyState from '../../common/EmptyState';
 import ArcGauge from '../../common/ArcGauge';
+import { RankRow } from '../../common/RankBar';
 import { ARTICLE_STATUS_LABELS, ARTICLE_STATUS_COLORS } from '../../../utils/constants';
 
 const RANGES = [ 7, 30, 90 ];
@@ -123,35 +124,6 @@ const buildSeries = ( days, created, published ) => {
 		.sort( ( a, b ) => a.date.localeCompare( b.date ) )
 		.map( ( point ) => ( { ...point, label: point.date.slice( 5 ) } ) );
 };
-
-/*
- * One row of a ranked bar list: label, a bar on a common baseline, and the
- * count. This is the shape both the pipeline and the tone list want.
- *
- * It is also the answer to "should this be a pie". A pie compares angles, which
- * is the least accurate comparison the eye can make; these rows compare lengths
- * from a shared left edge, which is the most accurate. And a pie has no order —
- * draft → ready → published is a sequence, and scattering it around a circle
- * throws away the only structure the data has.
- */
-const RankRow = ( { label, count, percent, color, suffix } ) => (
-	<li className="aime-rankbar__row">
-		<span className="aime-rankbar__label">
-			<span className="aime-rankbar__dot" style={ { background: color } } />
-			{ label }
-		</span>
-		<span className="aime-rankbar__track">
-			<span
-				className="aime-rankbar__fill"
-				style={ { width: `${ Math.max( percent, percent > 0 ? 2 : 0 ) }%`, background: color } }
-			/>
-		</span>
-		<span className="aime-rankbar__count">
-			{ count.toLocaleString() }
-			{ suffix && <em className="aime-rankbar__suffix">{ suffix }</em> }
-		</span>
-	</li>
-);
 
 const ContentAnalytics = ( { onNavigate } ) => {
 	const { get, loading, error, clearError } = useApi();

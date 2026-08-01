@@ -87,7 +87,9 @@ const ErrorLog = ( { onNavigate } ) => {
 		load();
 	}, [ load ] );
 
-	if ( loading ) {
+	// Refresh reuses `load()`, so gate the skeleton on having nothing to show —
+	// otherwise pressing Refresh tears the log down and rebuilds it.
+	if ( loading && ! entries.length ) {
 		return <Loader variant="table" />;
 	}
 

@@ -245,18 +245,51 @@ class AiController {
 	/* ── OPTIMIZE SUBJECT LINE ───────────────────────── */
 
 	public function optimize_subject( \WP_REST_Request $request ): \WP_REST_Response {
-		$subject  = sanitize_text_field( $request->get_param( 'subject' ) );
-		$audience = sanitize_text_field( $request->get_param( 'audience' ) ?: 'general' );
+		$subject       = sanitize_text_field( $request->get_param( 'subject' ) ?: '' );
+		$audience      = sanitize_text_field( $request->get_param( 'audience' ) ?: 'general' );
+		$campaign_name = sanitize_text_field( $request->get_param( 'campaign_name' ) ?: '' );
+		$content       = wp_strip_all_tags( wp_kses_post( $request->get_param( 'content' ) ?: '' ) );
+		$content       = mb_substr( trim( preg_replace( '/\s+/', ' ', $content ) ), 0, 1500 );
 
-		$prompt = "You are an email marketing expert specializing in subject lines. "
-			. "Analyze and improve this email subject line for maximum open rates. Audience: {$audience}.\n\n"
-			. "Original subject: \"{$subject}\"\n\n"
-			. "Return a JSON object with these keys:\n"
-			. "- \"suggestions\": array of 5 improved subject lines\n"
-			. "- \"analysis\": brief analysis of the original (2-3 sentences)\n"
-			. "- \"score\": 1-100 rating of the original\n"
-			. "- \"best_pick\": index (0-based) of your top recommendation\n"
-			. "Return ONLY the JSON object. No thinking, no reasoning, no commentary.";
+		// Two jobs behind one button. With a subject typed, the email body is
+		// context for rewriting the line the user already has — their angle is
+		// the brief. With the field empty, the body IS the brief and the AI
+		// writes the first line from scratch, which is what a writer would do
+		// rather than refusing until you type something to improve.
+		$brief = ( $campaign_name ? "Campaign name: {$campaign_name}\n" : '' )
+			. ( $content ? "Email body:\n{$content}\n" : '' );
+
+		if ( $subject ) {
+			$prompt = "You are an email marketing expert specializing in subject lines. "
+				. "Improve this email subject line for maximum open rates. Audience: {$audience}.\n\n"
+				. "Original subject: \"{$subject}\"\n"
+				. ( $brief ? "\n{$brief}" : '' )
+				. "\nKeep the angle and promise of the original subject, and make sure every "
+				. "suggestion is true to the email body above.\n\n"
+				. "Return a JSON object with these keys:\n"
+				. "- \"suggestions\": array of 5 improved subject lines\n"
+				. "- \"analysis\": brief analysis of the original (2-3 sentences)\n"
+				. "- \"score\": 1-100 rating of the original\n"
+				. "- \"best_pick\": index (0-based) of your top recommendation\n"
+				. "Return ONLY the JSON object. No thinking, no reasoning, no commentary.";
+		} else {
+			if ( ! $brief ) {
+				return new \WP_REST_Response(
+					array( 'message' => __( 'Write the email body (or a subject line) first so the AI has something to work from.', 'ai-marketing-expert' ) ),
+					400
+				);
+			}
+			$prompt = "You are an email marketing expert specializing in subject lines. "
+				. "Write subject lines for this email from scratch. Audience: {$audience}.\n\n"
+				. $brief
+				. "\nEach subject line must describe what is actually in the email body above. "
+				. "Under 60 characters, no clickbait that the body does not deliver.\n\n"
+				. "Return a JSON object with these keys:\n"
+				. "- \"suggestions\": array of 5 subject lines\n"
+				. "- \"analysis\": brief note on the angle you took (2-3 sentences)\n"
+				. "- \"best_pick\": index (0-based) of your top recommendation\n"
+				. "Return ONLY the JSON object. No thinking, no reasoning, no commentary.";
+		}
 
 		$result = AiProvider::generate( $prompt, 'text', 2048 );
 
@@ -274,6 +307,7 @@ class AiController {
 	public function generate_preview_text( \WP_REST_Request $request ): \WP_REST_Response {
 		$subject       = sanitize_text_field( $request->get_param( 'subject' ) ?: '' );
 		$campaign_name = sanitize_text_field( $request->get_param( 'campaign_name' ) ?: '' );
+		$current       = sanitize_text_field( $request->get_param( 'current' ) ?: '' );
 		$content       = wp_strip_all_tags( wp_kses_post( $request->get_param( 'content' ) ?: '' ) );
 		$content       = mb_substr( trim( preg_replace( '/\s+/', ' ', $content ) ), 0, 1200 );
 
@@ -281,6 +315,9 @@ class AiController {
 			. ( $campaign_name ? "Campaign name: {$campaign_name}\n" : '' )
 			. ( $subject ? "Subject line: \"{$subject}\"\n" : '' )
 			. ( $content ? "Email content excerpt: {$content}\n" : '' )
+			// Text already in the field is the user's angle, not a draft to
+			// discard — rewrite around it instead of replacing it wholesale.
+			. ( $current ? "The user already wrote this preview text: \"{$current}\". Keep its angle and wording where you can; every option must still match the email content above.\n" : '' )
 			. "\nReturn a JSON object with these keys:\n"
 			. "- \"suggestions\": array of 5 preview text options, each 35-90 characters\n"
 			. "- \"best_pick\": index (0-based) of your top recommendation\n"

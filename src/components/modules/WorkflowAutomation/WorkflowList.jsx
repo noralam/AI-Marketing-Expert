@@ -154,7 +154,10 @@ const WorkflowList = ( { onNavigate } ) => {
 		}
 	};
 
-	if ( loading ) {
+	// `load()` also runs after a delete, a duplicate and a manual run. Blanking
+	// the whole list for those refetches threw the page away and rebuilt it; the
+	// list stays on screen and only the first load shows a skeleton.
+	if ( loading && ! workflows.length ) {
 		return <Loader variant="table" />;
 	}
 
