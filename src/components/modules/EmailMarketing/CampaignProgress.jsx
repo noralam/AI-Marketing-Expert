@@ -13,6 +13,7 @@ import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import ProLock, { isProActive, ProLabel } from '../../common/ProLock';
+import { toSiteInput, siteInputToUtc } from '../../../utils/datetime';
 
 const COLORS = [ '#3858e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6' ];
 
@@ -25,18 +26,9 @@ const formatDuration = ( seconds ) => {
 	return { days, hours, minutes, seconds: secs };
 };
 
-const toLocalInputValue = ( value ) => {
-	if ( ! value ) return '';
-	const date = new Date( `${ value.replace( ' ', 'T' ) }Z` );
-	if ( Number.isNaN( date.getTime() ) ) return '';
-	const local = new Date( date.getTime() - date.getTimezoneOffset() * 60000 );
-	return local.toISOString().slice( 0, 16 );
-};
+const toLocalInputValue = ( value ) => toSiteInput( value );
 
-const toUtcMysqlValue = ( value ) => {
-	if ( ! value ) return '';
-	return new Date( value ).toISOString().slice( 0, 19 ).replace( 'T', ' ' );
-};
+const toUtcMysqlValue = ( value ) => siteInputToUtc( value );
 
 const getLinkLabel = ( url ) => {
 	if ( ! url ) return __( 'Unknown link', 'ai-marketing-expert' );
@@ -241,14 +233,14 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 	}, [ sendStartedAt ] );
 
 	if ( loading && ! data ) {
-		return <Loader text={ __( 'Loading campaign progress...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading campaign progress...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! data ) {
 		if ( loadFailed ) {
 			return <Notice type="error" message={ __( 'Campaign not found.', 'ai-marketing-expert' ) } />;
 		}
-		return <Loader text={ __( 'Loading campaign progress...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading campaign progress...', 'ai-marketing-expert' ) } />;
 	}
 
 	const kpis = [

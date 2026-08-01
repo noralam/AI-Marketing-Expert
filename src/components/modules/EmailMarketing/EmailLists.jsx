@@ -9,6 +9,7 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import { formatDate } from '../../../utils/datetime';
 
 const EmailLists = () => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
@@ -66,7 +67,7 @@ const EmailLists = () => {
 			}
 		>
 			{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
-			{ loading && <Loader /> }
+			{ loading && <Loader variant="table" /> }
 
 			{ ! loading && lists.length === 0 && (
 				<p className="aime-empty-msg">{ __( 'No lists yet. Create your first list.', 'ai-marketing-expert' ) }</p>
@@ -91,7 +92,7 @@ const EmailLists = () => {
 								<td><strong>{ l.title }</strong></td>
 								<td>{ l.subscribers_count ?? 0 }</td>
 								<td>{ l.description || '\u2014' }</td>
-								<td>{ l.created_at ? new Date( l.created_at ).toLocaleDateString() : '\u2014' }</td>
+								<td>{ formatDate( l.created_at, '\u2014' ) }</td>
 								<td className="aime-actions">
 									<Button variant="tertiary" size="small" onClick={ () => openEdit( l ) }>{ __( 'Edit', 'ai-marketing-expert' ) }</Button>
 									<Button isDestructive variant="tertiary" size="small" onClick={ () => handleDelete( l.id ) }>{ __( 'Delete', 'ai-marketing-expert' ) }</Button>

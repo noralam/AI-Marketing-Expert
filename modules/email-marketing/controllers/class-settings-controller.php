@@ -250,16 +250,17 @@ class SettingsController {
 
 	public function get_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$global_settings = get_option( 'aime_settings', array() );
-		$double_optin    = get_option( 'aime_double_optin', $global_settings['double_optin'] ?? true );
+		$double_optin    = get_option( 'aime_double_optin', $global_settings['double_optin'] ?? false );
+		$defaults        = \WPSpace\AiMarketingExpert\Activator::get_email_field_defaults();
 
 		return new \WP_REST_Response( array(
-			'from_name'         => get_option( 'aime_from_name', get_bloginfo( 'name' ) ),
-			'from_email'        => get_option( 'aime_from_email', get_option( 'admin_email' ) ),
-			'reply_to'          => get_option( 'aime_reply_to', '' ),
-			'unsubscribe_text'  => get_option( 'aime_unsubscribe_text', 'Unsubscribe' ),
-			'company_name'      => get_option( 'aime_company_name', '' ),
-			'company_address'   => get_option( 'aime_company_address', '' ),
-			'email_footer'      => get_option( 'aime_email_footer', '' ),
+			'from_name'         => get_option( 'aime_from_name', $defaults['aime_from_name'] ),
+			'from_email'        => get_option( 'aime_from_email', $defaults['aime_from_email'] ),
+			'reply_to'          => get_option( 'aime_reply_to', $defaults['aime_reply_to'] ),
+			'unsubscribe_text'  => get_option( 'aime_unsubscribe_text', $defaults['aime_unsubscribe_text'] ),
+			'company_name'      => get_option( 'aime_company_name', $defaults['aime_company_name'] ),
+			'company_address'   => get_option( 'aime_company_address', $defaults['aime_company_address'] ),
+			'email_footer'      => get_option( 'aime_email_footer', $defaults['aime_email_footer'] ),
 			'unsubscribe_heading'     => get_option( 'aime_unsubscribe_heading', '' ),
 			'unsubscribe_message'     => get_option( 'aime_unsubscribe_message', '' ),
 			'resubscribe_button_text' => get_option( 'aime_resubscribe_button_text', '' ),

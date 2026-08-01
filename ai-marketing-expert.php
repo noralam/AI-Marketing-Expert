@@ -3,7 +3,7 @@
  * Plugin Name:       AI Marketing Expert
  * Plugin URI:        https://wpthemespace.com/ai-marketing-expert
  * Description:       All-in-one AI marketing toolkit: email marketing, content generation, SEO analyzer, social media, AI chatbot, and workflow automation.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Requires at least: 6.2
  * Requires PHP:      8.0
  * Author:            Noor Alam
@@ -22,15 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'AIME_VERSION', '1.1.1' );
+define( 'AIME_VERSION', '1.1.2' );
 define( 'AIME_PLUGIN_FILE', __FILE__ );
 define( 'AIME_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AIME_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AIME_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Schema versions. Bump only when database tables or migrations change.
-define( 'AIME_DB_VERSION', '1.2.1' );
-define( 'AIME_EMAIL_DB_VERSION', '1.2.1' );
+define( 'AIME_DB_VERSION', '1.2.2' );
+define( 'AIME_EMAIL_DB_VERSION', '1.2.2' );
 
 define( 'AIME_MIN_PHP', '8.0' );
 define( 'AIME_MIN_WP', '6.2' );

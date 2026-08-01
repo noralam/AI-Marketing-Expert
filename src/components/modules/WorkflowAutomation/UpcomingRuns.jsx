@@ -8,14 +8,10 @@ import { apiGet } from '../../../utils/api';
 import { toast } from '../../common/Toast';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
+import { formatDateTime } from '../../../utils/datetime';
 
-const formatDate = ( value ) => {
-	if ( ! value ) {
-		return '—';
-	}
-	const d = new Date( value.replace( ' ', 'T' ) + 'Z' );
-	return isNaN( d.getTime() ) ? value : d.toLocaleString();
-};
+// Stored as UTC; rendered in the site timezone and format (Settings → General).
+const formatDate = ( value ) => formatDateTime( value );
 
 const UpcomingRuns = ( { onNavigate } ) => {
 	const [ loading, setLoading ] = useState( true );
@@ -38,7 +34,7 @@ const UpcomingRuns = ( { onNavigate } ) => {
 	}, [ load ] );
 
 	if ( loading ) {
-		return <Loader />;
+		return <Loader variant="table" />;
 	}
 
 	return (

@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { useNodesState, useEdgesState, addEdge } from '@xyflow/react';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
 import { toast } from '../../common/Toast';
@@ -76,6 +76,9 @@ const triggerSummary = ( wf, triggers ) => {
 
 const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 	const hasPro = isProActive();
+	// Free-plan step cap, mirrored from the server so the builder shows the
+	// limit before a save is rejected for exceeding it.
+	const stepLimit = window.aimeData?.freeLimits?.workflow_steps || 3;
 
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
@@ -431,7 +434,7 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 	};
 
 	if ( loading ) {
-		return <Loader />;
+		return <Loader variant="form" />;
 	}
 
 	const selectedNode = selectedId ? displayNodes.find( ( n ) => n.id === selectedId ) : null;
@@ -449,6 +452,19 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 						onChange={ ( e ) => setWorkflowField( { name: e.target.value } ) }
 					/>
 					{ dirty && <span className="aime-wf-dirty-dot" title={ __( 'Unsaved changes', 'ai-marketing-expert' ) }>●</span> }
+					{ ! hasPro && (
+						<span
+							className="aime-wf-step-meter"
+							title={ __( 'Free plan step limit per workflow. Upgrade to Pro for unlimited steps.', 'ai-marketing-expert' ) }
+						>
+							{ sprintf(
+								/* translators: 1: steps used, 2: free step limit */
+								__( 'Free plan: %1$d of %2$d steps used', 'ai-marketing-expert' ),
+								nodes.filter( ( n ) => n.id !== 'trigger' ).length,
+								stepLimit
+							) }
+						</span>
+					) }
 				</div>
 				<div className="aime-wf-topbar__right">
 					<SelectControl
@@ -476,9 +492,8 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 				</div>
 			</div>
 
-			<NodePalette actions={ actions } hasPro={ hasPro } onAdd={ addAction } />
-
 			<div className="aime-wf-layout">
+				<NodePalette actions={ actions } hasPro={ hasPro } onAdd={ addAction } />
 				<WorkflowCanvas
 					nodes={ displayNodes }
 					edges={ edges }

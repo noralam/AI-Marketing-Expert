@@ -13,6 +13,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import sanitizeHtml from '../../../utils/sanitizeHtml';
+import { formatDate } from '../../../utils/datetime';
 
 const CATEGORY_OPTIONS = [
 	{ label: __( 'All Categories', 'ai-marketing-expert' ), value: '' },
@@ -34,6 +35,10 @@ const CATEGORY_COLORS = {
 };
 
 const TEMPLATE_IMAGE_MAP = [
+	// Order matters: more specific names must be matched before the broader
+	// category keys, otherwise e.g. "Seasonal Sale" (category: promotional)
+	// would resolve to the promotional image.
+	{ keys: [ 'seasonal', 'sale' ], file: 'template-seasonal-sale.webp' },
 	{ keys: [ 'digest', 'roundup' ], file: 'template-digest-roundup.webp' },
 	{ keys: [ 'event', 'invitation', 'invite' ], file: 'template-event-invitation.webp' },
 	{ keys: [ 'feedback', 'survey' ], file: 'template-feedback-request.webp' },
@@ -42,12 +47,11 @@ const TEMPLATE_IMAGE_MAP = [
 	{ keys: [ 'newsletter', 'classic' ], file: 'template-newsletter-classic.webp' },
 	{ keys: [ 'notification', 'alert' ], file: 'template-notification-alert.webp' },
 	{ keys: [ 'product', 'launch' ], file: 'template-product-launch.webp' },
-	{ keys: [ 'promotional', 'promotion', 'offer' ], file: 'template-promotional-offer.webp' },
 	{ keys: [ 're-engagement', 'reengagement', 'winback' ], file: 'template-re-engagement.webp' },
-	{ keys: [ 'seasonal', 'sale' ], file: 'template-seasonal-sale.webp' },
-	{ keys: [ 'simple', 'text' ], file: 'template-simple-text.webp' },
 	{ keys: [ 'transactional', 'receipt' ], file: 'template-transactional-receipt.webp' },
 	{ keys: [ 'welcome' ], file: 'template-welcome-email.webp' },
+	{ keys: [ 'promotional', 'promotion', 'offer' ], file: 'template-promotional-offer.webp' },
+	{ keys: [ 'simple', 'text' ], file: 'template-simple-text.webp' },
 ];
 
 const getTemplateImage = ( template ) => {
@@ -236,7 +240,7 @@ const EmailTemplates = ( { onNavigate } ) => {
 									</span>
 									{ t.created_at && (
 										<span className="aime-svg-card-date">
-											{ new Date( t.created_at ).toLocaleDateString() }
+											{ formatDate( t.created_at ) }
 										</span>
 									) }
 								</div>

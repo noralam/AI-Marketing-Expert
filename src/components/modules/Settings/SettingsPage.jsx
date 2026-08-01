@@ -244,7 +244,7 @@ const SettingsPage = () => {
 	};
 
 	if ( loading ) {
-		return <Loader text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
 	}
 
 	const logPages = Math.ceil( logTotal / 30 );
@@ -286,18 +286,21 @@ const SettingsPage = () => {
 					{ tab === 'general' && (
 						<>
 							<Card title={ __( 'License Status', 'ai-marketing-expert' ) }>
-								<div className={ `aime-license-status ${ hasPro ? 'aime-license-pro' : 'aime-license-free' }` }>
-									<h3>
-										{ hasPro
-											? __( 'Pro License Active', 'ai-marketing-expert' )
-											: __( 'Free Version', 'ai-marketing-expert' )
-										}
-									</h3>
-									{ ! hasPro && (
-										<div className="aime-license-status__content">
+								<div className={ `aime-license-status ${ hasPro ? 'is-pro' : 'is-free' }` }>
+									<span className="aime-license-status__mark" aria-hidden="true" />
+									<div className="aime-license-status__text">
+										<strong>
+											{ hasPro
+												? __( 'Pro License Active', 'ai-marketing-expert' )
+												: __( 'Free Version', 'ai-marketing-expert' )
+											}
+										</strong>
+										{ ! hasPro && (
 											<p>{ __( 'Upgrade to Pro to unlock all features.', 'ai-marketing-expert' ) }</p>
-											<ProUpgradeButton>{ __( 'Upgrade Pro', 'ai-marketing-expert' ) }</ProUpgradeButton>
-										</div>
+										) }
+									</div>
+									{ ! hasPro && (
+										<ProUpgradeButton>{ __( 'Upgrade Pro', 'ai-marketing-expert' ) }</ProUpgradeButton>
 									) }
 								</div>
 							</Card>
@@ -306,7 +309,7 @@ const SettingsPage = () => {
 								<p className="aime-card-description">
 									{ __( 'Export plugin settings and email templates as a JSON file, or import them on another site. API keys and other secrets are never included in exports.', 'ai-marketing-expert' ) }
 								</p>
-								<div style={ { display: 'flex', gap: 8, flexWrap: 'wrap' } }>
+								<div className="aime-settings-btn-row">
 									<Button variant="secondary" onClick={ handleExportSettings } isBusy={ exporting } disabled={ exporting }>
 										{ __( 'Export Settings', 'ai-marketing-expert' ) }
 									</Button>
@@ -380,13 +383,13 @@ const SettingsPage = () => {
 								</p>
 
 								{ cronStatus?.has_overdue && (
-									<div style={ { border: '1px solid #fbbf24', background: '#fffbeb', color: '#92400e', borderRadius: 8, padding: 12, marginBottom: 16 } }>
+									<div className="aime-settings-callout is-warning" style={ { marginTop: 0, marginBottom: 16 } }>
 										<strong>{ __( 'Cron is overdue.', 'ai-marketing-expert' ) }</strong>{ ' ' }
 										{ __( 'Automations can run later than the wait time you set. Configure server cron to call wp-cron.php every minute for reliable timing.', 'ai-marketing-expert' ) }
 									</div>
 								) }
 
-								<div style={ { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 } }>
+								<div className="aime-settings-btn-row" style={ { marginBottom: 16 } }>
 									<Button variant="secondary" onClick={ loadCronStatus } disabled={ cronLoading }>
 										{ cronLoading ? <Spinner /> : __( 'Refresh Status', 'ai-marketing-expert' ) }
 									</Button>
@@ -414,21 +417,21 @@ const SettingsPage = () => {
 													<span className={ `aime-status-badge aime-status-${ item.status }` }>
 														{ item.status === 'overdue' ? __( 'Overdue', 'ai-marketing-expert' ) : item.status === 'missing' ? __( 'Missing', 'ai-marketing-expert' ) : __( 'Scheduled', 'ai-marketing-expert' ) }
 													</span>
-													<span style={ { marginLeft: 8, color: '#64748b' } }>{ formatCronDelay( item.delay_seconds ) }</span>
+													<span className="aime-cron-delay">{ formatCronDelay( item.delay_seconds ) }</span>
 												</td>
 											</tr>
 										) ) }
 									</tbody>
 								</table>
 
-								<div style={ { marginTop: 16, padding: 16, background: '#f8fafc', borderRadius: 8 } }>
+								<div className="aime-settings-callout">
 									<p style={ { marginTop: 0 } }>
 										<strong>{ __( 'Recommended server cron', 'ai-marketing-expert' ) }</strong>
 									</p>
-									<code style={ { display: 'block', whiteSpace: 'normal', wordBreak: 'break-all' } }>
+									<code>
 										* * * * * curl -s { window.aimeData?.siteUrl || window.location.origin }/wp-cron.php?doing_wp_cron &gt;/dev/null 2&gt;&amp;1
 									</code>
-									<p style={ { marginBottom: 0, color: '#64748b' } }>
+									<p style={ { marginBottom: 0 } }>
 										{ cronStatus?.wp_cron_disabled
 											? __( 'DISABLE_WP_CRON is enabled. Make sure a real server cron is configured.', 'ai-marketing-expert' )
 											: __( 'For best reliability, disable visitor-triggered WP-Cron and run wp-cron.php from your hosting cron every minute.', 'ai-marketing-expert' ) }
@@ -461,11 +464,11 @@ const SettingsPage = () => {
 												</div>
 											</div>
 										) : (
-											<p style={ { color: '#64748b' } }>
+											<p className="aime-settings-hint" style={ { marginBottom: 0 } }>
 												{ __( 'API key:', 'ai-marketing-expert' ) } <code>{ settings.api_key_masked }</code>
 											</p>
 										) }
-										<div style={ { display: 'flex', gap: 8, marginTop: 12 } }>
+										<div className="aime-settings-btn-row" style={ { marginTop: 12 } }>
 											<Button variant="secondary" onClick={ handleGenerateApiKey } isBusy={ apiKeyBusy } disabled={ apiKeyBusy }>
 												{ __( 'Regenerate Key', 'ai-marketing-expert' ) }
 											</Button>
@@ -476,7 +479,7 @@ const SettingsPage = () => {
 									</>
 								) : (
 									<>
-										<p style={ { color: '#64748b', marginBottom: 12 } }>
+										<p className="aime-settings-hint">
 											{ __( 'No API key generated yet. Generate one to enable webhook integrations.', 'ai-marketing-expert' ) }
 										</p>
 										<Button variant="primary" onClick={ handleGenerateApiKey } isBusy={ apiKeyBusy } disabled={ apiKeyBusy }>
@@ -488,7 +491,7 @@ const SettingsPage = () => {
 
 							{ settings.has_api_key && (
 								<Card title={ __( 'Webhook Endpoint', 'ai-marketing-expert' ) }>
-									<p style={ { color: '#64748b', marginBottom: 8 } }>
+									<p className="aime-settings-hint" style={ { marginBottom: 8 } }>
 										{ __( 'Send a POST request to this URL with your API key to create subscribers from any external tool.', 'ai-marketing-expert' ) }
 									</p>
 									<div className="aime-api-key-value">
@@ -498,9 +501,9 @@ const SettingsPage = () => {
 										</Button>
 									</div>
 
-									<div style={ { marginTop: 16, padding: 16, background: '#f8fafc', borderRadius: 8, fontSize: 13 } }>
+									<div className="aime-settings-callout">
 										<strong>{ __( 'Request format:', 'ai-marketing-expert' ) }</strong>
-										<pre style={ { margin: '8px 0 0', padding: 12, background: '#1e293b', color: '#e2e8f0', borderRadius: 6, overflow: 'auto', fontSize: 12, lineHeight: 1.5 } }>{ `POST ${ settings.webhook_url || '/wp-json/aime/v1/email/webhook/subscribe' }
+										<pre className="aime-settings-code">{ `POST ${ settings.webhook_url || '/wp-json/aime/v1/email/webhook/subscribe' }
 Content-Type: application/json
 X-API-Key: your-api-key
 
@@ -516,7 +519,7 @@ X-API-Key: your-api-key
     "company": "Acme Inc"
   }
 }` }</pre>
-										<p style={ { margin: '10px 0 0', color: '#64748b' } }>
+										<p style={ { margin: '10px 0 0' } }>
 											{ __( 'Only "email" is required. All other fields are optional. Rate limit: 60 requests per minute.', 'ai-marketing-expert' ) }
 										</p>
 									</div>
@@ -567,9 +570,9 @@ X-API-Key: your-api-key
 							</div>
 
 							{ logsLoading ? (
-								<div style={ { textAlign: 'center', padding: 20 } }><Spinner /></div>
+								<Loader variant="table" text={ __( 'Loading log entries…', 'ai-marketing-expert' ) } />
 							) : logs.length === 0 ? (
-								<p style={ { color: '#94a3b8', textAlign: 'center', padding: 20 } }>
+								<p className="aime-settings-hint" style={ { textAlign: 'center', padding: 20, marginBottom: 0 } }>
 									{ __( 'No log entries found.', 'ai-marketing-expert' ) }
 								</p>
 							) : (

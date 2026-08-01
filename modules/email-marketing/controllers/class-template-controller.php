@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class TemplateController {
-	private const DEFAULT_TEMPLATE_LAYOUT_VERSION = '2026-05-table-layout';
+	private const DEFAULT_TEMPLATE_LAYOUT_VERSION = '2026-07-table-layout-dedupe';
 
 	public function index( \WP_REST_Request $request ): \WP_REST_Response {
 		$this->maybe_sync_default_templates();
@@ -49,8 +49,12 @@ class TemplateController {
 			? $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_templates WHERE {$where_sql}" )
 			: $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$p}aime_templates WHERE {$where_sql}", ...$count_params ) ) ); // phpcs:ignore
 
+		// Defaults first (oldest id first, so the built-in order is stable), then
+		// custom templates newest first. Written without unary minus: `-id` on a
+		// bigint unsigned column can raise ER_DATA_OUT_OF_RANGE, which would blank
+		// the whole Templates screen.
 		$items = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM {$p}aime_templates WHERE {$where_sql} ORDER BY is_default DESC, id DESC LIMIT %d OFFSET %d",
+			"SELECT * FROM {$p}aime_templates WHERE {$where_sql} ORDER BY is_default DESC, CASE WHEN is_default = 1 THEN id END ASC, id DESC LIMIT %d OFFSET %d",
 			...$params
 		) ); // phpcs:ignore
 		$items = array_map( array( $this, 'normalize_template_content' ), $items );
@@ -147,15 +151,71 @@ class TemplateController {
 		global $wpdb;
 		$p = $wpdb->prefix;
 
-		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_templates WHERE is_default = 1" );
-
-		if ( $force && $count > 0 ) {
-			$wpdb->query( "DELETE FROM {$p}aime_templates WHERE is_default = 1" ); // phpcs:ignore
-		} elseif ( $count > 0 ) {
-			return;
+		// Cross-request mutex. add_option() relies on the UNIQUE index on
+		// option_name, so only one concurrent request can claim the lock.
+		$lock = 'aime_seeding_email_templates';
+		if ( ! add_option( $lock, time(), '', false ) ) {
+			$claimed_at = (int) get_option( $lock );
+			// Reclaim a stale lock left behind by a fatal error mid-seed.
+			if ( $claimed_at > time() - 5 * MINUTE_IN_SECONDS ) {
+				return;
+			}
+			update_option( $lock, time(), false );
 		}
 
-		$defaults = array(
+		try {
+			if ( $force ) {
+				$wpdb->query( "DELETE FROM {$p}aime_templates WHERE is_default = 1" ); // phpcs:ignore
+			}
+
+			// Insert only the defaults that are missing, so a repeated run can
+			// never duplicate a template that already exists.
+			$existing = $wpdb->get_col( "SELECT name FROM {$p}aime_templates WHERE is_default = 1" ); // phpcs:ignore
+			$existing = array_map( 'strval', is_array( $existing ) ? $existing : array() );
+
+			$defaults = $this->get_default_templates();
+
+			$now = current_time( 'mysql', true );
+			foreach ( $defaults as $tpl ) {
+				if ( in_array( (string) $tpl['name'], $existing, true ) ) {
+					continue;
+				}
+				$tpl['content']    = $this->strip_unsubscribe_markup( $tpl['content'] );
+				$tpl['created_at'] = $now;
+				$wpdb->insert( "{$p}aime_templates", $tpl );
+				$existing[] = (string) $tpl['name'];
+			}
+		} finally {
+			delete_option( $lock );
+		}
+	}
+
+	/**
+	 * Remove duplicate default templates, keeping the lowest id per name.
+	 *
+	 * Repairs installs seeded more than once by concurrent first-load requests.
+	 */
+	private function dedupe_default_templates(): void {
+		global $wpdb;
+		$p = $wpdb->prefix;
+
+		$wpdb->query( // phpcs:ignore
+			"DELETE dup FROM {$p}aime_templates dup
+			 INNER JOIN {$p}aime_templates keep
+			 ON dup.name = keep.name
+			 AND dup.is_default = 1
+			 AND keep.is_default = 1
+			 AND dup.id > keep.id"
+		);
+	}
+
+	/**
+	 * The default template definitions.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function get_default_templates(): array {
+		return array(
 			/*
 			 * ── FREE TEMPLATES (7) ────────────────────────────
 			 */
@@ -290,13 +350,6 @@ class TemplateController {
 				'content'         => $this->get_minimal_dark_template_content(),
 			),
 		);
-
-		$now = current_time( 'mysql', true );
-		foreach ( $defaults as $tpl ) {
-			$tpl['content']    = $this->strip_unsubscribe_markup( $tpl['content'] );
-			$tpl['created_at'] = $now;
-			$wpdb->insert( "{$p}aime_templates", $tpl );
-		}
 	}
 
 	private function get_simple_text_template_content(): string {
@@ -1018,6 +1071,8 @@ HTML;
 		}
 
 		global $wpdb;
+
+		$this->dedupe_default_templates();
 
 		$table_name = "{$wpdb->prefix}aime_templates";
 		$templates  = $wpdb->get_results( "SELECT id, name FROM {$table_name} WHERE is_default = 1" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

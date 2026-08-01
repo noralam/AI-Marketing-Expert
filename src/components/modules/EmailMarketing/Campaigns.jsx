@@ -89,7 +89,7 @@ const Campaigns = ( { onNavigate } ) => {
 					<SelectControl value={ status } options={ STATUS_OPTIONS } onChange={ ( v ) => { setStatus( v ); setPage( 1 ); } } __nextHasNoMarginBottom />
 				</div>
 
-				{ loading ? <Loader /> : (
+				{ loading ? <Loader variant="table" /> : (
 					<>
 						<table className="aime-table">
 							<thead>

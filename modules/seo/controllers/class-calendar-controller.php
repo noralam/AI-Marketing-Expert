@@ -8,6 +8,7 @@
 namespace WPSpace\AiMarketingExpert\Modules\Seo\Controllers;
 
 use WPSpace\AiMarketingExpert\Modules\Seo\Services\ContentCalendarService;
+use WPSpace\AiMarketingExpert\Modules\Seo\SeoModule;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -69,10 +70,16 @@ class CalendarController {
 	}
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
+		if ( aime_limit_reached( 'seo_calendar_items', SeoModule::get_calendar_count() ) ) {
+			$limit = aime_free_limits()['seo_calendar_items'] ?? 10;
 			return new \WP_REST_Response( array(
 				'success' => false,
-				'message' => __( 'Content calendar is a Pro feature.', 'ai-marketing-expert' ),
+				'message' => sprintf(
+					/* translators: %d: calendar item limit on the free plan */
+					__( 'Free plan allows %d calendar items. Delete one or upgrade to Pro for an unlimited calendar.', 'ai-marketing-expert' ),
+					$limit
+				),
+				'limit_reached' => true,
 			), 403 );
 		}
 
@@ -214,14 +221,37 @@ class CalendarController {
 	}
 
 	/**
-	 * AI-generate content calendar (Pro).
+	 * AI-generate content calendar. Free plan is metered.
 	 */
 	public function generate_calendar( \WP_REST_Request $request ): \WP_REST_Response {
+		$max_items = null;
+
 		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'success' => false,
-				'message' => __( 'Calendar generation is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
+			$gen_limit = aime_free_limits()['seo_calendar_generate_monthly'] ?? 1;
+			if ( SeoModule::get_monthly_feature_count( 'calendar_generate' ) >= $gen_limit ) {
+				return new \WP_REST_Response( array(
+					'success' => false,
+					'message' => sprintf(
+						/* translators: %d: monthly calendar generation limit on the free plan */
+						__( 'Free plan allows %d AI calendar generation per month. Upgrade to Pro for unlimited generations.', 'ai-marketing-expert' ),
+						$gen_limit
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
+
+			$max_items = aime_limit_remaining( 'seo_calendar_items', SeoModule::get_calendar_count() );
+			if ( ! $max_items ) {
+				return new \WP_REST_Response( array(
+					'success' => false,
+					'message' => sprintf(
+						/* translators: %d: calendar item limit on the free plan */
+						__( 'You have reached the free plan limit of %d calendar items. Delete some items or upgrade to Pro before generating a calendar.', 'ai-marketing-expert' ),
+						aime_free_limits()['seo_calendar_items'] ?? 10
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
 		}
 
 		$niche     = sanitize_text_field( $request->get_param( 'niche' ) ?? '' );
@@ -236,8 +266,26 @@ class CalendarController {
 		}
 
 		$service = new ContentCalendarService();
-		$result  = $service->generate_calendar( $niche, $weeks, $frequency );
+		$result  = $service->generate_calendar( $niche, $weeks, $frequency, $max_items );
+
+		if ( $result['success'] && ! aime_has_pro() ) {
+			SeoModule::increment_monthly_feature( 'calendar_generate' );
+		}
 
 		return new \WP_REST_Response( $result, $result['success'] ? 200 : 500 );
+	}
+
+	/**
+	 * Calendar usage counts and free limits.
+	 */
+	public function calendar_usage(): \WP_REST_Response {
+		return new \WP_REST_Response( array(
+			'success' => true,
+			'is_pro'  => aime_has_pro(),
+			'usage'   => array(
+				'items'    => aime_usage_payload( 'seo_calendar_items', SeoModule::get_calendar_count() ),
+				'generate' => aime_usage_payload( 'seo_calendar_generate_monthly', SeoModule::get_monthly_feature_count( 'calendar_generate' ) ),
+			),
+		) );
 	}
 }

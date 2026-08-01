@@ -12,6 +12,7 @@ import {
 	Legend,
 	ResponsiveContainer,
 } from 'recharts';
+import { formatDay, formatDayShort } from '../../utils/datetime';
 
 /**
  * Merge separate arrays into unified datelined data.
@@ -49,15 +50,12 @@ const EmailTimelineChart = ( { data = {}, height = 300 } ) => {
 				<XAxis
 					dataKey="date"
 					tick={ { fontSize: 11, fill: '#94a3b8' } }
-					tickFormatter={ ( v ) => {
-						const d = new Date( v );
-						return `${ d.getMonth() + 1 }/${ d.getDate() }`;
-					} }
+					tickFormatter={ ( v ) => formatDayShort( v ) }
 				/>
 				<YAxis tick={ { fontSize: 11, fill: '#94a3b8' } } allowDecimals={ false } />
 				<Tooltip
 					contentStyle={ { borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 } }
-					labelFormatter={ ( v ) => new Date( v ).toLocaleDateString() }
+					labelFormatter={ ( v ) => formatDay( v, '' ) }
 				/>
 				<Legend wrapperStyle={ { fontSize: 12 } } />
 				<Line type="monotone" dataKey="sends" stroke="#3858e9" strokeWidth={ 2 } dot={ false } name="Sent" />

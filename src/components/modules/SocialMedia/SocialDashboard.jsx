@@ -32,7 +32,7 @@ const SocialDashboard = ( { onNavigate } ) => {
 	}, [ fetchData ] );
 
 	if ( loading && ! data ) {
-		return <Loader text={ __( 'Loading analytics...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading analytics...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! data ) {

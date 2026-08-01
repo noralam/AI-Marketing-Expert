@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-30T00:00:00.000Z",
+  "title": "Design System: AI Marketing Expert",
+  "extensions": {
+    "colorMeta": {
+      "forest-green": {
+        "role": "primary",
+        "displayName": "Forest Green",
+        "canonical": "#1B5E20",
+        "tonalRamp": ["#0A2410", "#0F3A16", "#145218", "#1B5E20", "#2E7D32", "#43A047", "#81C784", "#E8F5E9"]
+      },
+      "leaf-green": {
+        "role": "primary",
+        "displayName": "Leaf Green",
+        "canonical": "#2E7D32",
+        "tonalRamp": ["#0D2E10", "#14421A", "#1F6323", "#2E7D32", "#43A047", "#66BB6A", "#A5D6A7", "#EDF7EE"]
+      },
+      "studio-indigo": {
+        "role": "secondary",
+        "displayName": "Studio Indigo",
+        "canonical": "#4338CA",
+        "tonalRamp": ["#1E1B4B", "#282566", "#312E81", "#3730A3", "#4338CA", "#6366F1", "#A5B4FC", "#EEF2FF"]
+      },
+      "studio-teal": {
+        "role": "secondary",
+        "displayName": "Studio Teal",
+        "canonical": "#0E7490",
+        "tonalRamp": ["#083344", "#0C4A5E", "#164E63", "#155E75", "#0E7490", "#06B6D4", "#67E8F9", "#ECFEFF"]
+      },
+      "studio-crimson": {
+        "role": "secondary",
+        "displayName": "Studio Crimson",
+        "canonical": "#BE123C",
+        "tonalRamp": ["#4C0519", "#6B0A24", "#881337", "#9F1239", "#BE123C", "#E11D48", "#FDA4AF", "#FFF1F2"]
+      },
+      "studio-amber": {
+        "role": "secondary",
+        "displayName": "Studio Amber",
+        "canonical": "#B45309",
+        "tonalRamp": ["#451A03", "#5C2606", "#78350F", "#92400E", "#B45309", "#D97706", "#FCD34D", "#FFFBEB"]
+      },
+      "studio-violet": {
+        "role": "secondary",
+        "displayName": "Studio Violet",
+        "canonical": "#7C3AED",
+        "tonalRamp": ["#2E1065", "#3F1584", "#5B21B6", "#6D28D9", "#7C3AED", "#8B5CF6", "#C4B5FD", "#F5F3FF"]
+      },
+      "pro-ember": {
+        "role": "tertiary",
+        "displayName": "Pro Ember",
+        "canonical": "#FF6B35",
+        "tonalRamp": ["#4A1503", "#6B2006", "#9A3412", "#C2410C", "#EA580C", "#FF6B35", "#FDBA8C", "#FFF3ED"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1a2e1a",
+        "tonalRamp": ["#0C160C", "#132113", "#1a2e1a", "#2E4630", "#5f7562", "#8fa893", "#d5e2d5", "#f4f8f4"]
+      },
+      "ink-light": {
+        "role": "neutral",
+        "displayName": "Ink Light",
+        "canonical": "#5f7562"
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#8fa893"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#d5e2d5"
+      },
+      "hairline-faint": {
+        "role": "neutral",
+        "displayName": "Hairline Faint",
+        "canonical": "#e8f0e8"
+      },
+      "page-wash": {
+        "role": "neutral",
+        "displayName": "Page Wash",
+        "canonical": "#f4f8f4"
+      },
+      "page-wash-deep": {
+        "role": "neutral",
+        "displayName": "Page Wash Deep",
+        "canonical": "#eaf2ea"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#ffffff"
+      },
+      "signal-success": { "role": "neutral", "displayName": "Signal Success", "canonical": "#2E7D32" },
+      "signal-warning": { "role": "neutral", "displayName": "Signal Warning", "canonical": "#F9A825" },
+      "signal-error": { "role": "neutral", "displayName": "Signal Error", "canonical": "#D32F2F" },
+      "signal-info": { "role": "neutral", "displayName": "Signal Info", "canonical": "#1565C0" }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Stat values only. The largest thing on any screen is always a number, never a heading."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page title in .aime-page-header h2. One per screen."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles and section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default UI text, table cells, descriptions, empty-state copy. 13px is the floor for anything essential."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Eyebrows, badge text, column headers, sidebar dividers. Often uppercase."
+      }
+    },
+    "shadows": [
+      {
+        "name": "resting",
+        "value": "0 1px 3px rgba(27, 94, 32, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03)",
+        "purpose": "Cards at rest. Barely perceptible by design; if clearly visible it is wrong."
+      },
+      {
+        "name": "raised",
+        "value": "0 4px 12px rgba(27, 94, 32, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03)",
+        "purpose": "Hover on an interactive card; sticky headers once scrolled."
+      },
+      {
+        "name": "floating",
+        "value": "0 12px 24px rgba(27, 94, 32, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04)",
+        "purpose": "Dropdowns, popovers, menus."
+      },
+      {
+        "name": "overlay",
+        "value": "0 20px 40px rgba(27, 94, 32, 0.10), 0 8px 16px rgba(0, 0, 0, 0.05)",
+        "purpose": "Modals only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition",
+        "value": "0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for all state transitions: hover, focus, border color, box-shadow."
+      },
+      {
+        "name": "transition-slow",
+        "value": "0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Larger movements: sidebar collapse, panel expand, modal entry."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "480px" },
+      { "name": "wp-menu-offcanvas", "value": "782px" },
+      { "name": "wp-menu-collapse", "value": "960px" },
+      { "name": "lg", "value": "1280px" }
+    ],
+    "gradients": [
+      {
+        "name": "house",
+        "value": "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%)",
+        "purpose": "Overview and Settings hero surfaces. Each room overrides this with its own two-stop accent gradient."
+      },
+      {
+        "name": "house-soft",
+        "value": "linear-gradient(135deg, rgba(27, 94, 32, 0.05) 0%, rgba(46, 125, 50, 0.02) 100%)",
+        "purpose": "Barely-there wash behind panels that need separation without a border."
+      }
+    ],
+    "shell": [
+      { "name": "sidebar-width", "value": "250px" },
+      { "name": "sidebar-collapsed", "value": "64px" },
+      { "name": "header-height", "value": "60px" },
+      { "name": "admin-bar-offset", "value": "32px" }
+    ],
+    "rooms": [
+      { "module": "overview", "accent": "#1B5E20", "displayName": "Lobby (house green)" },
+      { "module": "settings", "accent": "#1B5E20", "displayName": "Lobby (house green)" },
+      { "module": "content-generator", "accent": "#4338CA", "displayName": "Studio Indigo" },
+      { "module": "social-media", "accent": "#0E7490", "displayName": "Studio Teal" },
+      { "module": "email-marketing", "accent": "#BE123C", "displayName": "Studio Crimson" },
+      { "module": "seo", "accent": "#B45309", "displayName": "Studio Amber" },
+      { "module": "chatbot", "accent": "#7C3AED", "displayName": "Studio Violet" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The system's fundamental container. Defined by its hairline border, not by shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\">Campaign performance</h3></div><div class=\"ds-card-body\">Body content sits on a 20px pad.</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #d5e2d5; border-radius: 12px; box-shadow: 0 1px 3px rgba(27,94,32,0.04), 0 1px 2px rgba(0,0,0,0.03); color: #1a2e1a; transition: box-shadow 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-card-header { padding: 16px 20px; border-bottom: 1px solid #d5e2d5; display: flex; align-items: center; justify-content: space-between; } .ds-card-title { font-size: 15px; font-weight: 600; margin: 0; color: #1a2e1a; } .ds-card-body { padding: 20px; font-size: 13px; line-height: 1.5; color: #1a2e1a; }"
+    },
+    {
+      "name": "Stat Card (canonical icon-row form)",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "The one canonical stat display. 48px accent icon tile, then value over label. Replaces the legacy centered variant.",
+      "html": "<div class=\"ds-stat-card\"><div class=\"ds-stat-icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg></div><div class=\"ds-stat-data\"><div class=\"ds-stat-value\">12,480</div><div class=\"ds-stat-label\">Subscribers</div></div></div>",
+      "css": ".ds-stat-card { background: #ffffff; border: 1px solid #d5e2d5; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(27,94,32,0.04), 0 1px 2px rgba(0,0,0,0.03); transition: border-color 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-stat-card:hover { border-color: var(--aime-primary, #1B5E20); } .ds-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--aime-primary, #1B5E20); color: #ffffff; flex-shrink: 0; } .ds-stat-data { flex: 1; min-width: 0; } .ds-stat-value { font-size: 32px; font-weight: 700; line-height: 1.2; color: #1a2e1a; } .ds-stat-label { font-size: 13px; color: #5f7562; margin-top: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Accent-filled action. Recolors automatically per room via --aime-primary.",
+      "html": "<button class=\"ds-btn-primary\">Create campaign</button>",
+      "css": ".ds-btn-primary { background: var(--aime-primary, #1B5E20); color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--aime-primary-hover, #145218); } .ds-btn-primary:focus-visible { outline: 2px solid var(--aime-primary, #1B5E20); outline-offset: 2px; } .ds-btn-primary:active { background: var(--aime-primary-hover, #145218); }"
+    },
+    {
+      "name": "Pro Button",
+      "kind": "button",
+      "refersTo": "button-pro",
+      "description": "Ember-filled upgrade action. Ember appears nowhere else in the system.",
+      "html": "<button class=\"ds-btn-pro\">Upgrade to Pro</button>",
+      "css": ".ds-btn-pro { background: #FF6B35; color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-btn-pro:hover { background: #EA580C; } .ds-btn-pro:focus-visible { outline: 2px solid #FF6B35; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Label-weight type in an 8%-alpha status wash. Vocabulary: success, warning, error, info, scheduled, overdue, missing.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Sent</span> <span class=\"ds-badge ds-badge-warning\">Scheduled</span> <span class=\"ds-badge ds-badge-error\">Failed</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 8px; } .ds-badge-success { background: rgba(46,125,50,0.08); color: #2E7D32; } .ds-badge-warning { background: rgba(249,168,37,0.08); color: #8a5c00; } .ds-badge-error { background: rgba(211,47,47,0.08); color: #D32F2F; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "13px Body item on Surface white; active item takes the accent wash and goes 600 weight.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Overview</a><a class=\"ds-nav-item\" href=\"#\">Email Marketing</a><a class=\"ds-nav-item\" href=\"#\">SEO Analyzer</a></nav>",
+      "css": ".ds-nav { background: #ffffff; border-right: 1px solid #d5e2d5; width: 250px; display: flex; flex-direction: column; padding: 8px 0; } .ds-nav-item { display: block; padding: 10px 16px; font-size: 13px; font-weight: 400; color: #1a2e1a; text-decoration: none; border-left: 3px solid transparent; transition: background 0.2s cubic-bezier(0.4,0,0.2,1), color 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-nav-item:hover { background: #f4f8f4; } .ds-nav-item-active { background: var(--aime-primary-light, rgba(27,94,32,0.07)); color: var(--aime-primary, #1B5E20); font-weight: 600; border-left-color: var(--aime-primary, #1B5E20); } .ds-nav-item:focus-visible { outline: 2px solid var(--aime-primary, #1B5E20); outline-offset: -2px; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": "empty-state",
+      "description": "A primary state, not a fallback — every module ships empty on install. Names what is missing and offers the one action that fills it.",
+      "html": "<div class=\"ds-empty\"><p class=\"ds-empty-msg\">No campaigns yet. Your first send starts here.</p><button class=\"ds-empty-action\">Create your first campaign</button></div>",
+      "css": ".ds-empty { text-align: center; padding: 32px 16px; } .ds-empty-msg { font-size: 14px; color: #5f7562; margin: 0 0 16px; line-height: 1.5; } .ds-empty-action { background: var(--aime-primary, #1B5E20); color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-empty-action:hover { background: var(--aime-primary-hover, #145218); }"
+    },
+    {
+      "name": "Pro Gate",
+      "kind": "custom",
+      "refersTo": "pro-gate",
+      "description": "Signature component. Real content blurred behind an aria-hidden layer, legible overlay message and ember CTA on top. Shows the shape of what Pro unlocks instead of describing it.",
+      "html": "<div class=\"ds-gate\"><div class=\"ds-gate-blur\" aria-hidden=\"true\"><div class=\"ds-gate-bars\"><i style=\"height:38%\"></i><i style=\"height:62%\"></i><i style=\"height:48%\"></i><i style=\"height:81%\"></i><i style=\"height:55%\"></i><i style=\"height:70%\"></i></div></div><div class=\"ds-gate-overlay\"><p class=\"ds-gate-msg\">Advanced stats are a Pro feature.</p><button class=\"ds-gate-btn\">Upgrade to Pro</button></div></div>",
+      "css": ".ds-gate { position: relative; border: 1px solid #d5e2d5; border-radius: 12px; background: #ffffff; overflow: hidden; min-height: 180px; } .ds-gate-blur { filter: blur(6px); opacity: 0.55; padding: 24px; height: 100%; } .ds-gate-bars { display: flex; align-items: flex-end; gap: 10px; height: 130px; } .ds-gate-bars i { flex: 1; background: var(--aime-primary, #1B5E20); border-radius: 8px 8px 0 0; display: block; } .ds-gate-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(255,255,255,0.62); } .ds-gate-msg { margin: 0; font-size: 13px; font-weight: 600; color: #1a2e1a; } .ds-gate-btn { background: #FF6B35; color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-gate-btn:hover { background: #EA580C; } .ds-gate-btn:focus-visible { outline: 2px solid #FF6B35; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Six-Room Studio",
+    "overview": "One building, six rooms, each lit its own color. The building never changes: same page wash, same card geometry, same hairline borders, same type scale, same sidebar. What changes when you walk into a room is the light. Content Generator is lit indigo, Social Media teal, Email Marketing crimson, SEO amber, Chatbot violet. Overview and Settings are the lobby, and the lobby is forest green — the house color.\n\nThis is not decoration; it is the system's load-bearing mechanism. Redefining the primary and accent tokens on the module wrapper cascades automatically to buttons, input focus rings, active tabs, the active sidebar item, and gradients — and because the wrapper also reassigns --wp-admin-theme-color and --wp-components-color-accent, WordPress's own toggles, checkboxes, and range sliders follow the room's light too. A native WP control inside the Email room is crimson without anyone styling that control.\n\nThe material is quiet. Surfaces are flat white on a pale green wash, separated by a single hairline. Depth is tonal, not cast: the page recedes because it is #f4f8f4 and the card advances because it is #ffffff, not because anything floats. The green-tinted shadows that exist are near-invisible by design and stay that way. Density is moderate at rest and earns depth on demand — the system serves a solo blogger and an agency operator from the same screen, so the default is legible and the detail is reachable, never the reverse.",
+    "keyCharacteristics": [
+      "Forest green house color; five module accents spanning indigo → teal → crimson → amber → violet",
+      "Accent cascade reaches WordPress-native controls, not just plugin controls",
+      "Flat surfaces, 1px hairline structure, tonal layering for depth",
+      "Small type (13px body) on a compact 4px-based rhythm — this is admin instrumentation, not marketing copy",
+      "12px default corner radius; nothing is sharp, nothing is a pill",
+      "Lives inside wp-admin chrome it does not control"
+    ],
+    "rules": [
+      {
+        "name": "The One Light Rule",
+        "body": "A room has exactly one accent. Within any module surface, the module's primary is the only saturated non-status color permitted. If a second accent appears — a hardcoded hex, a borrowed module color, an off-system gradient stop — the room has two lights and the system has broken. Audit test: grep the surface for hex literals; a compliant surface has none outside the :root and module-wrapper blocks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ember Reserve Rule",
+        "body": "#FF6B35 means Pro and nothing else. It is never a chart series, never a status, never an accent, never a decorative highlight. If a surface uses ember for anything other than a Pro boundary, the upsell has been diluted and the user can no longer tell what costs money.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cascade Rule",
+        "body": "New accent-colored UI reads var(--aime-primary) / var(--aime-accent). It never hardcodes a module hex, because doing so silently opts that element out of the room lighting and it will be wrong in five of six rooms.",
+        "section": "colors"
+      },
+      {
+        "name": "The Number Is The Headline Rule",
+        "body": "Display weight belongs to data, not to prose. A stat value at 32px/700 outranks the page title at 22px/600 on purpose — the user came to read the number. Never promote a heading above a metric in the same viewport.",
+        "section": "typography"
+      },
+      {
+        "name": "The 13px Floor Rule",
+        "body": "Body text is 13px. Text below 13px is permitted only at Label weight (600) and only for non-essential labels — never for content, values, or anything a user must read to make a decision. #8fa893 muted text never goes below 13px at any weight.",
+        "section": "typography"
+      },
+      {
+        "name": "The Four Doors Rule",
+        "body": "480, 782, 960, 1280. No other breakpoint may be introduced. The incumbent stylesheet currently contains 35 media queries at eight different widths (480, 600, 640, 768, 782, 900, 1100, 1200) — this is drift, not a system, and each of those non-conforming values is a bug to migrate to its nearest door, not a precedent to follow.",
+        "section": "layout"
+      },
+      {
+        "name": "The Auto-Fill First Rule",
+        "body": "Reach for minmax() auto-fill before reaching for a media query. A grid that reflows on its own needs no breakpoint; most of the 35 existing queries exist because a fixed column count was chosen first.",
+        "section": "layout"
+      },
+      {
+        "name": "The Borrowed Chrome Rule",
+        "body": "The admin bar, the admin menu, and the user's chosen admin color scheme are not ours. Never assume a viewport width equals available width, never position anything fixed where it can collide with the admin bar, and always verify at 782px where the menu goes off-canvas and the content column suddenly gains ~160px.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Carries It Rule",
+        "body": "Remove every shadow from a screen and the layout must remain completely legible. If structure collapses without shadows, the borders were doing too little. Shadow is confirmation, never construction.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Green Shadow Rule",
+        "body": "Shadows are tinted with the house green (rgba(27,94,32,α)), not neutral black. A rgba(0,0,0,0.1) shadow reads as a foreign object dropped onto this palette.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two Steps Maximum Rule",
+        "body": "No element moves more than one step up the ramp on interaction, and only floating layers may start above Resting. Cards do not translate upward on hover in a flat system; if a card needs to signal interactivity, it shifts its border to the module accent.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Radius Family Rule",
+        "body": "8 / 12 / 16 and nothing else. A 4px, 6px, 20px, or 999px radius is drift. Radius communicates scale of container, not importance of content.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Border Color, Not Border Width Rule",
+        "body": "To emphasize a container, shift its 1px border from #d5e2d5 to var(--aime-primary). Never thicken it. This keeps layout geometry stable across states — no 1px reflow jitter on hover.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do read var(--aime-primary) / var(--aime-accent) for anything accent-colored, so it lights correctly in all six rooms.",
+      "Do define new containers with a 1px #d5e2d5 border and Surface white on the page wash. Structure first, shadow never.",
+      "Do use repeat(auto-fill, minmax(<floor>, 1fr)) with a 16px gap before considering a media query.",
+      "Do restyle @wordpress/components through tokens instead of building replacements — keyboard, focus, and disabled behavior come free and match the surrounding admin.",
+      "Do set both --wp-admin-theme-color and --wp-components-color-accent when introducing a new room, or WordPress's native toggles and sliders will stay green inside a non-green module.",
+      "Do stay on the 4px rhythm: 4 / 8 / 12 / 16 / 20 / 24 / 32.",
+      "Do keep the 8 / 12 / 16 radius family.",
+      "Do treat the empty state as the first thing a real user sees, and name the action that fills it.",
+      "Do verify every surface at 782px, where WordPress moves the admin menu off-canvas and the content column jumps width."
+    ],
+    "donts": [
+      "Don't introduce a breakpoint outside 480 / 782 / 960 / 1280. The eight widths currently in global.scss are drift to be migrated, not precedent.",
+      "Don't build new stat displays on the centered .aime-stat-card. The icon-row form is canonical; two patterns for one job is the defect this file exists to stop.",
+      "Don't use Pro Ember (#FF6B35) for anything except a Pro boundary.",
+      "Don't thicken a border to show emphasis — change its color to the accent and keep it at 1px.",
+      "Don't add a cast shadow to convey that something is a container, or translate a card upward on hover. This system is flat.",
+      "Don't put essential text below 13px, or muted #8fa893 text below 13px at any weight.",
+      "Don't load fonts, icons, or any asset from an external CDN — WordPress.org guidelines prohibit it and the system deliberately inherits the admin's font stack.",
+      "Don't nag or render plugin UI outside the plugin's own admin pages.",
+      "Don't fabricate testimonials, user counts, install counts, or benchmark numbers in any surface. Free-tier limits come from aime_free_limits(); feature claims come from readme.txt."
+    ]
+  }
+}

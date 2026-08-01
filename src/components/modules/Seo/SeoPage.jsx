@@ -108,6 +108,20 @@ const SeoPage = () => {
 		}
 	};
 
+	// The chunk that is loading decides the shape of the wait: routing every SEO
+	// view through one dashboard skeleton promises stats to a settings page.
+	const FALLBACK_SHAPE = {
+		'keyword-vault': 'table',
+		'link-building': 'table',
+		'on-page-audit': 'table',
+		'rank-tracker': 'table',
+		'content-calendar': 'calendar',
+		settings: 'form',
+		automation: 'form',
+		'topic-map': 'cards',
+		'keyword-research': 'cards',
+	};
+
 	const sidebar = (
 		<InternalSidebar
 			items={ sidebarItems }
@@ -118,7 +132,7 @@ const SeoPage = () => {
 
 	return (
 		<AppLayout module="seo" sidebar={ sidebar } subHeading={ __( 'SEO', 'ai-marketing-expert' ) }>
-			<Suspense fallback={ <Loader text={ __( 'Loading SEO view…', 'ai-marketing-expert' ) } /> }>
+			<Suspense fallback={ <Loader variant={ FALLBACK_SHAPE[ view ] || 'dashboard' } text={ __( 'Loading SEO view…', 'ai-marketing-expert' ) } /> }>
 			{ /* Persistent views — stay mounted, hidden via CSS */ }
 			{ mounted.has( 'keyword-research' ) && (
 				<div style={ view !== 'keyword-research' ? { display: 'none' } : undefined }>

@@ -102,7 +102,7 @@ const BotList = ( { onNavigate } ) => {
 				</div>
 
 				{ loading && ! bots.length ? (
-					<Loader text={ __( 'Loading chatbots...', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading chatbots...', 'ai-marketing-expert' ) } />
 				) : filtered.length === 0 ? (
 					<p className="aime-empty-msg">
 						{ bots.length === 0

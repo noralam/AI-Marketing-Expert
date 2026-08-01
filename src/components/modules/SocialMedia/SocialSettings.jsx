@@ -45,7 +45,7 @@ const SocialSettings = () => {
 	};
 
 	if ( ! settings ) {
-		return <Loader text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (

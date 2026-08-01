@@ -21,6 +21,10 @@ class SettingsController {
 		'site_niche'         => '',
 		'site_domain'        => '',
 		'rank_check_engine'  => 'google',
+		// Kept in the schema so previously stored values still round-trip, but
+		// deliberately absent from $text_fields below: the SERP provider UI is
+		// commented out until an integration exists, so nothing may write these.
+		// See src/components/modules/Seo/views/SeoSettings.jsx for the full note.
 		'serp_provider'      => '',
 		'serp_api_key'       => '',
 		'search_console_property' => '',
@@ -45,7 +49,11 @@ class SettingsController {
 		$current  = get_option( self::OPTION_KEY, array() );
 		$settings = wp_parse_args( $current, self::DEFAULTS );
 
-		$text_fields = array( 'default_language', 'default_country', 'site_niche', 'site_domain', 'rank_check_engine', 'serp_provider', 'serp_api_key', 'search_console_property' );
+		// 'serp_provider' and 'serp_api_key' are intentionally omitted — the UI
+		// that set them is commented out, so accepting them here would let a
+		// crafted request store a credential the plugin never uses. Re-add both
+		// when the SERP provider integration ships.
+		$text_fields = array( 'default_language', 'default_country', 'site_niche', 'site_domain', 'rank_check_engine', 'search_console_property' );
 		foreach ( $text_fields as $field ) {
 			$val = $request->get_param( $field );
 			if ( $val !== null ) {

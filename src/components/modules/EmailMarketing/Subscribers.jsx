@@ -407,7 +407,7 @@ const Subscribers = ( { onNavigate } ) => {
 			</div>
 
 			{ loading ? (
-					<Loader />
+					<Loader variant="table" />
 				) : (
 					<>
 						<table className="aime-table">

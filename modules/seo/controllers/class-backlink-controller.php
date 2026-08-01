@@ -8,6 +8,7 @@
 namespace WPSpace\AiMarketingExpert\Modules\Seo\Controllers;
 
 use WPSpace\AiMarketingExpert\Modules\Seo\Services\LinkBuildingService;
+use WPSpace\AiMarketingExpert\Modules\Seo\SeoModule;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -67,10 +68,16 @@ class BacklinkController {
 	}
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
+		if ( aime_limit_reached( 'seo_backlink_prospects', SeoModule::get_backlink_count() ) ) {
+			$limit = aime_free_limits()['seo_backlink_prospects'] ?? 10;
 			return new \WP_REST_Response( array(
 				'success' => false,
-				'message' => __( 'Link building pipeline is a Pro feature.', 'ai-marketing-expert' ),
+				'message' => sprintf(
+					/* translators: %d: backlink prospect limit on the free plan */
+					__( 'Free plan allows %d link prospects. Delete one or upgrade to Pro for an unlimited pipeline.', 'ai-marketing-expert' ),
+					$limit
+				),
+				'limit_reached' => true,
 			), 403 );
 		}
 
@@ -226,14 +233,22 @@ class BacklinkController {
 	}
 
 	/**
-	 * AI-generate outreach email (Pro).
+	 * AI-generate outreach email. Free plan is metered.
 	 */
 	public function generate_outreach( \WP_REST_Request $request ): \WP_REST_Response {
 		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'success' => false,
-				'message' => __( 'AI outreach generation is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
+			$limit = aime_free_limits()['seo_outreach_monthly'] ?? 3;
+			if ( SeoModule::get_monthly_feature_count( 'outreach_generate' ) >= $limit ) {
+				return new \WP_REST_Response( array(
+					'success' => false,
+					'message' => sprintf(
+						/* translators: %d: monthly outreach generation limit on the free plan */
+						__( 'Free plan allows %d AI outreach emails per month. Upgrade to Pro for unlimited outreach.', 'ai-marketing-expert' ),
+						$limit
+					),
+					'limit_reached' => true,
+				), 403 );
+			}
 		}
 
 		$backlink_id = absint( $request->get_param( 'backlink_id' ) );
@@ -249,6 +264,24 @@ class BacklinkController {
 		$service = new LinkBuildingService();
 		$result  = $service->generate_outreach_email( $backlink_id, $context );
 
+		if ( $result['success'] && ! aime_has_pro() ) {
+			SeoModule::increment_monthly_feature( 'outreach_generate' );
+		}
+
 		return new \WP_REST_Response( $result, $result['success'] ? 200 : 500 );
+	}
+
+	/**
+	 * Link building usage counts and free limits.
+	 */
+	public function backlink_usage(): \WP_REST_Response {
+		return new \WP_REST_Response( array(
+			'success' => true,
+			'is_pro'  => aime_has_pro(),
+			'usage'   => array(
+				'prospects' => aime_usage_payload( 'seo_backlink_prospects', SeoModule::get_backlink_count() ),
+				'outreach'  => aime_usage_payload( 'seo_outreach_monthly', SeoModule::get_monthly_feature_count( 'outreach_generate' ) ),
+			),
+		) );
 	}
 }

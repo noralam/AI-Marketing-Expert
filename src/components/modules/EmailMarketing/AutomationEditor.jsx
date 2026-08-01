@@ -574,7 +574,7 @@ const AutomationEditor = ( { id, onBack } ) => {
 	const triggerListOptions = useMemo( () => ( allLists || [] ).map( ( l ) => ( { value: l.id, label: `#${ l.id } \u2014 ${ l.title }` } ) ), [ allLists ] );
 
 	if ( loading && ! automation && id ) {
-		return <Loader text={ __( 'Loading automation...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading automation...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (

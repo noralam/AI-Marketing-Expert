@@ -96,6 +96,29 @@ const defaultArticle = {
 
 const toDateTimeLocalValue = ( value ) => ( value ? value.replace( ' ', 'T' ).slice( 0, 16 ) : '' );
 
+/* Inline icons — emoji get swapped for remote twemoji images by wp-emoji. */
+const ICON_CAMERA = (
+	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+		<path d="M3 8h3l1.5-2h9L18 8h3v11H3z" />
+		<circle cx="12" cy="13" r="3.5" />
+	</svg>
+);
+
+const ICON_SPARKLE = (
+	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+		<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+		<path d="M18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9z" />
+	</svg>
+);
+
+const ICON_UPLOAD = (
+	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+		<path d="M12 16V4" />
+		<path d="M8 8l4-4 4 4" />
+		<path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
+	</svg>
+);
+
 const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	const { get, post, put, del, loading } = useApi( { toastErrors: true } );
 	const { hasPro, freeLimits } = usePro();
@@ -139,6 +162,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	const [ activeTab, setActiveTab ] = useState( 'compose' );
 	const [ generatingImage, setGeneratingImage ] = useState( false );
 	const [ imageTab, setImageTab ] = useState( 'stock' );
+	// null = not checked yet, true = provider key present, false = needs setup.
+	const [ stockReady, setStockReady ] = useState( null );
 	const [ imageProgress, setImageProgress ] = useState( '' );
 	const [ imageError, setImageError ] = useState( '' );
 	const [ stockQuery, setStockQuery ] = useState( '' );
@@ -457,6 +482,23 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	};
 
 	// Search free stock photos (Pexels / Pixabay via plugin settings).
+	// Stock search needs a Pexels/Pixabay key; check once so the tab can point
+	// the user at Settings instead of failing on the first search.
+	useEffect( () => {
+		let cancelled = false;
+		( async () => {
+			try {
+				const s = await get( '/content/settings' );
+				if ( cancelled ) return;
+				const provider = s?.stock_provider || 'pexels';
+				setStockReady( provider === 'pixabay' ? !! s?.has_pixabay_key : !! s?.has_pexels_key );
+			} catch ( e ) {
+				if ( ! cancelled ) setStockReady( true ); // Don't block on a failed probe.
+			}
+		} )();
+		return () => { cancelled = true; };
+	}, [ get ] );
+
 	const handleStockSearch = async ( queryOverride ) => {
 		const q = ( queryOverride ?? stockQuery ?? '' ).trim() || article.topic || article.title || '';
 		if ( ! q ) {
@@ -751,7 +793,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	};
 
 	if ( ! loaded ) {
-		return <Loader text={ __( 'Loading editor...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading editor...', 'ai-marketing-expert' ) } />;
 	}
 
 	const presetOptions = [
@@ -1256,26 +1298,42 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 										className={ `aime-image-tabs__tab${ imageTab === 'stock' ? ' is-active' : '' }` }
 										onClick={ () => setImageTab( 'stock' ) }
 									>
-										{ __( '\uD83D\uDCF7 Stock Photos', 'ai-marketing-expert' ) }
+										<span className="aime-image-tabs__icon" aria-hidden="true">{ ICON_CAMERA }</span>
+									{ __( 'Stock Photos', 'ai-marketing-expert' ) }
 									</button>
 									<button
 										type="button"
 										className={ `aime-image-tabs__tab${ imageTab === 'ai' ? ' is-active' : '' }` }
 										onClick={ () => setImageTab( 'ai' ) }
 									>
-										<span className="aime-pro-inline-action">{ __( '\uD83C\uDFA8 AI Generate', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+										<span className="aime-pro-inline-action"><span className="aime-image-tabs__icon" aria-hidden="true">{ ICON_SPARKLE }</span>{ __( 'AI Generate', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
 									</button>
 									<button
 										type="button"
 										className={ `aime-image-tabs__tab${ imageTab === 'upload' ? ' is-active' : '' }` }
 										onClick={ () => setImageTab( 'upload' ) }
 									>
-										{ __( '\uD83D\uDCC1 Upload', 'ai-marketing-expert' ) }
+										<span className="aime-image-tabs__icon" aria-hidden="true">{ ICON_UPLOAD }</span>
+									{ __( 'Upload', 'ai-marketing-expert' ) }
 									</button>
 								</div>
 								<div className="aime-image-tabs__content">
 									{ imageTab === 'stock' && (
 										<div className="aime-image-tab-panel">
+											{ stockReady === false ? (
+												<>
+													<p className="aime-image-tab-desc">
+														{ __( 'Stock photo search needs a provider API key. Add one first — both Pexels and Pixabay are free and take about a minute to set up.', 'ai-marketing-expert' ) }
+													</p>
+													<Button
+														variant="primary"
+														onClick={ () => onNavigate( 'settings', { tab: 'images' } ) }
+													>
+														{ __( 'Go to Settings → Images', 'ai-marketing-expert' ) }
+													</Button>
+												</>
+											) : (
+											<>
 											<p className="aime-image-tab-desc">
 												{ __( 'Search free stock photos and set one as the featured image. Photos are saved to your Media Library.', 'ai-marketing-expert' ) }
 											</p>
@@ -1312,6 +1370,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 														</button>
 													) ) }
 												</div>
+											) }
+											</>
 											) }
 										</div>
 									) }

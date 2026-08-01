@@ -75,10 +75,14 @@ export const ARTICLE_STATUS_LABELS = {
 	[ ARTICLE_STATUS.ARCHIVED ]: 'Archived',
 };
 
+// `generating` and `ready` were both #2196f3, so two different stages of an
+// article's life rendered as the same colour — invisible on a badge, and
+// indistinguishable on the pipeline bars that now use this map. Ready is the
+// stage that wants your attention, so it takes the module's own indigo.
 export const ARTICLE_STATUS_COLORS = {
 	draft: '#9e9e9e',
 	generating: '#2196f3',
-	ready: '#2196f3',
+	ready: '#4338CA',
 	review: '#ff9800',
 	scheduled: '#7b61ff',
 	published: '#4caf50',

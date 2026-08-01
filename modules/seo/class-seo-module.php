@@ -439,6 +439,53 @@ class SeoModule extends Module {
 			)
 		);
 	}
+
+	/* ── Row counts for free-plan storage limits ────────── */
+
+	private static function count_rows( string $table ): int {
+		global $wpdb;
+		$p     = $wpdb->prefix;
+		$full  = $p . $table;
+
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $full ) );
+		if ( ! $table_exists ) {
+			return 0;
+		}
+
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$full}" );
+	}
+
+	public static function get_topic_count(): int {
+		return self::count_rows( 'aime_seo_topics' );
+	}
+
+	public static function get_calendar_count(): int {
+		return self::count_rows( 'aime_seo_calendar' );
+	}
+
+	public static function get_backlink_count(): int {
+		return self::count_rows( 'aime_seo_backlinks' );
+	}
+
+	/**
+	 * Count enabled automation toggles that count against the free-plan task
+	 * limit. Cron-driven toggles are Pro-only and metered separately, so they
+	 * must not be counted here or the meter locks a free user out of the
+	 * publish-hook rules they are entitled to.
+	 */
+	public static function get_active_automation_count(): int {
+		$settings = get_option( 'aime_seo_automation_settings', array() );
+		$toggles  = array( 'auto_audit_on_publish', 'auto_meta_on_publish' );
+
+		$count = 0;
+		foreach ( $toggles as $toggle ) {
+			if ( ! empty( $settings[ $toggle ] ) ) {
+				$count++;
+			}
+		}
+
+		return $count;
+	}
 }
 
 /* ── Register with Module Manager ──────────────────────── */

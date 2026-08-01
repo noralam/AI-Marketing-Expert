@@ -169,10 +169,14 @@ final class Plugin {
 		add_action( 'aime_minutely_tasks', array( $this, 'run_minutely_tasks' ) );
 		$this->maybe_migrate_cron();
 
+		// Claim the seed flag *before* running so concurrent requests on the
+		// first admin load (page + REST + heartbeat) cannot each seed a copy.
 		if ( get_transient( 'aime_seed_email_templates' ) ) {
-			Activator::seed_email_templates();
 			delete_transient( 'aime_seed_email_templates' );
+			Activator::seed_email_templates();
 		}
+
+		Activator::maybe_seed_email_defaults();
 
 		// Register public hooks (tracking, unsubscribe, etc.).
 		$this->register_public_hooks();

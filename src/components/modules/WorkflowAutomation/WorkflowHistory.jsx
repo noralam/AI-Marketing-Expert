@@ -11,15 +11,11 @@ import { toast } from '../../common/Toast';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import LoadingBtn from '../../common/LoadingBtn';
+import { formatDateTime } from '../../../utils/datetime';
 import { Button } from '../../common/WpComponents';
 
-const formatDate = ( value ) => {
-	if ( ! value ) {
-		return '—';
-	}
-	const d = new Date( value.replace( ' ', 'T' ) + 'Z' );
-	return isNaN( d.getTime() ) ? value : d.toLocaleString();
-};
+// Stored as UTC; rendered in the site timezone and format (Settings → General).
+const formatDate = ( value ) => formatDateTime( value );
 
 const STATUS_COLOR = {
 	success: '#2e7d32',
@@ -113,7 +109,7 @@ const WorkflowHistory = ( { id, onBack } ) => {
 	};
 
 	if ( loading ) {
-		return <Loader />;
+		return <Loader variant="table" />;
 	}
 
 	return (
@@ -159,7 +155,7 @@ const WorkflowHistory = ( { id, onBack } ) => {
 						{ expanded === exec.id && (
 							<div style={ { marginTop: 12, borderTop: '1px solid #eee', paddingTop: 12 } }>
 								{ ! detail[ exec.id ] ? (
-									<Loader />
+									<Loader variant="lines" />
 								) : (
 									( detail[ exec.id ].outputs || [] ).map( ( out ) => (
 										<div key={ out.id } style={ { padding: '8px 0', borderBottom: '1px dashed #eee' } }>

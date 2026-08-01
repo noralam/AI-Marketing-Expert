@@ -21,6 +21,7 @@ import Notice from '../../common/Notice';
 import WPEditor from '../../common/WPEditor';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import sanitizeHtml from '../../../utils/sanitizeHtml';
+import { siteDateTimeToUtc } from '../../../utils/datetime';
 
 /* --------- constants --------- */
 
@@ -271,6 +272,10 @@ const TEMPLATE_SVGS = {
 };
 
 const TEMPLATE_IMAGE_MAP = [
+	// Order matters: more specific names must be matched before the broader
+	// category keys, otherwise e.g. "Seasonal Sale" (category: promotional)
+	// would resolve to the promotional image.
+	{ keys: [ 'seasonal', 'sale' ], file: 'template-seasonal-sale.webp' },
 	{ keys: [ 'digest', 'roundup' ], file: 'template-digest-roundup.webp' },
 	{ keys: [ 'event', 'invitation', 'invite' ], file: 'template-event-invitation.webp' },
 	{ keys: [ 'feedback', 'survey' ], file: 'template-feedback-request.webp' },
@@ -279,12 +284,11 @@ const TEMPLATE_IMAGE_MAP = [
 	{ keys: [ 'newsletter', 'classic' ], file: 'template-newsletter-classic.webp' },
 	{ keys: [ 'notification', 'alert', 'announcement', 'update' ], file: 'template-notification-alert.webp' },
 	{ keys: [ 'product', 'launch' ], file: 'template-product-launch.webp' },
-	{ keys: [ 'promotional', 'promotion', 'offer', 'flash', 'discount' ], file: 'template-promotional-offer.webp' },
 	{ keys: [ 're-engagement', 'reengagement', 'winback' ], file: 'template-re-engagement.webp' },
-	{ keys: [ 'seasonal', 'sale' ], file: 'template-seasonal-sale.webp' },
-	{ keys: [ 'simple', 'text', 'plain' ], file: 'template-simple-text.webp' },
 	{ keys: [ 'transactional', 'receipt' ], file: 'template-transactional-receipt.webp' },
 	{ keys: [ 'welcome', 'onboard' ], file: 'template-welcome-email.webp' },
+	{ keys: [ 'promotional', 'promotion', 'offer', 'flash', 'discount' ], file: 'template-promotional-offer.webp' },
+	{ keys: [ 'simple', 'text', 'plain' ], file: 'template-simple-text.webp' },
 ];
 
 const getTemplateImage = ( template ) => {
@@ -681,7 +685,14 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 			setNotice( { type: 'warning', message: __( 'Free sites can schedule up to 3 campaigns. Upgrade to Pro for unlimited scheduled campaigns.', 'ai-marketing-expert' ) } );
 		}
 		if ( ! scheduleDate ) return;
-		const dt = scheduleTime ? `${ scheduleDate } ${ scheduleTime }` : `${ scheduleDate } 00:00`;
+		// The picker collects a site-time wall clock; the column is UTC.
+		const dt = siteDateTimeToUtc( scheduleDate, scheduleTime );
+		// An empty conversion means the date could not be parsed. handleSend( '' )
+		// is the send-now path, so bail rather than blasting the campaign.
+		if ( ! dt ) {
+			setNotice( { type: 'error', message: __( 'That schedule date could not be read. Pick the date and time again.', 'ai-marketing-expert' ) } );
+			return;
+		}
 		setScheduleModalOpen( false );
 		handleSend( dt );
 	};
@@ -825,7 +836,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	const recipientOptions = recipientType === 'lists' ? lists : recipientType === 'tags' ? tags : SMART_SEGMENT_OPTIONS.map( ( segment ) => ( { id: segment.value, title: segment.label } ) );
 
 	if ( loading && ! isNew && ! campaign && ! skipFetch ) {
-		return <Loader text={ __( 'Loading campaign...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading campaign...', 'ai-marketing-expert' ) } />;
 	}
 
 	/* ======= STEP RENDERERS ======= */
@@ -1496,7 +1507,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	);
 
 	const renderReview = () => {
-		const footerCredit = '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280;font-size:12px;line-height:1.5">Sent with AI Marketing Expert</div>';
+		const footerCredit = '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280;font-size:12px;line-height:1.5">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#6b7280;text-decoration:underline">AI Marketing Expert</a></div>';
 		const previewEmailBody = form.email_body ? buildPreviewEmailHtml( `${ form.email_body }${ hasPro ? '' : footerCredit }`, emailSettings ) : '';
 		const recipientNames = selectedRecipients
 			.map( ( rid ) => recipientOptions.find( ( o ) => o.id === rid ) )

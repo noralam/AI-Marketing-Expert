@@ -4,17 +4,18 @@
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, TextControl, SelectControl, Spinner } from '@aime/wp-components';
+import { Button, TextControl, SelectControl } from '@aime/wp-components';
 import { trash, edit, pencil } from '@wordpress/icons';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 import useApi from '../../../../hooks/useApi';
+import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
+import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, StackedBar, SortArrow } from './SeoCharts';
@@ -35,7 +36,9 @@ const STATUS_LABELS = {
 
 const ContentCalendar = ( { onNavigate } ) => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
+	const { proUrl } = usePro();
 	const slowWarning = useSlowWarning();
+	const [ usage, setUsage ] = useState( null );
 	const [ items, setItems ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );
 	const [ generating, setGenerating ] = useState( false );
@@ -65,9 +68,19 @@ const ContentCalendar = ( { onNavigate } ) => {
 		}
 	}, [ get ] );
 
+	const fetchUsage = useCallback( async () => {
+		try {
+			const res = await get( '/seo/calendar/usage' );
+			setUsage( res.usage || null );
+		} catch ( e ) {
+			// silent
+		}
+	}, [ get ] );
+
 	useEffect( () => {
 		fetchItems();
-	}, [ fetchItems ] );
+		fetchUsage();
+	}, [ fetchItems, fetchUsage ] );
 
 	const handleGenerate = async () => {
 		if ( ! niche.trim() ) return;
@@ -82,6 +95,7 @@ const ContentCalendar = ( { onNavigate } ) => {
 			} );
 			toast( __( 'Content calendar generated!', 'ai-marketing-expert' ) );
 			fetchItems();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -106,6 +120,7 @@ const ContentCalendar = ( { onNavigate } ) => {
 			toast( __( 'Item deleted.', 'ai-marketing-expert' ) );
 			setConfirmDelete( null );
 			fetchItems();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		}
@@ -144,8 +159,13 @@ const ContentCalendar = ( { onNavigate } ) => {
 
 	const sortedDates = Object.keys( groupedByWeek ).sort();
 
+	const genExhausted = !! usage?.generate && usage.generate.limit != null
+		&& usage.generate.used >= usage.generate.limit;
+	const itemsFull = !! usage?.items && usage.items.limit != null
+		&& usage.items.used >= usage.items.limit;
+
 	return (
-		<ProGate feature={ __( 'Content Calendar', 'ai-marketing-expert' ) }>
+		<>
 			<div className="aime-seo-calendar">
 				{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 
@@ -153,8 +173,20 @@ const ContentCalendar = ( { onNavigate } ) => {
 					<h2>{ __( 'Content Calendar', 'ai-marketing-expert' ) } ({ total })</h2>
 				</div>
 
+				<UsageNotice
+					usage={ usage?.items }
+					featureLabel={ __( 'calendar items', 'ai-marketing-expert' ) }
+					proUrl={ proUrl }
+					kind="storage"
+				/>
+
 				{ /* Generate */ }
 				<Card title={ __( 'Generate Calendar with AI', 'ai-marketing-expert' ) }>
+					<UsageNotice
+						usage={ usage?.generate }
+						featureLabel={ __( 'calendar generation', 'ai-marketing-expert' ) }
+						proUrl={ proUrl }
+					/>
 					<div className="aime-table-toolbar">
 						<TextControl
 							label={ __( 'Niche', 'ai-marketing-expert' ) }
@@ -190,7 +222,7 @@ const ContentCalendar = ( { onNavigate } ) => {
 							<Button
 								variant="primary"
 								onClick={ handleGenerate }
-								disabled={ ! isAiConfigured() || ! niche.trim() }
+								disabled={ ! isAiConfigured() || ! niche.trim() || genExhausted || itemsFull }
 								title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 								style={ { marginLeft: 'auto' } }
 							>
@@ -199,12 +231,12 @@ const ContentCalendar = ( { onNavigate } ) => {
 						) }
 						<AiNotice />
 					</div>
-					{ generating && <Loader text={ __( 'AI is planning your content\u2026', 'ai-marketing-expert' ) } /> }
+					{ generating && <Loader variant="lines" text={ __( 'AI is planning your content\u2026', 'ai-marketing-expert' ) } /> }
 				</Card>
 
 				{ /* Calendar list */ }
 				{ loading && ! items.length ? (
-					<Loader text={ __( 'Loading calendar\u2026', 'ai-marketing-expert' ) } />
+					<Loader variant="calendar" text={ __( 'Loading calendar\u2026', 'ai-marketing-expert' ) } />
 				) : items.length === 0 ? (
 					<Card>
 						<p className="aime-empty-text">
@@ -316,7 +348,7 @@ const ContentCalendar = ( { onNavigate } ) => {
 					/>
 				) }
 			</div>
-		</ProGate>
+		</>
 	);
 };
 

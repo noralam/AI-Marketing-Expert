@@ -9,7 +9,8 @@ import { trash, edit } from '@wordpress/icons';
 import useApi from '../../../hooks/useApi';
 // import usePro from '../../../hooks/usePro';
 import Card from '../../common/Card';
-import Loader from '../../common/Loader';
+import EmptyState from '../../common/EmptyState';
+import { SkeletonBlock } from '../../common/Skeleton';
 // import ProGate from '../../common/ProGate';
 import ConfirmModal from '../../common/ConfirmModal';
 import { toast } from '../../common/Toast';
@@ -116,7 +117,22 @@ const Presets = () => {
 			</div>
 
 			{ loading && ! presets.length ? (
-				<Loader text={ __( 'Loading presets...', 'ai-marketing-expert' ) } />
+				<div className="aime-presets-grid" aria-busy="true" aria-live="polite">
+					<span className="screen-reader-text">{ __( 'Loading presets…', 'ai-marketing-expert' ) }</span>
+					{ [ 0, 1, 2 ].map( ( i ) => (
+						<Card key={ i } className="aime-preset-card">
+							<SkeletonBlock height={ 15 } width="50%" style={ { marginBottom: 14 } } />
+							<SkeletonBlock height={ 22 } width="85%" style={ { marginBottom: 14 } } />
+							<SkeletonBlock height={ 13 } width="100%" style={ { marginBottom: 6 } } />
+							<SkeletonBlock height={ 13 } width="65%" />
+						</Card>
+					) ) }
+				</div>
+			) : presets.length === 0 ? (
+				<EmptyState
+					title={ __( 'No presets yet', 'ai-marketing-expert' ) }
+					description={ __( 'A preset saves the tone, style, length, and prompt instructions you use most, so a new article starts from your settings instead of the defaults.', 'ai-marketing-expert' ) }
+				/>
 			) : (
 				<div className="aime-presets-grid">
 					{ presets.map( ( preset ) => {
@@ -135,7 +151,9 @@ const Presets = () => {
 								<span>{ __( 'Words:', 'ai-marketing-expert' ) } { preset.word_count }</span>
 							</div>
 							{ preset.prompt_template && (
-								<p className="aime-preset-template">{ preset.prompt_template.substring( 0, 100 ) }...</p>
+								// Clamped in CSS at three lines — a 100-char substring cut
+								// mid-word and then added an ellipsis of its own.
+								<p className="aime-preset-template">{ preset.prompt_template }</p>
 							) }
 							<div className="aime-preset-actions">
 								<Button

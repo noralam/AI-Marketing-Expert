@@ -25,7 +25,6 @@ class SettingsController {
 		'auto_seo_optimize'     => true,
 		'auto_generate_meta'    => true,
 		'auto_generate_excerpt' => true,
-		'image_source'          => 'none',
 		'stock_provider'        => 'pexels',
 		'inline_images'         => 0,
 		'inline_image_size'     => 'large',
@@ -80,12 +79,8 @@ class SettingsController {
 			$current['default_category_id'] = absint( $params['default_category_id'] );
 		}
 
-		// Image settings.
-		if ( isset( $params['image_source'] ) ) {
-			$source = sanitize_key( $params['image_source'] );
-			$current['image_source'] = in_array( $source, array( 'none', 'stock', 'ai' ), true ) ? $source : 'none';
-		}
-
+		// Image settings. The old image_source select is gone from the UI —
+		// stale stored values are simply ignored on read.
 		if ( isset( $params['stock_provider'] ) ) {
 			$provider = sanitize_key( $params['stock_provider'] );
 			$current['stock_provider'] = in_array( $provider, \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService::PROVIDERS, true ) ? $provider : 'pexels';

@@ -21,8 +21,10 @@ class ContentCalendarService {
 
 	/**
 	 * AI-generate content calendar.
+	 *
+	 * @param int|null $max_items Cap on saved items (free plan), or null for unlimited.
 	 */
-	public function generate_calendar( string $niche, int $weeks, string $frequency ): array {
+	public function generate_calendar( string $niche, int $weeks, string $frequency, ?int $max_items = null ): array {
 		$freq_map = array(
 			'daily'        => 'every day',
 			'twice_weekly' => 'twice per week',
@@ -90,12 +92,21 @@ class ContentCalendarService {
 		}
 
 		// Save calendar items to database.
-		$saved = $this->save_calendar_items( $data['calendar'] );
+		$items   = $data['calendar'];
+		$dropped = 0;
+
+		if ( null !== $max_items && count( $items ) > $max_items ) {
+			$dropped = count( $items ) - $max_items;
+			$items   = array_slice( $items, 0, $max_items );
+		}
+
+		$saved = $this->save_calendar_items( $items );
 
 		return array(
 			'success'        => true,
 			'data'           => $data,
 			'saved_count'    => $saved,
+			'dropped_count'  => $dropped,
 			'strategy_notes' => $data['strategy_notes'] ?? '',
 		);
 	}
@@ -129,7 +140,7 @@ class ContentCalendarService {
 				'status'       => 'planned',
 				'planned_date' => sanitize_text_field( $item['planned_date'] ?? '' ) ?: null,
 				'notes'        => sanitize_textarea_field( $item['brief'] ?? '' ),
-				'is_pro'       => 1,
+				'is_pro'       => aime_has_pro() ? 1 : 0,
 			) );
 
 			if ( $wpdb->insert_id ) {

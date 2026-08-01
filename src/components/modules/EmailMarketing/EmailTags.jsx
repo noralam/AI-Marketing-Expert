@@ -66,7 +66,7 @@ const EmailTags = () => {
 			}
 		>
 			{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
-			{ loading && <Loader /> }
+			{ loading && <Loader variant="table" /> }
 
 			{ ! loading && tags.length === 0 && (
 				<p className="aime-empty-msg">{ __( 'No tags yet. Create your first tag.', 'ai-marketing-expert' ) }</p>

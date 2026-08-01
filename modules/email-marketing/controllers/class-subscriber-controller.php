@@ -1433,7 +1433,7 @@ class SubscriberController {
 
 	private function is_double_optin_enabled(): bool {
 		$global_settings = get_option( 'aime_settings', array() );
-		return (bool) get_option( 'aime_double_optin', $global_settings['double_optin'] ?? true );
+		return (bool) get_option( 'aime_double_optin', $global_settings['double_optin'] ?? false );
 	}
 
 	private function validate_public_subscribe_token( \WP_REST_Request $request ): bool {

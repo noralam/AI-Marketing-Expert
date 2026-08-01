@@ -16,9 +16,12 @@ import {
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import EmptyState from '../../common/EmptyState';
+import { SkeletonBlock, SkeletonTable } from '../../common/Skeleton';
 import { ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import useApi from '../../../hooks/useApi';
 import { FREE_LIMITS } from '../../../utils/constants';
+import { formatDateTime } from '../../../utils/datetime';
 
 /* AI provider logo paths (SVG) */
 const pluginUrl = window.aimeData?.pluginUrl || '';
@@ -405,8 +408,8 @@ const AiProvidersPage = () => {
 		}
 
 		if ( conn.retry_after ) {
-			const retryDate = new Date( conn.retry_after * 1000 );
-			return sprintf( __( 'Requests paused until %s.', 'ai-marketing-expert' ), retryDate.toLocaleString() );
+			// Unix seconds from the provider's cool-off, shown in site time.
+			return sprintf( __( 'Requests paused until %s.', 'ai-marketing-expert' ), formatDateTime( conn.retry_after ) );
 		}
 
 		return __( 'Requests are temporarily paused for this provider.', 'ai-marketing-expert' );
@@ -450,7 +453,7 @@ const AiProvidersPage = () => {
 	};
 
 	if ( loading ) {
-		return <Loader text={ __( 'Loading AI providers...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading AI providers...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (
@@ -674,9 +677,10 @@ const AiProvidersPage = () => {
 
 			{ /* AI Usage & Cost dashboard */ }
 			{ pageTab === 'usage' && (
-				<Card>
-					<div style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } }>
-						<h3 style={ { margin: 0 } }>{ __( 'AI Usage & Cost', 'ai-marketing-expert' ) }</h3>
+				<Card
+					className="aime-usage-panel"
+					title={ __( 'AI Usage & Cost', 'ai-marketing-expert' ) }
+					actions={
 						<SelectControl
 							value={ String( usageDays ) }
 							options={ [
@@ -685,79 +689,143 @@ const AiProvidersPage = () => {
 								{ value: '90', label: __( 'Last 90 days', 'ai-marketing-expert' ) },
 							] }
 							onChange={ ( v ) => setUsageDays( parseInt( v, 10 ) || 30 ) }
+							label={ __( 'Date range', 'ai-marketing-expert' ) }
+							hideLabelFromVision
 							__nextHasNoMarginBottom
 						/>
-					</div>
-
-					{ usageLoading && <Spinner /> }
+					}
+				>
+					{ usageLoading && (
+						<div aria-busy="true" aria-live="polite">
+							<span className="screen-reader-text">{ __( 'Loading usage data…', 'ai-marketing-expert' ) }</span>
+							<div className="aime-usage-stats">
+								{ [ 0, 1, 2, 3 ].map( ( i ) => (
+									<div className="aime-usage-stat" key={ i }>
+										<SkeletonBlock height={ 30 } width="60%" style={ { marginBottom: 10 } } />
+										<SkeletonBlock height={ 12 } width="80%" />
+									</div>
+								) ) }
+							</div>
+							<SkeletonTable rows={ 3 } cols={ 6 } />
+						</div>
+					) }
 
 					{ ! usageLoading && ( ! usage?.totals || ! usage.totals.calls ) && (
-						<p style={ { color: '#94a3b8', textAlign: 'center', padding: 20, margin: 0 } }>
-							{ __( 'No AI usage recorded yet. Data appears here after your first AI generation.', 'ai-marketing-expert' ) }
-						</p>
+						<EmptyState
+							title={ __( 'No AI usage recorded yet', 'ai-marketing-expert' ) }
+							description={ __( 'Every AI call made by any module is logged here with its token count and estimated cost. Generate an article, reply, or social post to start the log.', 'ai-marketing-expert' ) }
+						/>
 					) }
 
 					{ ! usageLoading && usage?.totals && usage.totals.calls > 0 && (
 						<>
-							<div style={ { display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 } }>
-								<div>
-									<strong style={ { fontSize: 20, display: 'block' } }>{ usage.totals.calls }</strong>
-									<span className="aime-card-description">{ __( 'API calls', 'ai-marketing-expert' ) }</span>
+							<div className="aime-usage-stats">
+								<div className="aime-usage-stat">
+									<span className="aime-usage-stat__value">{ Number( usage.totals.calls ).toLocaleString() }</span>
+									<span className="aime-usage-stat__label">{ __( 'API calls', 'ai-marketing-expert' ) }</span>
 								</div>
-								<div>
-									<strong style={ { fontSize: 20, display: 'block' } }>{ usage.totals.failures }</strong>
-									<span className="aime-card-description">{ __( 'Failures', 'ai-marketing-expert' ) }</span>
+								<div className={ `aime-usage-stat${ usage.totals.failures > 0 ? ' is-error' : '' }` }>
+									<span className="aime-usage-stat__value">{ Number( usage.totals.failures ).toLocaleString() }</span>
+									<span className="aime-usage-stat__label">
+										{ __( 'Failures', 'ai-marketing-expert' ) }
+										{ usage.totals.failures > 0 && (
+											<span className="aime-usage-stat__note">
+												{ sprintf(
+													/* translators: %s: percentage of calls that failed. */
+													__( '%s of calls', 'ai-marketing-expert' ),
+													`${ Math.round( ( usage.totals.failures / usage.totals.calls ) * 100 ) }%`
+												) }
+											</span>
+										) }
+									</span>
 								</div>
-								<div>
-									<strong style={ { fontSize: 20, display: 'block' } }>
+								<div className="aime-usage-stat">
+									<span className="aime-usage-stat__value">
 										{ Number( usage.totals.prompt_tokens + usage.totals.completion_tokens ).toLocaleString() }
-									</strong>
-									<span className="aime-card-description">{ __( 'Total tokens', 'ai-marketing-expert' ) }</span>
+									</span>
+									<span className="aime-usage-stat__label">
+										{ __( 'Total tokens', 'ai-marketing-expert' ) }
+										<span className="aime-usage-stat__note">
+											{ sprintf(
+												/* translators: 1: input token count, 2: output token count. */
+												__( '%1$s in / %2$s out', 'ai-marketing-expert' ),
+												Number( usage.totals.prompt_tokens ).toLocaleString(),
+												Number( usage.totals.completion_tokens ).toLocaleString()
+											) }
+										</span>
+									</span>
 								</div>
-								<div>
-									<strong style={ { fontSize: 20, display: 'block' } }>
+								<div className="aime-usage-stat">
+									<span className="aime-usage-stat__value">
 										{ usage.totals.estimated_cost !== null && usage.totals.estimated_cost !== undefined
-											? `$${ Number( usage.totals.estimated_cost ).toFixed( 4 ) }${ usage.totals.cost_is_partial ? '+' : '' }`
+											? <>${ Number( usage.totals.estimated_cost ).toFixed( 4 ) }{ usage.totals.cost_is_partial && <span className="aime-usage-stat__partial">+</span> }</>
 											: '—'
 										}
-									</strong>
-									<span className="aime-card-description">
+									</span>
+									<span className="aime-usage-stat__label">
 										{ __( 'Estimated cost', 'ai-marketing-expert' ) }
-										{ usage.totals.cost_is_partial ? ' ' + __( '(some models unpriced)', 'ai-marketing-expert' ) : '' }
+										{ usage.totals.cost_is_partial && (
+											<span className="aime-usage-stat__note">{ __( 'some models unpriced', 'ai-marketing-expert' ) }</span>
+										) }
 									</span>
 								</div>
 							</div>
 
 							{ ( usage.by_model || [] ).length > 0 && (
-								<table className="widefat striped" style={ { marginBottom: 4 } }>
-									<thead>
-										<tr>
-											<th>{ __( 'Connection', 'ai-marketing-expert' ) }</th>
-											<th>{ __( 'Model', 'ai-marketing-expert' ) }</th>
-											<th>{ __( 'Task', 'ai-marketing-expert' ) }</th>
-											<th>{ __( 'Calls', 'ai-marketing-expert' ) }</th>
-											<th>{ __( 'Tokens (in / out)', 'ai-marketing-expert' ) }</th>
-											<th>{ __( 'Est. cost', 'ai-marketing-expert' ) }</th>
-										</tr>
-									</thead>
-									<tbody>
-										{ usage.by_model.map( ( row, i ) => (
-											<tr key={ i }>
-												<td>{ row.connection_name || row.connection_id || '—' }</td>
-												<td>{ row.model || '—' }</td>
-												<td>{ row.task || 'text' }</td>
-												<td>{ row.calls }</td>
-												<td>{ Number( row.prompt_tokens ).toLocaleString() } / { Number( row.completion_tokens ).toLocaleString() }</td>
-												<td>
-													{ row.estimated_cost !== null && row.estimated_cost !== undefined
-														? `$${ Number( row.estimated_cost ).toFixed( 4 ) }`
-														: '—'
-													}
-												</td>
-											</tr>
-										) ) }
-									</tbody>
-								</table>
+								<>
+									<div className="aime-table-wrap">
+										<table className="aime-table aime-usage-table">
+											<thead>
+												<tr>
+													<th scope="col">{ __( 'Connection', 'ai-marketing-expert' ) }</th>
+													<th scope="col">{ __( 'Model', 'ai-marketing-expert' ) }</th>
+													<th scope="col">{ __( 'Task', 'ai-marketing-expert' ) }</th>
+													<th scope="col" className="is-numeric">{ __( 'Calls', 'ai-marketing-expert' ) }</th>
+													<th scope="col" className="is-numeric">{ __( 'Tokens (in / out)', 'ai-marketing-expert' ) }</th>
+													<th scope="col" className="is-numeric">{ __( 'Est. cost', 'ai-marketing-expert' ) }</th>
+												</tr>
+											</thead>
+											<tbody>
+												{ usage.by_model.map( ( row, i ) => (
+													<tr key={ i }>
+														<td className="aime-usage-table__conn">{ row.connection_name || row.connection_id || '—' }</td>
+														<td className="aime-usage-table__model">{ row.model || '—' }</td>
+														<td><span className="aime-usage-task">{ row.task || 'text' }</span></td>
+														<td className="is-numeric">
+															{ Number( row.calls ).toLocaleString() }
+															{ row.failures > 0 && (
+																<span className="aime-usage-table__failed">
+																	{ sprintf(
+																		/* translators: %s: number of failed calls. */
+																		__( '%s failed', 'ai-marketing-expert' ),
+																		Number( row.failures ).toLocaleString()
+																	) }
+																</span>
+															) }
+														</td>
+														<td className="is-numeric aime-usage-table__tokens">
+															{ Number( row.prompt_tokens ).toLocaleString() }
+															<span className="aime-usage-table__slash"> / </span>
+															{ Number( row.completion_tokens ).toLocaleString() }
+														</td>
+														<td className="is-numeric">
+															{ row.estimated_cost !== null && row.estimated_cost !== undefined
+																? `$${ Number( row.estimated_cost ).toFixed( 4 ) }`
+																: <span className="aime-usage-table__unpriced">{ '—' }</span>
+															}
+														</td>
+													</tr>
+												) ) }
+											</tbody>
+										</table>
+									</div>
+
+									{ usage.totals.cost_is_partial && (
+										<p className="aime-usage-footnote">
+											{ __( '— in Est. cost means no published price is known for that model, so its calls are left out of the total above.', 'ai-marketing-expert' ) }
+										</p>
+									) }
+								</>
 							) }
 						</>
 					) }
@@ -770,6 +838,7 @@ const AiProvidersPage = () => {
 					title={ aiEditId ? __( 'Edit AI Provider', 'ai-marketing-expert' ) : __( 'Add AI Provider', 'ai-marketing-expert' ) }
 					onRequestClose={ aiCloseModal }
 					className="aime-ai-modal"
+					overlayClassName="aime-modal-overlay"
 				>
 					<div className="aime-ai-modal-body">
 						{ notice && (

@@ -65,7 +65,7 @@ const SeoDashboard = ( { onNavigate } ) => {
 	}, [ stats ] );
 
 	if ( loading && ! stats ) {
-		return <Loader text={ __( 'Loading analytics...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading analytics...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (

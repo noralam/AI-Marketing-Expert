@@ -1,20 +1,16 @@
 /**
- * Skeleton loading components.
+ * Skeleton primitives.
+ *
+ * The shimmer itself lives in `.aime-skeleton` (global.scss) so every waiting
+ * surface in the plugin sweeps in the same material and the same rhythm — these
+ * only decide size and arrangement.
+ *
+ * For a whole-surface wait, prefer `Loader` with a variant; reach for these when
+ * a specific block needs its own placeholder.
  */
 
 const SkeletonBlock = ( { width = '100%', height = 16, style = {} } ) => (
-	<div
-		className="aime-skeleton"
-		style={ {
-			width,
-			height,
-			borderRadius: 6,
-			background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-			backgroundSize: '200% 100%',
-			animation: 'aime-shimmer 1.5s infinite',
-			...style,
-		} }
-	/>
+	<div className="aime-skeleton" style={ { width, height, ...style } } />
 );
 
 const SkeletonCard = () => (
@@ -25,10 +21,16 @@ const SkeletonCard = () => (
 	</div>
 );
 
-const SkeletonRow = () => (
+// Fixed, offset widths rather than random ones: a placeholder that reshuffles on
+// every re-render reads as content changing, not as content arriving.
+const ROW_WIDTHS = [ '72%', '90%', '55%', '80%', '64%' ];
+
+const SkeletonRow = ( { cols = 5, offset = 0 } ) => (
 	<tr>
-		{ [ 1, 2, 3, 4, 5 ].map( ( i ) => (
-			<td key={ i }><SkeletonBlock height={ 14 } width={ `${ 40 + Math.random() * 40 }%` } /></td>
+		{ Array.from( { length: cols } ).map( ( _, i ) => (
+			<td key={ i }>
+				<SkeletonBlock height={ 14 } width={ ROW_WIDTHS[ ( i + offset ) % ROW_WIDTHS.length ] } />
+			</td>
 		) ) }
 	</tr>
 );
@@ -44,7 +46,9 @@ const SkeletonTable = ( { rows = 5, cols = 5 } ) => (
 				</tr>
 			</thead>
 			<tbody>
-				{ Array.from( { length: rows } ).map( ( _, i ) => <SkeletonRow key={ i } /> ) }
+				{ Array.from( { length: rows } ).map( ( _, i ) => (
+					<SkeletonRow key={ i } cols={ cols } offset={ i } />
+				) ) }
 			</tbody>
 		</table>
 	</div>

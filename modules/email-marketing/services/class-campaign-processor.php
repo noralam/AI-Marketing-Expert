@@ -691,7 +691,7 @@ class CampaignProcessor {
 
 		$footer_parts = array();
 		if ( ! aime_has_pro() ) {
-			$footer_parts[] = '<p style="margin:0 0 8px;color:#64748b;font-size:12px">Sent with AI Marketing Expert</p>';
+			$footer_parts[] = '<p style="margin:0 0 8px;color:#64748b;font-size:12px">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert</a></p>';
 		}
 		if ( '' !== $footer ) {
 			$footer_parts[] = $footer;

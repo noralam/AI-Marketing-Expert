@@ -202,7 +202,7 @@ const KeywordVault = ( { onNavigate, isActive } ) => {
 			{ /* Table */ }
 			<Card>
 				{ loading && ! keywords.length ? (
-					<Loader text={ __( 'Loading keywords\u2026', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading keywords\u2026', 'ai-marketing-expert' ) } />
 				) : keywords.length === 0 ? (
 					<p className="aime-empty-text">
 						{ __( 'No keywords found.', 'ai-marketing-expert' ) }{ ' ' }

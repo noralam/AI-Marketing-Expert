@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextControl, SelectControl, ToggleControl, TabPanel, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
@@ -90,16 +89,17 @@ const ENGINE_OPTIONS = [
 	{ label: 'Yahoo', value: 'yahoo' },
 ];
 
-const SERP_PROVIDER_OPTIONS = [
-	{ label: __( 'AI Estimate Only', 'ai-marketing-expert' ), value: '' },
-	{ label: 'SerpApi', value: 'serpapi' },
-	{ label: 'DataForSEO', value: 'dataforseo' },
-	{ label: 'Custom SERP API', value: 'custom' },
-];
+// Restored together with the SERP controls in the Rank Tracking tab below.
+// See the block comment there for why they are out and what to re-wire.
+// const SERP_PROVIDER_OPTIONS = [
+// 	{ label: __( 'AI Estimate Only', 'ai-marketing-expert' ), value: '' },
+// 	{ label: 'SerpApi', value: 'serpapi' },
+// 	{ label: 'DataForSEO', value: 'dataforseo' },
+// 	{ label: 'Custom SERP API', value: 'custom' },
+// ];
 
 const SeoSettings = () => {
 	const { get, put, loading, error, clearError } = useApi();
-	const { hasPro } = usePro();
 	const [ settings, setSettings ] = useState( null );
 	const [ saving, setSaving ] = useState( false );
 	const [ success, setSuccess ] = useState( '' );
@@ -141,7 +141,7 @@ const SeoSettings = () => {
 	};
 
 	if ( loading && ! settings ) {
-		return <Loader text={ __( 'Loading settings\u2026', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading settings\u2026', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! settings ) return null;
@@ -158,7 +158,7 @@ const SeoSettings = () => {
 			<h2>{ __( 'SEO Settings', 'ai-marketing-expert' ) }</h2>
 
 			<Card>
-				{ loading ? <Loader /> : (
+				{ loading ? <Loader variant="form" /> : (
 					<TabPanel tabs={ TABS }>
 						{ ( tab ) => {
 							/* General tab */
@@ -220,22 +220,53 @@ const SeoSettings = () => {
 										checked={ !! settings.auto_rank_check }
 										onChange={ ( v ) => setField( 'auto_rank_check', v ) }
 									/>
-									<SelectControl
-										label={ __( 'SERP Data Provider', 'ai-marketing-expert' ) }
-										help={ __( 'AI estimates are used until a SERP provider integration is connected.', 'ai-marketing-expert' ) }
-										value={ settings.serp_provider || '' }
-										options={ SERP_PROVIDER_OPTIONS }
-										onChange={ ( v ) => setField( 'serp_provider', v ) }
-										__nextHasNoMarginBottom
-									/>
-									<TextControl
-										label={ __( 'SERP API Key', 'ai-marketing-expert' ) }
-										value={ settings.serp_api_key || '' }
-										onChange={ ( v ) => setField( 'serp_api_key', v ) }
-										type="password"
-										placeholder={ __( 'Optional Pro integration key', 'ai-marketing-expert' ) }
-										__nextHasNoMarginBottom
-									/>
+									{ /*
+									 * SERP Data Provider + SERP API Key — removed from the UI until
+									 * the integration actually exists.
+									 *
+									 * Both settings were write-only: `serp_provider` and
+									 * `serp_api_key` were saved by the settings controller and read
+									 * by nothing. `serpapi` and `dataforseo` appeared only in the
+									 * dropdown's own option list — no client, no request, no
+									 * adapter. Rank checks in class-rank-tracker-service.php never
+									 * consulted either value and always used AI estimates.
+									 *
+									 * So the form asked for a paid third-party API key it had no
+									 * use for, stored it in plaintext in wp_options, and returned a
+									 * success toast that implied rank data would now come from the
+									 * provider. Showing nothing is more honest than showing that.
+									 *
+									 * TO RESTORE (next update, once a provider client ships):
+									 *   1. Uncomment SERP_PROVIDER_OPTIONS near the top of this file.
+									 *   2. Uncomment the two controls below.
+									 *   3. Re-add 'serp_provider' and 'serp_api_key' to $text_fields
+									 *      in modules/seo/controllers/class-settings-controller.php.
+									 *   4. Make the rank tracker read them, and only then list a
+									 *      provider as selectable.
+									 *
+									 * <SelectControl
+									 *     label={ __( 'SERP Data Provider', 'ai-marketing-expert' ) }
+									 *     help={ __( 'AI estimates are used until a SERP provider integration is connected.', 'ai-marketing-expert' ) }
+									 *     value={ settings.serp_provider || '' }
+									 *     options={ SERP_PROVIDER_OPTIONS }
+									 *     onChange={ ( v ) => {
+									 *         setField( 'serp_provider', v );
+									 *         if ( ! v ) { setField( 'serp_api_key', '' ); }
+									 *     } }
+									 *     __nextHasNoMarginBottom
+									 * />
+									 * { !! settings.serp_provider && (
+									 *     <TextControl
+									 *         label={ __( 'SERP API Key', 'ai-marketing-expert' ) }
+									 *         help={ __( 'Stored for the selected provider. Leave the provider on AI Estimate Only if you do not have one.', 'ai-marketing-expert' ) }
+									 *         value={ settings.serp_api_key || '' }
+									 *         onChange={ ( v ) => setField( 'serp_api_key', v ) }
+									 *         type="password"
+									 *         placeholder={ __( 'Paste your provider API key', 'ai-marketing-expert' ) }
+									 *         __nextHasNoMarginBottom
+									 *     />
+									 * ) }
+									 */ }
 									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving
 											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving\u2026', 'ai-marketing-expert' ) }</>
@@ -248,26 +279,26 @@ const SeoSettings = () => {
 
 							return (
 								<div className="aime-settings-form">
+									<Notice
+										type="info"
+										message={ __( 'Coming soon. Google Search Console sync is planned for a future release — connecting it needs a Google OAuth app and review. Nothing here talks to Google yet.', 'ai-marketing-expert' ) }
+									/>
 									<TextControl
 										label={ __( 'Google Search Console Property', 'ai-marketing-expert' ) }
-										help={ __( 'Store the property URL or sc-domain value for the upcoming Search Console integration.', 'ai-marketing-expert' ) }
+										help={ __( 'Domain property: sc-domain:example.com — URL-prefix property: https://example.com/. Available once the integration ships.', 'ai-marketing-expert' ) }
 										value={ settings.search_console_property || '' }
 										onChange={ ( v ) => setField( 'search_console_property', v ) }
 										placeholder="sc-domain:example.com"
+										disabled
 										__nextHasNoMarginBottom
 									/>
 									<ToggleControl
 										label={ __( 'Enable Schema Suggestions', 'ai-marketing-expert' ) }
-										help={ __( 'Show schema suggestion workflows in SEO audits and automation.', 'ai-marketing-expert' ) }
+										help={ __( 'Schema suggestion workflows in audits and automation. Available once the integration ships.', 'ai-marketing-expert' ) }
 										checked={ !! settings.enable_schema_suggestions }
 										onChange={ ( v ) => setField( 'enable_schema_suggestions', v ) }
+										disabled
 									/>
-									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
-										{ saving
-											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving\u2026', 'ai-marketing-expert' ) }</>
-											: __( 'Save Settings', 'ai-marketing-expert' )
-										}
-									</Button>
 								</div>
 							);
 						} }

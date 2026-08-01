@@ -193,7 +193,7 @@ const Posts = ( { onNavigate } ) => {
 
 			{ /* Posts Table */ }
 			{ loading ? (
-				<Loader text={ __( 'Loading posts...', 'ai-marketing-expert' ) } />
+				<Loader variant="table" text={ __( 'Loading posts...', 'ai-marketing-expert' ) } />
 			) : posts.length === 0 ? (
 				<Card>
 					<div style={ { textAlign: 'center', padding: '40px 20px' } }>

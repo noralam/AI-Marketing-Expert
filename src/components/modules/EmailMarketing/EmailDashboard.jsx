@@ -25,7 +25,7 @@ const EmailDashboard = ( { onNavigate } ) => {
 	}, [ get ] );
 
 	if ( loading && ! data ) {
-		return <Loader text={ __( 'Loading dashboard...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading dashboard...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( error ) {

@@ -179,6 +179,12 @@ class SeoRestController {
 			'permission_callback' => array( $this, 'admin_permission' ),
 		) );
 
+		register_rest_route( $this->ns, '/seo/topics/usage', array(
+			'methods'             => \WP_REST_Server::READABLE,
+			'callback'            => array( $ctrl, 'topic_usage' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+		) );
+
 		// Topic links.
 		register_rest_route( $this->ns, '/seo/topics/links', array(
 			array(
@@ -286,6 +292,12 @@ class SeoRestController {
 			'callback'            => array( $ctrl, 'generate_calendar' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 		) );
+
+		register_rest_route( $this->ns, '/seo/calendar/usage', array(
+			'methods'             => \WP_REST_Server::READABLE,
+			'callback'            => array( $ctrl, 'calendar_usage' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+		) );
 	}
 
 	/* ── Backlink / Link Building Routes ──────────────────── */
@@ -327,6 +339,12 @@ class SeoRestController {
 		register_rest_route( $this->ns, '/seo/backlinks/generate-outreach', array(
 			'methods'             => \WP_REST_Server::CREATABLE,
 			'callback'            => array( $ctrl, 'generate_outreach' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+		) );
+
+		register_rest_route( $this->ns, '/seo/backlinks/usage', array(
+			'methods'             => \WP_REST_Server::READABLE,
+			'callback'            => array( $ctrl, 'backlink_usage' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 		) );
 	}

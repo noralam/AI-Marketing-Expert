@@ -24,8 +24,10 @@ class TopicalAuthorityService {
 	 *
 	 * Creates pillar topics, cluster topics, and internal linking suggestions,
 	 * then saves them to the database.
+	 *
+	 * @param int|null $max_topics Cap on saved topics (free plan), or null for unlimited.
 	 */
-	public function generate_topical_map( string $niche, string $pillar_topic ): array {
+	public function generate_topical_map( string $niche, string $pillar_topic, ?int $max_topics = null ): array {
 		$focus = $pillar_topic ?: $niche;
 
 		$prompt = implode( "\n", array(
@@ -104,44 +106,61 @@ class TopicalAuthorityService {
 		}
 
 		// Save to database.
-		$saved = $this->save_topical_map( $data );
+		$saved = $this->save_topical_map( $data, $max_topics );
 
 		return array(
 			'success'       => true,
 			'data'          => $data,
 			'saved_topics'  => $saved['topic_count'],
 			'saved_links'   => $saved['link_count'],
+			'dropped_topics' => $saved['dropped_count'],
 		);
 	}
 
 	/**
 	 * Save generated topical map to the database.
+	 *
+	 * @param int|null $max_topics Cap on saved topics, or null for unlimited.
 	 */
-	private function save_topical_map( array $data ): array {
+	private function save_topical_map( array $data, ?int $max_topics = null ): array {
 		global $wpdb;
 		$p = $wpdb->prefix;
 
 		$topic_count = 0;
 		$link_count  = 0;
+		$requested   = 0;
 		$name_to_id  = array();
 
 		foreach ( $data['pillars'] as $pillar ) {
-			$pillar_id = $this->insert_topic( $pillar, 'pillar', null );
-			if ( $pillar_id ) {
-				$topic_count++;
-				$name_to_id[ $pillar['name'] ] = $pillar_id;
+			$clusters   = $pillar['clusters'] ?? array();
+			$requested += 1 + count( $clusters );
 
-				foreach ( $pillar['clusters'] ?? array() as $cluster ) {
-					$cluster_id = $this->insert_topic( $cluster, 'cluster', $pillar_id );
-					if ( $cluster_id ) {
-						$topic_count++;
-						$name_to_id[ $cluster['name'] ] = $cluster_id;
-					}
+			if ( null !== $max_topics && $topic_count >= $max_topics ) {
+				continue;
+			}
+
+			$pillar_id = $this->insert_topic( $pillar, 'pillar', null );
+			if ( ! $pillar_id ) {
+				continue;
+			}
+
+			$topic_count++;
+			$name_to_id[ $pillar['name'] ] = $pillar_id;
+
+			foreach ( $clusters as $cluster ) {
+				if ( null !== $max_topics && $topic_count >= $max_topics ) {
+					break;
+				}
+
+				$cluster_id = $this->insert_topic( $cluster, 'cluster', $pillar_id );
+				if ( $cluster_id ) {
+					$topic_count++;
+					$name_to_id[ $cluster['name'] ] = $cluster_id;
 				}
 			}
 		}
 
-		// Save internal links.
+		// Save internal links. Links to topics dropped by the cap are skipped.
 		foreach ( $data['internal_links'] ?? array() as $link ) {
 			$from_name = $link['from'] ?? '';
 			$to_name   = $link['to'] ?? '';
@@ -159,8 +178,9 @@ class TopicalAuthorityService {
 		}
 
 		return array(
-			'topic_count' => $topic_count,
-			'link_count'  => $link_count,
+			'topic_count'   => $topic_count,
+			'link_count'    => $link_count,
+			'dropped_count' => max( 0, $requested - $topic_count ),
 		);
 	}
 
@@ -180,7 +200,7 @@ class TopicalAuthorityService {
 			'content_brief'     => sanitize_textarea_field( $topic['brief'] ?? '' ),
 			'word_count_target' => absint( $topic['word_count_target'] ?? 1500 ),
 			'priority'          => min( 5, max( 1, absint( $topic['priority'] ?? 3 ) ) ),
-			'is_pro'            => 1,
+			'is_pro'            => aime_has_pro() ? 1 : 0,
 		) );
 
 		return $wpdb->insert_id ?: null;

@@ -317,7 +317,7 @@ const KnowledgeBase = ( { onNavigate } ) => {
 				</div>
 
 				{ loading && ! items.length ? (
-					<Loader text={ __( 'Loading knowledge base...', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading knowledge base...', 'ai-marketing-expert' ) } />
 				) : items.length === 0 ? (
 					<p className="aime-empty-msg">
 						{ __( 'No knowledge entries found. Add Q&A pairs or index your content.', 'ai-marketing-expert' ) }

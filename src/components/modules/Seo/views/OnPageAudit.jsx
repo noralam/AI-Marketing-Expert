@@ -292,7 +292,7 @@ const OnPageAudit = ( { onNavigate } ) => {
 					) }
 					<AiNotice />
 				</div>
-				{ running && <Loader text={ __( 'Running SEO audit\u2026', 'ai-marketing-expert' ) } /> }
+				{ running && <Loader variant="lines" text={ __( 'Running SEO audit\u2026', 'ai-marketing-expert' ) } /> }
 			</Card>
 
 			{ /* Summary Stats & Charts */ }
@@ -392,7 +392,7 @@ const OnPageAudit = ( { onNavigate } ) => {
 			{ /* Audit History */ }
 			<Card title={ __( 'Audit History', 'ai-marketing-expert' ) }>
 				{ loading && ! audits.length ? (
-					<Loader text={ __( 'Loading audits\u2026', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading audits\u2026', 'ai-marketing-expert' ) } />
 				) : audits.length === 0 ? (
 					<p className="aime-empty-text">
 						{ __( 'No audits yet. Run your first audit above.', 'ai-marketing-expert' ) }

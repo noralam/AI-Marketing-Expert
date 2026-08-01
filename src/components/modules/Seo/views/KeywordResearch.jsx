@@ -15,6 +15,7 @@ import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
+import UsageNotice from '../../../common/UsageNotice';
 import { toast } from '../../../common/Toast';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 
@@ -334,58 +335,6 @@ const SerpBadges = ( { features } ) => {
 				</span>
 			) ) }
 			{ features.length > 4 && <span style={ { fontSize: 10, color: '#888' } }>+{ features.length - 4 }</span> }
-		</div>
-	);
-};
-
-/**
- * Free-plan usage indicator for a research feature.
- * Shows "X of Y left this month" while quota remains, or an upgrade
- * banner once exhausted. Renders nothing for Pro (limit == null).
- */
-const UsageNotice = ( { usage, featureLabel, proUrl } ) => {
-	if ( ! usage || usage.limit == null ) return null;
-	const left = Math.max( 0, usage.limit - usage.used );
-
-	if ( left > 0 ) {
-		return (
-			<div style={ {
-				display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16,
-				padding: '4px 10px', borderRadius: 4, background: '#f0f6fc', border: '1px solid #c5d9ed',
-				fontSize: 12, color: '#1d2327',
-			} }>
-				<span>{ '\u{2728}' }</span>
-				<span>
-					{ sprintf(
-						/* translators: 1: remaining uses, 2: monthly limit */
-						__( 'Free plan: %1$d of %2$d uses left this month.', 'ai-marketing-expert' ),
-						left,
-						usage.limit
-					) }
-				</span>
-			</div>
-		);
-	}
-
-	return (
-		<div style={ {
-			display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
-			marginBottom: 16, padding: '12px 16px', borderRadius: 6,
-			background: '#fff8e5', border: '1px solid #f0c33c',
-		} }>
-			<span style={ { fontSize: 13 } }>
-				{ sprintf(
-					/* translators: 1: feature name, 2: monthly limit */
-					__( 'You have used all %2$d free %1$s runs for this month. Upgrade to Pro for unlimited access.', 'ai-marketing-expert' ),
-					featureLabel,
-					usage.limit
-				) }
-			</span>
-			<a href={ proUrl } target="_blank" rel="noopener noreferrer">
-				<Button variant="primary" size="compact" className="aime-btn-pro">
-					{ __( 'Upgrade to Pro', 'ai-marketing-expert' ) }
-				</Button>
-			</a>
 		</div>
 	);
 };
@@ -1698,7 +1647,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 			</div>
 
 			<Card>
-				{ loading && <Loader text={ __( 'AI is analyzing your keywords. Processing time depends on your AI model and internet connection.', 'ai-marketing-expert' ) } /> }
+				{ loading && <Loader variant="lines" text={ __( 'AI is analyzing your keywords. Processing time depends on your AI model and internet connection.', 'ai-marketing-expert' ) } /> }
 				<div style={ loading ? { display: 'none' } : undefined }>
 					<TabPanel tabs={ TABS } initialTabName={ activeTab } onSelect={ setActiveTab }>
 						{ ( tab ) => {

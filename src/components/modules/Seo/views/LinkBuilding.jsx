@@ -7,10 +7,11 @@ import { __ } from '@wordpress/i18n';
 import { Button } from '@aime/wp-components';
 import { trash, edit } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
+import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
+import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, HBarChart, SortArrow } from './SeoCharts';
@@ -52,7 +53,9 @@ const emptyForm = {
 
 const LinkBuilding = ( { onNavigate } ) => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
+	const { proUrl } = usePro();
 	const [ backlinks, setBacklinks ] = useState( [] );
+	const [ usage, setUsage ] = useState( null );
 	const [ total, setTotal ] = useState( 0 );
 	const [ showForm, setShowForm ] = useState( false );
 	const [ form, setForm ] = useState( { ...emptyForm } );
@@ -114,9 +117,19 @@ const LinkBuilding = ( { onNavigate } ) => {
 		}
 	}, [ get ] );
 
+	const fetchUsage = useCallback( async () => {
+		try {
+			const res = await get( '/seo/backlinks/usage' );
+			setUsage( res.usage || null );
+		} catch ( e ) {
+			// silent
+		}
+	}, [ get ] );
+
 	useEffect( () => {
 		fetchBacklinks();
-	}, [ fetchBacklinks ] );
+		fetchUsage();
+	}, [ fetchBacklinks, fetchUsage ] );
 
 	const setField = ( key, value ) => {
 		setForm( ( prev ) => ( { ...prev, [ key ]: value } ) );
@@ -136,6 +149,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 			setEditId( null );
 			setForm( { ...emptyForm } );
 			fetchBacklinks();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		}
@@ -161,6 +175,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 			toast( __( 'Backlink deleted.', 'ai-marketing-expert' ) );
 			setConfirmDelete( null );
 			fetchBacklinks();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		}
@@ -172,6 +187,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 		try {
 			const res = await post( '/seo/backlinks/generate-outreach', { backlink_id: id } );
 			setOutreach( res.data || res );
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -179,8 +195,13 @@ const LinkBuilding = ( { onNavigate } ) => {
 		}
 	};
 
+	const prospectsFull = !! usage?.prospects && usage.prospects.limit != null
+		&& usage.prospects.used >= usage.prospects.limit;
+	const outreachExhausted = !! usage?.outreach && usage.outreach.limit != null
+		&& usage.outreach.used >= usage.outreach.limit;
+
 	return (
-		<ProGate feature={ __( 'Link Building', 'ai-marketing-expert' ) }>
+		<>
 			<div className="aime-seo-link-building">
 				{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 
@@ -188,6 +209,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 					<h2>{ __( 'Link Building', 'ai-marketing-expert' ) } ({ total })</h2>
 					<Button
 						variant="primary"
+						disabled={ prospectsFull }
 						onClick={ () => {
 							setForm( { ...emptyForm } );
 							setEditId( null );
@@ -197,6 +219,19 @@ const LinkBuilding = ( { onNavigate } ) => {
 						{ __( '+ Add Prospect', 'ai-marketing-expert' ) }
 					</Button>
 				</div>
+
+				<UsageNotice
+					usage={ usage?.prospects }
+					featureLabel={ __( 'link prospects', 'ai-marketing-expert' ) }
+					proUrl={ proUrl }
+					kind="storage"
+				/>
+
+				<UsageNotice
+					usage={ usage?.outreach }
+					featureLabel={ __( 'AI outreach email', 'ai-marketing-expert' ) }
+					proUrl={ proUrl }
+				/>
 
 				{ /* Add/Edit Form Modal */ }
 				{ showForm && (
@@ -329,7 +364,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 
 				{ /* Table */ }
 				{ loading && ! backlinks.length ? (
-					<Loader text={ __( 'Loading backlinks\u2026', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading backlinks\u2026', 'ai-marketing-expert' ) } />
 				) : backlinks.length === 0 ? (
 					<Card>
 						<p className="aime-empty-text">
@@ -419,7 +454,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 											<Button
 												variant="secondary"
 												onClick={ () => handleGenerateOutreach( bl.id ) }
-												disabled={ generating }
+												disabled={ generating || outreachExhausted }
 												style={ { marginRight: 4 } }
 												isSmall
 											>
@@ -446,7 +481,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 					</>
 				) }
 
-				{ generating && <Loader text={ __( 'AI is crafting your outreach email\u2026', 'ai-marketing-expert' ) } /> }
+				{ generating && <Loader variant="lines" text={ __( 'AI is crafting your outreach email\u2026', 'ai-marketing-expert' ) } /> }
 
 				{ confirmDelete && (
 					<ConfirmModal
@@ -457,7 +492,7 @@ const LinkBuilding = ( { onNavigate } ) => {
 					/>
 				) }
 			</div>
-		</ProGate>
+		</>
 	);
 };
 

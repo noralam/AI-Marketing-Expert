@@ -68,6 +68,9 @@ class AnalyticsController {
 				'gap_limit'      => aime_has_pro() ? null : ( $limits['seo_competitor_gap_monthly'] ?? 3 ),
 				'brief_used'     => SeoModule::get_monthly_feature_count( 'content_brief' ),
 				'brief_limit'    => aime_has_pro() ? null : ( $limits['seo_content_brief_monthly'] ?? 5 ),
+				'topics'         => aime_usage_payload( 'seo_topics', SeoModule::get_topic_count() ),
+				'calendar_items' => aime_usage_payload( 'seo_calendar_items', SeoModule::get_calendar_count() ),
+				'prospects'      => aime_usage_payload( 'seo_backlink_prospects', SeoModule::get_backlink_count() ),
 			),
 			'is_pro' => aime_has_pro(),
 		) );

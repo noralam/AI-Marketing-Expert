@@ -282,6 +282,14 @@ function aime_free_limits(): array {
 		'seo_niche_analysis_monthly'      => 3,
 		'seo_competitor_gap_monthly'      => 3,
 		'seo_content_brief_monthly'       => 5,
+		'seo_topics'                      => 10,
+		'seo_topic_map_generate_monthly'  => 1,
+		'seo_calendar_items'              => 10,
+		'seo_calendar_generate_monthly'   => 1,
+		'seo_backlink_prospects'          => 10,
+		'seo_outreach_monthly'            => 3,
+		'seo_automation_tasks'            => 1,
+		'seo_automation_runs_monthly'     => 10,
 		// Workflow Automation.
 		'workflows_active'                => 2,
 		'workflow_steps'                  => 3,
@@ -305,6 +313,39 @@ function aime_limit_reached( string $limit_key, int $current ): bool {
 	$limit  = $limits[ $limit_key ] ?? PHP_INT_MAX;
 
 	return $current >= $limit;
+}
+
+/**
+ * Get the number of uses remaining for a free-plan limit.
+ *
+ * @param string $limit_key Limit key.
+ * @param int    $current   Current count.
+ * @return int|null Remaining uses, or null when unlimited (Pro).
+ */
+function aime_limit_remaining( string $limit_key, int $current ): ?int {
+	if ( aime_has_pro() ) {
+		return null;
+	}
+
+	$limit = aime_free_limits()[ $limit_key ] ?? PHP_INT_MAX;
+
+	return max( 0, $limit - $current );
+}
+
+/**
+ * Build a usage payload for the admin UI.
+ *
+ * A null limit means unlimited, which the UI renders as no meter at all.
+ *
+ * @param string $limit_key Limit key.
+ * @param int    $current   Current count.
+ * @return array{used:int,limit:int|null}
+ */
+function aime_usage_payload( string $limit_key, int $current ): array {
+	return array(
+		'used'  => $current,
+		'limit' => aime_has_pro() ? null : ( aime_free_limits()[ $limit_key ] ?? null ),
+	);
 }
 
 /**

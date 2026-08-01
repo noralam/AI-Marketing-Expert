@@ -30,7 +30,7 @@ const ArticlePreview = ( { id, onBack, onNavigate } ) => {
 	}, [ get, id ] );
 
 	if ( loading || ! article ) {
-		return <Loader text={ __( 'Loading preview...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="lines" text={ __( 'Loading preview...', 'ai-marketing-expert' ) } />;
 	}
 
 	const keywords = Array.isArray( article.keywords ) ? article.keywords : [];

@@ -102,7 +102,7 @@ const SubscriberProfile = ( { id, onBack, onNavigate } ) => {
 	};
 
 	if ( loading && ! sub ) {
-		return <Loader text={ __( 'Loading contact...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="lines" text={ __( 'Loading contact...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! sub ) {

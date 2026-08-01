@@ -11,6 +11,7 @@ import Loader from '../../common/Loader';
 import ProGate from '../../common/ProGate';
 import { toast } from '../../common/Toast';
 import { SOCIAL_PLATFORMS, SOCIAL_POST_STATUS } from '../../../utils/constants';
+import { siteToday } from '../../../utils/datetime';
 
 const DAYS = [ 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ];
 const MONTHS = [
@@ -79,9 +80,11 @@ const Calendar = ( { onNavigate } ) => {
 
 	const handleDragOver = ( e ) => e.preventDefault();
 
-	const todayDate = new Date();
+	// "Today" follows the site timezone, not the admin's browser, so the
+	// highlighted cell matches the day the scheduler will actually publish on.
+	const today = siteToday();
 	const isToday = ( day ) =>
-		todayDate.getFullYear() === year && todayDate.getMonth() === month && todayDate.getDate() === day;
+		today.year === year && today.month === month && today.day === day;
 
 	const calendarContent = (
 		<div className="aime-social-calendar">
@@ -109,7 +112,7 @@ const Calendar = ( { onNavigate } ) => {
 				</div>
 
 				{ loading ? (
-					<Loader text={ __( 'Loading calendar...', 'ai-marketing-expert' ) } />
+					<Loader variant="calendar" text={ __( 'Loading calendar...', 'ai-marketing-expert' ) } />
 				) : (
 					<>
 						{ /* Days of week header */ }

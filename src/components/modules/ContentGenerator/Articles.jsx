@@ -184,7 +184,7 @@ const Articles = ( { onNavigate } ) => {
 
 			{ /* Table */ }
 			{ loading && ! articles.length ? (
-				<Loader text={ __( 'Loading articles...', 'ai-marketing-expert' ) } />
+				<Loader variant="table" text={ __( 'Loading articles...', 'ai-marketing-expert' ) } />
 			) : articles.length === 0 ? (
 				<p className="aime-empty-msg">
 					{ __( 'No articles found. Create one to get started!', 'ai-marketing-expert' ) }

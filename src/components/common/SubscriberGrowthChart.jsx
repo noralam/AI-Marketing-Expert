@@ -11,6 +11,7 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 } from 'recharts';
+import { formatDay, formatDayShort } from '../../utils/datetime';
 
 const SubscriberGrowthChart = ( { data = [], height = 300 } ) => {
 	if ( ! data.length ) {
@@ -35,15 +36,12 @@ const SubscriberGrowthChart = ( { data = [], height = 300 } ) => {
 				<XAxis
 					dataKey="date"
 					tick={ { fontSize: 11, fill: '#94a3b8' } }
-					tickFormatter={ ( v ) => {
-						const d = new Date( v );
-						return `${ d.getMonth() + 1 }/${ d.getDate() }`;
-					} }
+					tickFormatter={ ( v ) => formatDayShort( v ) }
 				/>
 				<YAxis tick={ { fontSize: 11, fill: '#94a3b8' } } allowDecimals={ false } />
 				<Tooltip
 					contentStyle={ { borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 } }
-					labelFormatter={ ( v ) => new Date( v ).toLocaleDateString() }
+					labelFormatter={ ( v ) => formatDay( v, '' ) }
 				/>
 				<Area
 					type="monotone"

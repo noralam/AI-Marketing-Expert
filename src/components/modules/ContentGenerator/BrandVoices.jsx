@@ -8,7 +8,8 @@ import { Button, TextControl, TextareaControl, ToggleControl, Spinner } from '@a
 import { edit, trash, starFilled } from '@wordpress/icons';
 import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
-import Loader from '../../common/Loader';
+import EmptyState from '../../common/EmptyState';
+import { SkeletonBlock } from '../../common/Skeleton';
 import { toast } from '../../common/Toast';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
@@ -88,7 +89,11 @@ const BrandVoices = () => {
 		}
 	};
 
-	const previewText = ( value, fallback = '' ) => ( value || fallback || __( 'Not set.', 'ai-marketing-expert' ) ).slice( 0, 150 );
+	const RULES = [
+		{ key: 'tone_rules', label: __( 'Tone', 'ai-marketing-expert' ) },
+		{ key: 'style_rules', label: __( 'Style', 'ai-marketing-expert' ) },
+		{ key: 'avoid_rules', label: __( 'Avoid', 'ai-marketing-expert' ) },
+	];
 
 	return (
 		<div className="aime-brand-voices">
@@ -103,9 +108,29 @@ const BrandVoices = () => {
 				</div>
 			</div>
 
-			{ loading && ! voices.length ? <Loader text={ __( 'Loading brand voices...', 'ai-marketing-expert' ) } /> : (
+			{ loading && ! voices.length ? (
+				// Voices arrive as a grid of cards, so the wait shows a grid of
+				// cards. A centred spinner would move the page twice.
+				<div className="aime-presets-grid" aria-busy="true" aria-live="polite">
+					<span className="screen-reader-text">{ __( 'Loading brand voices…', 'ai-marketing-expert' ) }</span>
+					{ [ 0, 1, 2 ].map( ( i ) => (
+						<Card key={ i } className="aime-preset-card aime-brand-voice-card">
+							<SkeletonBlock height={ 15 } width="55%" style={ { marginBottom: 14 } } />
+							<SkeletonBlock height={ 13 } width="100%" style={ { marginBottom: 6 } } />
+							<SkeletonBlock height={ 13 } width="80%" style={ { marginBottom: 18 } } />
+							<SkeletonBlock height={ 12 } width="100%" style={ { marginBottom: 8 } } />
+							<SkeletonBlock height={ 12 } width="92%" style={ { marginBottom: 8 } } />
+							<SkeletonBlock height={ 12 } width="70%" />
+						</Card>
+					) ) }
+				</div>
+			) : voices.length === 0 ? (
+				<EmptyState
+					title={ __( 'No brand voices yet', 'ai-marketing-expert' ) }
+					description={ __( 'A brand voice pins the tone, style, and phrasing to avoid, so every article the generator writes sounds like the same company. Create one, or let AI draft it from a short description of your business.', 'ai-marketing-expert' ) }
+				/>
+			) : (
 				<div className="aime-presets-grid aime-brand-voice-grid">
-					{ voices.length === 0 && <p className="aime-empty-text">{ __( 'No brand voices yet. Create one to keep generated content consistent.', 'ai-marketing-expert' ) }</p> }
 					{ voices.map( ( voice ) => (
 						<Card key={ voice.id } className="aime-preset-card aime-brand-voice-card">
 							<div className="aime-preset-header">
@@ -113,11 +138,17 @@ const BrandVoices = () => {
 								{ Number( voice.is_default ) === 1 ? <span className="aime-badge-default">{ __( 'Default', 'ai-marketing-expert' ) }</span> : null }
 							</div>
 							<p className="aime-brand-voice-description">{ voice.description || __( 'No description.', 'ai-marketing-expert' ) }</p>
-							<div className="aime-preset-details aime-brand-voice-values">
-								<span>{ __( 'Tone:', 'ai-marketing-expert' ) } { previewText( voice.tone_rules ) }</span>
-								<span>{ __( 'Style:', 'ai-marketing-expert' ) } { previewText( voice.style_rules ) }</span>
-								<span>{ __( 'Avoid:', 'ai-marketing-expert' ) } { previewText( voice.avoid_rules ) }</span>
-							</div>
+							<dl className="aime-brand-voice-values">
+								{ RULES.map( ( rule ) => {
+									const value = ( voice[ rule.key ] || '' ).trim();
+									return (
+										<div key={ rule.key } className={ `aime-brand-voice-rule${ value ? '' : ' is-empty' }` }>
+											<dt>{ rule.label }</dt>
+											<dd>{ value || __( 'Not set.', 'ai-marketing-expert' ) }</dd>
+										</div>
+									);
+								} ) }
+							</dl>
 							<div className="aime-preset-actions">
 								<Button icon={ edit } label={ __( 'Edit', 'ai-marketing-expert' ) } onClick={ () => setEditing( { ...voice, is_default: Number( voice.is_default ) === 1 } ) } size="small" />
 								<Button icon={ trash } label={ __( 'Delete', 'ai-marketing-expert' ) } isDestructive onClick={ () => deleteVoice( voice.id ) } size="small" />

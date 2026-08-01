@@ -300,7 +300,7 @@ const RankTracker = ( { onNavigate } ) => {
 			{ /* Rank History */ }
 			<Card title={ __( 'Rank History', 'ai-marketing-expert' ) }>
 				{ loading && ! history.length ? (
-					<Loader text={ __( 'Loading history\u2026', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading history\u2026', 'ai-marketing-expert' ) } />
 				) : history.length === 0 ? (
 					<p className="aime-empty-text">
 						{ __( 'No rank history yet. Add keywords to your vault and check their rank.', 'ai-marketing-expert' ) }{ ' ' }

@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { list, plus, calendar, cog } from '@wordpress/icons';
+import { list, plus, calendar, cog, warning } from '@wordpress/icons';
 import AppLayout from '../../Layout/AppLayout';
 import InternalSidebar from '../../Layout/InternalSidebar';
 import Card from '../../common/Card';
@@ -20,6 +20,7 @@ import WorkflowBuilder from './WorkflowBuilder';
 import TemplatePicker from './TemplatePicker';
 import UpcomingRuns from './UpcomingRuns';
 import WorkflowHistory from './WorkflowHistory';
+import ErrorLog from './ErrorLog';
 
 const parseHash = () => {
 	const hash = window.location.hash.replace( '#', '' );
@@ -104,6 +105,7 @@ const WorkflowAutomationPage = () => {
 		{ key: 'workflows', label: __( 'Workflows', 'ai-marketing-expert' ), icon: list },
 		{ key: 'new-workflow', label: __( 'New Workflow', 'ai-marketing-expert' ), icon: plus },
 		{ key: 'upcoming', label: __( 'Upcoming Runs', 'ai-marketing-expert' ), icon: calendar },
+		{ key: 'error-log', label: __( 'Error Log', 'ai-marketing-expert' ), icon: warning },
 		{ key: 'settings', label: __( 'Settings', 'ai-marketing-expert' ), icon: cog },
 	];
 
@@ -127,6 +129,8 @@ const WorkflowAutomationPage = () => {
 				);
 			case 'upcoming':
 				return <UpcomingRuns onNavigate={ navigate } />;
+			case 'error-log':
+				return <ErrorLog onNavigate={ navigate } />;
 			case 'settings':
 				return <WorkflowSettings />;
 			case 'history':

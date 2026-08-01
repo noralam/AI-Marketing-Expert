@@ -386,7 +386,7 @@ class Admin {
 				'displayName' => wp_get_current_user()->display_name,
 				'email'       => wp_get_current_user()->user_email,
 			),
-			'proUrl'         => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert' ),
+			'proUrl'         => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ),
 			'menuSlug'       => 'ai-marketing-expert',
 			'isDebug'        => defined( 'WP_DEBUG' ) && WP_DEBUG,
 		);
@@ -436,7 +436,7 @@ class Admin {
 		);
 
 		if ( ! aime_has_pro() ) {
-			$plugin_links[] = '<a href="' . esc_url( apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert' ) ) . '" style="color: #FF6B35; font-weight: bold;" target="_blank">' .
+			$plugin_links[] = '<a href="' . esc_url( apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ) ) . '" style="color: #FF6B35; font-weight: bold;" target="_blank">' .
 				esc_html__( 'Go Pro', 'ai-marketing-expert' ) . '</a>';
 		}
 

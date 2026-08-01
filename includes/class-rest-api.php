@@ -515,7 +515,7 @@ class RestApi {
 			'from_name'        => get_bloginfo( 'name' ),
 			'from_email'       => get_option( 'admin_email' ),
 			'unsubscribe_page' => 0,
-			'double_optin'     => (bool) get_option( 'aime_double_optin', true ),
+			'double_optin'     => (bool) get_option( 'aime_double_optin', false ),
 			'track_opens'      => true,
 			'track_clicks'     => true,
 			'sending_method'   => 'wp_mail',
@@ -607,7 +607,7 @@ class RestApi {
 			array(
 				'has_pro'      => aime_has_pro(),
 				'license_info' => apply_filters( 'aime_pro_license_info', array() ),
-				'pro_url'      => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert' ),
+				'pro_url'      => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ),
 			)
 		);
 	}

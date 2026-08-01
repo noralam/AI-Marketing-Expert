@@ -47,7 +47,7 @@ class Pro {
 			$message,
 			array(
 				'status'  => 403,
-				'pro_url' => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert' ),
+				'pro_url' => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ),
 			)
 		);
 	}

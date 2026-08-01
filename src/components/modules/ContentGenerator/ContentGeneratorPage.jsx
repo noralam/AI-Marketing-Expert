@@ -71,7 +71,7 @@ const ContentGeneratorPage = () => {
 			case 'presets':
 				return <Presets />;
 			case 'settings':
-				return <ContentSettings />;
+				return <ContentSettings initialTab={ viewParams.tab } />;
 			default:
 				return <ContentAnalytics onNavigate={ navigate } />;
 		}

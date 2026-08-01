@@ -46,7 +46,7 @@ const Dashboard = ( { onNavigate } ) => {
 	}, [ get ] );
 
 	if ( loading && ! stats ) {
-		return <Loader text={ __( 'Loading dashboard...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="dashboard" text={ __( 'Loading dashboard...', 'ai-marketing-expert' ) } />;
 	}
 
 	const monthlyConversations = stats?.conversations_this_month || 0;

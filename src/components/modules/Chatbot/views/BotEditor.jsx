@@ -324,7 +324,7 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 	};
 
 	if ( loading && ! bot ) {
-		return <Loader text={ __( 'Loading chatbot...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading chatbot...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! bot ) return null;

@@ -10,6 +10,7 @@ import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import { menuUrl } from '../../../utils/menuUrl';
+import { formatDate } from '../../../utils/datetime';
 
 const STATUS_OPTIONS = [
 	{ label: __( 'All Statuses', 'ai-marketing-expert' ), value: '' },
@@ -103,7 +104,7 @@ const Automations = ( { onNavigate } ) => {
 				<SelectControl value={ status } options={ STATUS_OPTIONS } onChange={ ( v ) => { setStatus( v ); setPage( 1 ); } } __nextHasNoMarginBottom />
 			</div>
 
-			{ loading && <Loader /> }
+			{ loading && <Loader variant="table" /> }
 
 			{ ! loading && automations.length === 0 && (
 				<p className="aime-empty-msg">{ __( 'No automations found. Create your first automation!', 'ai-marketing-expert' ) }</p>
@@ -134,7 +135,7 @@ const Automations = ( { onNavigate } ) => {
 									<span className={ `aime-badge aime-badge-${ BADGE[ a.status ] || 'default' }` }>{ a.status }</span>
 								</td>
 								<td>{ a.sequences_count ?? '\u2014' }</td>
-								<td>{ a.updated_at ? new Date( a.updated_at ).toLocaleDateString() : '\u2014' }</td>
+								<td>{ formatDate( a.updated_at, '\u2014' ) }</td>
 								<td className="aime-actions">
 									<Button variant="tertiary" size="small" onClick={ () => handleToggleStatus( a ) }>
 										{ a.status === 'published' ? __( 'Pause', 'ai-marketing-expert' ) : __( 'Activate', 'ai-marketing-expert' ) }

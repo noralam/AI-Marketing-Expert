@@ -120,6 +120,18 @@ class WorkflowRestController {
 			'permission_callback' => $perm,
 		) );
 
+		register_rest_route( $this->ns, $base . '/logs', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'logs' ),
+			'permission_callback' => $perm,
+		) );
+
+		register_rest_route( $this->ns, $base . '/usage', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'usage' ),
+			'permission_callback' => $perm,
+		) );
+
 		register_rest_route( $this->ns, $base . '/settings', array(
 			array(
 				'methods'             => 'GET',
@@ -405,6 +417,54 @@ class WorkflowRestController {
 
 	public function upcoming(): \WP_REST_Response {
 		return new \WP_REST_Response( array( 'upcoming' => $this->repo->upcoming( 20 ) ), 200 );
+	}
+
+	/**
+	 * Module-wide error log: every run that failed, partly failed, or was
+	 * skipped, with the step-level reasons attached.
+	 */
+	public function logs(): \WP_REST_Response {
+		$rows = $this->repo->recent_problem_executions( 50 );
+
+		$ids     = array_map( static fn ( object $e ): int => (int) $e->id, $rows );
+		$outputs = $this->repo->problem_outputs_for( $ids );
+
+		$by_execution = array();
+		foreach ( $outputs as $out ) {
+			$by_execution[ (int) $out->execution_id ][] = array(
+				'action_type' => (string) $out->action_type,
+				'action_label' => ActionRegistry::get( (string) $out->action_type )['label'] ?? (string) $out->action_type,
+				'status'      => (string) $out->status,
+				'error'       => (string) $out->error,
+			);
+		}
+
+		$entries = array();
+		foreach ( $rows as $row ) {
+			$entry           = $this->shape_execution( $row );
+			$entry['steps']  = $by_execution[ (int) $row->id ] ?? array();
+			$entries[]       = $entry;
+		}
+
+		return new \WP_REST_Response( array( 'entries' => $entries ), 200 );
+	}
+
+	/**
+	 * Free-plan usage meters for the workflow module.
+	 */
+	public function usage(): \WP_REST_Response {
+		$limits = aime_free_limits();
+
+		return new \WP_REST_Response( array(
+			'is_pro' => aime_has_pro(),
+			'usage'  => array(
+				'workflows' => aime_usage_payload( 'workflows_active', $this->repo->count_active() ),
+				'runs'      => aime_usage_payload( 'workflow_runs_monthly', $this->repo->count_runs_this_month() ),
+			),
+			// Per-workflow cap, not a running total — the builder shows it against
+			// the step count of the workflow currently open.
+			'step_limit' => aime_has_pro() ? null : (int) ( $limits['workflow_steps'] ?? 3 ),
+		), 200 );
 	}
 
 	/* ── Sanitizers / shapers ───────────────────────────── */

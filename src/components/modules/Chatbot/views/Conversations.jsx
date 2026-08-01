@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Button, SelectControl, SearchControl, CheckboxControl } from '@aime/wp-components';
-import { trash, seen, globe, lock } from '@wordpress/icons';
+import { Icon, trash, seen, globe, lock, chevronDown, chevronUp } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
 import usePro from '../../../../hooks/usePro';
 import { apiGet } from '../../../../utils/api';
@@ -227,6 +227,7 @@ const Conversations = ( { onNavigate } ) => {
 	];
 
 	const [ copied, setCopied ] = useState( false );
+	const [ shortcodeOpen, setShortcodeOpen ] = useState( false );
 
 	const copyShortcode = () => {
 		navigator.clipboard.writeText( '[aime_discussions]' ).then( () => {
@@ -240,33 +241,6 @@ const Conversations = ( { onNavigate } ) => {
 			<div className="aime-page-header">
 				<h2>{ __( 'Conversations', 'ai-marketing-expert' ) } <span className="aime-count">({ total })</span></h2>
 			</div>
-
-			<Card className="aime-shortcode-info">
-				<div className="aime-shortcode-info__inner">
-					<div className="aime-shortcode-info__text">
-						<strong>{ __( 'Public Discussions', 'ai-marketing-expert' ) }{ ! hasPro ? ' - Pro' : '' }</strong>
-						<p style={ { margin: '4px 0 0', color: '#555', fontSize: '13px' } }>
-							{ hasPro
-								? __( 'Show conversations on any page as a community discussion board. Add the shortcode below to a page or post. Use the', 'ai-marketing-expert' )
-								: __( 'Show conversations on any page as a community discussion board. Upgrade to Pro to use this shortcode and public visibility controls.', 'ai-marketing-expert' )
-							}{ ' ' }
-							<span style={ { verticalAlign: 'middle' } }>{ '\uD83C\uDF10' }</span> { __( 'icon in the table to show/hide individual conversations.', 'ai-marketing-expert' ) }
-						</p>
-					</div>
-					<div className="aime-shortcode-info__code">
-						<code>[aime_discussions]</code>
-						{ hasPro ? (
-							<Button
-								variant="secondary"
-								size="small"
-								onClick={ copyShortcode }
-							>
-								{ copied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy', 'ai-marketing-expert' ) }
-							</Button>
-						) : <ProUpgradeButton /> }
-					</div>
-				</div>
-			</Card>
 
 			<Card>
 				{ /* Bulk actions bar */ }
@@ -332,7 +306,7 @@ const Conversations = ( { onNavigate } ) => {
 				</div>
 
 				{ loading && ! items.length ? (
-					<Loader text={ __( 'Loading conversations...', 'ai-marketing-expert' ) } />
+					<Loader variant="table" text={ __( 'Loading conversations...', 'ai-marketing-expert' ) } />
 				) : items.length === 0 ? (
 					<p className="aime-empty-msg">
 						{ __( 'No conversations found.', 'ai-marketing-expert' ) }
@@ -446,6 +420,47 @@ const Conversations = ( { onNavigate } ) => {
 							</div>
 						) }
 					</>
+				) }
+			</Card>
+
+			<Card className={ `aime-shortcode-info${ shortcodeOpen ? ' is-open' : '' }` }>
+				<button
+					type="button"
+					className="aime-shortcode-info__toggle"
+					onClick={ () => setShortcodeOpen( ( o ) => ! o ) }
+					aria-expanded={ shortcodeOpen }
+					aria-controls="aime-shortcode-info-panel"
+				>
+					<span className="aime-shortcode-info__title">
+						{ __( 'Public Discussions', 'ai-marketing-expert' ) }{ ! hasPro ? ' - Pro' : '' }
+					</span>
+					<Icon icon={ shortcodeOpen ? chevronUp : chevronDown } size={ 20 } />
+				</button>
+
+				{ shortcodeOpen && (
+					<div className="aime-shortcode-info__inner" id="aime-shortcode-info-panel">
+						<div className="aime-shortcode-info__text">
+							<p style={ { margin: 0, color: '#555', fontSize: '13px' } }>
+								{ hasPro
+									? __( 'Show conversations on any page as a community discussion board. Add the shortcode below to a page or post. Use the', 'ai-marketing-expert' )
+									: __( 'Show conversations on any page as a community discussion board. Upgrade to Pro to use this shortcode and public visibility controls.', 'ai-marketing-expert' )
+								}{ ' ' }
+								<span style={ { verticalAlign: 'middle' } }>{ '🌐' }</span> { __( 'icon in the table to show/hide individual conversations.', 'ai-marketing-expert' ) }
+							</p>
+						</div>
+						<div className="aime-shortcode-info__code">
+							<code>[aime_discussions]</code>
+							{ hasPro ? (
+								<Button
+									variant="secondary"
+									size="small"
+									onClick={ copyShortcode }
+								>
+									{ copied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy', 'ai-marketing-expert' ) }
+								</Button>
+							) : <ProUpgradeButton /> }
+						</div>
+					</div>
 				) }
 			</Card>
 

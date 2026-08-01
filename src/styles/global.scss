@@ -6,6 +6,7 @@
 :root {
 	--aime-primary: #1B5E20;
 	--aime-primary-hover: #145218;
+	--aime-primary-dark: #0E3A12;
 	--aime-primary-light: rgba(27, 94, 32, 0.07);
 	--aime-primary-rgb: 27, 94, 32;
 	--aime-accent: #2E7D32;
@@ -15,10 +16,16 @@
 	--aime-success-light: rgba(46, 125, 50, 0.08);
 	--aime-warning: #F9A825;
 	--aime-warning-light: rgba(249, 168, 37, 0.08);
+	// #F9A825 on a tinted background fails contrast at label sizes, so warning
+	// *text* gets its own darker value rather than reusing the signal colour.
+	--aime-warning-dark: #8A5A00;
+	--aime-pro-light: rgba(255, 107, 53, 0.10);
 	--aime-error: #D32F2F;
 	--aime-error-light: rgba(211, 47, 47, 0.08);
+	--aime-error-dark: #9B1C1C;
 	--aime-info: #1565C0;
 	--aime-info-light: rgba(21, 101, 192, 0.08);
+	--aime-info-dark: #0F4C93;
 	--aime-text: #1a2e1a;
 	--aime-text-light: #5f7562;
 	--aime-text-muted: #8fa893;
@@ -31,14 +38,30 @@
 	--aime-sidebar-collapsed: 64px;
 	--aime-header-height: 60px;
 	--aime-radius: 12px;
-	--aime-radius-sm: 8px;
+	--aime-radius-sm: 5px;
 	--aime-radius-lg: 16px;
+	// Controls and buttons share one height so a filter select, a search box
+	// and the button beside them line up on a single baseline.
+	--aime-control-h: 36px;
+	--aime-focus-ring: 0 0 0 3px rgba(var(--aime-primary-rgb), 0.14);
+	--aime-focus-ring-error: 0 0 0 3px rgba(211, 47, 47, 0.14);
 	--aime-shadow: 0 1px 3px rgba(27, 94, 32, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
 	--aime-shadow-md: 0 4px 12px rgba(27, 94, 32, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
 	--aime-shadow-lg: 0 12px 24px rgba(27, 94, 32, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
 	--aime-shadow-xl: 0 20px 40px rgba(27, 94, 32, 0.10), 0 8px 16px rgba(0, 0, 0, 0.05);
 	--aime-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	--aime-transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	// Motion vocabulary. Feedback is fast enough to read as the click itself;
+	// only a layer that actually arrives from somewhere gets the entrance
+	// duration, and it decelerates hard so it lands rather than drifts.
+	--aime-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--aime-transition-fast: 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+	--aime-enter: 0.26s var(--aime-ease-out);
+	--aime-enter-quick: 0.16s var(--aime-ease-out);
+	// The dim behind a dialog is tinted with the house ink, not neutral black,
+	// so the page reads as dimmed rather than as covered by a foreign sheet.
+	--aime-overlay: rgba(16, 38, 18, 0.52);
+	--aime-radius-pill: 50px;
 	--aime-gradient: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%);
 	--aime-gradient-soft: linear-gradient(135deg, rgba(27, 94, 32, 0.05) 0%, rgba(46, 125, 50, 0.02) 100%);
 }
@@ -53,6 +76,7 @@
 .aime-app-layout[data-module="content-generator"] {
 	--aime-primary: #4338CA;
 	--aime-primary-hover: #3730A3;
+	--aime-primary-dark: #312E81;
 	--aime-primary-light: rgba(67, 56, 202, 0.07);
 	--aime-primary-rgb: 67, 56, 202;
 	--aime-accent: #6366F1;
@@ -69,6 +93,7 @@
 .aime-app-layout[data-module="social-media"] {
 	--aime-primary: #0E7490;
 	--aime-primary-hover: #155E75;
+	--aime-primary-dark: #164E63;
 	--aime-primary-light: rgba(14, 116, 144, 0.07);
 	--aime-primary-rgb: 14, 116, 144;
 	--aime-accent: #06B6D4;
@@ -85,6 +110,7 @@
 .aime-app-layout[data-module="email-marketing"] {
 	--aime-primary: #BE123C;
 	--aime-primary-hover: #9F1239;
+	--aime-primary-dark: #881337;
 	--aime-primary-light: rgba(190, 18, 60, 0.07);
 	--aime-primary-rgb: 190, 18, 60;
 	--aime-accent: #E11D48;
@@ -101,6 +127,7 @@
 .aime-app-layout[data-module="seo"] {
 	--aime-primary: #B45309;
 	--aime-primary-hover: #92400E;
+	--aime-primary-dark: #78350F;
 	--aime-primary-light: rgba(180, 83, 9, 0.07);
 	--aime-primary-rgb: 180, 83, 9;
 	--aime-accent: #D97706;
@@ -117,6 +144,7 @@
 .aime-app-layout[data-module="chatbot"] {
 	--aime-primary: #7C3AED;
 	--aime-primary-hover: #6D28D9;
+	--aime-primary-dark: #5B21B6;
 	--aime-primary-light: rgba(124, 58, 237, 0.07);
 	--aime-primary-rgb: 124, 58, 237;
 	--aime-accent: #8B5CF6;
@@ -128,6 +156,28 @@
 	--wp-admin-theme-color-darker-20: #5B21B6;
 	--wp-components-color-accent: #7C3AED;
 	--wp-components-color-accent-darker-10: #6D28D9;
+}
+
+// ============================================
+// ROOM WAYFINDING SCALE
+// The same five accents as the per-module themes above, but exposed
+// globally so cross-module surfaces (Overview charts, module summary
+// cards, any future roll-up) can point at a room they are not currently
+// standing in. A module's own chrome still reads --aime-primary; these
+// tokens are only for *referring* to another room.
+// Keep in sync with the [data-module] blocks above — these are the
+// single source of truth for "what colour is Email?".
+// ============================================
+:root {
+	--aime-room-email: #BE123C;
+	--aime-room-content: #4338CA;
+	--aime-room-seo: #B45309;
+	--aime-room-chatbot: #7C3AED;
+	--aime-room-social: #0E7490;
+
+	// Muted counterpart for the second slice of a two-part chart,
+	// so "the rest" never competes with the room's own colour.
+	--aime-room-rest: #cbd8cc;
 }
 
 // Reset WP admin styles in our container
@@ -269,7 +319,7 @@
 }
 
 .aime-dashboard-hero-card {
-	margin-bottom: 14px;
+	margin-bottom: 16px;
 	max-width: 1040px;
 	transition: opacity 0.2s ease;
 
@@ -284,27 +334,36 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 24px;
-	padding: 6px 2px;
+	padding: 8px 4px;
 
+	// Title, not Headline. The page already has one 22px heading ("Dashboard")
+	// and this sat at 22px too — two things the same size reading as two
+	// different levels. The hero's weight comes from the ember eyebrow above it,
+	// the card it sits in, and the two buttons beside it, so it does not need to
+	// borrow the page title's size to be read first.
 	h3 {
 		margin: 4px 0 8px;
-		font-size: 22px;
-		line-height: 1.25;
+		font-size: 15px;
+		font-weight: 600;
+		line-height: 1.4;
 		color: var(--aime-text);
 	}
 
+	// 720px at 14px is roughly 103 characters per line — a measure you re-find
+	// the start of by hunting. 68ch keeps it inside the readable band without
+	// shrinking the card.
 	p {
 		margin: 0;
-		max-width: 720px;
+		max-width: 68ch;
 		color: var(--aime-text-light);
-		font-size: 14px;
-		line-height: 1.55;
+		font-size: 13px;
+		line-height: 1.5;
 	}
 }
 
 .aime-dashboard-hero__actions {
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	flex-shrink: 0;
@@ -590,50 +649,151 @@
 }
 
 // Tables
+//
+// A table here is a ledger someone scans, not a grid they admire. The rules
+// between rows are the quietest thing that still separates them, the head is a
+// label strip rather than a second heading, and the only loud element in the
+// row is the value the reader came for.
 .aime-table-wrap {
 	overflow-x: auto;
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	background: var(--aime-white);
+	// Fades the right edge while the table is still scrollable, so a clipped
+	// column reads as "more this way" instead of as a cut-off layout.
+	background-image:
+		linear-gradient(to right, var(--aime-white) 30%, rgba(255, 255, 255, 0)),
+		linear-gradient(to left, var(--aime-white) 30%, rgba(255, 255, 255, 0));
+	background-position: left center, right center;
+	background-repeat: no-repeat;
+	background-size: 28px 100%, 28px 100%;
+	background-attachment: local, local;
+
+	> .aime-table {
+		border: 0;
+	}
 }
 
 .aime-table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 13px;
+	background: var(--aime-white);
 
 	th {
 		text-align: left;
-		padding: 10px 12px;
-		font-weight: 600;
-		color: var(--aime-text);
-		border-bottom: 2px solid var(--aime-border);
+		padding: 11px 14px;
+		border-bottom: 1px solid var(--aime-border);
+		background: var(--aime-bg);
 		white-space: nowrap;
-		font-size: 12px;
+		font-size: 11px;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.05em;
 		color: var(--aime-text-light);
 	}
 
 	td {
-		padding: 10px 12px;
-		border-bottom: 1px solid var(--aime-border);
+		padding: 12px 14px;
+		border-bottom: 1px solid var(--aime-border-light);
 		color: var(--aime-text);
+		vertical-align: middle;
+		line-height: 1.45;
+	}
+
+	// The last rule would draw on top of the wrapper's own border.
+	tbody tr:last-child td {
+		border-bottom: 0;
 	}
 
 	tbody tr {
 		transition: background var(--aime-transition);
 	}
 
-	tr:hover td {
+	// A neutral wash, not an accent tint: the accent is reserved for selection
+	// and for the row's own links, and a tinted hover competes with both.
+	tbody tr:hover > td {
+		background: var(--aime-bg);
+	}
+
+	tbody tr.is-selected > td {
 		background: var(--aime-primary-light);
 	}
 
-	a {
+	// Numbers are read by column, so they hang off a shared right edge and use
+	// tabular figures — otherwise 1,204 and 15 wander against each other.
+	.is-numeric,
+	td.is-numeric,
+	th.is-numeric {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	// A muted cell is a fact the reader only needs if they are already looking
+	// at the row: timestamps, counts, ids.
+	.is-muted {
+		color: var(--aime-text-light);
+	}
+
+	a,
+	.aime-link-btn {
 		color: var(--aime-primary);
+		font-weight: 600;
 		text-decoration: none;
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: inherit;
+		font-family: inherit;
+		cursor: pointer;
+		text-align: left;
 
 		&:hover {
 			text-decoration: underline;
 		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-primary);
+			outline-offset: 2px;
+			border-radius: 2px;
+		}
 	}
+
+	// Secondary line under a primary cell value (a description under a name).
+	.aime-table-sub {
+		display: block;
+		margin-top: 2px;
+		font-size: 12px;
+		line-height: 1.4;
+		color: var(--aime-text-light);
+	}
+
+	// WP's own .widefat/.striped rules paint rows from the admin palette and
+	// would override the hover above. Neutralised where our class is present.
+	&.widefat,
+	&.striped {
+		border: 0;
+		box-shadow: none;
+
+		> tbody > tr:nth-child(odd),
+		> tbody > tr:nth-child(odd) > td {
+			background-color: transparent;
+		}
+
+		> tbody > tr:hover > td {
+			background-color: var(--aime-bg);
+		}
+	}
+}
+
+// Row actions: present but quiet. Hiding them until hover costs touch users
+// the affordance entirely, so they stay visible and simply stop shouting.
+.aime-table-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 4px;
+	flex-wrap: wrap;
 }
 
 // Status Badges
@@ -875,19 +1035,8 @@
 }
 
 // Loader
-.aime-loader {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 48px;
-	color: var(--aime-text-light);
-}
-
-.aime-loader-text {
-	margin-top: 12px;
-	font-size: 13px;
-}
+// `.aime-loader` / `.aime-loader-text` (centred spinner) removed with the
+// spinner itself — waiting is now a skeleton. See `.aime-loading` below.
 
 // Empty State
 .aime-empty-state {
@@ -978,31 +1127,48 @@
 }
 
 // Settings page
+// The module list sits inside a Card, so each row is a hairline ledger entry
+// rather than its own bordered box — a box inside a box reads as two surfaces
+// competing for the same job.
 .aime-modules-list {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	border-top: 1px solid var(--aime-border-light);
 }
 
 .aime-module-toggle {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
-	padding: 16px;
-	border: 1px solid var(--aime-border);
-	border-radius: var(--aime-radius);
+	gap: 20px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--aime-border-light);
+
+	&:last-child {
+		border-bottom: 0;
+		padding-bottom: 0;
+	}
+
+	.components-base-control,
+	.components-base-control__field {
+		margin-bottom: 0;
+	}
 
 	.aime-module-info {
 		flex: 1;
+		min-width: 0;
 
 		strong {
 			display: block;
-			margin-bottom: 4px;
+			margin-bottom: 3px;
+			font-size: 14px;
+			color: var(--aime-text);
 		}
 
 		p {
 			margin: 0;
 			font-size: 13px;
+			line-height: 1.5;
 			color: var(--aime-text-light);
 		}
 	}
@@ -1018,18 +1184,53 @@
     fill: #1a1a1a;
 }
 // License Status
+// Inside a Card titled "License Status", a full-width tinted slab restated the
+// card and left a large empty green field when Pro is active. One line of state
+// carries the same information: a status mark, the label, and the action.
 .aime-license-status {
-	padding: 16px;
-	border-radius: var(--aime-radius);
+	display: flex;
+	align-items: center;
+	gap: 12px;
 
-	h3 {
-		margin: 0 0 8px;
+	h3,
+	strong {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--aime-text);
 	}
 
 	p {
-		margin: 0;
+		margin: 2px 0 0;
 		font-size: 13px;
+		color: var(--aime-text-light);
 	}
+}
+
+.aime-license-status__mark {
+	flex-shrink: 0;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	// Ring rather than a bare dot: it survives on a white surface at 9px.
+	box-shadow: 0 0 0 3px currentColor;
+	background: currentColor;
+	opacity: 0.9;
+}
+
+.aime-license-status__text {
+	min-width: 0;
+	flex: 1;
+}
+
+.aime-license-status.is-free,
+.aime-license-free {
+	.aime-license-status__mark { color: var(--aime-pro-color); }
+}
+
+.aime-license-status.is-pro,
+.aime-license-pro {
+	.aime-license-status__mark { color: var(--aime-success); }
 }
 
 .aime-license-status__content {
@@ -1037,16 +1238,6 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
-}
-
-.aime-license-free {
-	background: rgba(255, 107, 53, 0.08);
-	border: 1px solid rgba(255, 107, 53, 0.3);
-}
-
-.aime-license-pro {
-	background: #e8f5e9;
-	border: 1px solid #a5d6a7;
 }
 
 .aime-analytics-upgrade {
@@ -1093,13 +1284,15 @@
 }
 
 .aime-analytics-upgrade__eyebrow,
+// Label role. Was 700/0.04em — 700 is reserved for numbers, and every other
+// eyebrow and column header on the page tracks at 0.02em.
 .aime-dashboard-hero__eyebrow {
 	display: inline-flex;
 	align-items: center;
 	font-size: 11px;
-	font-weight: 700;
+	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.02em;
 	color: var(--aime-pro-color);
 }
 
@@ -1355,6 +1548,16 @@ input.aime-premium-input[type=color]
 
 	&:hover {
 		text-decoration: underline;
+	}
+
+	// Hover was the only state this had. A link that drops its underline and
+	// relies on colour alone needs a focus ring, or tabbing through the module
+	// cards moves an invisible cursor. Additive — there was no focus style to
+	// override, so no other page changes visually.
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+		border-radius: 2px;
 	}
 }
 
@@ -1908,19 +2111,25 @@ input.aime-premium-input[type=color]
 .aime-body {
 	flex: 1;
 	display: flex;
+	align-items: stretch;
 }
 
+// The rail owns its own width so it can shrink to icons without the shell
+// needing to know it happened. It also sits above the content column: the
+// collapsed tooltips reach across that boundary, and a stat card painted at
+// the same level would swallow them.
 .aime-internal-sidebar {
-	width: 220px;
+	position: relative;
+	z-index: 20;
+	width: auto;
 	flex-shrink: 0;
 	background: var(--aime-white);
 	border-right: 1px solid var(--aime-border);
-	padding: 12px 0;
 }
 
 .aime-main-content {
 	flex: 1;
-	padding: 24px 40px 24px 15px;
+	padding: 24px 40px 24px 28px;
 	min-width: 0;
 	max-width: 1200px;
 	overflow-x: hidden;
@@ -1958,39 +2167,124 @@ input.aime-premium-input[type=color]
 }
 
 // ── Internal Sidebar Navigation ──────────────────────────
-#aime-app .aime-sidebar-item-icon svg {
-    fill: #000;
-}
-
-#aime-app button.aime-sidebar-active .aime-sidebar-item-icon svg {
-    fill:#fff
-}
+//
+// A rail, not a panel: hairline on the right, no card chrome, one accented
+// item. It runs the full height of the shell so the content column never
+// looks like it is floating next to a stub.
 
 .aime-sidebar-nav {
+	--aime-rail-width: 236px;
+
+	position: sticky;
+	top: 44px; // clears the fixed admin bar (32px)
+	z-index: 21;
+	display: flex;
+	flex-direction: column;
+	width: var(--aime-rail-width);
+	// No scroll box of its own: an `overflow` here would clip the collapsed
+	// tooltips against the rail edge, and no module has enough items to
+	// outgrow the viewport.
+	min-height: calc(100vh - 76px);
+	padding: 10px 12px 16px;
+	gap: 2px;
+	transition: width var(--aime-transition);
+
+	&.is-collapsed {
+		--aime-rail-width: 68px;
+		padding-inline: 10px;
+	}
+}
+
+// Toggle sits above the list, aligned to the rail edge it pulls toward.
+.aime-sidebar-rail-head {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 2px 8px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid var(--aime-border-light);
+
+	.is-collapsed & {
+		justify-content: center;
+	}
+}
+
+.aime-nav-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius-sm);
+	background: var(--aime-white);
+	color: var(--aime-text-light);
+	cursor: pointer;
+	transition: background var(--aime-transition), color var(--aime-transition),
+		border-color var(--aime-transition);
+
+	svg {
+		fill: currentColor;
+	}
+
+	&:hover {
+		background: var(--aime-primary-light);
+		border-color: var(--aime-primary);
+		color: var(--aime-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+}
+
+.aime-sidebar-list {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
-	padding: 0 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	li {
+		margin: 0;
+	}
 }
 
 .aime-sidebar-item {
+	position: relative;
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 10px 14px;
+	gap: 12px;
+	width: 100%;
+	min-height: 40px;
+	padding: 9px 12px;
 	border: none;
 	background: transparent;
 	cursor: pointer;
-	border-radius: var(--aime-radius);
-	font-size: 14px;
-	color: var(--aime-text);
+	border-radius: var(--aime-radius-sm);
+	font-size: 13.5px;
+	font-weight: 500;
+	line-height: 1.3;
+	color: var(--aime-text-light);
 	text-align: left;
-	width: 100%;
-	transition: background 0.15s ease, color 0.15s ease;
+	transition: background var(--aime-transition), color var(--aime-transition);
 
 	&:hover {
-		background: var(--aime-bg);
+		background: var(--aime-primary-light);
 		color: var(--aime-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+
+	.is-collapsed & {
+		justify-content: center;
+		gap: 0;
+		padding-inline: 0;
 	}
 }
 
@@ -1999,11 +2293,25 @@ input.aime-premium-input[type=color]
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
 	color: inherit;
+
+	svg {
+		fill: currentColor;
+	}
 }
 
 .aime-sidebar-item-label {
-	font-weight: 500;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	.is-collapsed & {
+		display: none;
+	}
 }
 
 .aime-sidebar-badge {
@@ -2020,26 +2328,79 @@ input.aime-premium-input[type=color]
 	font-size: 11px;
 	font-weight: 700;
 	line-height: 1;
+	flex-shrink: 0;
+
+	// Collapsed, the count rides the icon rather than claiming a column
+	// that no longer exists.
+	.is-collapsed & {
+		position: absolute;
+		top: 4px;
+		right: 8px;
+		margin: 0;
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		font-size: 10px;
+		box-shadow: 0 0 0 2px var(--aime-white);
+	}
 }
 
 .aime-sidebar-active {
-	background: var(--aime-primary) !important;
-	color: white !important;
+	background: var(--aime-primary);
+	color: var(--aime-white);
 	font-weight: 600;
+	box-shadow: 0 6px 14px rgba(var(--aime-primary-rgb), 0.24);
 
-	.aime-sidebar-item-icon {
-		color: white;
+	&:hover {
+		background: var(--aime-primary-hover);
+		color: var(--aime-white);
 	}
 
 	.aime-sidebar-badge {
-		background: rgba(255, 255, 255, 0.25);
+		background: rgba(255, 255, 255, 0.24);
+	}
+}
+
+// Collapsed labels are still readable — on hover and on keyboard focus.
+.aime-sidebar-nav.is-collapsed {
+	.aime-sidebar-item[data-tip],
+	.aime-nav-toggle[data-tip] {
+		&::after {
+			content: attr(data-tip);
+			position: absolute;
+			left: calc(100% + 10px);
+			top: 50%;
+			transform: translateY(-50%);
+			z-index: 30;
+			padding: 5px 9px;
+			border-radius: var(--aime-radius-sm);
+			background: var(--aime-text);
+			color: var(--aime-white);
+			font-size: 12px;
+			font-weight: 500;
+			white-space: nowrap;
+			pointer-events: none;
+			opacity: 0;
+			visibility: hidden;
+			transition: opacity var(--aime-transition);
+		}
+
+		&:hover::after,
+		&:focus-visible::after {
+			opacity: 1;
+			visibility: visible;
+		}
+	}
+
+	.aime-nav-toggle {
+		position: relative;
 	}
 }
 
 .aime-sidebar-footer {
 	margin-top: auto;
-	padding: 12px 8px;
-	border-top: 1px solid var(--aime-border);
+	padding-top: 12px;
+	border-top: 1px solid var(--aime-border-light);
 }
 
 // ── Coming Soon Page ─────────────────────────────────────
@@ -3558,42 +3919,10 @@ input.aime-premium-input[type=color]
 	margin: 0 0 16px;
 }
 
-.aime-preset-grid {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 12px;
-}
-
-.aime-preset-card {
-	border: 2px solid var(--aime-border);
-	border-radius: var(--aime-radius);
-	padding: 16px;
-	text-align: center;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-	background: var(--aime-white);
-
-	&:hover {
-		border-color: var(--aime-primary);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-	}
-
-	.aime-preset-icon {
-		font-size: 32px;
-		margin-bottom: 8px;
-	}
-
-	h4 {
-		margin: 0 0 4px;
-		font-size: 15px;
-	}
-
-	p {
-		margin: 0 0 12px;
-		color: var(--aime-text-light);
-		font-size: 12px;
-		line-height: 1.4;
-	}
-}
+// `.aime-preset-grid` / `.aime-preset-card` (icon-tile picker) lived here and no
+// longer has any markup. It was still winning `text-align: center` and a 2px
+// border on the real preset and brand-voice cards further down, which is why
+// their paragraphs were centred. Removed rather than scoped — nothing renders it.
 
 .aime-preset-divider {
 	text-align: center;
@@ -3804,20 +4133,55 @@ input.aime-premium-input[type=color]
 		width: 100%;
 		border-right: none;
 		border-bottom: 1px solid var(--aime-border);
-		padding: 8px 0;
 	}
 
-	.aime-sidebar-nav {
+	// Stacked, the rail becomes a scrolling strip. Collapsing to icons buys
+	// nothing here, so the toggle stands down and the labels come back.
+	.aime-sidebar-nav,
+	.aime-sidebar-nav.is-collapsed {
+		--aime-rail-width: 100%;
+
+		position: static;
+		min-height: 0;
+		padding: 8px 12px;
+	}
+
+	.aime-sidebar-rail-head {
+		display: none;
+	}
+
+	.aime-sidebar-list {
 		flex-direction: row;
 		overflow-x: auto;
 		gap: 4px;
-		padding: 0 8px;
+		padding-bottom: 2px;
 	}
 
-	.aime-sidebar-item {
-		white-space: nowrap;
+	.aime-sidebar-nav.is-collapsed .aime-sidebar-item-label {
+		display: inline;
+	}
+
+	.aime-sidebar-item,
+	.is-collapsed .aime-sidebar-item {
+		width: auto;
+		min-height: 36px;
 		padding: 8px 12px;
+		gap: 8px;
+		white-space: nowrap;
 		font-size: 13px;
+	}
+
+	.aime-sidebar-nav.is-collapsed .aime-sidebar-badge {
+		position: static;
+		box-shadow: none;
+		height: 20px;
+		min-width: 20px;
+		padding: 0 6px;
+		font-size: 11px;
+	}
+
+	.aime-sidebar-nav.is-collapsed .aime-sidebar-item[data-tip]::after {
+		content: none;
 	}
 
 	.aime-main-content {
@@ -3858,10 +4222,6 @@ input.aime-premium-input[type=color]
 
 	.aime-editor-sidebar {
 		order: -1;
-	}
-
-	.aime-preset-grid {
-		grid-template-columns: 1fr;
 	}
 
 	.aime-import-sources {
@@ -4924,11 +5284,27 @@ input.aime-premium-input[type=color]
 	}
 }
 
+// The waiting material. Tinted from the house tokens, not neutral gray — a
+// gray sweep on a green-tinted app reads as a different product loading.
 .aime-skeleton {
-	background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+	display: block;
+	background: linear-gradient(
+		90deg,
+		var(--aime-bg-subtle) 25%,
+		var(--aime-border) 50%,
+		var(--aime-bg-subtle) 75%
+	);
 	background-size: 200% 100%;
-	animation: aime-shimmer 1.5s ease-in-out infinite;
+	animation: aime-shimmer 1.6s ease-in-out infinite;
 	border-radius: var(--aime-radius-sm);
+}
+
+// A shimmer is decoration, not information — the reserved space already says
+// "loading". Anyone who asked for less motion keeps the space and loses the sweep.
+@media (prefers-reduced-motion: reduce) {
+	.aime-skeleton {
+		animation: none;
+	}
 }
 
 .aime-skeleton-row {
@@ -4938,6 +5314,169 @@ input.aime-premium-input[type=color]
 
 	.aime-skeleton {
 		flex: 1;
+	}
+}
+
+// ── Loading states ────────────────────────────────────────
+// One component (`Loader`) renders all of these; the variant names what is
+// arriving, so the wait has the shape of the thing it is waiting for.
+.aime-loading {
+	.aime-skeleton + .aime-skeleton {
+		margin-top: 10px;
+	}
+}
+
+.aime-loading__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
+}
+
+.aime-loading__card {
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	box-shadow: var(--aime-shadow);
+	padding: 20px;
+}
+
+// A Loader dropped inside a panel must not draw a second panel. Cards are never
+// nested in this system, so the chrome comes off and only the bars remain.
+.aime-card .aime-loading__card,
+.aime-panel .aime-loading__card,
+.aime-premium-modal .aime-loading__card {
+	background: none;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+}
+
+.aime-loading__table {
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	overflow: hidden;
+	background: var(--aime-white);
+}
+
+.aime-card .aime-loading__table {
+	border: 0;
+	border-radius: 0;
+}
+
+.aime-loading__tr {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 16px;
+	align-items: center;
+	padding: 14px 16px;
+	border-bottom: 1px solid var(--aime-border-light);
+
+	&:last-child {
+		border-bottom: 0;
+	}
+
+	// Bars are laid out by the grid here, so the stacking margin does not apply.
+	.aime-skeleton + .aime-skeleton {
+		margin-top: 0;
+	}
+}
+
+.aime-loading__tr--head {
+	background: var(--aime-bg);
+	border-bottom-color: var(--aime-border);
+}
+
+.aime-loading__field {
+	margin-bottom: 20px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.aime-skeleton--control {
+	border-radius: var(--aime-radius-sm);
+	margin-top: 8px;
+}
+
+// ── Dashboard wait ────────────────────────────────────────
+.aime-loading__stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 1px;
+	background: var(--aime-border-light);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	overflow: hidden;
+	margin-bottom: 16px;
+}
+
+.aime-loading__stat {
+	background: var(--aime-white);
+	padding: 20px;
+
+	.aime-skeleton + .aime-skeleton {
+		margin-top: 12px;
+	}
+}
+
+.aime-loading__panels {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 16px;
+}
+
+.aime-skeleton--plot {
+	margin-top: 16px;
+}
+
+// ── Calendar wait ─────────────────────────────────────────
+.aime-loading__calendar {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1px;
+	background: var(--aime-border-light);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	overflow: hidden;
+}
+
+.aime-loading__day-head {
+	background-color: var(--aime-bg);
+	margin: 14px 12px;
+}
+
+.aime-loading__day {
+	background: var(--aime-white);
+	min-height: 92px;
+	padding: 10px;
+
+	.aime-skeleton + .aime-skeleton {
+		margin-top: 10px;
+	}
+}
+
+@media (max-width: 782px) {
+	.aime-loading__tr {
+		grid-template-columns: repeat(3, 1fr);
+
+		.aime-skeleton:nth-child(n + 4) {
+			display: none;
+		}
+	}
+
+	// A seven-column month does not survive a phone. The calendar wait falls
+	// back to the agenda list those views switch to at this width.
+	.aime-loading__calendar {
+		grid-template-columns: 1fr;
+	}
+
+	.aime-loading__day-head {
+		display: none;
+	}
+
+	.aime-loading__day {
+		min-height: 0;
 	}
 }
 
@@ -4997,45 +5536,12 @@ input.aime-premium-input[type=color]
 
 // ═══════════════════════════════════════════════════════════
 // Confirm Modal
+// The standalone `.aime-confirm-overlay` / `.aime-confirm-modal` /
+// `.aime-confirm-actions` rules that used to live here were dead: ConfirmModal
+// renders the shared `.aime-premium-modal` shell. They carried the last
+// neutral-black overlay and the last bounce entrance in the plugin, so
+// deleting them is what makes the dialog language single-sourced.
 // ═══════════════════════════════════════════════════════════
-
-.aime-confirm-overlay {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.45);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 100001;
-}
-
-.aime-confirm-modal {
-	background: var(--aime-white);
-	border-radius: var(--aime-radius);
-	padding: 24px;
-	width: 420px;
-	max-width: 90vw;
-	box-shadow: var(--aime-shadow-lg);
-	animation: aime-bounce 0.3s ease-out;
-
-	h3 {
-		margin: 0 0 12px;
-		font-size: 16px;
-		color: var(--aime-text);
-	}
-
-	p {
-		color: var(--aime-text-light);
-		margin: 0 0 20px;
-		line-height: 1.5;
-	}
-}
-
-.aime-confirm-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-}
 
 // ═══════════════════════════════════════════════════════════
 // Time Range Selector
@@ -6070,6 +6576,47 @@ input.aime-premium-input[type=color]
 	letter-spacing: 0.5px;
 }
 
+// ── Overview page rhythm ─────────────────────────────────
+// One vertical scale for the dashboard: 8px inside a group, 24px between
+// siblings, 40px between sections. Scoped to .aime-overview rather than
+// changing .aime-section-title globally, because that selector is shared with
+// every other module page and their rhythm is not this page's problem.
+.aime-overview {
+	// A section heading belongs to what comes after it, so it sits closer to
+	// its own content than to the block it follows.
+	//
+	// 15px, not the global 20px: the page title renders at 20px too, so a
+	// section heading at the same size claimed to be the same level as the page
+	// it lives on. The 40px above it is what marks it as a new section — size
+	// was doing a job space already does better. Scoped, because every other
+	// module page uses this selector and their hierarchy is not this pass's
+	// business.
+	.aime-section-title {
+		margin: 40px 0 12px;
+		font-size: 15px;
+		font-weight: 600;
+		line-height: 1.4;
+	}
+
+	// The first heading has nothing above it to separate from.
+	> .aime-section-title:first-child {
+		margin-top: 0;
+	}
+
+	// Grids end a section; the heading below supplies the gap.
+	.aime-charts-grid,
+	.aime-module-cards-grid {
+		margin-bottom: 0;
+	}
+
+	// Chart chrome is all one role. The axis ticks are set to 11px in the JSX,
+	// but Recharts legends carry no size of their own and inherit the 13px body,
+	// so the same class of label rendered at two sizes inside one chart.
+	.recharts-legend-item-text {
+		font-size: 11px;
+	}
+}
+
 // Charts grid
 .aime-charts-grid {
 	display: grid;
@@ -6078,63 +6625,10 @@ input.aime-premium-input[type=color]
 	margin-bottom: 24px;
 }
 
-// Full-width card inside a grid (e.g., Module Activity line chart).
-.aime-chart-full-width {
-	grid-column: 1 / -1;
-}
-
-// Pro-gate overlay for the Module Activity chart (free users).
-.aime-chart-pro-gate {
-	position: relative;
-	border-radius: var(--aime-radius-sm, 8px);
-	overflow: hidden;
-
-	&__blur {
-		pointer-events: none;
-		filter: blur(4px);
-		opacity: 0.55;
-		user-select: none;
-	}
-
-	&__overlay {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 16px;
-		background: rgba(255, 255, 255, 0.18);
-	}
-
-	&__msg {
-		margin: 0;
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--aime-text, #1e293b);
-		text-align: center;
-		letter-spacing: -0.01em;
-	}
-
-	&__btn {
-		display: inline-block;
-		padding: 9px 22px;
-		background: var(--aime-primary, #3858e9);
-		color: #fff;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 600;
-		text-decoration: none;
-		transition: background 0.15s ease, box-shadow 0.15s ease;
-
-		&:hover {
-			background: var(--aime-primary-dark, #2a47c9);
-			box-shadow: 0 4px 12px rgba(56, 88, 233, 0.35);
-			color: #fff;
-			text-decoration: none;
-		}
-	}
-}
+// `.aime-chart-pro-gate` lived here: a blur + upgrade scrim over the dashboard
+// activity chart. Removed with the gate itself — the activity endpoint never
+// had a Pro check, so the blur was hiding the site's own data behind a wall
+// that was never load-bearing.
 
 // Quick actions
 .aime-quick-actions {
@@ -6166,127 +6660,76 @@ input.aime-premium-input[type=color]
 	border-radius: 0;
 }
 
+// The lead number answers "is this module OK?" on its own. Everything under it
+// is supporting detail, so the size gap between the two has to be obvious at a
+// glance — 32px against 15px, not a polite nudge. Deliberately NOT tinted with
+// the module colour: the 4px stripe above already carries the room's identity,
+// and a coloured hero number plus an accent stripe is the same signal twice.
+.aime-module-summary-lead {
+	margin-bottom: 16px;
+}
+
+.aime-module-summary-lead__value {
+	display: block;
+	font-size: 32px;
+	font-weight: 700;
+	color: var(--aime-text);
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+}
+
+.aime-module-summary-lead__label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--aime-text-light);
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	margin-top: 4px;
+}
+
+// Supporting stats. Left-aligned like the lead so every number in the card
+// shares one scan edge instead of drifting to its own column centre.
 .aime-module-summary-stats {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+	gap: 12px 16px;
 }
 
 .aime-module-summary-stat {
-	text-align: center;
+	text-align: left;
 }
 
 .aime-module-summary-value {
 	display: block;
-	font-size: 20px;
+	font-size: 15px;
 	font-weight: 700;
 	color: var(--aime-text);
-	line-height: 1.3;
+	line-height: 1.4;
 }
 
 .aime-module-summary-label {
 	display: block;
 	font-size: 11px;
+	font-weight: 600;
 	color: var(--aime-text-light);
 	text-transform: uppercase;
-	letter-spacing: 0.4px;
+	letter-spacing: 0.02em;
 	margin-top: 2px;
 }
 
-// ── Email Performance Summary ────────────────────────────
-.aime-performance-panel {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-}
-
-.aime-performance-panel__gauge {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	padding: 16px 0 4px;
-}
-
-.aime-performance-gauge-label {
-	text-align: center;
-}
-
-.aime-performance-gauge-value {
-	display: block;
-	font-size: 30px;
-	font-weight: 700;
-	line-height: 1.1;
-	color: var(--aime-text);
-}
-
-.aime-performance-gauge-text {
-	display: block;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	color: var(--aime-text-light);
-	margin-top: 4px;
-}
-
-.aime-performance-panel__metrics {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-	gap: 10px;
-}
-
-.aime-performance-metric {
-	background: var(--aime-white);
-	border: 1px solid var(--aime-border);
-	border-radius: var(--aime-radius);
-	padding: 14px 12px;
-	text-align: center;
-	box-shadow: var(--aime-shadow);
-}
-
-.aime-performance-metric__value {
-	display: block;
-	font-size: 24px;
-	font-weight: 700;
-	line-height: 1.1;
-	color: var(--aime-text);
-}
-
-.aime-performance-metric__label {
-	display: block;
-	margin-top: 4px;
-	font-size: 11px;
-	text-transform: uppercase;
-	letter-spacing: 0.45px;
-	color: var(--aime-text-light);
-}
-
-.aime-performance-panel__chart {
-	min-width: 0;
-}
-
-.aime-performance-chart {
-	min-height: 260px;
-}
-
-.aime-email-perf-summary {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-	gap: 12px;
-}
-
-@media (max-width: 1100px) {
-	.aime-performance-panel__gauge {
-		max-width: 240px;
-	}
-}
+// ── Email / SEO Performance panels ───────────────────────
+// Removed. The dashboard's two performance cards became arc gauges in the
+// summary band (see DASHBOARD — SUMMARY BAND at the end of this file), and
+// their supporting numbers moved into the module cards. The old
+// .aime-performance-metric was a bordered, shadowed box inside a card — a card
+// nested in a card, which the inset floor (--aime-bg-subtle) exists to avoid.
 
 // ── Upgrade CTA Banner ───────────────────────────────────
 .aime-upgrade-card {
 	max-width: 920px;
-	margin: 30px auto 24px;
-	background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 55%, #FF6B35 100%);
+	margin: 32px auto 24px;
+	background: linear-gradient(135deg, var(--aime-primary) 0%, var(--aime-accent) 55%, var(--aime-pro-color) 100%);
 	border: none;
 	box-shadow: var(--aime-shadow-lg);
 
@@ -6302,19 +6745,24 @@ input.aime-premium-input[type=color]
 		justify-content: space-between;
 		flex-wrap: wrap;
 		gap: 16px;
-		padding: 26px 28px;
+		padding: 24px 32px;
 
+		// White on a saturated gradient renders visually lighter than the same
+		// weight on white, so this one keeps 700 and picks up a little tracking
+		// rather than dropping to the 600 that Title uses on white.
 		h3 {
 			color: #fff;
-			font-size: 20px;
+			font-size: 15px;
 			font-weight: 700;
+			letter-spacing: 0.01em;
 			margin: 0 0 4px;
 		}
 
 		p {
 			color: rgba(255, 255, 255, 0.85);
 			margin: 0;
-			font-size: 14px;
+			font-size: 13px;
+			line-height: 1.5;
 		}
 
 		.components-button.is-primary {
@@ -6442,6 +6890,63 @@ input.aime-premium-input[type=color]
 }
 
 // Empty message
+// ── Empty state block ────────────────────────────────────
+// Used by <EmptyState>. Replaces the bare "No data yet." paragraph in surfaces
+// that would otherwise dead-end. Text-only by design: several of these render
+// at once inside the dashboard chart grid, and an icon on each would turn the
+// gaps into the page's structure.
+//
+// The action is a bordered ghost link, not a filled button. Five filled
+// primaries firing at once would each be shouting the same volume as the
+// single real setup CTA in the hero above them.
+.aime-empty-block {
+	text-align: center;
+	padding: 32px 16px;
+}
+
+.aime-empty-block__title {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--aime-text);
+}
+
+// 46ch, not 40: below about 45 characters the eye returns to the left edge
+// often enough that short copy starts to feel like a list of fragments.
+.aime-empty-block__desc {
+	margin: 6px auto 0;
+	max-width: 46ch;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--aime-text-light);
+}
+
+.aime-empty-block__action {
+	display: inline-block;
+	margin-top: 16px;
+	padding: 6px 14px;
+	border: 1px solid var(--aime-border);
+	border-radius: 8px;
+	font-size: 13px;
+	font-weight: 500;
+	text-decoration: none;
+	color: var(--aime-primary);
+	background: transparent;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+
+	&:hover,
+	&:focus {
+		border-color: var(--aime-primary);
+		background: rgba(var(--aime-primary-rgb, 27, 94, 32), 0.06);
+		color: var(--aime-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+}
+
 .aime-empty-msg {
 	text-align: center;
 	color: var(--aime-text-light);
@@ -6544,7 +7049,7 @@ input.aime-premium-input[type=color]
 	display: grid;
 	gap: 16px;
 	margin-bottom: 16px;
-	align-items: end;
+	align-items: start;
 
 	// Top-aligned variant: rows with mixed help-text heights keep their
 	// labels and inputs on the same line.
@@ -6559,6 +7064,17 @@ input.aime-premium-input[type=color]
 	margin-bottom: 0 !important;
 }
 
+#aime-app .aime-chatbot-settings .aime-settings-form .components-base-control,
+#aime-app #tab-panel-1-integrations-view .aime-settings-form .components-base-control,
+#aime-app .aime-seo-automation .aime-settings-form .components-base-control,
+#aime-app #tab-panel-0-tracking-view .aime-settings-form .components-base-control,
+#aime-app #tab-panel-1-general-view .aime-settings-form .components-base-control,
+#aime-app #tab-panel-1-sending-view .aime-settings-form .components-base-control {
+    margin-bottom: 10px;
+}
+.aime-seo-topic-map .aime-form-grid{
+	align-items: end;
+}
 .aime-form-grid-2 {
 	grid-template-columns: 1fr 1fr;
 
@@ -7328,10 +7844,24 @@ input.aime-premium-input[type=color]
 
 // Responsive table wrapper
 @media (max-width: 768px) {
+	// An unwrapped table becomes its own scroller. One already inside
+	// .aime-table-wrap must not — two nested scrollers on the same axis trap
+	// the gesture in the inner one and the outer never moves.
 	.aime-table {
 		display: block;
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
+	}
+
+	.aime-table-wrap > .aime-table {
+		display: table;
+		overflow: visible;
+	}
+
+	// Tighter gutters: on a 360px screen the 14px side padding costs a column.
+	.aime-table th,
+	.aime-table td {
+		padding: 10px;
 	}
 
 	.aime-kpi-grid-4 {
@@ -7362,42 +7892,57 @@ input.aime-premium-input[type=color]
 .aime-premium-modal-overlay {
 	position: fixed;
 	inset: 0;
-	background: rgba(0, 0, 0, 0.5);
+	background: var(--aime-overlay);
 	backdrop-filter: blur(4px);
 	z-index: 100000;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	animation: aime-fadeIn 0.2s ease;
+	padding: 24px 16px;
+	animation: aime-overlay-in 0.18s ease-out;
 }
 
-@keyframes aime-fadeIn {
+// The dialog is the only thing in this product that interrupts, so it is the
+// one place motion is authored: the page dims, then the panel arrives from
+// 10px below at 98% and decelerates into place. Nothing else in the plugin
+// moves this far or this long.
+@keyframes aime-overlay-in {
 	from { opacity: 0; }
-	to { opacity: 1; }
+	to   { opacity: 1; }
 }
 
-@keyframes aime-slideUp {
-	from { opacity: 0; transform: translateY(20px) scale(0.97); }
-	to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes aime-modal-in {
+	from { opacity: 0; transform: translateY(10px) scale(0.98); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .aime-premium-modal {
+	display: flex;
+	flex-direction: column;
 	background: var(--aime-white);
+	border: 1px solid var(--aime-border-light);
 	border-radius: var(--aime-radius-lg);
 	box-shadow: var(--aime-shadow-xl);
 	width: 540px;
 	max-width: 94vw;
 	max-height: 90vh;
 	overflow-y: auto;
-	animation: aime-slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	animation: aime-modal-in var(--aime-enter) both;
 }
 
 .aime-premium-modal-header {
+	position: sticky;
+	top: 0;
+	z-index: 2;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: 16px;
+	flex-shrink: 0;
 	padding: 20px 24px;
+	background: var(--aime-white);
 	border-bottom: 1px solid var(--aime-border-light);
+	border-radius: var(--aime-radius-lg) var(--aime-radius-lg) 0 0;
 
 	h3 {
 		margin: 0;
@@ -7428,26 +7973,53 @@ input.aime-premium-input[type=color]
 	}
 }
 
+// The dismiss control. A round 50px-radius button so it reads as an object to
+// hit rather than a glyph floating in the header, and the `×` is centred by
+// flex + line-height instead of the padding nudge that used to fake it.
 .aime-modal-close,
 .aime-premium-modal-close {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border-radius: var(--aime-radius-pill);
 	border: 1px solid var(--aime-border);
-	background: var(--aime-bg);
+	background: var(--aime-white);
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--aime-text-light);
-	transition: all var(--aime-transition);
-	font-size: 18px;
-	padding-bottom: 5px;
+	font-size: 20px;
+	line-height: 1;
+	// Colour and the 1px press only. A close button that grows on hover moves
+	// the target the visitor is already aiming at.
+	transition: background-color var(--aime-transition-fast),
+		border-color var(--aime-transition-fast), color var(--aime-transition-fast),
+		transform var(--aime-transition-fast);
 
-	&:hover {
+	svg {
+		fill: currentColor;
+	}
+
+	&:hover:not(:disabled) {
 		background: var(--aime-error-light);
 		border-color: var(--aime-error);
 		color: var(--aime-error);
+	}
+
+	&:active:not(:disabled) {
+		transform: scale(0.92);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 }
 
@@ -7492,96 +8064,140 @@ input.aime-premium-input[type=color]
 
 .aime-premium-input {
 	width: 100%;
-	padding: 10px 14px;
+	height: var(--aime-control-h);
+	padding: 0 12px;
 	border: 1.5px solid var(--aime-border);
 	border-radius: var(--aime-radius-sm);
-	font-size: 14px;
+	font-size: 13.5px;
 	color: var(--aime-text);
 	background: var(--aime-white);
-	transition: all var(--aime-transition);
+	transition: border-color var(--aime-transition), box-shadow var(--aime-transition),
+		background-color var(--aime-transition);
 	outline: none;
 	box-sizing: border-box;
 
 	&::placeholder {
 		color: var(--aime-text-muted);
+		opacity: 1;
+	}
+
+	&:hover:not(:disabled):not([readonly]) {
+		border-color: var(--aime-text-muted);
 	}
 
 	&:focus {
 		border-color: var(--aime-primary);
-		box-shadow: 0 0 0 3px rgba(var(--aime-primary-rgb), 0.1);
+		box-shadow: var(--aime-focus-ring);
+	}
+
+	&:disabled,
+	&[readonly] {
+		background: var(--aime-bg);
+		color: var(--aime-text-light);
+		border-color: var(--aime-border-light);
+		cursor: not-allowed;
+	}
+
+	&[aria-invalid="true"],
+	&.is-invalid {
+		border-color: var(--aime-error);
+
+		&:focus {
+			box-shadow: var(--aime-focus-ring-error);
+		}
 	}
 }
 
 .aime-premium-select {
 	width: 100%;
-	padding: 10px 14px;
+	height: var(--aime-control-h);
+	padding: 0 30px 0 12px;
 	border: 1.5px solid var(--aime-border);
 	border-radius: var(--aime-radius-sm);
-	font-size: 14px;
+	font-size: 13.5px;
 	color: var(--aime-text);
-	background: var(--aime-white);
-	transition: all var(--aime-transition);
+	background-color: var(--aime-white);
+	transition: border-color var(--aime-transition), box-shadow var(--aime-transition),
+		background-color var(--aime-transition);
 	outline: none;
 	appearance: none;
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235f7562'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
-	background-position: right 12px center;
+	background-position: right 10px center;
 	background-size: 16px;
-	padding-right: 36px;
 	box-sizing: border-box;
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		border-color: var(--aime-text-muted);
+	}
 
 	&:focus {
 		border-color: var(--aime-primary);
-		box-shadow: 0 0 0 3px rgba(var(--aime-primary-rgb), 0.1);
+		box-shadow: var(--aime-focus-ring);
+	}
+
+	&:disabled {
+		background-color: var(--aime-bg);
+		color: var(--aime-text-light);
+		border-color: var(--aime-border-light);
+		cursor: not-allowed;
 	}
 }
 
 .aime-premium-textarea {
 	width: 100%;
-	padding: 10px 14px;
+	min-height: 88px;
+	padding: 9px 12px;
 	border: 1.5px solid var(--aime-border);
 	border-radius: var(--aime-radius-sm);
-	font-size: 14px;
+	font-size: 13.5px;
 	font-family: inherit;
+	line-height: 1.5;
 	color: var(--aime-text);
 	background: var(--aime-white);
-	transition: all var(--aime-transition);
+	transition: border-color var(--aime-transition), box-shadow var(--aime-transition),
+		background-color var(--aime-transition);
 	outline: none;
 	resize: vertical;
 	box-sizing: border-box;
 
+	&::placeholder {
+		color: var(--aime-text-muted);
+		opacity: 1;
+	}
+
+	&:hover:not(:disabled):not([readonly]) {
+		border-color: var(--aime-text-muted);
+	}
+
 	&:focus {
 		border-color: var(--aime-primary);
-		box-shadow: 0 0 0 3px rgba(var(--aime-primary-rgb), 0.1);
+		box-shadow: var(--aime-focus-ring);
+	}
+
+	&:disabled,
+	&[readonly] {
+		background: var(--aime-bg);
+		color: var(--aime-text-light);
+		border-color: var(--aime-border-light);
+		cursor: not-allowed;
+	}
+
+	&[aria-invalid="true"],
+	&.is-invalid {
+		border-color: var(--aime-error);
+
+		&:focus {
+			box-shadow: var(--aime-focus-ring-error);
+		}
 	}
 }
 
+// Container, token, and remove-button styling now lives in the shared token
+// field block further down. This variant only drops the label, because the
+// surrounding form already supplies one.
 .aime-premium-token-field {
-	.components-form-token-field__input-container {
-		border: 1.5px solid var(--aime-border) !important;
-		border-radius: var(--aime-radius-sm) !important;
-		padding: 6px 10px !important;
-		min-height: 42px;
-		background: var(--aime-white);
-
-		&:focus-within {
-			border-color: var(--aime-primary) !important;
-			box-shadow: 0 0 0 3px rgba(var(--aime-primary-rgb), 0.1) !important;
-		}
-	}
-
-	.components-form-token-field__token {
-		background: var(--aime-primary-light) !important;
-		border: 1px solid rgba(var(--aime-primary-rgb), 0.2) !important;
-		border-radius: 6px !important;
-		color: var(--aime-primary) !important;
-		font-weight: 500;
-	}
-
-	.components-form-token-field__remove-token {
-		color: var(--aime-primary) !important;
-	}
-
 	.components-base-control__label {
 		display: none !important;
 	}
@@ -7652,10 +8268,14 @@ input.aime-premium-input[type=color]
 }
 
 .aime-premium-modal-footer {
+	position: sticky;
+	bottom: 0;
+	z-index: 2;
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
 	gap: 10px;
+	flex-shrink: 0;
 	padding: 16px 24px;
 	border-top: 1px solid var(--aime-border-light);
 	background: var(--aime-bg);
@@ -7679,46 +8299,9 @@ input.aime-premium-input[type=color]
 	}
 }
 
-.aime-btn-primary {
-	padding: 10px 24px;
-	border: none;
-	border-radius: var(--aime-radius-sm);
-	background: var(--aime-gradient);
-	color: white;
-	font-size: 14px;
-	font-weight: 600;
-	cursor: pointer;
-	transition: all var(--aime-transition);
-	box-shadow: 0 2px 8px rgba(27, 94, 32, 0.25);
-
-	&:hover {
-		box-shadow: 0 4px 16px rgba(27, 94, 32, 0.35);
-		transform: translateY(-1px);
-	}
-
-	&:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		transform: none;
-		box-shadow: none;
-	}
-}
-
-.aime-btn-secondary {
-	padding: 10px 20px;
-	border: 1.5px solid var(--aime-primary);
-	border-radius: var(--aime-radius-sm);
-	background: var(--aime-white);
-	color: var(--aime-primary);
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all var(--aime-transition);
-
-	&:hover {
-		background: var(--aime-primary-light);
-	}
-}
+// .aime-btn-primary / .aime-btn-secondary are defined once, further down in
+// the shared button system. The duplicates that used to sit here carried a
+// hardcoded green shadow that ignored the per-module accent.
 
 .aime-btn-danger {
 	padding: 10px 24px;
@@ -8288,50 +8871,87 @@ input.aime-premium-input[type=color]
 	margin-top: 8px;
 }
 
+// ============================================
+// SHARED BUTTON SYSTEM
+// One rhythm for every action in the plugin: 36px tall, 8px radius, the
+// module accent for intent, a 1px press on activation. Colour comes from the
+// accent tokens so a button in SEO is amber and the same button in Email is
+// crimson without either being written twice.
+// ============================================
 .aime-btn-primary,
-.aime-btn-secondary {
+.aime-btn-secondary,
+.aime-btn-ghost {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	padding: 10px 20px;
-	font-size: 14px;
+	justify-content: center;
+	gap: 7px;
+	min-height: 36px;
+	padding: 8px 18px;
+	font-size: 13.5px;
 	font-weight: 600;
+	line-height: 1.2;
 	border-radius: var(--aime-radius-sm);
 	cursor: pointer;
-	transition: all var(--aime-transition);
-	border: none;
+	transition: background var(--aime-transition), color var(--aime-transition),
+		border-color var(--aime-transition), box-shadow var(--aime-transition),
+		transform 0.08s ease;
+	border: 1px solid transparent;
 	white-space: nowrap;
+
+	svg {
+		fill: currentColor;
+		flex-shrink: 0;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+
+	&:active:not(:disabled) {
+		transform: translateY(1px);
+	}
+
+	&:disabled,
+	&[aria-disabled='true'] {
+		opacity: 0.5;
+		cursor: not-allowed;
+		box-shadow: none;
+		transform: none;
+	}
 }
 
 .aime-btn-primary {
 	background: var(--aime-primary);
 	color: var(--aime-white);
+	box-shadow: 0 2px 5px rgba(var(--aime-primary-rgb), 0.22);
 
-	&:hover {
+	&:hover:not(:disabled) {
 		background: var(--aime-primary-hover);
-		box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-	}
-
-	&:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		box-shadow: 0 5px 14px rgba(var(--aime-primary-rgb), 0.28);
 	}
 }
 
 .aime-btn-secondary {
 	background: var(--aime-white);
 	color: var(--aime-text);
-	border: 1px solid var(--aime-border);
+	border-color: var(--aime-border);
 
-	&:hover {
+	&:hover:not(:disabled) {
 		border-color: var(--aime-primary);
 		color: var(--aime-primary);
 		background: var(--aime-primary-light);
 	}
+}
 
-	&:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+// Ghost: toolbar-weight actions that should not compete with the primary.
+.aime-btn-ghost {
+	background: transparent;
+	color: var(--aime-text-light);
+
+	&:hover:not(:disabled) {
+		background: var(--aime-primary-light);
+		color: var(--aime-primary);
 	}
 }
 
@@ -8944,6 +9564,14 @@ input.aime-premium-input[type=color]
 	border: 1px solid #ef9a9a !important;
 }
 
+.aime-article-preview .aime-preview-meta-bar {
+	display: flex;
+	flex-flow: row wrap;
+	gap: 10px;
+	align-items: center;
+	margin: 10px 0;
+}
+
 // ============================================
 // PREVIEW EDIT BAR
 // ============================================
@@ -8982,11 +9610,15 @@ input.aime-premium-input[type=color]
 		border-radius: var(--aime-radius-sm);
 		font-size: 14px;
 		box-sizing: border-box;
+		transition: border-color var(--aime-transition),
+			box-shadow var(--aime-transition);
 
 		&:focus {
 			outline: none;
 			border-color: var(--aime-primary);
-			box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.1);
+			// Was a hardcoded forest-green ring, which stayed green inside the
+			// crimson and amber rooms. The token follows the module accent.
+			box-shadow: var(--aime-focus-ring);
 		}
 	}
 
@@ -9421,9 +10053,6 @@ input.aime-premium-input[type=color]
 		border: none;
 		pointer-events: none;
 	}
-}
-.components-form-token-field {
-    margin-top: 1rem;
 }
 .aime-svg-card-overlay {
 	position: absolute;
@@ -10072,17 +10701,40 @@ input.aime-premium-input[type=color]
 
 // ============================================
 // PREMIUM BUTTON OVERRIDES FOR WP COMPONENTS
+// Matched to the shared button system above so a <Button> from @wordpress
+// and an .aime-btn- sit on the same baseline in the same toolbar.
 // ============================================
+#aime-app .components-button.is-primary,
+#aime-app .components-button.is-secondary,
+#aime-app .components-button.is-tertiary,
+#aime-app .components-button.is-destructive {
+	min-height: 36px;
+	border-radius: var(--aime-radius-sm);
+	font-size: 13.5px;
+	font-weight: 600;
+	transition: background var(--aime-transition), color var(--aime-transition),
+		border-color var(--aime-transition), box-shadow var(--aime-transition),
+		transform 0.08s ease;
+
+	&:active:not(:disabled):not([aria-disabled='true']) {
+		transform: translateY(1px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+		box-shadow: none;
+	}
+}
+
 #aime-app .components-button.is-primary {
 	background: var(--aime-primary) !important;
 	border-color: var(--aime-primary) !important;
-	border-radius: var(--aime-radius-sm);
-	font-weight: 600;
-	box-shadow: 0 2px 4px rgba(var(--aime-primary-rgb), 0.2);
+	box-shadow: 0 2px 5px rgba(var(--aime-primary-rgb), 0.22);
 
 	&:hover, &:focus {
 		background: var(--aime-primary-hover) !important;
-		box-shadow: 0 4px 12px rgba(var(--aime-primary-rgb), 0.3);
+		box-shadow: 0 5px 14px rgba(var(--aime-primary-rgb), 0.28);
 	}
 
 	&:disabled,
@@ -10098,17 +10750,34 @@ input.aime-premium-input[type=color]
 
 #aime-app .components-button.is-secondary {
 	border-color: var(--aime-border);
-	border-radius: var(--aime-radius-sm);
+	background: var(--aime-white);
 	color: var(--aime-text);
+	box-shadow: none;
 
-	&:hover {
+	&:hover:not(:disabled):not([aria-disabled='true']) {
 		border-color: var(--aime-primary);
+		color: var(--aime-primary);
+		background: var(--aime-primary-light);
+	}
+}
+
+#aime-app .components-button.is-tertiary {
+	color: var(--aime-text-light);
+
+	&:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--aime-primary-light);
 		color: var(--aime-primary);
 	}
 }
 
 #aime-app .components-button.is-destructive {
 	border-radius: var(--aime-radius-sm);
+	color: var(--aime-error);
+
+	&:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--aime-error-light);
+		color: var(--aime-error-dark);
+	}
 }
 
 #aime-app .components-tab-panel__tabs {
@@ -10138,37 +10807,140 @@ input.aime-premium-input[type=color]
 	margin-bottom: 0;
 }
 
-#aime-app .components-text-control__input,
-#aime-app .components-select-control__input,
-#aime-app .components-textarea-control__input,
-#aime-app input[type="date"],
-#aime-app input[type="datetime-local"],
-#aime-app input[type="time"],
-#aime-app input[type="number"],
-#aime-app input[type="url"],
-#aime-app input[type="email"] {
-	border-radius: var(--aime-radius-sm) !important;
-	border: 1.5px solid var(--aime-border) !important;
-	padding: 8px 12px !important;
+// ============================================
+// FORM CONTROL SYSTEM
+// Every field in the plugin resolves to one shape: the button height, the
+// button radius, a 1.5px hairline that warms on hover, and a focus ring in
+// the module accent. Focus is the only state that grows — the ring animates
+// out from the border rather than the box changing size, so a form does not
+// twitch as the visitor tabs through it.
+// ============================================
+#aime-app {
+	.components-text-control__input,
+	.components-select-control__input,
+	.components-textarea-control__input,
+	input[type="text"],
+	input[type="search"],
+	input[type="password"],
+	input[type="date"],
+	input[type="datetime-local"],
+	input[type="time"],
+	input[type="number"],
+	input[type="url"],
+	input[type="email"],
+	input[type="tel"],
+	textarea,
+	select {
+		box-sizing: border-box;
+		border-radius: var(--aime-radius-sm) !important;
+		border: 1.5px solid var(--aime-border) !important;
+		background-color: var(--aime-white);
+		color: var(--aime-text);
+		font-size: 13.5px;
+		line-height: 1.4;
+		box-shadow: none;
+		// Only the two properties that actually change — animating `all` here
+		// would drag layout metrics along with the colour.
+		transition: border-color var(--aime-transition),
+			box-shadow var(--aime-transition), background-color var(--aime-transition);
 
-	&:focus {
-		border-color: var(--aime-primary) !important;
-		box-shadow: 0 0 0 2px rgba(var(--aime-primary-rgb), 0.1) !important;
-		outline: none !important;
+		&::placeholder {
+			color: var(--aime-text-muted);
+			opacity: 1;
+		}
+
+		&:hover:not(:disabled):not([readonly]) {
+			border-color: var(--aime-text-muted) !important;
+		}
+
+		&:focus,
+		&:focus-visible {
+			border-color: var(--aime-primary) !important;
+			box-shadow: var(--aime-focus-ring) !important;
+			outline: none !important;
+		}
+
+		&:disabled,
+		&[readonly] {
+			background-color: var(--aime-bg);
+			color: var(--aime-text-light);
+			border-color: var(--aime-border-light) !important;
+			box-shadow: none !important;
+			cursor: not-allowed;
+		}
+
+		&[aria-invalid="true"],
+		&.is-invalid {
+			border-color: var(--aime-error) !important;
+
+			&:focus {
+				box-shadow: var(--aime-focus-ring-error) !important;
+			}
+		}
 	}
-}
 
-// Native date/time/number controls — match WP input height & remove WP-core blue focus
-#aime-app input[type="date"],
-#aime-app input[type="datetime-local"],
-#aime-app input[type="time"],
-#aime-app input[type="number"] {
-	height: 40px;
-	box-sizing: border-box;
-	background: var(--aime-white);
-	color: var(--aime-text);
-	font-size: 13px;
-	line-height: 1.4;
+	// Single-line controls share the button baseline; textareas grow instead.
+	.components-text-control__input,
+	.components-select-control__input,
+	input[type="text"],
+	input[type="search"],
+	input[type="password"],
+	input[type="date"],
+	input[type="datetime-local"],
+	input[type="time"],
+	input[type="number"],
+	input[type="url"],
+	input[type="email"],
+	input[type="tel"],
+	select {
+		height: var(--aime-control-h);
+		min-height: var(--aime-control-h);
+		padding: 0 12px !important;
+	}
+
+	.components-textarea-control__input,
+	textarea {
+		min-height: 88px;
+		padding: 9px 12px !important;
+		font-family: inherit;
+		resize: vertical;
+	}
+
+	// The select arrow lives in the padding, so the text needs to stop short.
+	.components-select-control__input,
+	select {
+		padding-right: 30px !important;
+	}
+
+	// Checkbox and radio opt out of the box treatment — they are marks, not
+	// fields, and inherit only the accent.
+	input[type="checkbox"],
+	input[type="radio"] {
+		&:focus-visible {
+			outline: 2px solid var(--aime-primary);
+			outline-offset: 2px;
+			box-shadow: none;
+		}
+	}
+
+	// Field labels: one weight, one size, consistent gap to the control.
+	.components-base-control__label,
+	.aime-field-label {
+		display: block;
+		margin-bottom: 6px;
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.3;
+		text-transform: none;
+		color: var(--aime-text);
+	}
+
+	.components-base-control__help {
+		margin-top: 6px;
+		font-size: 12px;
+		line-height: 1.45;
+		color: var(--aime-text-light);
+	}
 }
 
 // Reset padding for select elements inside WP ColorPicker & other internal components
@@ -10178,21 +10950,21 @@ input.aime-premium-input[type=color]
 #aime-app [class*="color-picker"] select {
 	padding: 4px 8px !important;
 	height: auto !important;
-	font-size: 11px !important;
 	min-height: 0 !important;
+	font-size: 11px !important;
 	line-height: 1.4 !important;
 }
 
 #aime-app .aime-table-toolbar .components-select-control__input {
-	height: 40px !important;
-	padding: 0 32px 0 12px !important;
+	height: var(--aime-control-h) !important;
+	padding: 0 30px 0 12px !important;
 	box-sizing: border-box !important;
 }
 
 #aime-app .aime-table-toolbar .components-search-control {
 	.components-input-base {
-		height: 40px !important;
-		min-height: 40px !important;
+		height: var(--aime-control-h) !important;
+		min-height: var(--aime-control-h) !important;
 		box-sizing: border-box !important;
 	}
 
@@ -10201,14 +10973,194 @@ input.aime-premium-input[type=color]
 	}
 
 	input[type="search"] {
-		height: 40px !important;
+		height: var(--aime-control-h) !important;
 		box-sizing: border-box !important;
 		padding: 0 8px !important;
 	}
 }
 
 #aime-app .components-search-control .components-text-control__input {
-	border-radius: 20px !important;
+	border-radius: calc(var(--aime-control-h) / 2) !important;
+}
+
+// Composite controls own their border. Any input nested inside one is a part,
+// not a field, so it drops the chrome the global form rules would give it.
+#aime-app .aime-searchable-select__search,
+#aime-app .aime-searchable-select__dropdown input[type="text"],
+#aime-app .aime-searchable-select__dropdown input[type="search"] {
+	height: auto !important;
+	min-height: 0 !important;
+	padding: 8px 12px !important;
+	border: none !important;
+	border-bottom: 1px solid var(--aime-border) !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+
+	&:hover,
+	&:focus {
+		border-color: var(--aime-border) !important;
+		box-shadow: none !important;
+	}
+}
+
+// ============================================
+// TOKEN / MULTISELECT FIELDS
+// A token field is one control that happens to contain a text input. The
+// input therefore gets no chrome of its own — the container carries the
+// border, the hover and the focus ring, so the field reads as a single box
+// instead of a box inside a box.
+// ============================================
+#aime-app .components-form-token-field {
+	// The wrapper is spacing-neutral: whatever grid or stack the field sits in
+	// owns the rhythm, exactly as it does for a text input.
+	margin: 0;
+
+	.components-form-token-field__input-container {
+		// border-box, or the 1.5px border and the 3px of padding stack on top
+		// of the 36px floor and the field lands ~8px taller than every control
+		// beside it — the extra height that made this box look mispadded.
+		box-sizing: border-box;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px;
+		min-height: var(--aime-control-h);
+		padding: 3px 6px !important;
+		margin: 0 !important;
+		border: 1.5px solid var(--aime-border) !important;
+		border-radius: var(--aime-radius-sm) !important;
+		background: var(--aime-white);
+		box-shadow: none !important;
+		transition: border-color var(--aime-transition), box-shadow var(--aime-transition);
+
+		&:hover {
+			border-color: var(--aime-text-muted) !important;
+		}
+
+		&.is-active,
+		&:focus-within {
+			border-color: var(--aime-primary) !important;
+			box-shadow: var(--aime-focus-ring) !important;
+			outline: none !important;
+		}
+	}
+
+	// The inner input inherits the container's box, not its own. 26px keeps an
+	// empty field at exactly --aime-control-h, so it lines up with the text
+	// input above it and the select below it.
+	input.components-form-token-field__input,
+	.components-form-token-field__input-container input[type="text"] {
+		flex: 1;
+		min-width: 120px;
+		height: 26px !important;
+		min-height: 26px !important;
+		margin: 0 !important;
+		padding: 0 4px !important;
+		border: none !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		outline: none !important;
+		font-size: 13.5px;
+		color: var(--aime-text);
+
+		&:hover,
+		&:focus {
+			border: none !important;
+			box-shadow: none !important;
+		}
+	}
+
+	// Newer WP wraps the tokens in a list. It is a layout artefact, not a list
+	// the reader should feel — it inherits the container's flex row.
+	.components-form-token-field__token-list,
+	ul.components-form-token-field__input-container {
+		display: contents;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.components-form-token-field__token {
+		display: inline-flex;
+		align-items: center;
+		max-width: 100%;
+		margin: 0;
+		background: var(--aime-primary-light);
+		border: 1px solid rgba(var(--aime-primary-rgb), 0.22);
+		border-radius: var(--aime-radius-sm);
+		color: var(--aime-primary);
+		font-size: 12.5px;
+		font-weight: 500;
+		line-height: 1;
+		overflow: hidden;
+	}
+
+	.components-form-token-field__token-text {
+		padding: 0 2px 0 8px;
+		line-height: 22px;
+		background: transparent;
+		color: inherit;
+		border-radius: 0;
+	}
+
+	// The remove control was a near-invisible glyph on a tinted chip. It now
+	// carries its own hit area and states: accent at rest, error on hover, so
+	// removing a token looks like the destructive act it is.
+	.components-form-token-field__remove-token.components-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 20px;
+		height: 22px;
+		min-width: 20px;
+		padding: 0;
+		border: none;
+		border-radius: 0;
+		background: transparent;
+		color: var(--aime-primary);
+		cursor: pointer;
+		transition: background var(--aime-transition), color var(--aime-transition);
+
+		svg {
+			width: 15px;
+			height: 15px;
+			fill: currentColor;
+		}
+
+		&:hover {
+			background: var(--aime-error-light);
+			color: var(--aime-error);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-primary);
+			outline-offset: -2px;
+			box-shadow: none;
+		}
+	}
+
+	// Suggestion dropdown picks up the same border language as the field.
+	.components-form-token-field__suggestions-list {
+		border: 1.5px solid var(--aime-border);
+		border-top: none;
+		border-radius: 0 0 var(--aime-radius-sm) var(--aime-radius-sm);
+		background: var(--aime-white);
+		box-shadow: var(--aime-shadow-md);
+	}
+
+	.components-form-token-field__suggestion {
+		font-size: 13px;
+		color: var(--aime-text);
+
+		&.is-selected {
+			background: var(--aime-primary);
+			color: var(--aime-white);
+		}
+	}
 }
 
 // Page header button
@@ -10225,6 +11177,11 @@ input.aime-premium-input[type=color]
 		transform: translateY(-2px);
 		box-shadow: var(--aime-shadow-md);
 	}
+}
+
+.aime-social-calendar {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 // ============================================
@@ -10696,92 +11653,166 @@ input.aime-premium-input[type=color]
 		transition: width 0.4s ease;
 	}
 
-	.aime-bar-chart {
-		display: flex;
-		align-items: flex-end;
-		gap: 6px;
-		padding: 12px 0;
-		min-height: 140px;
-	}
+	// The hand-rolled `.aime-bar-chart` / `.aime-bar-item` / `.aime-bar` divs
+	// lived here, along with `.aime-status-grid` and `.aime-tone-list`. All of it
+	// went with the page: the bar chart had no axis and collapsed empty days, the
+	// status chips carried no share, and the tone list printed counts with
+	// nothing to compare them against. Recharts and `.aime-rankbar` replaced
+	// them. The same class names still exist scoped to other modules — this block
+	// only ever applied inside `.aime-content-analytics`.
 
-	.aime-bar-item {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4px;
+	// Cards sitting in a grid stop being responsible for the gap under them.
+	.aime-content-split > .aime-card,
+	.aime-charts-grid > .aime-card {
+		margin-bottom: 0;
 	}
+}
 
-	.aime-bar {
-		width: 100%;
-		max-width: 40px;
-		background: var(--aime-primary);
-		border-radius: 4px 4px 0 0;
-		transition: height 0.3s ease;
+// ── Ranked bar list ───────────────────────────────────────
+// One label, one bar on a shared baseline, one count. This is the plugin's
+// answer to "should this be a pie": a pie asks the eye to compare angles, which
+// is the least accurate comparison it can make, and it has no order — while
+// draft → ready → published is a sequence, and scattering a sequence around a
+// circle throws away the only structure the data has.
+//
+// The grid lives on the list and the rows are `display: contents`, so every
+// label, track and count lines up down the card without a magic label width —
+// which matters because the tone list holds user-authored text of any length.
+.aime-rankbar {
+	display: grid;
+	grid-template-columns: minmax(0, max-content) minmax(80px, 1fr) max-content;
+	align-items: center;
+	gap: 10px 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.aime-rankbar__row {
+	display: contents;
+}
+
+.aime-rankbar__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	overflow: hidden;
+	font-size: 13px;
+	color: var(--aime-text);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-transform: capitalize;
+}
+
+.aime-rankbar__dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 8px;
+}
+
+.aime-rankbar__track {
+	height: 8px;
+	background: var(--aime-bg-subtle);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.aime-rankbar__fill {
+	display: block;
+	height: 100%;
+	border-radius: 8px;
+	transition: width var(--aime-transition);
+}
+
+.aime-rankbar__count {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.aime-rankbar__suffix {
+	margin-left: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	font-style: normal;
+	color: var(--aime-text-light);
+}
+
+// ── Pipeline card ─────────────────────────────────────────
+.aime-pipeline {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+// The headline answers the card in one number before the bars explain it. A
+// hairline, not a rule and not a box: the gap already separates the two, the
+// line only has to confirm it.
+.aime-pipeline__headline {
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--aime-border-light);
+}
+
+.aime-pipeline__value {
+	display: block;
+	font-size: 40px;
+	font-weight: 700;
+	line-height: 1.1;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+.aime-pipeline__caption {
+	display: block;
+	margin-top: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-light);
+}
+
+.aime-pipeline__foot {
+	margin: 0;
+	font-size: 11px;
+	color: var(--aime-text-light);
+}
+
+// ── Content analytics layout ──────────────────────────────
+// The time chart carries an axis, a legend and up to ninety points; the
+// pipeline carries a number and a short list. Equal columns would have made the
+// chart illegible to give the list room it never asked for.
+.aime-charts-grid--wide-first {
+	@media (min-width: 960px) {
+		grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
 	}
+}
 
-	.aime-bar-label {
-		font-size: 10px;
-		color: var(--aime-text-light);
-		white-space: nowrap;
+// A four-column table beside a list of one-word labels. Below the 960 door they
+// stack, because a table squeezed into half of 782px is a table nobody reads.
+.aime-content-split {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 20px;
+	margin-bottom: 24px;
+
+	@media (min-width: 960px) {
+		grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
 	}
+}
 
-	.aime-status-grid {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-	}
-
-	.aime-status-item {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 14px;
-		background: var(--aime-bg);
-		border-radius: var(--aime-radius-sm);
-		font-size: 13px;
-	}
-
-	.aime-status-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	.aime-status-name {
-		color: var(--aime-text);
-	}
-
-	.aime-status-count {
-		font-weight: 600;
-		color: var(--aime-text);
-		margin-left: auto;
-	}
-
-	.aime-tone-list {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.aime-tone-item {
-		display: flex;
-		justify-content: space-between;
-		padding: 8px 12px;
-		background: var(--aime-bg);
-		border-radius: var(--aime-radius-sm);
-		font-size: 13px;
-	}
-
-	.aime-tone-name {
-		font-weight: 500;
-		color: var(--aime-text);
-		text-transform: capitalize;
-	}
-
-	.aime-tone-count {
-		color: var(--aime-text-light);
+// Counts belong on the right, on one decimal column, at one width per digit.
+// A word count that shifts left as it grows cannot be compared to the row above
+// it without reading both.
+.aime-table {
+	th.aime-num,
+	td.aime-num {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
 	}
 }
 
@@ -10831,20 +11862,55 @@ input.aime-premium-input[type=color]
 
 .aime-brand-voice-card {
 	.aime-brand-voice-description {
-		margin: 0 0 12px;
+		margin: 0 0 14px;
 		color: var(--aime-text-light);
 		font-size: 13px;
-		line-height: 1.5;
+		line-height: 1.55;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
 	}
 
+	// Tone / Style / Avoid were three filled boxes inside the card — cards
+	// nested in a card. They are a labelled record, so they get a hairline
+	// ledger: the rules do the separating, no second surface required.
 	.aime-brand-voice-values {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
+		margin: 0 0 12px;
+		border-top: 1px solid var(--aime-border-light);
+	}
 
-		span {
-			display: block;
-			line-height: 1.45;
+	.aime-brand-voice-rule {
+		padding: 10px 0;
+		border-bottom: 1px solid var(--aime-border-light);
+
+		&:last-child {
+			border-bottom: 0;
+		}
+
+		dt {
+			margin: 0 0 3px;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			color: var(--aime-text-muted);
+		}
+
+		dd {
+			margin: 0;
+			font-size: 13px;
+			line-height: 1.5;
+			color: var(--aime-text-light);
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 3;
+			overflow: hidden;
+		}
+
+		&.is-empty dd {
+			color: var(--aime-text-muted);
+			font-style: italic;
 		}
 	}
 }
@@ -10900,9 +11966,11 @@ input.aime-premium-input[type=color]
 	.aime-form-field {
 		&.has-error {
 			.components-text-control__input,
+			.components-textarea-control__input,
+			.components-select-control__input,
 			.components-form-token-field__input-container {
 				border-color: var(--aime-error) !important;
-				box-shadow: 0 0 0 1px var(--aime-error) !important;
+				box-shadow: var(--aime-focus-ring-error) !important;
 			}
 
 			.components-base-control__label {
@@ -11442,65 +12510,96 @@ input.aime-premium-input[type=color]
 	}
 }
 
-// ── Presets grid ──────────────────────────────────────────
+// ── Presets / Brand Voices card grid ──────────────────────
+// Both pages show the same kind of object: a saved configuration with a name,
+// a badge, some values, and edit/delete. One grid, one card shell, so the two
+// tabs read as the same drawer of the same cabinet.
 .aime-presets-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 16px;
+
+	// Cards carry a 20px bottom margin for stacked use; inside a gapped grid
+	// that is a phantom gutter under every card, and it ragged the row.
+	> .aime-card {
+		margin-bottom: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	// Body stretches so the action rail lands on the card floor. Without it the
+	// footer rules sit at different heights across a row of unequal content.
+	> .aime-card > .aime-card-body {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
 }
 
 .aime-preset-card {
 	.aime-preset-header {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: space-between;
-		margin-bottom: 8px;
+		gap: 8px;
+		margin-bottom: 10px;
 
 		h3 {
 			margin: 0;
 			font-size: 15px;
 			font-weight: 600;
+			line-height: 1.35;
 			color: var(--aime-text);
 		}
 	}
 
 	.aime-badge-default {
+		flex-shrink: 0;
 		padding: 2px 8px;
 		border-radius: 10px;
 		font-size: 10px;
 		font-weight: 600;
+		letter-spacing: 0.04em;
 		background: var(--aime-primary-light);
 		color: var(--aime-primary);
 		text-transform: uppercase;
 	}
 
+	// Preset values are single words (professional / blog_post / 1000) — chips
+	// are honest here. Brand voice values are sentences and get rules instead.
 	.aime-preset-details {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
-		margin-bottom: 8px;
+		gap: 6px;
+		margin-bottom: 12px;
 
 		> span {
 			font-size: 12px;
 			color: var(--aime-text-light);
-			padding: 2px 8px;
-			background: var(--aime-bg);
+			padding: 3px 8px;
+			background: var(--aime-bg-subtle);
 			border-radius: 4px;
 		}
 	}
 
 	.aime-preset-template {
-		font-size: 12px;
+		font-size: 13px;
 		color: var(--aime-text-light);
-		margin: 0 0 8px;
+		margin: 0 0 12px;
 		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
 	}
 
 	.aime-preset-actions {
 		display: flex;
-		gap: 4px;
-		padding-top: 8px;
-		border-top: 1px solid var(--aime-border);
+		align-items: center;
+		gap: 2px;
+		margin-top: auto;
+		padding-top: 12px;
+		border-top: 1px solid var(--aime-border-light);
 
 		.components-button.is-small {
 			padding: 4px;
@@ -11508,6 +12607,7 @@ input.aime-premium-input[type=color]
 		}
 	}
 }
+
 
 /* .aime-preset-modal — replaced with aime-premium-modal pattern */
 
@@ -11523,11 +12623,40 @@ input.aime-premium-input[type=color]
 	}
 }
 
-// ── Shortcode info box (Conversations page) ───────────────
+// ── Shortcode info accordion (Conversations page) ─────────
 .aime-shortcode-info {
-	margin-bottom: 16px !important;
+	margin-top: 16px !important;
+	margin-bottom: 0 !important;
 	border-left: 4px solid var(--aime-primary, #3858e9) !important;
 	background: #f0f4ff !important;
+
+	.aime-shortcode-info__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		width: 100%;
+		padding: 0;
+		background: none;
+		border: 0;
+		cursor: pointer;
+		text-align: left;
+		color: #1e1e1e;
+
+		&:hover .aime-shortcode-info__title {
+			color: var(--aime-primary, #3858e9);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-primary, #3858e9);
+			outline-offset: 2px;
+		}
+	}
+
+	.aime-shortcode-info__title {
+		font-size: 14px;
+		font-weight: 600;
+	}
 
 	.aime-shortcode-info__inner {
 		display: flex;
@@ -11535,6 +12664,9 @@ input.aime-premium-input[type=color]
 		justify-content: space-between;
 		gap: 16px;
 		flex-wrap: wrap;
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid rgba(56, 88, 233, 0.15);
 	}
 
 	.aime-shortcode-info__text {
@@ -12096,12 +13228,12 @@ input.aime-premium-input[type=color]
 }
 
 .aime-api-key-notice {
-	background: #fffbeb;
-	border: 1px solid #f59e0b;
+	background: var(--aime-warning-light);
+	border: 1px solid var(--aime-warning);
 	border-radius: var(--aime-radius-sm, 6px);
 	padding: 10px 14px;
 	margin-bottom: 12px;
-	color: #92400e;
+	color: var(--aime-warning-dark);
 	font-size: 13px;
 }
 
@@ -12109,7 +13241,7 @@ input.aime-premium-input[type=color]
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	background: #f1f5f9;
+	background: var(--aime-bg-subtle);
 	border: 1px solid var(--aime-border);
 	border-radius: var(--aime-radius-sm, 6px);
 	padding: 8px 12px;
@@ -12123,6 +13255,76 @@ input.aime-premium-input[type=color]
 		padding: 0;
 	}
 }
+
+/* Settings — shared blocks */
+.aime-settings-hint {
+	margin: 0 0 12px;
+	font-size: 13px;
+	color: var(--aime-text-light);
+}
+
+.aime-settings-callout {
+	margin-top: 16px;
+	padding: 14px 16px;
+	background: var(--aime-bg);
+	border: 1px solid var(--aime-border-light);
+	border-radius: var(--aime-radius-sm);
+	font-size: 13px;
+	color: var(--aime-text-light);
+
+	> :first-child { margin-top: 0; }
+	> :last-child { margin-bottom: 0; }
+
+	strong {
+		color: var(--aime-text);
+	}
+
+	&.is-warning {
+		background: var(--aime-warning-light);
+		border-color: var(--aime-warning);
+		color: var(--aime-warning-dark);
+
+		strong { color: inherit; }
+	}
+
+	code {
+		display: block;
+		margin-top: 8px;
+		padding: 10px 12px;
+		background: var(--aime-white);
+		border: 1px solid var(--aime-border-light);
+		border-radius: var(--aime-radius-sm);
+		font-size: 12px;
+		white-space: normal;
+		word-break: break-all;
+		color: var(--aime-text);
+	}
+}
+
+.aime-settings-code {
+	margin: 8px 0 0;
+	padding: 12px;
+	background: var(--aime-bg-subtle);
+	border: 1px solid var(--aime-border-light);
+	border-radius: var(--aime-radius-sm);
+	overflow: auto;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--aime-text);
+}
+
+.aime-settings-btn-row {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.aime-cron-delay {
+	margin-left: 8px;
+	font-size: 12px;
+	color: var(--aime-text-light);
+}
+
 /* ── Keyword Research: SEMrush-style ──────────────────────── */
 
 .aime-kw-seed-card {
@@ -12942,44 +14144,76 @@ input.aime-premium-input[type=color]
 .aime-settings-sidebar {
 	display: flex;
 	flex-direction: column;
-	min-width: 180px;
-	background: #fff;
-	border: 1px solid #e2e8f0;
-	border-radius: 8px;
-	padding: 8px;
+	gap: 2px;
+	min-width: 200px;
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	padding: 10px;
 	align-self: flex-start;
 	position: sticky;
-	top: 32px;
+	top: 46px; // clears the admin bar (32px) with breathing room
+	// The rail runs the height of the viewport rather than stopping under its
+	// last tab — a five-item stub next to a long settings column reads as a
+	// fragment of the page instead of its spine.
+	min-height: calc(100vh - 140px);
 }
 
 .aime-settings-tab {
+	position: relative;
 	display: block;
 	width: 100%;
-	padding: 10px 16px;
+	padding: 10px 14px;
 	border: none;
 	background: none;
 	text-align: left;
-	font-size: 14px;
-	color: #475569;
-	border-radius: 6px;
+	font-size: 13.5px;
+	font-weight: 500;
+	color: var(--aime-text-light);
+	border-radius: var(--aime-radius-sm);
 	cursor: pointer;
-	transition: background 0.15s, color 0.15s;
+	transition: background var(--aime-transition), color var(--aime-transition);
 
 	&:hover {
 		background: var(--aime-primary-light);
 		color: var(--aime-primary);
 	}
 
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 2px;
+	}
+
 	&.is-active {
 		background: var(--aime-primary);
-		color: #fff;
+		color: var(--aime-white);
 		font-weight: 600;
+		box-shadow: 0 6px 14px rgba(var(--aime-primary-rgb), 0.24);
 	}
 }
 
 .aime-settings-content {
 	flex: 1;
 	min-width: 0;
+}
+
+// The rail goes horizontal before it starts crushing the content column.
+@media (max-width: 782px) {
+	.aime-settings-layout {
+		flex-direction: column;
+	}
+
+	.aime-settings-sidebar {
+		position: static;
+		flex-direction: row;
+		flex-wrap: wrap;
+		min-width: 0;
+		min-height: 0;
+	}
+
+	.aime-settings-tab {
+		width: auto;
+	}
 }
 
 /* ── Log Viewer ── */
@@ -12998,7 +14232,7 @@ input.aime-premium-input[type=color]
 .aime-log-count {
 	margin-left: auto;
 	font-size: 13px;
-	color: #94a3b8;
+	color: var(--aime-text-muted);
 }
 
 .aime-log-table {
@@ -13011,7 +14245,7 @@ input.aime-premium-input[type=color]
 	.aime-log-time {
 		white-space: nowrap;
 		font-size: 12px;
-		color: #64748b;
+		color: var(--aime-text-light);
 	}
 
 	.aime-log-msg {
@@ -13027,25 +14261,26 @@ input.aime-premium-input[type=color]
 	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
+	letter-spacing: 0.03em;
 
 	&--info {
-		background: #dbeafe;
-		color: #1e40af;
+		background: var(--aime-info-light);
+		color: var(--aime-info-dark);
 	}
 
 	&--warning {
-		background: #fef3c7;
-		color: #92400e;
+		background: var(--aime-warning-light);
+		color: var(--aime-warning-dark);
 	}
 
 	&--error {
-		background: #fee2e2;
-		color: #991b1b;
+		background: var(--aime-error-light);
+		color: var(--aime-error-dark);
 	}
 }
 
 .aime-log-level--error {
-	background: #fef2f2;
+	background: var(--aime-error-light);
 }
 
 /* ── Image Generation Progress ── */
@@ -13136,6 +14371,20 @@ input.aime-premium-input[type=color]
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+
+	// The builder measures itself, not the window. Collapsing the module rail
+	// hands this page 168px it did not have a moment ago, and a viewport query
+	// cannot see that — it would keep the strip layout on a screen with room
+	// for the rail, and it would promise three columns on a wide window whose
+	// content box is narrow. Everything below reads this container instead.
+	container: aime-wf / inline-size;
+
+	// One height for the canvas and the config column. They were sized
+	// independently before — the canvas off the viewport, the panel off a fixed
+	// 480px floor — so the two columns ended at different places and, on a short
+	// screen, the panel's own floor exceeded its own ceiling and it scrolled
+	// inside a box taller than the window.
+	--aime-wf-h: clamp(420px, calc(100vh - 330px), 860px);
 }
 
 .aime-wf-topbar {
@@ -13143,6 +14392,7 @@ input.aime-premium-input[type=color]
 	justify-content: space-between;
 	align-items: center;
 	gap: 12px;
+	flex-wrap: wrap;
 	padding: 10px 14px;
 	background: var(--aime-white);
 	border: 1px solid var(--aime-border);
@@ -13154,19 +14404,50 @@ input.aime-premium-input[type=color]
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+
+	&__left {
+		flex: 1 1 260px;
+	}
+
+	&__right {
+		flex-shrink: 0;
 	}
 
 	.components-base-control {
 		margin-bottom: 0;
 	}
+
+	// When the builder itself is narrow the actions become their own row and the
+	// name takes the full width, rather than four controls squeezing a title
+	// field down to an ellipsis.
+	@container aime-wf (max-width: 700px) {
+		&__left,
+		&__right {
+			flex: 1 1 100%;
+		}
+
+		&__right {
+			justify-content: flex-end;
+		}
+	}
 }
 
+#aime-app .aime-log-toolbar .components-base-control,
 #aime-app .aime-wf-topbar__right .components-base-control,
 #aime-app .aime-seo-topic-map .components-base-control ,
 #aime-app .aime-settings-form .components-base-control {
 	margin-bottom: 0;
 }
-
+#aime-app #tab-panel-1-tracking-view .aime-settings-form .components-base-control {
+    margin-bottom: 1rem;
+}
+#aime-app #tab-panel-3-general-view .aime-settings-form .components-base-control,
+#aime-app #tab-panel-3-sending-view .aime-settings-form .components-base-control {
+    margin-bottom: 10px;
+}
 .aime-wf-name-input {
 	border: 1px solid transparent;
 	border-radius: var(--aime-radius-sm);
@@ -13175,7 +14456,9 @@ input.aime-premium-input[type=color]
 	font-size: 16px;
 	font-weight: 600;
 	padding: 4px 8px;
-	min-width: 240px;
+	min-width: 0;
+	flex: 1 1 200px;
+	max-width: 320px;
 
 	&:hover {
 		border-color: var(--aime-border);
@@ -13184,6 +14467,7 @@ input.aime-premium-input[type=color]
 	&:focus {
 		border-color: var(--aime-primary);
 		background: var(--aime-white);
+		box-shadow: var(--aime-focus-ring);
 		outline: none;
 	}
 }
@@ -13193,23 +14477,64 @@ input.aime-premium-input[type=color]
 	font-size: 11px;
 }
 
+// Three organs in one frame: the source you add from, the thing you are
+// building, the properties of what you selected. Left → centre → right is the
+// order every builder reads in, so the palette becomes a rail as soon as there
+// is width for one — and folds back to a strip above the canvas when there is
+// not, rather than starving the canvas to keep a shape.
 .aime-wf-layout {
 	display: grid;
-	grid-template-columns: 1fr 300px;
 	gap: 12px;
+	grid-template-columns: minmax(0, 1fr) 320px;
+	grid-template-areas:
+		"palette palette"
+		"canvas  config";
 	align-items: stretch;
-	min-height: 480px;
 
-	@media (max-width: 900px) {
+	> .aime-wf-palette { grid-area: palette; }
+	> .aime-wf-canvas { grid-area: canvas; }
+	> .aime-wf-config { grid-area: config; }
+
+	// Thresholds are content widths now, not window widths. 1060px is where a
+	// 200px rail and a 320px panel still leave the canvas ~500px — the canvas
+	// is the reason the page exists, so it sets the floor. Browsers without
+	// container query support keep the two-column default below, which is a
+	// working layout rather than a broken one.
+	@container aime-wf (min-width: 1060px) {
+		grid-template-columns: 200px minmax(0, 1fr) 320px;
+		grid-template-areas: "palette canvas config";
+	}
+
+	@container aime-wf (max-width: 860px) {
+		grid-template-columns: minmax(0, 1fr) 280px;
+	}
+
+	// Stacked: the canvas keeps a workable height, the panel stops being a
+	// scroller of its own and simply extends the page. Two nested scrollbars on
+	// one narrow screen is one more than anybody can aim at.
+	@container aime-wf (max-width: 700px) {
 		grid-template-columns: 1fr;
+		grid-template-areas:
+			"palette"
+			"canvas"
+			"config";
+
+		.aime-wf-canvas {
+			height: clamp(360px, 55vh, 520px);
+		}
+
+		.aime-wf-config {
+			height: auto;
+			max-height: none;
+			overflow-y: visible;
+		}
 	}
 }
 
 // Canvas wrapper
 .aime-wf-canvas {
 	position: relative;
-	height: calc(100vh - 350px);
-	min-height: 480px;
+	height: var(--aime-wf-h);
 	border: 1px solid var(--aime-border);
 	border-radius: var(--aime-radius);
 	background: var(--aime-bg);
@@ -13408,6 +14733,28 @@ input.aime-premium-input[type=color]
 		flex: 1;
 		min-width: 0;
 		padding-bottom: 2px;
+		// The default admin scrollbar is a 16px slab under a 34px row of chips.
+		// It reads as a second UI element rather than as a hint that the strip
+		// continues.
+		scrollbar-width: thin;
+		scrollbar-color: var(--aime-border) transparent;
+
+		&::-webkit-scrollbar {
+			height: 6px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background: var(--aime-border);
+			border-radius: 3px;
+		}
+
+		&:hover::-webkit-scrollbar-thumb {
+			background: var(--aime-text-muted);
+		}
 	}
 
 	&__group {
@@ -13438,6 +14785,7 @@ input.aime-premium-input[type=color]
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
+		min-height: 32px;
 		padding: 6px 10px;
 		border: 1px solid var(--aime-border);
 		border-radius: var(--aime-radius-sm);
@@ -13446,11 +14794,22 @@ input.aime-premium-input[type=color]
 		font-size: 12px;
 		white-space: nowrap;
 		cursor: grab;
-		transition: border-color var(--aime-transition), background var(--aime-transition);
+		transition: border-color var(--aime-transition), background var(--aime-transition),
+			box-shadow var(--aime-transition);
 
 		&:hover {
 			border-color: var(--aime-primary);
 			background: var(--aime-primary-light);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--aime-primary);
+			outline-offset: 2px;
+		}
+
+		&:active {
+			cursor: grabbing;
+			box-shadow: var(--aime-shadow);
 		}
 
 		&.is-unavailable {
@@ -13474,7 +14833,7 @@ input.aime-premium-input[type=color]
 		text-overflow: ellipsis;
 	}
 
-	@media (max-width: 782px) {
+	@container aime-wf (max-width: 700px) {
 		flex-direction: column;
 		gap: 10px;
 
@@ -13488,21 +14847,88 @@ input.aime-premium-input[type=color]
 	}
 }
 
+// Rail form. The horizontal strip put every step behind a sideways scroll —
+// the reader had to drag a scrollbar to find out what steps even exist. Stacked
+// vertically there is room for all of them at once, the module names read as
+// section headings instead of a dashed band, and the canvas gets back the
+// ~90px of height the strip was spending.
+@container aime-wf (min-width: 1060px) {
+	.aime-wf-palette {
+		flex-direction: column;
+		align-items: stretch;
+		height: var(--aime-wf-h);
+		gap: 10px;
+		padding: 12px;
+	}
+
+	.aime-wf-palette__intro {
+		border-right: 0;
+		border-bottom: 1px solid var(--aime-border);
+		padding-right: 0;
+		padding-bottom: 10px;
+		max-width: none;
+	}
+
+	.aime-wf-palette__groups {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 14px;
+		overflow-x: hidden;
+		overflow-y: auto;
+		padding-bottom: 0;
+	}
+
+	.aime-wf-palette__group + .aime-wf-palette__group {
+		padding-left: 0;
+		padding-top: 14px;
+		border-left: 0;
+		border-top: 1px dashed var(--aime-border);
+	}
+
+	.aime-wf-palette__group-items {
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	// Full-width targets that wrap: "Create Email Campaign (Draft)" is a real
+	// label and truncating it to fit a chip would cost the reader the meaning.
+	.aime-wf-palette__item {
+		width: 100%;
+		justify-content: flex-start;
+		white-space: normal;
+		text-align: left;
+		line-height: 1.35;
+	}
+}
+
 // Config panel (right column)
 .aime-wf-config {
+	display: flex;
+	flex-direction: column;
 	background: var(--aime-white);
 	border: 1px solid var(--aime-border);
 	border-radius: var(--aime-radius);
 	padding: 14px;
 	overflow-y: auto;
-	max-height: calc(100vh - 350px);
-	min-height: 480px;
+	overscroll-behavior: contain;
+	height: var(--aime-wf-h);
+	min-height: 0;
 
 	&__head {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 8px;
 		margin-bottom: 8px;
+		// The panel scrolls; its own header should not scroll away from the
+		// field the reader is editing.
+		position: sticky;
+		top: -14px;
+		z-index: 2;
+		padding: 14px 0 8px;
+		margin-top: -14px;
+		background: var(--aime-white);
+		border-bottom: 1px solid var(--aime-border-light);
 	}
 
 	&__title {
@@ -13537,10 +14963,17 @@ input.aime-premium-input[type=color]
 	}
 }
 
+// Two fields side by side is right when the panel runs the page width, and
+// wrong in a 300px rail — there it is not a two-column form, it is two
+// truncated ones. Single column is therefore the default, not the exception.
 .aime-wf-field-row {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr;
 	gap: 12px;
+
+	@container aime-wf (max-width: 700px) {
+		grid-template-columns: 1fr 1fr;
+	}
 }
 
 .aime-wf-weekdays {
@@ -13682,4 +15115,886 @@ input.aime-premium-input[type=color]
 .aime-wf-settings {
 	margin-top: 20px;
 	max-width: 560px;
+}
+
+/* Inline icons in the Featured Image tab nav (replaces emoji glyphs). */
+.aime-image-tabs__icon {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 6px;
+	vertical-align: -3px;
+}
+
+/* Free-plan step counter in the workflow builder topbar. */
+.aime-wf-step-meter {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 10px;
+	padding: 2px 8px;
+	border-radius: 3px;
+	background: #f0f6fc;
+	border: 1px solid #c5d9ed;
+	font-size: 11px;
+	color: #1d2327;
+	white-space: nowrap;
+}
+
+// ── AI Usage & Cost panel (AI Providers → Usage & Cost) ───
+//
+// Two organs, one card: a meter of four totals sitting on the card's inset
+// floor, and the ledger that explains them below it. The split is a hairline,
+// not a shadow, and the card body loses its own padding so each organ can own
+// its edge — a stat rail that stops 20px short of the card edge reads as a
+// widget parked inside a card rather than as the top of it.
+.aime-usage-panel {
+	> .aime-card-body {
+		padding: 0;
+	}
+}
+
+// The 1px grid gap over a hairline background is what draws the rules between
+// stats: it survives wrapping at any column count, which border-left does not.
+// auto-fit, not auto-fill — an unfilled track would keep its width and leave a
+// bare strip of the hairline background parked at the end of the rail.
+.aime-usage-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 1px;
+	background: var(--aime-border-light);
+	border-bottom: 1px solid var(--aime-border);
+}
+
+.aime-usage-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 20px;
+	background: var(--aime-white);
+}
+
+// 32/700 because the user came here to read a number, not the card title.
+// tabular-nums so 140,908 and 139 hang off the same left edge when the grid
+// reflows and two values end up stacked.
+.aime-usage-stat__value {
+	font-size: 32px;
+	font-weight: 700;
+	line-height: 1.1;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.01em;
+}
+
+.aime-usage-stat__label {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	font-size: 13px;
+	line-height: 1.4;
+	color: var(--aime-text-light);
+}
+
+.aime-usage-stat__note {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-muted);
+}
+
+// A partial estimate says so in the number itself; the label says why.
+.aime-usage-stat__partial {
+	margin-left: 1px;
+	font-size: 0.55em;
+	vertical-align: super;
+	color: var(--aime-text-muted);
+}
+
+// Failures are the one status this panel can report, so they are the one place
+// it is allowed to spend color. Zero failures stays ink — a red 0 would train
+// the eye to ignore the cell that matters.
+.aime-usage-stat.is-error {
+	.aime-usage-stat__value {
+		color: var(--aime-error);
+	}
+
+	.aime-usage-stat__note {
+		color: var(--aime-error);
+	}
+}
+
+.aime-usage-panel .aime-table-wrap {
+	padding: 4px 8px 8px;
+}
+
+.aime-usage-table {
+	font-variant-numeric: tabular-nums;
+
+	th,
+	td {
+		padding: 10px 12px;
+	}
+
+	// Right-aligned so the digits of every row line up in a column the eye can
+	// compare down, with the header sitting over the last digit, not the first.
+	.is-numeric {
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	tbody tr:last-child td {
+		border-bottom: 0;
+	}
+}
+
+.aime-usage-table__conn {
+	font-weight: 600;
+	color: var(--aime-text);
+}
+
+.aime-usage-table__model {
+	color: var(--aime-text);
+	word-break: break-word;
+}
+
+.aime-usage-table__slash {
+	color: var(--aime-text-muted);
+}
+
+// Per-row failures ride under the call count instead of taking a column: the
+// total above already reports them, and this is the row that says where.
+.aime-usage-table__failed {
+	display: block;
+	margin-top: 2px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-error);
+}
+
+// An em dash in a money column reads as zero unless it is visibly not a number.
+.aime-usage-table__unpriced {
+	color: var(--aime-text-muted);
+}
+
+.aime-usage-task {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: var(--aime-bg-subtle);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-light);
+}
+
+.aime-usage-footnote {
+	margin: 0;
+	padding: 0 20px 20px;
+	max-width: 78ch;
+	font-size: 12px;
+	color: var(--aime-text-light);
+}
+
+/* Usage table */
+.aime-usage-table {
+	font-size: 13px;
+	width: 100%;
+
+	&__tokens {
+		.is-numeric {
+			display: flex;
+			gap: 12px;
+		}
+	}
+
+	&__failed {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--aime-error-dark);
+	}
+}
+
+.aime-usage-task {
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--aime-text);
+	background: var(--aime-bg-subtle);
+	border: 1px solid var(--aime-border-light);
+}
+
+@media (max-width: 782px) {
+	.aime-usage-stat {
+		padding: 16px;
+	}
+
+	.aime-usage-stat__value {
+		font-size: 26px;
+	}
+}
+
+// ============================================
+// DIALOG SYSTEM — WORDPRESS-NATIVE MODALS
+//
+// Two dialogs in the plugin (Add/Edit AI Provider, Add/Edit SMTP Connection)
+// are `@wordpress/components` <Modal>s rather than the hand-rolled
+// `.aime-premium-modal` shell, and they were arriving in WordPress's own
+// chrome: 4px corners, a neutral-black scrim, a square close glyph, no
+// entrance. Same product, two dialog languages. This block puts them on the
+// shared one — 16px frame, ink-tinted scrim, round close button, the same
+// arrival — without replacing the component, so focus trapping, Escape and
+// the aria wiring keep coming from WordPress.
+//
+// Selectors are unscoped by design: <Modal> portals to <body>, outside
+// #aime-app, so they key on the plugin's own modal class names instead and
+// cannot reach the block editor's modals.
+// ============================================
+
+.aime-modal-overlay.components-modal__screen-overlay {
+	background-color: var(--aime-overlay);
+	backdrop-filter: blur(4px);
+	animation: aime-overlay-in 0.18s ease-out;
+}
+
+.components-modal__frame {
+	&.aime-ai-modal,
+	&.aime-smtp-modal {
+		border-radius: var(--aime-radius-lg);
+		border: 1px solid var(--aime-border-light);
+		box-shadow: var(--aime-shadow-xl);
+		animation: aime-modal-in var(--aime-enter) both;
+
+		.components-modal__header {
+			border-bottom: 1px solid var(--aime-border-light);
+			padding: 0 24px;
+			background: var(--aime-white);
+		}
+
+		.components-modal__header-heading {
+			font-size: 18px;
+			font-weight: 700;
+			color: var(--aime-text);
+		}
+
+		// WordPress ships this close control as a square icon button. Reshaped
+		// to the same 32px round object the premium modals use, so closing
+		// either kind of dialog is the same gesture at the same target.
+		.components-modal__header .components-button.has-icon {
+			width: 32px;
+			height: 32px;
+			min-width: 32px;
+			padding: 0;
+			border-radius: var(--aime-radius-pill);
+			border: 1px solid var(--aime-border);
+			background: var(--aime-white);
+			color: var(--aime-text-light);
+			transition: background-color var(--aime-transition-fast),
+				border-color var(--aime-transition-fast),
+				color var(--aime-transition-fast),
+				transform var(--aime-transition-fast);
+
+			svg {
+				fill: currentColor;
+			}
+
+			&:hover {
+				background: var(--aime-error-light);
+				border-color: var(--aime-error);
+				color: var(--aime-error);
+			}
+
+			&:active {
+				transform: scale(0.92);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--aime-primary);
+				outline-offset: 2px;
+				box-shadow: none;
+			}
+		}
+	}
+}
+
+// ============================================
+// INTERACTION MOTION
+//
+// Everything below is feedback, not choreography: 120–180ms, colour plus at
+// most a 1–2px move, on controls the visitor is already touching. The rule the
+// section obeys is that no motion changes an element's box — these are dense
+// admin surfaces, and a growing row or a lifting card shifts the next target
+// out from under the cursor. Buttons and form fields already carry their own
+// transitions from the control systems above; this closes the gaps that were
+// left: dropdowns, tooltips, tabs, rail items, checkboxes, table rows.
+// ============================================
+
+@keyframes aime-pop-in {
+	from { opacity: 0; transform: translateY(-4px) scale(0.985); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ── Menus, dropdowns, popovers ───────────────────────────
+// A menu belongs to the button that opened it, so it arrives from that edge
+// instead of fading in place. Origin is the top because every menu in the
+// plugin opens downward from a toolbar control.
+#aime-app .components-dropdown-menu__menu,
+#aime-app .components-popover:not([data-popover-inline]) .components-popover__content {
+	animation: aime-pop-in var(--aime-enter-quick) both;
+	transform-origin: top center;
+}
+
+#aime-app .components-menu-item,
+.components-popover .components-menu-item {
+	transition: background-color var(--aime-transition-fast),
+		color var(--aime-transition-fast);
+}
+
+// ── Collapsed-rail tooltips ──────────────────────────────
+// The label slides the 4px it was hidden by, which reads as the name coming
+// out of the icon rather than materialising beside it.
+.aime-sidebar-nav.is-collapsed {
+	.aime-sidebar-item[data-tip],
+	.aime-nav-toggle[data-tip] {
+		&::after {
+			transform: translateY(-50%) translateX(-4px);
+			transition: opacity var(--aime-transition-fast),
+				transform var(--aime-transition-fast), visibility 0s linear 0.12s;
+		}
+
+		&:hover::after,
+		&:focus-visible::after {
+			transform: translateY(-50%) translateX(0);
+			transition-delay: 0s;
+		}
+	}
+}
+
+// ── Rail items ───────────────────────────────────────────
+// Only the accent shadow eases in; the fill and the label weight land at once
+// so the selection never looks tentative.
+.aime-sidebar-item {
+	transition: background-color var(--aime-transition-fast),
+		color var(--aime-transition-fast), box-shadow var(--aime-transition);
+}
+
+.aime-sidebar-item-icon {
+	transition: transform var(--aime-transition-fast);
+}
+
+.aime-sidebar-item:active:not(.aime-sidebar-active) .aime-sidebar-item-icon {
+	transform: scale(0.9);
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+.aime-tab-btn,
+.aime-sub-tab {
+	transition: color var(--aime-transition-fast),
+		background-color var(--aime-transition-fast),
+		border-color var(--aime-transition-fast), box-shadow var(--aime-transition);
+}
+
+#aime-app .components-tab-panel__tabs-item {
+	transition: color var(--aime-transition-fast),
+		box-shadow var(--aime-transition), background-color var(--aime-transition-fast);
+}
+
+// ── Checkboxes, radios, toggles ──────────────────────────
+// WordPress animates the toggle knob itself; what it never does is
+// acknowledge the press on the control the finger is actually on.
+#aime-app {
+	.components-checkbox-control__input,
+	.components-radio-control__input,
+	input[type="checkbox"],
+	input[type="radio"] {
+		transition: background-color var(--aime-transition-fast),
+			border-color var(--aime-transition-fast),
+			box-shadow var(--aime-transition-fast),
+			transform var(--aime-transition-fast);
+
+		&:active:not(:disabled) {
+			transform: scale(0.9);
+		}
+	}
+
+	.components-form-toggle__thumb {
+		transition: transform var(--aime-transition),
+			background-color var(--aime-transition-fast);
+	}
+}
+
+// ── Table rows ───────────────────────────────────────────
+// Rows tint on hover. No lift and no border change: at this density either
+// would jitter the rows below the cursor.
+#aime-app {
+	.aime-table tbody tr,
+	.aime-data-table tbody tr {
+		transition: background-color var(--aime-transition-fast);
+	}
+}
+
+// ── Reduce Motion ────────────────────────────────────────
+// Anyone who asked for less motion keeps every state — the page still dims,
+// the dialog still appears, focus rings still land — and loses only the
+// travel. Durations collapse to 1ms rather than 0 so `transitionend`
+// listeners still fire.
+@media (prefers-reduced-motion: reduce) {
+	#aime-app,
+	.components-modal__screen-overlay,
+	.components-modal__frame,
+	.aime-premium-modal-overlay {
+		&,
+		*,
+		*::before,
+		*::after {
+			animation-duration: 1ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 1ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+
+	// Swap the travelling entrance for the plain dim, so the dialog still
+	// announces itself without sliding.
+	.aime-premium-modal,
+	.components-modal__frame.aime-ai-modal,
+	.components-modal__frame.aime-smtp-modal {
+		animation-name: aime-overlay-in !important;
+	}
+
+	.aime-sidebar-nav.is-collapsed {
+		.aime-sidebar-item[data-tip]::after,
+		.aime-nav-toggle[data-tip]::after {
+			transform: translateY(-50%) translateX(0);
+		}
+	}
+}
+
+// ============================================
+// DASHBOARD — SUMMARY BAND, ACTIVITY, MODULE SHARE
+//
+// The dashboard used to open on five same-size cards: two two-slice donuts,
+// two gauge panels and a five-line chart, all ranked equal by a single
+// auto-fit grid. Nothing on it was bigger than anything else, so nothing was
+// the answer. This is the replacement hierarchy — a band of three gauges that
+// answers "is this working", one activity chart that answers "is it moving",
+// then the module detail underneath.
+// ============================================
+
+.aime-overview-band {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+	gap: 20px;
+	margin-bottom: 20px;
+
+	// Auto-fit lands on three equal columns once there is room, and three equal
+	// columns say the three cards rank the same. At the wide door the workspace
+	// gauge takes the extra width its larger arc needs, so the lead reads as
+	// the lead.
+	@media (min-width: 1280px) {
+		grid-template-columns: 1.25fr 1fr 1fr;
+	}
+}
+
+.aime-band-card {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 0;
+
+	.aime-card-body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		gap: 16px;
+	}
+}
+
+.aime-band-card__label {
+	align-self: flex-start;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--aime-text-light);
+}
+
+// Chips and hint are alternates for the same slot, so both are pinned to the
+// bottom edge and every card in the band closes on one line regardless of
+// which state it is in.
+.aime-band-chips,
+.aime-band-card__hint {
+	width: 100%;
+	margin-top: auto;
+}
+
+.aime-band-chips {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+// An inset floor, not a card. A bordered, shadowed box inside a bordered card
+// is a card nested in a card; the third tonal step (--aime-bg-subtle) is what
+// this system uses to mark an interior region instead.
+.aime-band-chip {
+	min-width: 0;
+	padding: 10px 12px;
+	background: var(--aime-bg-subtle);
+	border-radius: 8px;
+}
+
+.aime-band-chip__label {
+	display: block;
+	overflow: hidden;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-light);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.aime-band-chip__value {
+	display: block;
+	margin-top: 2px;
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.4;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.aime-band-card__hint {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--aime-text-light);
+	text-align: center;
+}
+
+// ── Arc gauge ────────────────────────────────────────────
+.aime-arc {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.aime-arc__svg {
+	display: block;
+}
+
+.aime-arc__track {
+	stroke: var(--aime-border-light);
+}
+
+// Deliberately colourless here. Left alone the value stroke inherits the room
+// accent, so the same component lights green in the lobby and crimson in the
+// Email room without a prop. The dashboard passes an explicit colour only
+// where a gauge stands for a room other than the page it is on.
+.aime-arc__value {
+	stroke: var(--aime-primary);
+	transition: stroke-dashoffset 0.6s var(--aime-ease-out);
+}
+
+// The number sits in the mouth of the arc rather than under it — that hole is
+// the reason to use an open arc instead of a ring, and leaving it empty while
+// parking the value below wastes both. Pulled up by margin rather than
+// absolute positioning so a caption that wraps grows the card instead of
+// spilling over whatever is beneath it.
+.aime-arc__center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-top: -48px;
+	text-align: center;
+}
+
+.aime-band-card--lead .aime-arc__center {
+	margin-top: -56px;
+}
+
+.aime-arc__value-text {
+	font-size: 32px;
+	font-weight: 700;
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	color: var(--aime-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.aime-arc__caption {
+	margin-top: 2px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--aime-text-light);
+}
+
+// ── Activity card ────────────────────────────────────────
+.aime-insight-card {
+	.aime-card-header {
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+}
+
+// The range covered, said in words next to the title. It is context for the
+// heading, not a second heading, so it drops to body weight and Ink Light.
+.aime-card-title__note {
+	margin-left: 8px;
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--aime-text-light);
+}
+
+// Segmented range control. The selected option rises to the surface plane
+// instead of filling with the accent: this sits in a card header beside the
+// card title, and an accent fill there would outrank the title it belongs to.
+.aime-range-toggle {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	background: var(--aime-bg-subtle);
+	border-radius: 8px;
+}
+
+.aime-range-toggle__btn {
+	padding: 5px 10px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--aime-text-light);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background-color var(--aime-transition-fast),
+		color var(--aime-transition-fast),
+		box-shadow var(--aime-transition-fast);
+
+	&:hover:not(.is-active) {
+		color: var(--aime-text);
+	}
+
+	&.is-active {
+		background: var(--aime-white);
+		color: var(--aime-text);
+		box-shadow: var(--aime-shadow);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--aime-primary);
+		outline-offset: 1px;
+	}
+}
+
+// A refetch swaps the numbers under a chart that keeps its size, so the only
+// honest signal is that the current reading is stale. Dimming says that
+// without collapsing the card and bouncing everything below it.
+.aime-insight-body {
+	transition: opacity var(--aime-transition);
+
+	&.is-loading {
+		opacity: 0.45;
+	}
+}
+
+.aime-insight-placeholder {
+	height: 300px;
+	background: var(--aime-bg-subtle);
+	border-radius: var(--aime-radius);
+}
+
+// Legend for the activity chart. Scoped to the card: an older
+// `.aime-chart-legend` elsewhere is a vertical key beside a donut, and an
+// unscoped rule here would silently lay those on their side — including the
+// `flex-direction: column` it sets, which a bare `flex-wrap` cannot undo.
+.aime-insight-card .aime-chart-legend {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+	min-width: 0;
+	margin: 0 0 4px;
+	padding: 0;
+	list-style: none;
+}
+
+.aime-insight-card .aime-chart-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-light);
+}
+
+.aime-insight-card .aime-chart-legend__dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 8px;
+}
+
+// ── Chart tooltip ────────────────────────────────────────
+// Recharts' default is a white box with a 1px grey edge that belongs to no
+// system. This is the card language at a smaller scale, on the Floating
+// shadow step because a tooltip genuinely floats.
+.aime-chart-tooltip {
+	min-width: 172px;
+	padding: 10px 12px;
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	box-shadow: var(--aime-shadow-lg);
+	font-size: 13px;
+	color: var(--aime-text);
+}
+
+.aime-chart-tooltip__date {
+	margin-bottom: 8px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--aime-text-light);
+}
+
+.aime-chart-tooltip__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.aime-chart-tooltip__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 4px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.aime-chart-tooltip__dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 8px;
+}
+
+.aime-chart-tooltip__name {
+	flex: 1;
+	color: var(--aime-text-light);
+}
+
+.aime-chart-tooltip__value {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.aime-chart-tooltip__total {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--aime-border-light);
+	font-weight: 700;
+}
+
+// ── Module part-of-whole bar ─────────────────────────────
+// This replaced two 260px donut charts. A pie with two slices is a bar drawn
+// the expensive way, and five of them down a page could not be compared to
+// each other at all — five bars on one scan line can.
+.aime-module-share {
+	margin-bottom: 16px;
+}
+
+.aime-module-share__bar {
+	height: 8px;
+	background: var(--aime-bg-subtle);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.aime-module-share__fill {
+	display: block;
+	height: 100%;
+	border-radius: 8px;
+}
+
+.aime-module-share__legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	margin-top: 8px;
+}
+
+.aime-module-share__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--aime-text-light);
+
+	strong {
+		color: var(--aime-text);
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.aime-module-share__dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 8px;
+}
+
+.aime-module-share__dot--rest {
+	background: var(--aime-bg-subtle);
+	border: 1px solid var(--aime-border);
+}
+
+// Two chips side by side stop being readable long before the card does.
+@media (max-width: 480px) {
+	.aime-band-chips {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EMAIL ANALYTICS — OPEN RATE
+   ═══════════════════════════════════════════════════════════ */
+
+// Arc over its own part-of-whole bar. The arc answers "how good", the bar
+// answers "out of how many" — one is a rate, the other is the count it came
+// from, and separating them is why this replaced a two-slice pie.
+.aime-openrate {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	padding: 8px 0 4px;
+
+	.aime-module-share {
+		width: 100%;
+		max-width: 320px;
+	}
 }

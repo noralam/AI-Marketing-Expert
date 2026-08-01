@@ -21,6 +21,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import useApi from '../../../hooks/useApi';
 import { isProActive, ProLabel } from '../../common/ProLock';
+import { formatDateTime } from '../../../utils/datetime';
 
 const providerIconTypes = {
 	wp_mail: 'settings',
@@ -515,19 +516,13 @@ const SmtpSettings = () => {
 		}
 	};
 
-	const formatErrorLogTime = ( value ) => {
-		if ( ! value ) {
-			return '-';
-		}
-
-		const date = new Date( value.replace( ' ', 'T' ) + 'Z' );
-		return Number.isNaN( date.getTime() ) ? value : date.toLocaleString();
-	};
+	// Logged as UTC; shown in the site timezone and format (Settings → General).
+	const formatErrorLogTime = ( value ) => formatDateTime( value, '-' );
 
 	/* Render */
 
 	if ( fetching ) {
-		return <Loader text={ __( 'Loading SMTP connections...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading SMTP connections...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (
@@ -853,6 +848,7 @@ const SmtpSettings = () => {
 					title={ editId ? __( 'Edit SMTP Connection', 'ai-marketing-expert' ) : __( 'Add SMTP Connection', 'ai-marketing-expert' ) }
 					onRequestClose={ closeModal }
 					className="aime-smtp-modal"
+					overlayClassName="aime-modal-overlay"
 				>
 					<div className="aime-smtp-modal-body">
 						{ /* Connection name */ }

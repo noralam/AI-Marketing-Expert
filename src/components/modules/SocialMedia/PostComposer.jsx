@@ -304,7 +304,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	};
 
 	if ( loadingPost ) {
-		return <Loader text={ __( 'Loading post...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading post...', 'ai-marketing-expert' ) } />;
 	}
 
 	return (

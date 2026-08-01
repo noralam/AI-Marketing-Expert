@@ -50,6 +50,12 @@ class WorkflowEngine {
 		$now = current_time( 'mysql', true );
 		$due = $this->repo->due( $now, self::DISPATCH_LIMIT );
 
+		// Close out runs a fatal error left hanging, so the error log tells the
+		// user something instead of showing "running" forever. The cutoff is
+		// twice the lock TTL: a long but healthy run must never be rewritten to
+		// "failed" underneath itself.
+		$this->repo->fail_stale_running( (int) ( 2 * self::LOCK_TTL / MINUTE_IN_SECONDS ) );
+
 		foreach ( $due as $workflow ) {
 			$this->execute( (int) $workflow->id, 'schedule' );
 		}
@@ -139,6 +145,12 @@ class WorkflowEngine {
 		$counts = array( 'success' => 0, 'failed' => 0, 'skipped' => 0 );
 		$policy = (string) $workflow->failure_policy;
 		$halted = false;
+		// Set when the engine itself throws. Tracked separately from
+		// $counts['failed'] because no step output row exists for it.
+		$engine_error = false;
+		// Human-readable reasons, surfaced on the execution row so the history
+		// and error log explain a failure without expanding every step.
+		$step_errors = array();
 
 		// Build the children map: parent_key => steps sorted by step_order.
 		$children = array();
@@ -161,6 +173,7 @@ class WorkflowEngine {
 
 		$executed = array(); // step_key => true, for the skipped-subtree sweep.
 
+		try {
 		while ( $queue ) {
 			$entry = array_shift( $queue );
 			$step  = $entry['step'];
@@ -181,6 +194,7 @@ class WorkflowEngine {
 			if ( 'condition' === $step->action_type && ! aime_has_pro() ) {
 				$this->record_output( $execution_id, $workflow_id, $step, 'failed', '', array(), __( 'Condition steps require Pro.', 'ai-marketing-expert' ) );
 				$counts['failed']++;
+				$step_errors[] = $this->label_error( $step, __( 'Condition steps require Pro.', 'ai-marketing-expert' ) );
 				if ( 'stop' === $policy ) {
 					$halted = true;
 					break;
@@ -229,6 +243,7 @@ class WorkflowEngine {
 			} else {
 				$this->record_output( $execution_id, $workflow_id, $step, 'failed', $result['preview'], $result['reference'], $result['error'] );
 				$counts['failed']++;
+				$step_errors[] = $this->label_error( $step, $result['error'] );
 				$this->notify_failure( $workflow, $step, $result['error'] );
 
 				if ( 'stop' === $policy ) {
@@ -238,6 +253,24 @@ class WorkflowEngine {
 				// 'skip' and 'retry' (already retried) both continue to children.
 				$this->enqueue_children( $queue, $children, $step, false, $output, 'default' );
 			}
+		}
+		} catch ( \Throwable $e ) {
+			// The action registry already traps handler exceptions, so reaching
+			// here means the engine itself broke. Record it rather than letting
+			// the execution row hang in 'running'.
+			$halted        = true;
+			$engine_error  = true;
+			$step_errors[] = sprintf(
+				/* translators: 1: error message, 2: file, 3: line. */
+				__( 'Workflow engine error: %1$s (%2$s:%3$d)', 'ai-marketing-expert' ),
+				$e->getMessage(),
+				basename( $e->getFile() ),
+				$e->getLine()
+			);
+			// No counts['failed']++ here: no step output row was written, and
+			// the sweep below records every unreached step as skipped, so
+			// incrementing would push the totals past steps_total.
+			aime_log( sprintf( 'Workflow #%d engine error: %s', $workflow_id, $e->getMessage() ), 'error', 'workflow-automation' );
 		}
 
 		// Anything never reached (halted early, or orphaned by data issues)
@@ -250,8 +283,11 @@ class WorkflowEngine {
 			}
 		}
 
-		// Determine overall status.
-		if ( $counts['failed'] > 0 && $counts['success'] > 0 ) {
+		// Determine overall status. An engine-level crash has no failed step row,
+		// so it must be folded in here or a broken run reports success.
+		if ( $engine_error ) {
+			$status = $counts['success'] > 0 ? 'partial' : 'failed';
+		} elseif ( $counts['failed'] > 0 && $counts['success'] > 0 ) {
 			$status = 'partial';
 		} elseif ( $counts['failed'] > 0 && 0 === $counts['success'] ) {
 			$status = 'failed';
@@ -259,8 +295,14 @@ class WorkflowEngine {
 			$status = 'success';
 		}
 
-		$error_summary = $halted ? __( 'Halted early due to failure policy.', 'ai-marketing-expert' ) : '';
-		$this->repo->finish_execution( $execution_id, $status, $counts, $error_summary );
+		// Error summary: the actual step reasons, so the history row and the
+		// error log answer "why did this fail?" without drilling in.
+		$error_summary = implode( ' | ', array_slice( array_filter( $step_errors ), 0, 3 ) );
+		if ( $halted ) {
+			$suffix = __( 'Stopped after the first failure (failure policy: stop).', 'ai-marketing-expert' );
+			$error_summary = '' !== $error_summary ? $error_summary . ' — ' . $suffix : $suffix;
+		}
+		$this->repo->finish_execution( $execution_id, $status, $counts, mb_substr( $error_summary, 0, 1000 ) );
 
 		// Recompute the schedule.
 		$this->reschedule( $workflow );
@@ -416,6 +458,21 @@ class WorkflowEngine {
 		}
 		$decoded = json_decode( $json, true );
 		return is_array( $decoded ) ? $decoded : array();
+	}
+
+	/**
+	 * Prefix a step error with the action's human label so a summary line reads
+	 * "Blog Post: AI provider returned no response" rather than a bare message.
+	 */
+	private function label_error( object $step, string $error ): string {
+		$error = trim( $error );
+		if ( '' === $error ) {
+			$error = __( 'Step failed without reporting a reason.', 'ai-marketing-expert' );
+		}
+		$def   = ActionRegistry::get( (string) $step->action_type );
+		$label = (string) ( $def['label'] ?? $step->action_type );
+
+		return $label . ': ' . $error;
 	}
 
 	private function notify_failure( object $workflow, object $step, string $error ): void {

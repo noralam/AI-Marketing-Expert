@@ -350,6 +350,73 @@ class WorkflowRepository {
 		return $row ?: null;
 	}
 
+	/**
+	 * Executions that did not fully succeed, newest first, across all workflows.
+	 * Feeds the module-wide error log so a user never has to open each workflow's
+	 * history to find out what broke.
+	 *
+	 * @return array<int,object>
+	 */
+	public function recent_problem_executions( int $limit = 50 ): array {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT e.*, w.name AS workflow_name
+			   FROM {$this->executions} e
+			   LEFT JOIN {$this->workflows} w ON w.id = e.workflow_id
+			  WHERE e.status IN ('failed', 'partial', 'skipped')
+			  ORDER BY e.started_at DESC
+			  LIMIT %d",
+			$limit
+		) ) ?: array();
+	}
+
+	/**
+	 * Failed/skipped step outputs for a set of executions, so the error log can
+	 * show the actual step-level reason without an extra request per run.
+	 *
+	 * @param array<int,int> $execution_ids Execution IDs.
+	 * @return array<int,object>
+	 */
+	public function problem_outputs_for( array $execution_ids ): array {
+		global $wpdb;
+		$ids = array_filter( array_map( 'intval', $execution_ids ) );
+		if ( ! $ids ) {
+			return array();
+		}
+		$in = implode( ',', $ids );
+		return $wpdb->get_results(
+			"SELECT * FROM {$this->outputs}
+			  WHERE execution_id IN ({$in})
+			    AND status IN ('failed', 'skipped')
+			    AND error != ''
+			  ORDER BY execution_id DESC, step_order ASC, id ASC"
+		) ?: array();
+	}
+
+	/**
+	 * Close out runs stuck in 'running' past the engine lock TTL. A PHP fatal
+	 * (memory limit, timeout, a provider SDK dying mid-request) kills the worker
+	 * before finish_execution() runs, leaving a row that says "running" forever.
+	 * Flipping it to failed with a reason is what makes those visible at all.
+	 *
+	 * @param int $minutes Age after which a running row is considered dead.
+	 * @return int Rows closed.
+	 */
+	public function fail_stale_running( int $minutes ): int {
+		global $wpdb;
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $minutes * MINUTE_IN_SECONDS ) );
+		$reason = __( 'Run stopped unexpectedly and never reported back. Usual causes: the AI request timed out, the site hit its PHP time or memory limit, or the server killed the background job. Try a shorter workflow or fewer AI steps per run.', 'ai-marketing-expert' );
+
+		return (int) $wpdb->query( $wpdb->prepare(
+			"UPDATE {$this->executions}
+			    SET status = 'failed', error = %s, finished_at = %s
+			  WHERE status = 'running' AND started_at < %s",
+			$reason,
+			current_time( 'mysql', true ),
+			$cutoff
+		) );
+	}
+
 	/* ── Outputs ────────────────────────────────────────── */
 
 	public function add_output( array $data ): void {

@@ -35,10 +35,8 @@ import ImportExport from './ImportExport';
 import AiTools from './AiTools';
 import SmtpSettings from './SmtpSettings';
 import EmailSettings from './EmailSettings';
-import { isProActive } from '../../common/ProLock';
 
 const EmailMarketingPage = () => {
-	const hasPro = isProActive();
 	const parseHash = () => {
 		const hash = window.location.hash.replace( '#', '' );
 		if ( ! hash ) return { key: 'analytics', params: {} };
@@ -63,7 +61,7 @@ const EmailMarketingPage = () => {
 		{ key: 'tags', label: __( 'Tags', 'ai-marketing-expert' ), icon: tag },
 		{ key: 'campaigns', label: __( 'Campaigns', 'ai-marketing-expert' ), icon: megaphone },
 		{ key: 'templates', label: __( 'Templates', 'ai-marketing-expert' ), icon: page },
-		{ key: 'automations', label: __( 'Automations', 'ai-marketing-expert' ), icon: commentContent, badgeLabel: hasPro ? '' : __( 'PRO', 'ai-marketing-expert' ) },
+		{ key: 'automations', label: __( 'Automations', 'ai-marketing-expert' ), icon: commentContent },
 		{ key: 'import-export', label: __( 'Import / Export', 'ai-marketing-expert' ), icon: envelope },
 		{ key: 'ai-tools', label: __( 'AI Tools', 'ai-marketing-expert' ), icon: starFilled },
 		{ key: 'smtp', label: __( 'SMTP', 'ai-marketing-expert' ), icon: envelope },

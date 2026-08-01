@@ -120,7 +120,7 @@ const EmailSettings = () => {
 			<h2>{ __( 'Email Settings', 'ai-marketing-expert' ) }</h2>
 
 			<Card>
-				{ loading ? <Loader /> : <TabPanel tabs={ TABS }>
+				{ loading ? <Loader variant="form" /> : <TabPanel tabs={ TABS }>
 					{ ( tab ) => {
 						/* General */
 						if ( tab.name === 'general' ) {
@@ -146,11 +146,14 @@ const EmailSettings = () => {
 											<TextControl label={ __( 'Re-subscribe Button Text', 'ai-marketing-expert' ) } value={ settings.resubscribe_button_text || '' } onChange={ ( v ) => setSettings( { ...settings, resubscribe_button_text: v } ) } __nextHasNoMarginBottom />
 										</div>
 									) }
-									<CheckboxControl
-										label={ __( 'Enable Double Opt-in', 'ai-marketing-expert' ) }
-										checked={ !! settings.double_optin }
-										onChange={ ( v ) => setSettings( { ...settings, double_optin: v } ) }
-									/>
+									<div style={ { marginTop: 20 } }>
+										<CheckboxControl
+											label={ __( 'Enable Double Opt-in', 'ai-marketing-expert' ) }
+											checked={ !! settings.double_optin }
+											onChange={ ( v ) => setSettings( { ...settings, double_optin: v } ) }
+											__nextHasNoMarginBottom
+										/>
+									</div>
 									<Button variant="primary" onClick={ handleSaveSettings } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving
 											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>

@@ -25,6 +25,17 @@ class AutomationService {
 
 	const OPTION_KEY = 'aime_seo_automation_settings';
 
+	/**
+	 * Ceiling on how many suggestion-carrying posts we will index in one request.
+	 *
+	 * Counting suggestions is inherently proportional to the number of posts
+	 * carrying the meta, so the query has to be bounded somewhere. It is bounded
+	 * here rather than in the page query, and when the ceiling is hit the
+	 * response says so — a truncated list that admits it is truncated is a
+	 * different thing from one that quietly stops.
+	 */
+	const MAX_INDEXED_POSTS = 500;
+
 	const DEFAULTS = array(
 		'auto_audit_on_publish'    => false,
 		'auto_meta_on_publish'     => false,
@@ -332,59 +343,124 @@ class AutomationService {
 
 	/**
 	 * Get stored internal link suggestions grouped by source post.
+	 *
+	 * Paginated by *post*, not by suggestion: a post's suggestions are reviewed
+	 * together, so splitting one post's group across a page boundary would be
+	 * worse than a long page.
+	 *
+	 * Two passes on purpose. The first walks every indexed post to count and
+	 * filter, using only meta that has been primed into cache in a single query
+	 * — cheap. The second hydrates titles and permalinks for the current page
+	 * only, which is where the per-post query cost actually lives.
 	 */
-	public function get_internal_link_suggestions( string $status = 'pending' ): array {
+	public function get_internal_link_suggestions( string $status = 'pending', int $page = 1, int $per_page = 10 ): array {
 		$allowed_statuses = array( 'all', 'pending', 'applied', 'dismissed' );
 		if ( ! in_array( $status, $allowed_statuses, true ) ) {
 			$status = 'pending';
 		}
 
-		$posts = get_posts( array(
-			'post_type'      => array( 'post', 'page' ),
-			'post_status'    => 'any',
-			'posts_per_page' => 50,
-			'meta_key'       => '_aime_seo_internal_links',
-			'orderby'        => 'modified',
-			'order'          => 'DESC',
+		$page     = max( 1, $page );
+		$per_page = min( 50, max( 1, $per_page ) );
+
+		$post_ids = get_posts( array(
+			'post_type'              => array( 'post', 'page' ),
+			'post_status'            => 'any',
+			'posts_per_page'         => self::MAX_INDEXED_POSTS,
+			'meta_key'               => '_aime_seo_internal_links',
+			'orderby'                => 'modified',
+			'order'                  => 'DESC',
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_term_cache' => false,
 		) );
 
-		$items = array();
+		$truncated = count( $post_ids ) >= self::MAX_INDEXED_POSTS;
 
-		foreach ( $posts as $post ) {
-			$suggestions = $this->get_post_internal_link_suggestions( $post->ID );
-			$filtered    = array();
+		// One query for every suggestion blob, so the counting pass below hits
+		// cache instead of the database once per post.
+		if ( ! empty( $post_ids ) ) {
+			update_meta_cache( 'post', $post_ids );
+		}
 
-			foreach ( $suggestions as $suggestion ) {
+		// Pass one: which posts have at least one suggestion in this status, and
+		// how many overall. Pagination has to run over the *filtered* set —
+		// paging the raw post list would hand back empty pages whenever the
+		// selected status is sparse.
+		$matched = array();
+		$total   = 0;
+
+		foreach ( $post_ids as $post_id ) {
+			$filtered = array();
+
+			foreach ( $this->get_post_internal_link_suggestions( $post_id ) as $suggestion ) {
 				if ( 'all' !== $status && ( $suggestion['status'] ?? 'pending' ) !== $status ) {
 					continue;
 				}
 
-				$target_post_id = absint( $suggestion['target_post_id'] ?? 0 );
-				$filtered[]     = array_merge( $suggestion, array(
-					'target_title' => $target_post_id ? get_the_title( $target_post_id ) : '',
-				) );
+				$filtered[] = $suggestion;
 			}
 
 			if ( empty( $filtered ) ) {
 				continue;
 			}
 
-			$items[] = array(
-				'post_id'      => $post->ID,
-				'post_title'   => get_the_title( $post ),
-				'edit_link'    => get_edit_post_link( $post->ID, 'raw' ),
-				'view_link'    => get_permalink( $post ),
-				'post_status'  => $post->post_status,
-				'suggestions'  => $filtered,
-				'updated_at'    => get_post_modified_time( 'Y-m-d H:i:s', false, $post ),
-			);
+			$matched[ $post_id ] = $filtered;
+			$total              += count( $filtered );
+		}
+
+		$total_posts = count( $matched );
+		$total_pages = $total_posts > 0 ? (int) ceil( $total_posts / $per_page ) : 0;
+		$page        = $total_pages > 0 ? min( $page, $total_pages ) : 1;
+
+		$page_ids = array_slice( array_keys( $matched ), ( $page - 1 ) * $per_page, $per_page );
+
+		// Pass two: hydrate only what this page renders.
+		$items = array();
+
+		if ( ! empty( $page_ids ) ) {
+			$posts = get_posts( array(
+				'post_type'      => array( 'post', 'page' ),
+				'post_status'    => 'any',
+				'post__in'       => $page_ids,
+				'orderby'        => 'post__in',
+				'posts_per_page' => count( $page_ids ),
+				'no_found_rows'  => true,
+			) );
+
+			foreach ( $posts as $post ) {
+				$suggestions = array();
+
+				foreach ( $matched[ $post->ID ] as $suggestion ) {
+					$target_post_id = absint( $suggestion['target_post_id'] ?? 0 );
+					$suggestions[]  = array_merge( $suggestion, array(
+						'target_title' => $target_post_id ? get_the_title( $target_post_id ) : '',
+					) );
+				}
+
+				$items[] = array(
+					'post_id'     => $post->ID,
+					'post_title'  => get_the_title( $post ),
+					'edit_link'   => get_edit_post_link( $post->ID, 'raw' ),
+					'view_link'   => get_permalink( $post ),
+					'post_status' => $post->post_status,
+					'suggestions' => $suggestions,
+					'updated_at'  => get_post_modified_time( 'Y-m-d H:i:s', false, $post ),
+				);
+			}
 		}
 
 		return array(
-			'items' => $items,
-			'total' => array_sum( array_map( static fn( $item ) => count( $item['suggestions'] ), $items ) ),
+			'items'         => $items,
+			'total'         => $total,
+			'total_posts'   => $total_posts,
+			'page'          => $page,
+			'per_page'      => $per_page,
+			'total_pages'   => $total_pages,
+			'truncated'     => $truncated,
+			'index_ceiling' => self::MAX_INDEXED_POSTS,
 		);
 	}
+
 
 	/**
 	 * Dismiss one stored internal link suggestion.

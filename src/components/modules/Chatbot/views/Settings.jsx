@@ -70,7 +70,7 @@ const Settings = () => {
 	};
 
 	if ( loading && ! settings ) {
-		return <Loader text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="form" text={ __( 'Loading settings...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! settings ) return null;
@@ -87,7 +87,7 @@ const Settings = () => {
 			<h2>{ __( 'Chatbot Settings', 'ai-marketing-expert' ) }</h2>
 
 			<Card>
-				{ loading ? <Loader /> : <TabPanel tabs={ TABS }>
+				{ loading ? <Loader variant="form" /> : <TabPanel tabs={ TABS }>
 					{ ( tab ) => {
 						/* General tab */
 						if ( tab.name === 'general' ) {

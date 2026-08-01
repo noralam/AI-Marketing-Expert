@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, TextControl, TextareaControl, Spinner } from '@aime/wp-components';
+import { Button, TextControl, TextareaControl } from '@aime/wp-components';
 import { trash, pencil } from '@wordpress/icons';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 import useApi from '../../../../hooks/useApi';
@@ -15,7 +15,7 @@ import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
+import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, StackedBar, SortArrow } from './SeoCharts';
@@ -28,12 +28,22 @@ const TYPE_COLORS = {
 
 const TopicMap = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
-	const { hasPro } = usePro();
+	const { proUrl } = usePro();
 	const slowWarning = useSlowWarning();
 	const [ topics, setTopics ] = useState( [] );
 	const [ generating, setGenerating ] = useState( false );
 	const [ niche, setNiche ] = useState( '' );
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
+	const [ usage, setUsage ] = useState( null );
+
+	const fetchUsage = useCallback( async () => {
+		try {
+			const res = await get( '/seo/topics/usage' );
+			setUsage( res.usage || null );
+		} catch ( e ) {
+			// silent
+		}
+	}, [ get ] );
 
 	const fetchTopics = useCallback( async () => {
 		try {
@@ -46,7 +56,8 @@ const TopicMap = ( { onNavigate } ) => {
 
 	useEffect( () => {
 		fetchTopics();
-	}, [ fetchTopics ] );
+		fetchUsage();
+	}, [ fetchTopics, fetchUsage ] );
 
 	const handleGenerate = async () => {
 		if ( ! niche.trim() ) return;
@@ -57,6 +68,7 @@ const TopicMap = ( { onNavigate } ) => {
 			await post( '/seo/topics/generate-map', { niche: niche.trim() } );
 			toast( __( 'Topical map generated!', 'ai-marketing-expert' ) );
 			fetchTopics();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		} finally {
@@ -71,6 +83,7 @@ const TopicMap = ( { onNavigate } ) => {
 			toast( __( 'Topic deleted.', 'ai-marketing-expert' ) );
 			setConfirmDelete( null );
 			fetchTopics();
+			fetchUsage();
 		} catch ( e ) {
 			toast( e.message, 'error' );
 		}
@@ -81,8 +94,13 @@ const TopicMap = ( { onNavigate } ) => {
 	const clusters = topics.filter( ( t ) => t.topic_type === 'cluster' );
 	const supporting = topics.filter( ( t ) => t.topic_type === 'supporting' );
 
+	const genExhausted = !! usage?.generate_map && usage.generate_map.limit != null
+		&& usage.generate_map.used >= usage.generate_map.limit;
+	const topicsFull = !! usage?.topics && usage.topics.limit != null
+		&& usage.topics.used >= usage.topics.limit;
+
 	return (
-		<ProGate feature={ __( 'Topical Authority Map', 'ai-marketing-expert' ) }>
+		<>
 			<div className="aime-seo-topic-map">
 				{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 
@@ -90,8 +108,20 @@ const TopicMap = ( { onNavigate } ) => {
 					<h2>{ __( 'Topical Authority Map', 'ai-marketing-expert' ) }</h2>
 				</div>
 
+				<UsageNotice
+					usage={ usage?.topics }
+					featureLabel={ __( 'topics', 'ai-marketing-expert' ) }
+					proUrl={ proUrl }
+					kind="storage"
+				/>
+
 				{ /* AI Generation */ }
 				<Card title={ __( 'Generate Topic Map', 'ai-marketing-expert' ) }>
+					<UsageNotice
+						usage={ usage?.generate_map }
+						featureLabel={ __( 'topic map generation', 'ai-marketing-expert' ) }
+						proUrl={ proUrl }
+					/>
 					<div className="aime-form-grid aime-form-grid-2">
 						<TextControl
 							label={ __( 'Niche / Main Topic', 'ai-marketing-expert' ) }
@@ -107,7 +137,7 @@ const TopicMap = ( { onNavigate } ) => {
 								<Button
 									variant="primary"
 									onClick={ handleGenerate }
-									disabled={ ! isAiConfigured() || ! niche.trim() }
+									disabled={ ! isAiConfigured() || ! niche.trim() || genExhausted || topicsFull }
 									title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 								>
 									{ __( 'Generate Map with AI', 'ai-marketing-expert' ) }
@@ -116,7 +146,7 @@ const TopicMap = ( { onNavigate } ) => {
 						</div>
 						<AiNotice />
 					</div>
-					{ generating && <Loader text={ __( 'AI is building your topical map\u2026', 'ai-marketing-expert' ) } /> }
+					{ generating && <Loader variant="lines" text={ __( 'AI is building your topical map\u2026', 'ai-marketing-expert' ) } /> }
 				</Card>
 
 				{ /* Topic list grouped visually */ }
@@ -301,7 +331,7 @@ const TopicMap = ( { onNavigate } ) => {
 					/>
 				) }
 			</div>
-		</ProGate>
+		</>
 	);
 };
 

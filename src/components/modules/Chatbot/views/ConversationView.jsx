@@ -140,7 +140,7 @@ const ConversationView = ( { id, onBack } ) => {
 	};
 
 	if ( loading && ! conversation ) {
-		return <Loader text={ __( 'Loading conversation...', 'ai-marketing-expert' ) } />;
+		return <Loader variant="lines" text={ __( 'Loading conversation...', 'ai-marketing-expert' ) } />;
 	}
 
 	if ( ! conversation ) return null;
