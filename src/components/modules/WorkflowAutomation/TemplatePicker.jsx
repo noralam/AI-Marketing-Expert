@@ -88,7 +88,7 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 							<span className="aime-wf-template-card__icon">{ triggerIcon( tpl.trigger_event || tpl.trigger_type ) }</span>
 							<strong>
 								{ tpl.name }
-								{ tpl.is_pro && <ProBadge /> }
+								{ locked && <ProBadge /> }
 							</strong>
 							<span className="aime-wf-template-card__desc">{ tpl.description }</span>
 							<span className="aime-wf-template-card__meta">

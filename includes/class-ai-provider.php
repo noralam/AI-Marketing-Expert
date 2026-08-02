@@ -87,22 +87,35 @@ class AiProvider {
 	}
 
 	/**
-	 * Get default model IDs for a provider.
+	 * Decrypt a value that may be plaintext (migration safety for base_url).
 	 *
-	 * Backend safety fallback only (connection saved without a model, image
-	 * fallback pass). Not shown in the UI — the UI uses live-fetched models.
+	 * @param string $value Possibly encrypted value.
+	 * @return string Decrypted or original plaintext.
 	 */
-	private static function get_default_models( string $provider_id ): array {
-		$map = array(
-			'google_ai'  => array( 'text' => 'gemini-3-flash-preview',                    'image' => 'gemini-3.1-flash-image-preview' ),
-			'openai'     => array( 'text' => 'gpt-5.2',                                   'image' => 'gpt-image-1.5' ),
-			'openrouter' => array( 'text' => 'google/gemini-2.5-flash-preview:free',       'image' => 'google/gemini-3.1-flash-image-preview' ),
-			// Anthropic has no native image-generation model. Returning an
-			// empty default makes generate_image() skip anthropic connections
-			// while leaving text generation untouched.
-			'anthropic'  => array( 'text' => 'claude-sonnet-4-6',                          'image' => '' ),
-		);
-		return $map[ $provider_id ] ?? array( 'text' => '', 'image' => '' );
+	public static function decrypt_maybe( string $value ): string {
+		if ( '' === $value || empty( trim( $value ) ) ) {
+			return '';
+		}
+		// Only attempt decryption on prefixed ciphertexts.
+		if ( 0 === strpos( $value, 'v3:' ) || 0 === strpos( $value, 'v2:' ) ) {
+			$decrypted = Encryption::decrypt( $value );
+			return '' !== $decrypted ? $decrypted : $value;
+		}
+		// Not encrypted — return as-is (plaintext from before migration).
+		return $value;
+	}
+
+	/**
+	 * Timeout (seconds) for fetching generated images from provider URLs.
+	 *
+	 * Image generation is slow; allow plenty of headroom but keep it filterable.
+	 *
+	 * @return int
+	 */
+	public static function image_fetch_timeout(): int {
+		$timeout = (int) apply_filters( 'aime_image_fetch_timeout', 120 );
+
+		return $timeout > 0 ? $timeout : 120;
 	}
 
 	/**
@@ -220,6 +233,10 @@ class AiProvider {
 					$c['key_decrypt_failed'] = true;
 				}
 			}
+			// Decrypt base_url for display (custom providers need to see/edit the endpoint).
+			if ( ! empty( $c['base_url'] ) ) {
+				$c['base_url'] = self::decrypt_maybe( $c['base_url'] );
+			}
 			// Ensure primary_for is always present.
 			$c['primary_for'] = $c['primary_for'] ?? array();
 			// Legacy compat: is_primary = true if primary for any task.
@@ -243,7 +260,6 @@ class AiProvider {
 		$id          = ! empty( $data['id'] ) ? sanitize_key( $data['id'] ) : 'ai_' . substr( md5( wp_generate_uuid4() ), 0, 10 );
 
 		$provider_id = sanitize_key( $data['provider'] ?? 'google_ai' );
-		$defaults    = self::get_default_models( $provider_id );
 
 		// Handle primary_for — support both new array format and legacy is_primary bool.
 		$primary_for = array();
@@ -258,14 +274,14 @@ class AiProvider {
 			'id'                => $id,
 			'name'              => sanitize_text_field( $data['name'] ?? '' ),
 			'provider'          => $provider_id,
-			'text_model'        => sanitize_text_field( $data['text_model'] ?? $defaults['text'] ),
-			'image_model'       => sanitize_text_field( $data['image_model'] ?? $defaults['image'] ),
+			'text_model'        => sanitize_text_field( $data['text_model'] ?? '' ),
+			'image_model'       => sanitize_text_field( $data['image_model'] ?? '' ),
 			'custom_text_model' => sanitize_text_field( $data['custom_text_model'] ?? '' ),
 			'custom_image_model'=> sanitize_text_field( $data['custom_image_model'] ?? '' ),
 			'primary_for'       => $primary_for,
 			'enabled'           => (bool) ( $data['enabled'] ?? true ),
 			'api_format'        => in_array( $data['api_format'] ?? '', array( 'openai', 'anthropic' ), true ) ? $data['api_format'] : 'openai',
-			'base_url'          => ! empty( $data['base_url'] ) ? esc_url_raw( trim( $data['base_url'] ) ) : '',
+			'base_url'          => '',
 		);
 
 		// API key handling — encrypt if new, keep old if editing and not changed.
@@ -274,6 +290,18 @@ class AiProvider {
 		} else {
 			$existing       = self::find_connection( $connections, $id );
 			$conn['api_key'] = $existing ? ( $existing['api_key'] ?? '' ) : '';
+		}
+
+		// Base URL handling — encrypt if new, keep old if editing and not changed.
+		// For custom providers only; other providers don't use base_url.
+		if ( 'custom' === $provider_id ) {
+			$raw_url = trim( $data['base_url'] ?? '' );
+			if ( ! empty( $raw_url ) && 0 !== strpos( $raw_url, '••' ) ) {
+				$conn['base_url'] = Encryption::encrypt( $raw_url );
+			} else {
+				$existing         = self::find_connection( $connections, $id );
+				$conn['base_url'] = $existing ? ( $existing['base_url'] ?? '' ) : '';
+			}
 		}
 
 		// If this connection claims primary for a task, remove that task from all other connections.
@@ -1544,10 +1572,9 @@ class AiProvider {
 				continue; // already tried in pass 1
 			}
 
-			// Resolve fallback model from provider defaults.
+			// If no image model set, fallback to text model (multimodal support).
 			if ( empty( $model ) ) {
-				$defaults = self::get_default_models( $provider_id );
-				$model    = $defaults['image'] ?? '';
+				$model = $conn['text_model'] ?? '';
 			}
 
 			if ( empty( $api_key ) ) {
@@ -1580,7 +1607,7 @@ class AiProvider {
 					if ( 'anthropic' === ( $conn['api_format'] ?? 'openai' ) ) {
 						continue 2; // Anthropic-compatible endpoints have no image generation.
 					}
-					$result = self::with_retry( fn() => self::generate_image_custom_openai( $api_key, $model, $prompt, $conn['base_url'] ?? '' ), $call_label );
+					$result = self::with_retry( fn() => self::generate_image_custom_openai( $api_key, $model, $prompt, self::decrypt_maybe( $conn['base_url'] ?? '' ) ), $call_label );
 					break;
 				default:
 					continue 2; // skip providers without image generation
@@ -1715,7 +1742,7 @@ class AiProvider {
 			$url = $body['data'][0]['url'] ?? '';
 			if ( $url ) {
 				// URL comes from the AI provider response — block private/loopback targets (SSRF).
-				$img = wp_remote_get( $url, array( 'timeout' => 60, 'reject_unsafe_urls' => true ) );
+				$img = wp_remote_get( $url, array( 'timeout' => self::image_fetch_timeout(), 'reject_unsafe_urls' => true ) );
 				if ( ! is_wp_error( $img ) ) {
 					return array(
 						'success'    => true,
@@ -1903,7 +1930,7 @@ class AiProvider {
 		// Check for URL in response.
 		if ( preg_match( '/https?:\/\/[^\s"]+\.(?:png|jpg|jpeg|webp)/i', $content, $m ) ) {
 			// URL parsed from AI-generated content — block private/loopback targets (SSRF).
-			$img = wp_remote_get( $m[0], array( 'timeout' => 60, 'reject_unsafe_urls' => true ) );
+			$img = wp_remote_get( $m[0], array( 'timeout' => self::image_fetch_timeout(), 'reject_unsafe_urls' => true ) );
 			if ( ! is_wp_error( $img ) && 200 === wp_remote_retrieve_response_code( $img ) ) {
 				return array(
 					'success'    => true,
@@ -2254,7 +2281,7 @@ class AiProvider {
 	 * Dispatch text generation for a custom connection based on its API format.
 	 */
 	private static function generate_custom( array $conn, string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
-		$base_url = self::normalize_base_url( $conn['base_url'] ?? '' );
+		$base_url = self::normalize_base_url( self::decrypt_maybe( $conn['base_url'] ?? '' ) );
 		if ( empty( $base_url ) ) {
 			return array( 'success' => false, 'content' => '', 'message' => __( 'Custom provider base URL is not configured.', 'ai-marketing-expert' ) );
 		}
@@ -2400,7 +2427,7 @@ class AiProvider {
 	 * Test a custom connection. Resolves the connection's text model and pings the endpoint.
 	 */
 	private static function test_custom( array $conn, string $api_key ): array {
-		$base_url = self::normalize_base_url( $conn['base_url'] ?? '' );
+		$base_url = self::normalize_base_url( self::decrypt_maybe( $conn['base_url'] ?? '' ) );
 		if ( empty( $base_url ) ) {
 			return array( 'success' => false, 'message' => __( 'Enter a base URL before testing.', 'ai-marketing-expert' ) );
 		}

@@ -108,8 +108,19 @@ final class Plugin {
 	 */
 	public function add_cron_schedules( array $schedules ): array {
 		if ( ! isset( $schedules['every_minute'] ) ) {
+			/**
+			 * Filter the every_minute cron interval, in seconds.
+			 *
+			 * Lower it on busy queues, raise it on slow hosts.
+			 *
+			 * @param int $interval Interval in seconds.
+			 */
+			$interval = (int) apply_filters( 'aime_every_minute_interval', 60 );
+			if ( $interval < 30 ) {
+				$interval = 30;
+			}
 			$schedules['every_minute'] = array(
-				'interval' => 60,
+				'interval' => $interval,
 				'display'  => __( 'Every Minute', 'ai-marketing-expert' ),
 			);
 		}

@@ -295,6 +295,12 @@ class EmailRestController {
 		) );
 
 		// POST /email/campaigns
+		register_rest_route( $this->ns, '/email/usage', array(
+			'methods'             => 'GET',
+			'callback'            => array( $c, 'usage' ),
+			'permission_callback' => array( $this, 'admin_permission' ),
+		) );
+
 		register_rest_route( $this->ns, '/email/campaigns', array(
 			'methods'             => 'POST',
 			'callback'            => array( $c, 'store' ),
@@ -981,7 +987,13 @@ class EmailRestController {
 				}
 			}
 			if ( $counted_connections >= $max ) {
-				return new \WP_REST_Response( array( 'message' => __( 'Free sites can create up to 2 SMTP connections. Upgrade to Pro for unlimited connections.', 'ai-marketing-expert' ) ), 403 );
+				return new \WP_REST_Response( array(
+					'message' => sprintf(
+						/* translators: %d: number of SMTP connections allowed on the free plan. */
+						__( 'Free sites can create up to %d SMTP connections. Upgrade to Pro for unlimited connections.', 'ai-marketing-expert' ),
+						$max
+					),
+				), 403 );
 			}
 		}
 

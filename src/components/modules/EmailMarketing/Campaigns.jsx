@@ -6,9 +6,11 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, SelectControl, SearchControl } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
+import useEmailUsage from '../../../hooks/useEmailUsage';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import QuotaMeters from '../../common/QuotaMeters';
 
 const STATUS_OPTIONS = [
 	{ label: __( 'All', 'ai-marketing-expert' ), value: '' },
@@ -30,6 +32,7 @@ const STATUS_BADGES = {
 
 const Campaigns = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
+	const { usage, refresh: refreshUsage } = useEmailUsage();
 	const [ items, setItems ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );
 	const [ page, setPage ] = useState( 1 );
@@ -52,6 +55,7 @@ const Campaigns = ( { onNavigate } ) => {
 			await post( `/email/campaigns/${ id }/duplicate` );
 			setNotice( { type: 'success', message: __( 'Campaign duplicated.', 'ai-marketing-expert' ) } );
 			fetchItems();
+			refreshUsage();
 		} catch ( e ) {
 			setNotice( { type: 'error', message: e.message } );
 		}
@@ -63,6 +67,9 @@ const Campaigns = ( { onNavigate } ) => {
 			await del( `/email/campaigns/${ id }` );
 			setNotice( { type: 'success', message: __( 'Campaign deleted.', 'ai-marketing-expert' ) } );
 			fetchItems();
+			// A deleted scheduled campaign hands its slot back, so the strip is
+			// stale the moment the row disappears.
+			refreshUsage();
 		} catch ( e ) {
 			setNotice( { type: 'error', message: e.message } );
 		}
@@ -82,6 +89,21 @@ const Campaigns = ( { onNavigate } ) => {
 
 			{ notice && <Notice type={ notice.type } message={ notice.message } onDismiss={ () => setNotice( null ) } /> }
 			{ error && <Notice type="error" message={ error } onDismiss={ clearError } /> }
+
+			<QuotaMeters
+				items={ [
+					{
+						key: 'campaigns',
+						label: __( 'Campaigns this month', 'ai-marketing-expert' ),
+						usage: usage?.campaigns_per_month,
+					},
+					{
+						key: 'scheduled',
+						label: __( 'Scheduled at once', 'ai-marketing-expert' ),
+						usage: usage?.scheduled_campaigns,
+					},
+				] }
+			/>
 
 			<Card>
 				<div className="aime-table-toolbar">

@@ -36,7 +36,7 @@ export const ConfigField = ( { field, value, onChange: rawOnChange, hasPro = fal
 	// Per-field Pro gate: the field stays visible (discoverable) but edits
 	// are blocked with an upsell toast on the free tier.
 	const locked = !! field.is_pro && ! hasPro;
-	const label = ( field.label || field.key ) + ( field.is_pro ? ' (Pro)' : '' );
+	const label = ( field.label || field.key ) + ( locked ? ' (Pro)' : '' );
 	const onChange = locked
 		? () => toast( __( 'This setting requires Pro.', 'ai-marketing-expert' ), 'warning' )
 		: rawOnChange;

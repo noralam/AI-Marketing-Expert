@@ -6631,8 +6631,11 @@ input.aime-premium-input[type=color]
 // that was never load-bearing.
 
 // Quick actions
+// Centred: every current use sits under a centred EmptyState or card title, so
+// a left-flushed row read as debris hanging off the edge of centred copy.
 .aime-quick-actions {
 	display: flex;
+	justify-content: center;
 	gap: 8px;
 	flex-wrap: wrap;
 }
@@ -14989,6 +14992,31 @@ input.aime-premium-input[type=color]
 	height: var(--aime-wf-h);
 	min-height: 0;
 
+	// Sits above __head. Styled explicitly rather than leaning on WP's is-link,
+	// which renders at 11px in an undefined admin-theme colour here.
+	&__back {
+		align-self: flex-start;
+		flex: 0 0 auto;
+		height: auto;
+		min-height: 0;
+		margin: 0 0 10px;
+		padding: 0;
+		background: none;
+		border: 0;
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--aime-primary);
+		text-decoration: none;
+		cursor: pointer;
+
+		&:hover:not(:disabled),
+		&:focus:not(:disabled) {
+			color: var(--aime-primary-dark, var(--aime-primary));
+			text-decoration: underline;
+		}
+	}
+
 	&__head {
 		display: flex;
 		justify-content: space-between;
@@ -14998,12 +15026,22 @@ input.aime-premium-input[type=color]
 		// The panel scrolls; its own header should not scroll away from the
 		// field the reader is editing.
 		position: sticky;
-		top: -14px;
 		z-index: 2;
-		padding: 14px 0 8px;
-		margin-top: -14px;
 		background: var(--aime-white);
 		border-bottom: 1px solid var(--aime-border-light);
+		// Default: the head is the first thing in the panel, so it pulls up
+		// over the panel's own 14px padding and sticks flush to the top.
+		top: -14px;
+		padding: 14px 0 8px;
+		margin-top: -14px;
+
+		// When a back link precedes it, that negative pull dragged the opaque
+		// header up over the link and hid it. Nothing to reclaim in that case.
+		&:not(:first-child) {
+			top: 0;
+			padding: 8px 0;
+			margin-top: 0;
+		}
 	}
 
 	&__title {
@@ -16071,5 +16109,130 @@ input.aime-premium-input[type=color]
 	.aime-module-share {
 		width: 100%;
 		max-width: 320px;
+	}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FREE-PLAN QUOTA STRIP
+   ═══════════════════════════════════════════════════════════ */
+
+// Sits above a list and answers "how much of this can I still do" before the
+// user spends work finding out from a 403. Deliberately built as a tinted rule,
+// not a card: it introduces the card below it, so giving it the same elevation
+// would make two competing objects where the list is the only real one. The
+// room tint carries the identity — a thick coloured edge would be a second
+// object stuck to the side of the first.
+.aime-quota-strip {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+	padding: 12px 16px;
+	background: var(--aime-primary-light);
+	border: 1px solid var(--aime-border-light);
+	border-radius: var(--aime-radius-sm);
+
+	// One quota out — the strip stops being an FYI and becomes the reason the
+	// next click will fail, so it takes the warning tint and earns its button.
+	&.is-blocked {
+		background: var(--aime-warning-light);
+		border-color: var(--aime-warning);
+	}
+
+	&__plan {
+		flex: 0 0 auto;
+		padding-top: 2px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--aime-text-muted);
+	}
+
+	&__meters {
+		flex: 1 1 320px;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+		gap: 8px 24px;
+	}
+
+	&__action {
+		flex: 0 0 auto;
+		align-self: center;
+	}
+}
+
+.aime-quota-meter {
+	min-width: 0;
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 8px;
+		margin-bottom: 5px;
+	}
+
+	&__label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--aime-text);
+		// Long labels shorten rather than push the count off its own row.
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// The number the user actually came for, so it gets the weight — the "x of y"
+	// underneath is the supporting detail, not the headline.
+	&__left {
+		flex: 0 0 auto;
+		font-size: 13px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--aime-primary);
+	}
+
+	&__track {
+		height: 4px;
+		border-radius: 999px;
+		background: var(--aime-bg-subtle);
+		overflow: hidden;
+	}
+
+	&__fill {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--aime-primary);
+		transition: width var(--aime-transition);
+	}
+
+	&__note {
+		margin: 5px 0 0;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		color: var(--aime-text-light);
+	}
+
+	&.is-low {
+		.aime-quota-meter__left { color: var(--aime-warning-dark); }
+		.aime-quota-meter__fill { background: var(--aime-warning); }
+	}
+
+	&.is-empty {
+		.aime-quota-meter__left { color: var(--aime-error-dark); }
+		.aime-quota-meter__fill { background: var(--aime-error); }
+	}
+}
+
+@media (max-width: 782px) {
+	.aime-quota-strip {
+		gap: 12px;
+
+		&__action {
+			align-self: stretch;
+		}
 	}
 }

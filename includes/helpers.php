@@ -256,6 +256,7 @@ function aime_free_limits(): array {
 		'email_funnels'              => 2,
 		'email_smtp_connections'     => 2,
 		'ai_provider_connections'     => 2,
+		'ai_jobs_queued'             => 5,
 		'csv_import_rows'            => 100,
 		'campaigns_per_month'        => 30,
 		'content_articles_per_month' => 20,

@@ -161,7 +161,7 @@ const ConfigPanel = ( {
 	brandVoices = [],
 } ) => {
 	const backLink = onDeselect && (
-		<Button variant="link" size="small" onClick={ onDeselect }>
+		<Button variant="link" size="small" className="aime-wf-config__back" onClick={ onDeselect }>
 			{ __( '← Workflow settings', 'ai-marketing-expert' ) }
 		</Button>
 	);

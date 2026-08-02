@@ -175,10 +175,97 @@ class CampaignController {
 	 * Increment the monthly send counter, pruning past months.
 	 */
 	private function increment_monthly_send_count(): void {
+		global $wpdb;
+
+		$month = gmdate( 'Ym' );
+
+		// Read-modify-write on the option raced: two concurrent sends both read
+		// N and both wrote N+1, so one campaign was free. An atomic UPDATE with
+		// the old value in the WHERE clause makes the loser retry against the
+		// value the winner actually committed.
+		for ( $attempt = 0; $attempt < 5; $attempt++ ) {
+			$raw = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+					'aime_campaign_send_counts'
+				)
+			);
+
+			if ( null === $raw ) {
+				// No row yet — add_option is atomic on the unique option_name
+				// index, so a concurrent writer losing this race just retries.
+				if ( add_option( 'aime_campaign_send_counts', array( $month => 1 ), '', false ) ) {
+					return;
+				}
+				continue;
+			}
+
+			$counts = maybe_unserialize( $raw );
+			$counts = is_array( $counts ) ? $counts : array();
+			// Only the current month is kept; past months are pruned on write.
+			$next = array( $month => (int) ( $counts[ $month ] ?? 0 ) + 1 );
+
+			$updated = $wpdb->update(
+				$wpdb->options,
+				array( 'option_value' => maybe_serialize( $next ) ),
+				array(
+					'option_name'  => 'aime_campaign_send_counts',
+					'option_value' => $raw,
+				)
+			);
+
+			if ( $updated ) {
+				wp_cache_delete( 'aime_campaign_send_counts', 'options' );
+				wp_cache_delete( 'alloptions', 'options' );
+				return;
+			}
+		}
+
+		// Five contended attempts is far past any real concurrency here; fall
+		// back rather than silently skipping the increment entirely.
 		$counts = get_option( 'aime_campaign_send_counts', array() );
-		$month  = gmdate( 'Ym' );
-		$counts = array( $month => (int) ( $counts[ $month ] ?? 0 ) + 1 );
-		update_option( 'aime_campaign_send_counts', $counts, false );
+		$counts = is_array( $counts ) ? $counts : array();
+		update_option( 'aime_campaign_send_counts', array( $month => (int) ( $counts[ $month ] ?? 0 ) + 1 ), false );
+	}
+
+	/**
+	 * Free-plan usage snapshot for the Email Marketing UI.
+	 *
+	 * Surfaced so a free user sees the wall before they hit it — previously the
+	 * only signal was a 403 after clicking Send.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function usage(): \WP_REST_Response {
+		global $wpdb;
+		$p = $wpdb->prefix;
+
+		$has_pro = aime_has_pro();
+		$limits  = aime_free_limits();
+
+		$campaigns_used = $this->get_monthly_send_count();
+		$campaigns_max  = (int) ( $limits['campaigns_per_month'] ?? 30 );
+		$scheduled_used = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_campaigns WHERE status = 'scheduled'" );
+		$scheduled_max  = (int) ( $limits['email_scheduled_campaigns'] ?? 3 );
+		$funnels_used   = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_funnels" );
+		$funnels_max    = (int) ( $limits['email_funnels'] ?? 2 );
+
+		// `remaining` is null on Pro, which the UI reads as "unlimited" — a
+		// large number would render as a countdown to a wall that isn't there.
+		$block = static function ( int $used, int $max ) use ( $has_pro ): array {
+			return array(
+				'used'      => $used,
+				'limit'     => $has_pro ? null : $max,
+				'remaining' => $has_pro ? null : max( 0, $max - $used ),
+			);
+		};
+
+		return new \WP_REST_Response( array(
+			'has_pro'             => $has_pro,
+			'campaigns_per_month' => $block( $campaigns_used, $campaigns_max ),
+			'scheduled_campaigns' => $block( $scheduled_used, $scheduled_max ),
+			'automations'         => $block( $funnels_used, $funnels_max ),
+		) );
 	}
 
 	public function send( \WP_REST_Request $request ): \WP_REST_Response {
@@ -235,7 +322,14 @@ class CampaignController {
 				$max_free  = (int) ( $limits['email_scheduled_campaigns'] ?? 3 );
 				$scheduled = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_campaigns WHERE status = 'scheduled'" );
 				if ( $scheduled >= $max_free ) {
-					return new \WP_REST_Response( array( 'message' => __( 'Free sites can schedule up to 3 campaigns. Upgrade to Pro for unlimited scheduled campaigns.', 'ai-marketing-expert' ) ), 403 );
+					return new \WP_REST_Response( array(
+						'message'       => sprintf(
+							/* translators: %d: number of campaigns that may be scheduled at once on the free plan. */
+							__( 'Free sites can schedule up to %d campaigns. Upgrade to Pro for unlimited scheduled campaigns.', 'ai-marketing-expert' ),
+							$max_free
+						),
+						'limit_reached' => true,
+					), 403 );
 				}
 			}
 			$wpdb->update( "{$p}aime_campaigns", array(
@@ -541,12 +635,34 @@ class CampaignController {
 		);
 	}
 
+	/**
+	 * Statuses a plain create/update request is allowed to set.
+	 *
+	 * Everything else — scheduled, working, sending, sent, paused, failed — is a
+	 * lifecycle state owned by send()/pause()/stop() and the queue processor.
+	 * `status` used to be an ordinary text field here, which meant a PUT could
+	 * set 'working' directly; CampaignProcessor claims rows by status alone, so
+	 * that walked straight past the free-tier campaign metering in send() and
+	 * never incremented the counter either. It also let any campaign be flipped
+	 * to 'sent' out of band, which corrupts the progress screen.
+	 */
+	private const EDITABLE_STATUSES = array( 'draft' );
+
 	private function sanitize( \WP_REST_Request $r ): array {
 		$data = array();
-		$text_fields = array( 'title', 'slug', 'status', 'email_subject', 'email_pre_header', 'design_template', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content' );
+		$text_fields = array( 'title', 'slug', 'email_subject', 'email_pre_header', 'design_template', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content' );
 		foreach ( $text_fields as $f ) {
 			if ( $r->has_param( $f ) ) {
 				$data[ $f ] = sanitize_text_field( $r->get_param( $f ) );
+			}
+		}
+		if ( $r->has_param( 'status' ) ) {
+			$status = sanitize_text_field( $r->get_param( 'status' ) );
+			// Silently dropped rather than rejected: the editor posts the whole
+			// row back on save, so erroring on an unchanged 'sent' would make
+			// every edit of a delivered campaign fail.
+			if ( in_array( $status, self::EDITABLE_STATUSES, true ) ) {
+				$data['status'] = $status;
 			}
 		}
 		if ( $r->has_param( 'email_body' ) ) {

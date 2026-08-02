@@ -6,9 +6,11 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, SearchControl, SelectControl } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
+import useEmailUsage from '../../../hooks/useEmailUsage';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import QuotaMeters from '../../common/QuotaMeters';
 import { menuUrl } from '../../../utils/menuUrl';
 import { formatDate } from '../../../utils/datetime';
 
@@ -22,6 +24,7 @@ const BADGE = { draft: 'warning', published: 'success' };
 
 const Automations = ( { onNavigate } ) => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
+	const { usage, refresh: refreshUsage } = useEmailUsage();
 	const [ automations, setAutomations ] = useState( [] );
 	const [ search, setSearch ] = useState( '' );
 	const [ status, setStatus ] = useState( '' );
@@ -57,6 +60,7 @@ const Automations = ( { onNavigate } ) => {
 		try {
 			await post( `/email/automations/${ aid }/duplicate` );
 			fetchList();
+			refreshUsage();
 		} catch ( e ) { /* */ }
 	};
 
@@ -65,6 +69,7 @@ const Automations = ( { onNavigate } ) => {
 		try {
 			await del( `/email/automations/${ aid }` );
 			fetchList();
+			refreshUsage();
 		} catch ( e ) { /* */ }
 	};
 
@@ -98,6 +103,19 @@ const Automations = ( { onNavigate } ) => {
 					dismissible={ false }
 				/>
 			) }
+
+			<QuotaMeters
+				items={ [
+					{
+						key: 'automations',
+						label: __( 'Automations', 'ai-marketing-expert' ),
+						usage: usage?.automations,
+						// Unlike the campaign allowance this is a standing cap, so
+						// waiting for the month to turn over will not free a slot.
+						note: __( 'total, not monthly', 'ai-marketing-expert' ),
+					},
+				] }
+			/>
 
 			<div className="aime-table-toolbar">
 				<SearchControl value={ search } onChange={ ( v ) => { setSearch( v ); setPage( 1 ); } } placeholder={ __( 'Search automations...', 'ai-marketing-expert' ) } />

@@ -16,6 +16,14 @@ class RestApi {
 	private const CACHE_TTL   = 30;
 
 	/**
+	 * Persistent home of the cache version counter.
+	 *
+	 * Kept in the options table so an object-cache miss, TTL expiry or flush
+	 * cannot roll the version back and resurrect stale entries.
+	 */
+	private const CACHE_VERSION_OPTION = 'aime_rest_cache_version';
+
+	/**
 	 * Module Manager.
 	 *
 	 * @var ModuleManager
@@ -34,7 +42,13 @@ class RestApi {
 	private static function get_cache_version(): string {
 		$version = wp_cache_get( 'version', self::CACHE_GROUP );
 		if ( false === $version ) {
-			$version = '1';
+			// Object cache missed — read the authoritative value from options so
+			// we never fall back to a version an earlier bump already retired.
+			$version = (string) get_option( self::CACHE_VERSION_OPTION, '' );
+			if ( '' === $version ) {
+				$version = '1';
+				update_option( self::CACHE_VERSION_OPTION, $version, false );
+			}
 			wp_cache_set( 'version', $version, self::CACHE_GROUP, self::CACHE_TTL );
 		}
 
@@ -42,7 +56,11 @@ class RestApi {
 	}
 
 	private static function bump_cache_version(): void {
-		wp_cache_set( 'version', (string) microtime( true ), self::CACHE_GROUP, self::CACHE_TTL );
+		// Monotonic counter: even if two concurrent writers read the same value
+		// and land on the same bump, both retire every key built on the old one.
+		$version = (string) ( (int) get_option( self::CACHE_VERSION_OPTION, '1' ) + 1 );
+		update_option( self::CACHE_VERSION_OPTION, $version, false );
+		wp_cache_set( 'version', $version, self::CACHE_GROUP, self::CACHE_TTL );
 	}
 
 	private static function build_cache_key( string $prefix, array $parts = array() ): string {
@@ -719,6 +737,10 @@ class RestApi {
 			}
 
 			$col   = sanitize_key( $def['col'] );
+			// Whitelist column names to prevent SQL injection.
+			if ( ! in_array( $col, array( 'created_at', 'sent_at', 'updated_at' ), true ) ) {
+				continue;
+			}
 			$where = '';
 			if ( ! empty( $def['where'] ) ) {
 				// The where clause is hardcoded above (not user input) — safe to use directly.
@@ -751,13 +773,6 @@ class RestApi {
 		return new \WP_REST_Response( $result );
 	}
 
-	/**
-	 * Sanitize a setting value based on key.
-	 *
-	 * @param string $key   Setting key.
-	 * @param mixed  $value Raw value.
-	 * @return mixed Sanitized value.
-	 */
 	/**
 	 * GET /debug-log - Fetch plugin logs (only when WP_DEBUG is on).
 	 */
@@ -1008,7 +1023,7 @@ class RestApi {
 						$provider = $conn['provider'] ?? '';
 					}
 					if ( empty( $base_url ) ) {
-						$base_url = $conn['base_url'] ?? '';
+						$base_url = AiProvider::decrypt_maybe( $conn['base_url'] ?? '' );
 					}
 					if ( empty( $api_format ) ) {
 						$api_format = $conn['api_format'] ?? '';
@@ -1092,6 +1107,26 @@ class RestApi {
 	public function create_ai_job( \WP_REST_Request $request ) {
 		$params = $request->get_json_params();
 		$type   = sanitize_key( $params['type'] ?? 'generate' );
+
+		// Free tier keeps a shallow queue; Pro is unlimited.
+		if ( ! \aime_has_pro() ) {
+			$limits = \aime_free_limits();
+			$limit  = (int) ( $limits['ai_jobs_queued'] ?? 5 );
+
+			if ( $limit > 0 && JobQueue::count_active() >= $limit ) {
+				return new \WP_REST_Response(
+					array(
+						'success' => false,
+						'message' => sprintf(
+							/* translators: %d: number of background jobs allowed on the free plan */
+							__( 'Background job limit reached. Free plan allows %d queued jobs at a time. Upgrade to Pro for unlimited jobs.', 'ai-marketing-expert' ),
+							$limit
+						),
+					),
+					403
+				);
+			}
+		}
 
 		$payload = array(
 			'prompt'     => (string) ( $params['prompt'] ?? '' ),
@@ -1177,6 +1212,15 @@ class RestApi {
 			if ( 'aime_settings' === $name && is_array( $value ) ) {
 				unset( $value['webhook_api_key'] ); // Never export secrets.
 			}
+
+			// Let modules strip their own secrets before export.
+			if ( is_array( $value ) ) {
+				$secret_keys = (array) apply_filters( 'aime_export_secret_keys', array(), $name );
+				foreach ( $secret_keys as $secret_key ) {
+					unset( $value[ $secret_key ] );
+				}
+			}
+
 			$options[ $name ] = $value;
 		}
 
@@ -1407,7 +1451,19 @@ class RestApi {
 		if ( get_transient( $replay_key ) ) {
 			return false;
 		}
-		set_transient( $replay_key, 1, 10 * MINUTE_IN_SECONDS );
+
+		/**
+		 * Filter how long a used webhook signature is remembered.
+		 *
+		 * Must stay above the ±5 minute timestamp window or replays become possible.
+		 *
+		 * @param int $ttl Time to live in seconds.
+		 */
+		$replay_ttl = (int) apply_filters( 'aime_webhook_replay_cache_ttl', 10 * MINUTE_IN_SECONDS );
+		if ( $replay_ttl < 10 * MINUTE_IN_SECONDS ) {
+			$replay_ttl = 10 * MINUTE_IN_SECONDS;
+		}
+		set_transient( $replay_key, 1, $replay_ttl );
 
 		return true;
 	}

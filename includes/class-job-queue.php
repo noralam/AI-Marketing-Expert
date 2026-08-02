@@ -85,6 +85,25 @@ class JobQueue {
 	}
 
 	/**
+	 * Count jobs that are still queued or in flight.
+	 *
+	 * @return int
+	 */
+	public static function count_active(): int {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i WHERE status IN ( %s, %s )',
+				self::table(),
+				'pending',
+				'processing'
+			)
+		);
+	}
+
+	/**
 	 * Fetch a job by ID.
 	 */
 	public static function get( int $job_id ): ?array {
