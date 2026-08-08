@@ -68,10 +68,17 @@ class ContentGeneratorService {
 			. "IMPORTANT: Write ALL content in full. Do NOT use placeholders like \"...\", \"[content]\", or ellipsis. Every section must contain complete, detailed text.";
 
 		$max_tokens = min( 16384, max( 2048, (int) ( $word_count * 2.5 ) ) );
-		$result     = AiProvider::generate( $system . "\n\n" . $prompt, 'text', $max_tokens );
+		$result     = AiProvider::generate(
+			$system . "\n\n" . $prompt,
+			'text',
+			$max_tokens,
+			// The payload is a JSON envelope — stitching raw JSON across models is
+			// fragile, so a cut-off article is recovered as HTML further below.
+			array( 'continuation' => 'none' )
+		);
 
 		if ( ! $result['success'] ) {
-			return array( 'success' => false, 'error' => $result['content'] ?? __( 'AI generation failed.', 'ai-marketing-expert' ) );
+			return array( 'success' => false, 'error' => $result['message'] ?? ( $result['content'] ?? __( 'AI generation failed.', 'ai-marketing-expert' ) ) );
 		}
 
 		$parsed = $this->parse_json_response( $result['content'] );
@@ -89,20 +96,24 @@ class ContentGeneratorService {
 			}
 		}
 
-		if ( ! $parsed ) {
-			// Check if the raw response contains real HTML content (not thinking text).
-			$has_html = preg_match( '/<(p|h[1-6]|ul|ol|div|article|section)\b/i', $result['content'] );
+		// No usable body: either the model skipped the JSON wrapper, or the
+		// envelope was cut off mid-body so only the keys before it survived
+		// parsing. Both cases still carry real HTML worth salvaging.
+		$salvaged = false;
+		if ( ! $parsed || empty( $parsed['body'] ) ) {
+			$raw_html = self::salvage_body_from_raw( (string) $result['content'] );
 
-			if ( $has_html ) {
-				// Model returned HTML directly without JSON wrapper — use it.
-				// Strip any reasoning prefix the model emitted before the first tag.
-				$raw_html = self::strip_reasoning_before_html( $result['content'] );
-				$parsed   = array(
-					'title'   => $topic,
-					'body'    => self::strip_safety_lines( $raw_html ),
-					'excerpt' => '',
-					'outline' => array(),
-				);
+			if ( '' !== $raw_html ) {
+				$salvaged        = true;
+				$parsed          = is_array( $parsed ) ? $parsed : array();
+				$parsed['body']  = $raw_html;
+				$parsed['title'] = ! empty( $parsed['title'] ) ? $parsed['title'] : $topic;
+				if ( ! isset( $parsed['excerpt'] ) ) {
+					$parsed['excerpt'] = '';
+				}
+				if ( ! isset( $parsed['outline'] ) ) {
+					$parsed['outline'] = array();
+				}
 			} else {
 				// No JSON and no HTML — likely thinking/reasoning text. Fail clearly.
 				aime_log( 'AI returned non-JSON, non-HTML response (possible thinking/reasoning output). Retrying or failing.', 'warning', 'content-generator' );
@@ -113,13 +124,225 @@ class ContentGeneratorService {
 			}
 		}
 
-		return array(
-			'success'  => true,
-			'content'  => $result['content'],
-			'parsed'   => $parsed,
-			'provider' => $result['provider'] ?? '',
-			'model'    => $result['model'] ?? '',
+		// The first provider may have stopped mid-article (token budget or rate
+		// limit). Keep what it wrote and let the next provider finish the job.
+		$continuation = $this->complete_truncated_body(
+			(string) ( $parsed['body'] ?? '' ),
+			array(
+				// A salvaged body that does not end on a closing tag was cut off
+				// even when the provider forgot to say so.
+				'truncated'     => ! empty( $result['truncated'] )
+					|| ( $salvaged && ! preg_match( '/>\s*$/', (string) $parsed['body'] ) ),
+				'connection_id' => (string) ( $result['connection_id'] ?? '' ),
+				'topic'         => $topic,
+				'keywords'      => $keywords,
+				'tone'          => $tone,
+				'language'      => $language,
+				'word_count'    => $word_count,
+				'inline_images' => $inline_images,
+			)
 		);
+
+		$parsed['body'] = $continuation['body'];
+		$providers      = array_merge( $result['providers'] ?? array(), $continuation['providers'] );
+
+		if ( $continuation['continued'] > 0 ) {
+			// Metadata lives in the truncated JSON tail, so it is usually missing
+			// once an article had to be stitched — rebuild it cheaply.
+			if ( empty( $parsed['title'] ) ) {
+				$parsed['title'] = $topic;
+			}
+			if ( empty( $parsed['image_search'] ) ) {
+				$parsed['image_search'] = $topic;
+			}
+			if ( empty( $parsed['outline'] ) ) {
+				$parsed['outline'] = self::outline_from_html( $parsed['body'] );
+			}
+			if ( empty( $parsed['excerpt'] ) ) {
+				$excerpt_result = $this->generate_excerpt( (string) $parsed['title'], $parsed['body'] );
+				if ( ! empty( $excerpt_result['excerpt'] ) ) {
+					$parsed['excerpt'] = $excerpt_result['excerpt'];
+				}
+			}
+		}
+
+		return array(
+			'success'   => true,
+			'content'   => $result['content'],
+			'parsed'    => $parsed,
+			'provider'  => $result['provider'] ?? '',
+			'model'     => $result['model'] ?? '',
+			'providers' => $providers,
+			'continued' => $continuation['continued'],
+			'truncated' => $continuation['truncated'],
+		);
+	}
+
+	/**
+	 * Finish an article body that a provider left incomplete.
+	 *
+	 * Each round hands the partial HTML to the next available AI connection
+	 * (a different one when possible, the same one after its cooldown when the
+	 * site has only one) and asks for the remainder as raw HTML — never JSON,
+	 * so nothing depends on models agreeing about escaping.
+	 *
+	 * @param string $body Partial body HTML (may be empty).
+	 * @param array  $ctx  Article context: truncated, connection_id, topic,
+	 *                     keywords, tone, language, word_count, inline_images.
+	 * @return array{body:string,providers:array,continued:int,truncated:bool}
+	 */
+	private function complete_truncated_body( string $body, array $ctx ): array {
+		$providers = array();
+		$continued = 0;
+		$truncated = ! empty( $ctx['truncated'] );
+		$target    = max( 1, (int) $ctx['word_count'] );
+
+		// Nothing salvageable, or nothing missing — leave it alone.
+		if ( '' === trim( $body ) || ! $truncated ) {
+			return array(
+				'body'      => '' !== trim( $body ) ? force_balance_tags( $body ) : $body,
+				'providers' => $providers,
+				'continued' => 0,
+				'truncated' => $truncated,
+			);
+		}
+
+		$used   = array_filter( array( (string) ( $ctx['connection_id'] ?? '' ) ) );
+		$rounds = (int) apply_filters( 'aime_article_continuation_rounds', 3 );
+
+		for ( $round = 1; $round <= $rounds; $round++ ) {
+			$words     = str_word_count( wp_strip_all_tags( $body ) );
+			$remaining = $target - $words;
+
+			if ( $remaining <= (int) ( $target * 0.1 ) ) {
+				break; // Close enough to the target to call it finished.
+			}
+
+			$missing_images = max( 0, (int) $ctx['inline_images'] - preg_match_all( '/<!--aime-img:/', $body ) );
+
+			$instructions = "Write the remaining part of a blog article body in HTML.\n"
+				. "Article topic: \"{$ctx['topic']}\"\n"
+				. 'Target keywords: ' . ( $ctx['keywords'] ? implode( ', ', $ctx['keywords'] ) : 'none specified' ) . "\n"
+				. "Tone: {$ctx['tone']}\n"
+				. "Language: {$ctx['language']}\n"
+				. "Target total length: {$target} words. About {$words} words already exist, so roughly {$remaining} words are still missing.\n";
+
+			if ( $missing_images > 0 ) {
+				$instructions .= "Insert exactly {$missing_images} more image placeholders, formatted exactly as "
+					. "<!--aime-img:2-4 word English stock photo search query-->, at visually appropriate points "
+					. "(never inside a heading or list).\n";
+			}
+
+			$instructions .= "Output ONLY additional body HTML using h2, h3, p, ul, ol, li, strong and em tags. "
+				. "No JSON, no code fences, no <html> or <body> wrapper, no commentary. "
+				. "End the article with a proper conclusion once the target length is reached.";
+
+			$round_result = AiProvider::continue_text(
+				$body,
+				$instructions,
+				min( 8192, max( 1024, (int) ( $remaining * 2.5 ) ) ),
+				array(
+					'task'                => 'text',
+					'used_connection_ids' => $used,
+					'format_hint'         => 'raw article body HTML only (h2, h3, p, ul, ol, li, strong, em) — never JSON',
+				)
+			);
+
+			if ( empty( $round_result['success'] ) ) {
+				aime_log( 'Article continuation stopped: ' . ( $round_result['message'] ?? 'unknown reason' ), 'warning', 'content-generator' );
+				break;
+			}
+
+			$stitched = AiProvider::stitch_text( $body, (string) $round_result['content'] );
+			$added    = str_word_count( wp_strip_all_tags( $stitched ) ) - $words;
+
+			if ( $added < 10 ) {
+				break; // The provider added nothing useful; stop burning quota.
+			}
+
+			$body        = $stitched;
+			$used[]      = (string) $round_result['connection_id'];
+			$providers[] = array(
+				'provider' => $round_result['provider'],
+				'model'    => $round_result['model'],
+				'round'    => $round,
+			);
+			$continued = $round;
+			$truncated = ! empty( $round_result['truncated'] );
+
+			aime_log( sprintf(
+				'Article continuation round %d written by %s / %s (+%d words).',
+				$round,
+				$round_result['provider'],
+				$round_result['model'],
+				$added
+			), 'info', 'content-generator' );
+		}
+
+		return array(
+			'body'      => force_balance_tags( $body ),
+			'providers' => $providers,
+			'continued' => $continued,
+			'truncated' => $truncated,
+		);
+	}
+
+	/**
+	 * Pull article body HTML out of a raw AI response whose JSON envelope is
+	 * unusable — either never emitted, or cut off mid-body so the closing
+	 * quote and every following key are missing.
+	 *
+	 * @param string $raw Raw model output.
+	 * @return string Body HTML, or '' when the response holds no HTML at all.
+	 */
+	public static function salvage_body_from_raw( string $raw ): string {
+		if ( ! preg_match( '/<(?:p|h[1-6]|ul|ol|div|article|section)\b/i', $raw ) ) {
+			return '';
+		}
+
+		$html = self::strip_reasoning_before_html( $raw );
+
+		// The body was a JSON string value, so its HTML is still escaped.
+		if ( false !== strpos( $html, '\\' ) ) {
+			$html = str_replace( array( '\\n', '\\r', '\\t' ), array( "\n", "\r", "\t" ), $html );
+			$html = stripcslashes( $html );
+		}
+
+		// Drop a dangling JSON tail when the envelope did close after the body.
+		$html = (string) preg_replace(
+			'/"\s*,\s*"(?:excerpt|outline|title|tags|image_search|meta_description)"\s*:[\s\S]*$/i',
+			'',
+			$html
+		);
+		$html = (string) preg_replace( '/"\s*\}?\s*$/', '', $html );
+
+		return self::strip_safety_lines( trim( $html ) );
+	}
+
+	/**
+	 * Rebuild an article outline from its headings, used when the JSON tail
+	 * carrying the original outline was lost to truncation.
+	 *
+	 * @param string $html Article body HTML.
+	 * @return array List of { heading, level }.
+	 */
+	public static function outline_from_html( string $html ): array {
+		if ( ! preg_match_all( '/<h([23])\b[^>]*>(.*?)<\/h\1>/is', $html, $matches, PREG_SET_ORDER ) ) {
+			return array();
+		}
+
+		$outline = array();
+		foreach ( $matches as $match ) {
+			$heading = trim( wp_strip_all_tags( $match[2] ) );
+			if ( '' !== $heading ) {
+				$outline[] = array(
+					'heading' => $heading,
+					'level'   => (int) $match[1],
+				);
+			}
+		}
+
+		return $outline;
 	}
 
 	/* ── GENERATE outline ────────────────────────────── */
@@ -185,17 +408,31 @@ class ContentGeneratorService {
 	/* ── IMPROVE content ─────────────────────────────── */
 
 	public function improve_content( string $content, string $instruction, string $tone ): array {
-		$word_count = str_word_count( wp_strip_all_tags( $content ) );
+		// Swap media (images, figures, embeds) for placeholders so the AI cannot
+		// rewrite or drop them while rephrasing the surrounding prose.
+		$media     = array();
+		$protected = self::protect_media( $content, $media );
+
+		$word_count = str_word_count( wp_strip_all_tags( $protected ) );
 		$max_tokens = min( 16384, max( 2048, (int) ( $word_count * 2.5 ) ) );
 
 		$prompt = "You are a professional editor. Improve the following content based on this instruction.\n\n"
 			. "Instruction: {$instruction}\n"
 			. "Tone: {$tone}\n\n"
-			. "Original content:\n{$content}\n\n"
+			. "Original content:\n{$protected}\n\n"
 			. "IMPORTANT: The original content has approximately {$word_count} words. "
 			. "Your output MUST have approximately the same word count. Do NOT shorten, truncate, or remove any sections. "
-			. "Return the improved content in HTML format using p, h2, h3, ul, ol, li, strong, em tags. "
-			. "Return ONLY the improved HTML content. Do NOT include any thinking, reasoning, planning, or commentary — "
+			. "Return the improved content in HTML format using p, h2, h3, ul, ol, li, strong, em tags. ";
+
+		if ( $media ) {
+			$prompt .= "The content contains placeholder markers such as [[AIME_MEDIA_0]]. "
+				. "These represent images and embeds. You MUST copy every placeholder into your output "
+				. "exactly as written, character for character, keeping them in the same order and at the "
+				. "same position relative to the surrounding paragraphs. Never delete, rename, translate, "
+				. "or wrap them in other tags. ";
+		}
+
+		$prompt .= "Return ONLY the improved HTML content. Do NOT include any thinking, reasoning, planning, or commentary — "
 			. "do NOT prefix with phrases like \"Sure, here is...\", \"Here is the improved HTML:\", or any safety classification lines.";
 
 		$result = AiProvider::generate( $prompt, 'text', $max_tokens );
@@ -204,10 +441,88 @@ class ContentGeneratorService {
 			return array( 'success' => false, 'error' => $result['content'] ?? '' );
 		}
 
+		$improved = aime_strip_thinking_from_html( $result['content'] );
+
 		return array(
 			'success' => true,
-			'content' => aime_strip_thinking_from_html( $result['content'] ),
+			'content' => self::restore_media( $improved, $media ),
 		);
+	}
+
+	/**
+	 * Replace media nodes with opaque placeholders.
+	 *
+	 * @param string $content Source HTML.
+	 * @param array  $media   Filled with token => original HTML.
+	 * @return string HTML with media replaced by tokens.
+	 */
+	private static function protect_media( string $content, array &$media ): string {
+		$media   = array();
+		$pattern = '/<figure\b[^>]*>.*?<\/figure>'
+			. '|<picture\b[^>]*>.*?<\/picture>'
+			. '|<iframe\b[^>]*>.*?<\/iframe>'
+			. '|<video\b[^>]*>.*?<\/video>'
+			. '|<audio\b[^>]*>.*?<\/audio>'
+			. '|<img\b[^>]*\/?>/is';
+
+		$replaced = preg_replace_callback(
+			$pattern,
+			function ( $m ) use ( &$media ) {
+				$token           = '[[AIME_MEDIA_' . count( $media ) . ']]';
+				$media[ $token ] = $m[0];
+				return $token;
+			},
+			$content
+		);
+
+		// preg_replace_callback returns null on failure (e.g. backtrack limit) —
+		// fall back to the untouched content rather than losing the article.
+		if ( null === $replaced ) {
+			$media = array();
+			return $content;
+		}
+
+		return $replaced;
+	}
+
+	/**
+	 * Put protected media back into AI output.
+	 *
+	 * Any placeholder the model dropped is re-appended at the end so images
+	 * are never silently lost.
+	 *
+	 * @param string $content AI output containing tokens.
+	 * @param array  $media   Token => original HTML map.
+	 */
+	private static function restore_media( string $content, array $media ): string {
+		if ( ! $media ) {
+			return $content;
+		}
+
+		$missing = array();
+
+		foreach ( $media as $token => $html ) {
+			// Tolerate the model wrapping a placeholder in its own paragraph.
+			$quoted  = preg_quote( $token, '/' );
+			$count   = 0;
+			$content = preg_replace(
+				'/<p>\s*' . $quoted . '\s*<\/p>|' . $quoted . '/',
+				str_replace( '$', '\$', $html ),
+				$content,
+				-1,
+				$count
+			);
+
+			if ( ! $count ) {
+				$missing[] = $html;
+			}
+		}
+
+		if ( $missing ) {
+			$content .= "\n" . implode( "\n", $missing );
+		}
+
+		return $content;
 	}
 
 	/* ── GENERATE meta title & description ───────────── */

@@ -678,29 +678,51 @@ class CampaignProcessor {
 	}
 
 	private function append_footer( string $body, object $email ): string {
-		$body             = $this->strip_template_unsubscribe_markup( $body );
+		return self::render_with_footer( $body, $this->get_unsubscribe_url( $email ) );
+	}
+
+	/**
+	 * Strip any template-supplied unsubscribe markup and append the configured
+	 * footer. Shared by the send queue, the template preview, and test mail so
+	 * every rendering of an email shows the same footer.
+	 *
+	 * @param string $body            Email body HTML.
+	 * @param string $unsubscribe_url Absolute unsubscribe URL for this recipient.
+	 */
+	public static function render_with_footer( string $body, string $unsubscribe_url ): string {
+		$body             = self::strip_unsubscribe_markup( $body );
 		$footer           = wp_kses_post( get_option( 'aime_email_footer', '' ) );
 		$company_name     = sanitize_text_field( get_option( 'aime_company_name', '' ) );
 		$company_address  = sanitize_textarea_field( get_option( 'aime_company_address', '' ) );
 		$unsubscribe_text = sanitize_text_field( get_option( 'aime_unsubscribe_text', 'Unsubscribe' ) );
-		$unsubscribe_url  = esc_url( $this->get_unsubscribe_url( $email ) );
+		$unsubscribe_url  = esc_url( $unsubscribe_url );
 
-		if ( aime_has_pro() && '' === $footer && '' === $company_name && '' === $company_address && '' === $unsubscribe_text ) {
-			return $body;
-		}
-
+		// Build footer parts only from non-empty sources.
 		$footer_parts = array();
+
+		// Free tier: always include AIME branding.
 		if ( ! aime_has_pro() ) {
 			$footer_parts[] = '<p style="margin:0 0 8px;color:#64748b;font-size:12px">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert</a></p>';
 		}
+
+		// Add custom footer if not empty.
 		if ( '' !== $footer ) {
 			$footer_parts[] = $footer;
 		}
+
+		// Add company info if at least one field is populated.
 		if ( '' !== $company_name || '' !== $company_address ) {
 			$footer_parts[] = '<p style="margin:8px 0 0;color:#64748b;font-size:12px">' . esc_html( $company_name ) . ( $company_name && $company_address ? '<br>' : '' ) . nl2br( esc_html( $company_address ) ) . '</p>';
 		}
+
+		// Add unsubscribe link only if text is explicitly set (Pro: may be overridden; Free: always shown).
 		if ( '' !== $unsubscribe_text ) {
 			$footer_parts[] = '<p style="margin:8px 0 0"><a href="' . $unsubscribe_url . '" style="color:#64748b">' . esc_html( $unsubscribe_text ) . '</a></p>';
+		}
+
+		// Bail early if no footer content will be rendered.
+		if ( empty( $footer_parts ) ) {
+			return $body;
 		}
 
 		$footer_html = '<div class="aime-email-footer" style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;text-align:center">' . implode( '', $footer_parts ) . '</div>';
@@ -713,6 +735,10 @@ class CampaignProcessor {
 	}
 
 	private function strip_template_unsubscribe_markup( string $body ): string {
+		return self::strip_unsubscribe_markup( $body );
+	}
+
+	public static function strip_unsubscribe_markup( string $body ): string {
 		$patterns = array(
 			'#(?:<hr\b[^>]*>\s*)?<p\b[^>]*>\s*(?:[^<]*&bull;\s*)?<a\b[^>]*href=["\'][^"\']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"\']*["\'][^>]*>.*?</a>(?:\s*from these emails?)?\s*</p>#is',
 			'#<div\b[^>]*>\s*(?:[^<]*&bull;\s*)?<a\b[^>]*href=["\'][^"\']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"\']*["\'][^>]*>.*?</a>(?:\s*from these emails?)?\s*</div>#is',

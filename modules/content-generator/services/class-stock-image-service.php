@@ -97,6 +97,47 @@ class StockImageService {
 		return ( ! empty( $result['success'] ) && ! empty( $result['images'] ) ) ? $result['images'][0] : null;
 	}
 
+	/**
+	 * Random image from search results — intelligently picks variety instead of
+	 * always the first result. Fetches more results and randomly selects from them
+	 * to ensure different posts get different images even with similar queries.
+	 *
+	 * @param string $query Stock search query.
+	 * @return ?array Image array or null if search fails.
+	 */
+	public function random( string $query ): ?array {
+		// Fetch more results to have variety to choose from (5-8 images).
+		$result = $this->search( $query, 8, 1 );
+
+		if ( empty( $result['success'] ) || empty( $result['images'] ) ) {
+			return null;
+		}
+
+		// Randomly pick one from available results, weighted toward earlier results
+		// (they tend to be more relevant) but avoiding always picking the first.
+		$images = $result['images'];
+		$count  = count( $images );
+
+		// Use a weighted random: favor the first 3-4 results but allow variety.
+		// This gives 60% chance to top 3, rest distributed across remaining images.
+		$rand = wp_rand( 0, 99 );
+		if ( $rand < 25 && $count > 0 ) {
+			$index = 0; // Top result (25% chance)
+		} elseif ( $rand < 50 && $count > 1 ) {
+			$index = 1; // Second result (25% chance)
+		} elseif ( $rand < 75 && $count > 2 ) {
+			$index = 2; // Third result (25% chance)
+		} else {
+			// Remaining results (25% chance spread across them)
+			$index = wp_rand( 3, $count - 1 );
+			if ( $index >= $count ) {
+				$index = $count - 1;
+			}
+		}
+
+		return $images[ $index ] ?? null;
+	}
+
 	private function search_pexels( string $query, int $per_page, int $page, string $key ): array {
 		$url = add_query_arg(
 			array(

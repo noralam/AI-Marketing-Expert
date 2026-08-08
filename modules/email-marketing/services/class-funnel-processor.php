@@ -56,6 +56,25 @@ class FunnelProcessor {
 				if ( $this->time_exceeded() ) {
 					break 2;
 				}
+
+				// Claim the row before doing any work. The send happens before the
+				// pointer advances, so an overlapping worker that read the same row
+				// would otherwise send the step's email a second time. Only the
+				// worker whose UPDATE matches the row it read proceeds.
+				$claimed = $wpdb->query(
+					$wpdb->prepare(
+						"UPDATE {$p}aime_funnel_subscribers
+						 SET next_execution_time = %s
+						 WHERE id = %d AND status = 'active' AND next_execution_time = %s",
+						gmdate( 'Y-m-d H:i:s', time() + 5 * MINUTE_IN_SECONDS ),
+						$row->id,
+						$row->next_execution_time
+					)
+				);
+				if ( ! $claimed ) {
+					continue;
+				}
+
 				$this->execute_for_subscriber( $row );
 			}
 		}
@@ -254,8 +273,36 @@ class FunnelProcessor {
 		global $wpdb;
 		$p = $wpdb->prefix;
 
-		$subject = $settings['email_subject'] ?? $sequence->title ?? '';
-		$body    = $settings['email_body'] ?? '';
+		// Exactly one source builds the email. email_source is authoritative;
+		// steps saved before it existed fall back to "campaign selected wins",
+		// which is what the editor now shows them as.
+		$campaign_id = absint( $settings['campaign_id'] ?? 0 );
+		$source      = (string) ( $settings['email_source'] ?? '' );
+		if ( '' === $source ) {
+			$source = $campaign_id ? 'campaign' : 'plain_text';
+		}
+
+		if ( 'campaign' === $source ) {
+			if ( ! $campaign_id ) {
+				// Configured to use a campaign but none picked — nothing to send.
+				return false;
+			}
+			$campaign = $wpdb->get_row( $wpdb->prepare( "SELECT email_subject, email_body FROM {$p}aime_campaigns WHERE id = %d", $campaign_id ) );
+			if ( ! $campaign || '' === trim( (string) $campaign->email_body ) ) {
+				// Campaign deleted or empty — permanent failure, do not retry.
+				return false;
+			}
+			$subject = (string) $campaign->email_subject;
+			$body    = (string) $campaign->email_body;
+		} else {
+			$subject = (string) ( $settings['email_subject'] ?? $sequence->title ?? '' );
+			$body    = (string) ( $settings['email_body'] ?? '' );
+		}
+
+		if ( '' === trim( $body ) ) {
+			// No body from either source — a blank email is never worth sending.
+			return false;
+		}
 
 		// Generate a unique hash for tracking.
 		$email_hash = md5( $row->subscriber_id . '_automation_' . $sequence->id . '_' . wp_generate_uuid4() );

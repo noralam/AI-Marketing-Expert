@@ -699,6 +699,157 @@ function aime_check_ip_rate_limit( string $action, int $limit, int $window ): bo
 	return true;
 }
 
+/**
+ * Extra tags article bodies need on top of $allowedposttags.
+ *
+ * kses still enforces wp_allowed_protocols() on src/srcset, so javascript:
+ * and data: URLs are rejected; srcdoc and every on* handler stay disallowed.
+ *
+ * @return array Tag => attribute map.
+ */
+function aime_embed_kses_tags(): array {
+	$common = array(
+		'class' => true,
+		'id'    => true,
+		'style' => true,
+		'title' => true,
+	);
+
+	return array(
+		'iframe' => array_merge(
+			$common,
+			array(
+				'src'             => true,
+				'width'           => true,
+				'height'          => true,
+				'name'            => true,
+				'allow'           => true,
+				'allowfullscreen' => true,
+				'frameborder'     => true,
+				'scrolling'       => true,
+				'loading'         => true,
+				'referrerpolicy'  => true,
+				'sandbox'         => true,
+			)
+		),
+		'video'  => array_merge(
+			$common,
+			array(
+				'src'         => true,
+				'poster'      => true,
+				'width'       => true,
+				'height'      => true,
+				'controls'    => true,
+				'preload'     => true,
+				'autoplay'    => true,
+				'loop'        => true,
+				'muted'       => true,
+				'playsinline' => true,
+			)
+		),
+		'audio'  => array_merge(
+			$common,
+			array(
+				'src'      => true,
+				'controls' => true,
+				'preload'  => true,
+				'autoplay' => true,
+				'loop'     => true,
+				'muted'    => true,
+			)
+		),
+		'source' => array(
+			'src'    => true,
+			'srcset' => true,
+			'type'   => true,
+			'media'  => true,
+			'sizes'  => true,
+		),
+		'track'  => array(
+			'src'     => true,
+			'kind'    => true,
+			'srclang' => true,
+			'label'   => true,
+			'default' => true,
+		),
+		'picture' => $common,
+	);
+}
+
+/**
+ * Allowed HTML for article bodies.
+ *
+ * wp_kses_post()'s $allowedposttags has no iframe/video/audio/picture, so
+ * oEmbed players and self-hosted media are destroyed on every save and on
+ * every AI round trip. This adds them back.
+ *
+ * @return array Tag => attribute map for wp_kses().
+ */
+function aime_allowed_article_html(): array {
+	$tags = array_merge( wp_kses_allowed_html( 'post' ), aime_embed_kses_tags() );
+
+	/**
+	 * Filter the allowed HTML for AI Marketing Expert article bodies.
+	 *
+	 * @param array $tags Tag => attribute map.
+	 */
+	return apply_filters( 'aime_allowed_article_html', $tags );
+}
+
+/**
+ * Sanitize article HTML without destroying embedded media.
+ *
+ * Drop-in replacement for wp_kses_post() on article bodies. Applies kses
+ * unconditionally — no unfiltered_html bypass — because this content passes
+ * through AI models and must not be trusted even when an administrator
+ * submits it.
+ *
+ * @param string $content Raw HTML.
+ */
+function aime_kses_article( $content ): string {
+	if ( ! is_string( $content ) || '' === $content ) {
+		return '';
+	}
+
+	return wp_kses( $content, aime_allowed_article_html() );
+}
+
+/**
+ * Widen the core post allowlist while our own content is being saved.
+ *
+ * Hooked only around wp_insert_post()/wp_update_post() calls that write an
+ * already-sanitized article body — see aime_allow_embeds_during_save(). Without
+ * it, core's content_save_pre kses pass (active for any user or cron run
+ * without unfiltered_html) strips the embeds back out.
+ *
+ * @param array  $tags    Allowed tags.
+ * @param string $context Allowlist context.
+ * @return array
+ */
+function aime_filter_kses_allowed_html( $tags, $context ): array {
+	if ( 'post' !== $context || ! is_array( $tags ) ) {
+		return (array) $tags;
+	}
+
+	return array_merge( $tags, aime_embed_kses_tags() );
+}
+
+/**
+ * Run a post-writing callback with embeds allowed through core kses.
+ *
+ * @param callable $callback Receives no arguments.
+ * @return mixed Callback return value.
+ */
+function aime_allow_embeds_during_save( callable $callback ) {
+	add_filter( 'wp_kses_allowed_html', 'aime_filter_kses_allowed_html', 10, 2 );
+
+	try {
+		return $callback();
+	} finally {
+		remove_filter( 'wp_kses_allowed_html', 'aime_filter_kses_allowed_html', 10 );
+	}
+}
+
 function aime_parse_ai_json( string $raw ): ?array {
 	$raw = trim( $raw );
 

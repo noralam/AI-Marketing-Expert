@@ -1,14 +1,14 @@
-=== AI Marketing Expert — AI Email Marketing, Content Generator, SEO Analyzer, Social Media & Chatbot ===
+=== AI Marketing Expert — AI Email Marketing, Content Generator, SEO Analyzer, Workflow Automation, Social Media & Ai Chatbot ===
 Contributors: nalam
 Tags: ai marketing, email marketing, ai content generator, ai chatbot, seo analyzer
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.1.1
+Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-All-in-one AI marketing: email campaigns, content generation, SEO analyzer, social media scheduling, AI chatbot, and workflow automation.
+All-in-one AI marketing: AI email campaigns, AI content generation,  AI SEO analyzer, social media scheduling, AI chatbot, and AI workflow automation.
 
 == Description ==
 
@@ -339,6 +339,16 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 8. Subscriber management with segmentation
 
 == Changelog ==
+
+= 1.2.0 =
+* New: Workflow Automation module for connecting and orchestrating marketing tasks.
+* New: stock image support in the Content Generator module.
+* New: API token and usage price counters.
+* New: multi-provider continuation — when an AI provider stops mid-article (token cap or rate limit), the next connected provider finishes the remaining part instead of the whole generation failing. Sites with a single connection retry the same provider after its cooldown during background runs.
+* Improved: truncated AI responses are now detected (Google, OpenAI, OpenRouter, Anthropic, custom providers) instead of being saved as half-written articles.
+* Improved: redesigned dashboard and module UI.
+* Improved: smooth loading animations throughout the admin interface.
+* Fixed: various issues and errors in all Modules.
 
 = 1.1.1 =
 * Fixed: campaign recipient count could double mid-send under concurrent processing (duplicate emails). Added a unique constraint on the send queue and a one-time de-duplication migration.

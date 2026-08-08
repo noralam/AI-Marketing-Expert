@@ -131,11 +131,19 @@ class DashboardWidget {
 			);
 		}
 
+		// Only count conversations where the visitor has sent at least one message.
+		// A session with only a bot greeting (system/ai sender) is not truly "active".
 		$active_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$conversations} WHERE status IN (%s, %s)",
+				"SELECT COUNT(*) FROM {$conversations} c
+				WHERE c.status IN (%s, %s)
+				AND EXISTS (
+					SELECT 1 FROM {$messages} m
+					WHERE m.conversation_id = c.id AND m.sender_type = %s
+				)",
 				'active',
-				'human_takeover'
+				'human_takeover',
+				'visitor'
 			)
 		);
 
@@ -160,6 +168,8 @@ class DashboardWidget {
 		$recent = array();
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $messages ) ) ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table/column names interpolated.
+			// Only show conversations where the visitor has actually written something;
+			// msg_count reflects visitor messages only so "1 msg" always means real engagement.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT c.id, c.visitor_name, c.page_url, c.status, c.created_at,
@@ -174,12 +184,19 @@ class DashboardWidget {
 								SELECT COUNT(*)
 								FROM {$messages} m2
 								WHERE m2.conversation_id = c.id
+								AND m2.sender_type = %s
 							) AS msg_count
 					FROM {$conversations} c
 					WHERE c.created_at >= DATE_SUB(%s, INTERVAL 24 HOUR)
+					AND EXISTS (
+						SELECT 1 FROM {$messages} mv
+						WHERE mv.conversation_id = c.id AND mv.sender_type = %s
+					)
 					ORDER BY c.created_at DESC
 					LIMIT 5",
-					$today
+					'visitor',
+					$today,
+					'visitor'
 				)
 			);
 		}

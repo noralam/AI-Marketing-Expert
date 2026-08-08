@@ -121,36 +121,71 @@ const SearchableSelect = ( { label, value, options, onChange, placeholder } ) =>
 };
 
 const StepSettingsFields = ( { actionName, settings, onChange, campaigns, lists, tags } ) => {
-	const set = ( key, val ) => onChange( { ...settings, [ key ]: val } );
+	// Accepts ( key, value ) or a partial object, so a source switch can clear
+	// the other source's fields in one update instead of racing two setState calls.
+	const set = ( key, val ) => onChange(
+		'object' === typeof key && null !== key
+			? { ...settings, ...key }
+			: { ...settings, [ key ]: val }
+	);
 
 	const campaignOpts = ( campaigns || [] ).map( ( c ) => ( { value: c.id, label: `#${ c.id } \u2014 ${ c.title || c.email_subject || __( 'Untitled', 'ai-marketing-expert' ) }` } ) );
 	const listOpts = ( lists || [] ).map( ( l ) => ( { value: l.id, label: `#${ l.id } \u2014 ${ l.title }` } ) );
 	const tagOpts = ( tags || [] ).map( ( t ) => ( { value: t.id, label: `#${ t.id } \u2014 ${ t.title }` } ) );
 
 	switch ( actionName ) {
-		case 'send_email':
+		case 'send_email': {
+			// Legacy steps have no email_source; infer it from what they stored so
+			// an existing automation keeps sending the same email after upgrade.
+			const emailSource = settings.email_source || ( settings.campaign_id ? 'campaign' : 'plain_text' );
 			return (
 				<>
-					<div className="aime-premium-form-group">
-						<label className="aime-premium-form-label">{ __( 'Email Subject', 'ai-marketing-expert' ) }</label>
-						<input className="aime-premium-input" value={ settings.email_subject || '' } onChange={ ( e ) => set( 'email_subject', e.target.value ) } placeholder={ __( 'e.g. Welcome to our newsletter!', 'ai-marketing-expert' ) } />
-					</div>
-					<TextareaControl
-						label={ __( 'Email Body', 'ai-marketing-expert' ) }
-						value={ settings.email_body || '' }
-						onChange={ ( v ) => set( 'email_body', v ) }
-						rows={ 8 }
+					<SelectControl
+						label={ __( 'Email Source', 'ai-marketing-expert' ) }
+						value={ emailSource }
+						options={ [
+							{ value: 'plain_text', label: __( 'Write email inline', 'ai-marketing-expert' ) },
+							{ value: 'campaign', label: __( 'Use an existing campaign', 'ai-marketing-expert' ) },
+						] }
+						onChange={ ( v ) => {
+							// Clear the other source's fields so only one email can ever be built.
+							if ( 'campaign' === v ) {
+								set( { email_source: v, email_subject: '', email_body: '' } );
+							} else {
+								set( { email_source: v, campaign_id: '' } );
+							}
+						} }
+						help={ 'campaign' === emailSource
+							? __( 'The campaign supplies the subject and body. One email is sent.', 'ai-marketing-expert' )
+							: __( 'Write the subject and body below. One email is sent.', 'ai-marketing-expert' ) }
 						__nextHasNoMarginBottom
 					/>
-					<SearchableSelect
-						label={ __( 'Campaign', 'ai-marketing-expert' ) }
-						value={ settings.campaign_id || '' }
-						options={ campaignOpts }
-						onChange={ ( v ) => set( 'campaign_id', v ) }
-						placeholder={ __( 'Search & select a campaign (optional)', 'ai-marketing-expert' ) }
-					/>
+					{ 'campaign' === emailSource ? (
+						<SearchableSelect
+							label={ __( 'Campaign', 'ai-marketing-expert' ) }
+							value={ settings.campaign_id || '' }
+							options={ campaignOpts }
+							onChange={ ( v ) => set( 'campaign_id', v ) }
+							placeholder={ __( 'Search & select a campaign', 'ai-marketing-expert' ) }
+						/>
+					) : (
+						<>
+							<div className="aime-premium-form-group">
+								<label className="aime-premium-form-label">{ __( 'Email Subject', 'ai-marketing-expert' ) }</label>
+								<input className="aime-premium-input" value={ settings.email_subject || '' } onChange={ ( e ) => set( 'email_subject', e.target.value ) } placeholder={ __( 'e.g. Welcome to our newsletter!', 'ai-marketing-expert' ) } />
+							</div>
+							<TextareaControl
+								label={ __( 'Email Body', 'ai-marketing-expert' ) }
+								value={ settings.email_body || '' }
+								onChange={ ( v ) => set( 'email_body', v ) }
+								rows={ 8 }
+								__nextHasNoMarginBottom
+							/>
+						</>
+					) }
 				</>
 			);
+		}
 		case 'add_tag':
 		case 'remove_tag':
 			return tagOpts.length > 0 ? (

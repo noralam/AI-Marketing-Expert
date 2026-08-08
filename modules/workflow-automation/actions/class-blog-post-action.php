@@ -84,6 +84,18 @@ class BlogPostAction extends BaseAction {
 		$body    = $parsed['body'] ?? ( $result['content'] ?? '' );
 		$excerpt = $parsed['excerpt'] ?? '';
 
+		if ( ! empty( $result['continued'] ) ) {
+			$chain = array_map(
+				fn( $p ) => ( $p['provider'] ?? '?' ) . '/' . ( $p['model'] ?? '?' ),
+				(array) ( $result['providers'] ?? array() )
+			);
+			aime_log( sprintf(
+				'Workflow blog post: article stitched across %s%s.',
+				implode( ' → ', $chain ),
+				! empty( $result['truncated'] ) ? ' (still incomplete)' : ''
+			), 'info', 'workflow-automation' );
+		}
+
 		// Swap AI image placeholders for stock photos (fail-soft; also strips
 		// leftover placeholders when the feature is off or unconfigured).
 		if ( class_exists( $stock_class ) ) {

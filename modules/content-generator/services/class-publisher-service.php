@@ -107,7 +107,7 @@ class PublisherService {
 		if ( $clean_content && $clean_content !== $article->content ) {
 			$wpdb->update(
 				$table,
-				array( 'content' => wp_kses_post( $clean_content ), 'updated_at' => current_time( 'mysql', true ) ),
+				array( 'content' => aime_kses_article( $clean_content ), 'updated_at' => current_time( 'mysql', true ) ),
 				array( 'id' => $article_id ),
 				array( '%s', '%s' ),
 				array( '%d' )
@@ -117,7 +117,7 @@ class PublisherService {
 
 		$post_data = array(
 			'post_title'   => sanitize_text_field( $article->title ),
-			'post_content' => wp_kses_post( $article->content ),
+			'post_content' => aime_kses_article( $article->content ),
 			'post_excerpt' => sanitize_text_field( $article->excerpt ?? '' ),
 			'post_status'  => $post_status,
 			'post_type'    => $post_type,

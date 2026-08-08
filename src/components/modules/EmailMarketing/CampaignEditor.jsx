@@ -68,18 +68,18 @@ const stripTemplateFooterMarkup = ( body = '' ) => body
 	.replace( /<div\b[^>]*>\s*(?:[^<]*&bull;\s*)?<a\b[^>]*href=["'][^"']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"']*["'][^>]*>.*?<\/a>(?:\s*from these emails?)?\s*<\/div>/gis, '' )
 	.replace( /<a\b[^>]*href=["'][^"']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"']*["'][^>]*>.*?<\/a>/gis, '' );
 
-const buildPreviewEmailHtml = ( body = '', settings = {} ) => {
+const buildPreviewEmailHtml = ( body = '', settings = {}, hasPro = true ) => {
 	const strippedBody = stripTemplateFooterMarkup( body );
 	const footer = settings.email_footer || '';
 	const companyName = settings.company_name || '';
 	const companyAddress = settings.company_address || '';
 	const unsubscribeText = settings.unsubscribe_text || 'Unsubscribe';
 
-	if ( ! footer && ! companyName && ! companyAddress && ! unsubscribeText ) {
-		return strippedBody;
-	}
-
 	const footerParts = [];
+	// Free tier: branding always leads the footer, matching CampaignProcessor.
+	if ( ! hasPro ) {
+		footerParts.push( '<p style="margin:0 0 8px;color:#64748b;font-size:12px">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert</a></p>' );
+	}
 	if ( footer ) {
 		footerParts.push( footer );
 	}
@@ -88,6 +88,10 @@ const buildPreviewEmailHtml = ( body = '', settings = {} ) => {
 	}
 	if ( unsubscribeText ) {
 		footerParts.push( `<p style="margin:8px 0 0"><a href="{{unsubscribe_url}}" style="color:#64748b">${ escapeHtml( unsubscribeText ) }</a></p>` );
+	}
+
+	if ( ! footerParts.length ) {
+		return strippedBody;
 	}
 
 	const footerHtml = `<div class="aime-email-footer" style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;text-align:center">${ footerParts.join( '' ) }</div>`;
@@ -1131,7 +1135,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 											disabled={ ! isAiConfigured() || !! aiLoading }
 											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 										>
-											{ __( '\u2728 AI', 'ai-marketing-expert' ) }
+											{ aiLoading === 'subject_a' ? <><Spinner style={ { marginRight: 4 } } />{ __( '\u2728 ...', 'ai-marketing-expert' ) }</> : __( '\u2728 AI', 'ai-marketing-expert' ) }
 										</button>
 									</div>
 								</div>
@@ -1155,7 +1159,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 											disabled={ ! isAiConfigured() || !! aiLoading }
 											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 										>
-											{ __( '\u2728 AI', 'ai-marketing-expert' ) }
+											{ aiLoading === 'subject_b' ? <><Spinner style={ { marginRight: 4 } } />{ __( '\u2728 ...', 'ai-marketing-expert' ) }</> : __( '\u2728 AI', 'ai-marketing-expert' ) }
 										</button>
 									</div>
 									{ stepErrors.ab_subject && <p className="aime-field-error">{ stepErrors.ab_subject }</p> }
@@ -1546,8 +1550,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	);
 
 	const renderReview = () => {
-		const footerCredit = '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280;font-size:12px;line-height:1.5">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#6b7280;text-decoration:underline">AI Marketing Expert</a></div>';
-		const previewEmailBody = form.email_body ? buildPreviewEmailHtml( `${ form.email_body }${ hasPro ? '' : footerCredit }`, emailSettings ) : '';
+		const previewEmailBody = form.email_body ? buildPreviewEmailHtml( form.email_body, emailSettings, hasPro ) : '';
 		const recipientNames = selectedRecipients
 			.map( ( rid ) => recipientOptions.find( ( o ) => o.id === rid ) )
 			.filter( Boolean )

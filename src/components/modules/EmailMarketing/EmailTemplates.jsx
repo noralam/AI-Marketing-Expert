@@ -95,7 +95,7 @@ const EmailTemplates = ( { onNavigate } ) => {
 		}
 		try {
 			const res = await get( `/email/templates/${ tid }` );
-			setPreviewHtml( res.content || '' );
+			setPreviewHtml( res.preview_content || res.content || '' );
 			setPreviewId( tid );
 		} catch ( e ) { /* */ }
 	};

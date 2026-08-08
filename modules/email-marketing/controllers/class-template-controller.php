@@ -77,6 +77,15 @@ class TemplateController {
 			return new \WP_REST_Response( array( 'message' => __( 'Template not found.', 'ai-marketing-expert' ) ), 404 );
 		}
 		$row = $this->normalize_template_content( $row );
+
+		// Preview must show the same footer a real send appends. Kept in a
+		// separate field so importing the template ("Use This Template") still
+		// copies the bare content — the footer is added at send time.
+		$row->preview_content = \WPSpace\AiMarketingExpert\Modules\EmailMarketing\Services\CampaignProcessor::render_with_footer(
+			(string) ( $row->content ?? '' ),
+			home_url( '/' )
+		);
+
 		return new \WP_REST_Response( $row );
 	}
 

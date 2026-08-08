@@ -1411,6 +1411,424 @@ class AiProvider {
 	}
 
 	/**
+	 * Minimum requested max_tokens before automatic continuation kicks in.
+	 * Short calls (excerpts, meta, chat replies) are never stitched.
+	 */
+	private const CONTINUATION_MIN_TOKENS = 1500;
+
+	/**
+	 * Connections for a task, primary-for-task first.
+	 */
+	private static function sorted_connections( string $task ): array {
+		$connections = self::get_connections();
+
+		usort( $connections, function ( $a, $b ) use ( $task ) {
+			$a_primary = in_array( $task, $a['primary_for'] ?? array(), true );
+			$b_primary = in_array( $task, $b['primary_for'] ?? array(), true );
+			if ( $a_primary && ! $b_primary ) return -1;
+			if ( ! $a_primary && $b_primary ) return 1;
+			return 0;
+		} );
+
+		return $connections;
+	}
+
+	/**
+	 * Resolve the decrypted API key and model for a connection + task.
+	 *
+	 * @return array{api_key:string,model:string,error:string}
+	 */
+	private static function resolve_connection( array $conn, string $task ): array {
+		$model_key = $task . '_model';
+		$model     = $conn[ $model_key ] ?? '';
+		if ( 'custom' === $model ) {
+			$model = $conn[ 'custom_' . $model_key ] ?? '';
+		}
+
+		$name    = $conn['name'] ?? ( $conn['provider'] ?? '' );
+		$api_key = Encryption::decrypt( $conn['api_key'] ?? '' );
+
+		if ( empty( $api_key ) ) {
+			return array(
+				'api_key' => '',
+				'model'   => '',
+				'error'   => sprintf(
+					/* translators: %s: connection name */
+					__( '[%s] Stored API key could not be decrypted — security keys may have changed. Re-enter the API key in Settings → AI Providers.', 'ai-marketing-expert' ),
+					$name
+				),
+			);
+		}
+
+		if ( empty( $model ) ) {
+			return array(
+				'api_key' => '',
+				'model'   => '',
+				'error'   => sprintf(
+					/* translators: 1: connection name, 2: task type */
+					__( '[%1$s] No %2$s model selected for this connection.', 'ai-marketing-expert' ),
+					$name,
+					$task
+				),
+			);
+		}
+
+		return array( 'api_key' => $api_key, 'model' => $model, 'error' => '' );
+	}
+
+	/**
+	 * Dispatch one text call to the adapter for this connection's provider.
+	 *
+	 * @return array|null Adapter result, or null for an unknown provider id.
+	 */
+	private static function dispatch_text( array $conn, string $api_key, string $model, string $prompt, int $max_tokens, array $options ): ?array {
+		$label = sprintf( '%s / %s', $conn['name'] ?? $conn['provider'], $model );
+
+		switch ( $conn['provider'] ) {
+			case 'google_ai':
+				return self::with_retry( fn() => self::generate_google( $api_key, $model, $prompt, $max_tokens, $options ), $label );
+			case 'openai':
+				return self::with_retry( fn() => self::generate_openai( $api_key, $model, $prompt, $max_tokens, $options ), $label );
+			case 'openrouter':
+				return self::with_retry( fn() => self::generate_openrouter( $api_key, $model, $prompt, $max_tokens, $options ), $label );
+			case 'anthropic':
+				return self::with_retry( fn() => self::generate_anthropic( $api_key, $model, $prompt, $max_tokens, $options ), $label );
+			case 'custom':
+				return self::with_retry( fn() => self::generate_custom( $conn, $api_key, $model, $prompt, $max_tokens, $options ), $label );
+		}
+
+		return null;
+	}
+
+	/**
+	 * How many continuation rounds are allowed in the current context.
+	 *
+	 * Cron / WP-CLI can afford several extra HTTP calls (and a backoff sleep);
+	 * a web request gets exactly one so a PHP worker is never tied up.
+	 */
+	private static function continuation_rounds_allowed(): int {
+		$rounds = self::is_background_context() ? 3 : 1;
+
+		/**
+		 * Filter the maximum number of continuation rounds per generation.
+		 *
+		 * @param int  $rounds     Default rounds.
+		 * @param bool $background Whether this is a cron / CLI request.
+		 */
+		return max( 0, (int) apply_filters( 'aime_ai_max_continuation_rounds', $rounds, self::is_background_context() ) );
+	}
+
+	/**
+	 * Join a truncated completion with its continuation, removing any overlap
+	 * and whatever preamble the continuing model insisted on adding.
+	 *
+	 * @param string $head Text generated so far.
+	 * @param string $tail Continuation text.
+	 * @return string
+	 */
+	public static function stitch_text( string $head, string $tail ): string {
+		$tail = function_exists( 'aime_strip_thinking_text' ) ? aime_strip_thinking_text( $tail ) : $tail;
+		$tail = (string) preg_replace( '/^\s*```(?:json|html)?\s*/i', '', $tail );
+		$tail = (string) preg_replace( '/\s*```\s*$/', '', $tail );
+		// Drop conversational preambles ("Sure!", "Continuing where it left off:").
+		// Two passes so "Sure!\nContinuing:\n<h2>" is fully cleared, and never
+		// so far that the whole continuation disappears.
+		for ( $i = 0; $i < 2; $i++ ) {
+			$stripped = (string) preg_replace(
+				'/^\s*(?:sure|certainly|okay|ok|of course|absolutely|got it|here(?:\'s| is)\b|continuing\b|continued\b)[^\n]*\R+/i',
+				'',
+				$tail,
+				1
+			);
+			if ( $stripped === $tail || '' === trim( $stripped ) ) {
+				break;
+			}
+			$tail = $stripped;
+		}
+		$tail = ltrim( $tail );
+
+		if ( '' === $tail ) {
+			return $head;
+		}
+		if ( '' === $head ) {
+			return $tail;
+		}
+
+		// Strip the longest suffix of $head that the continuation repeated.
+		$max = min( 300, strlen( $head ), strlen( $tail ) );
+		for ( $len = $max; $len >= 24; $len-- ) {
+			if ( 0 === substr_compare( $head, substr( $tail, 0, $len ), -$len, $len ) ) {
+				$tail = ltrim( substr( $tail, $len ) );
+				break;
+			}
+		}
+
+		if ( '' === $tail ) {
+			return $head;
+		}
+
+		$head_trimmed = rtrim( $head );
+		$block_edge   = '<' === $tail[0] || '>' === substr( $head_trimmed, -1 );
+
+		return $head_trimmed . ( $block_edge ? "\n" : ' ' ) . $tail;
+	}
+
+	/**
+	 * Build the prompt that asks a (possibly different) provider to finish
+	 * a response another provider started.
+	 */
+	private static function build_continuation_prompt( string $original_prompt, string $partial, string $format_hint = '' ): string {
+		$tail = function_exists( 'mb_substr' ) ? mb_substr( $partial, -1500 ) : substr( $partial, -1500 );
+		$hint = '' !== $format_hint ? $format_hint : 'exactly the same format as the text above';
+
+		return "You are finishing a response that another model started but could not complete "
+			. "because it ran out of output budget.\n\n"
+			. "=== ORIGINAL TASK ===\n{$original_prompt}\n\n"
+			. "=== RESPONSE SO FAR (this is the ending of it; it may stop mid-sentence) ===\n...{$tail}\n\n"
+			. "=== YOUR JOB ===\n"
+			. "Continue from exactly where the text above stops, in {$hint}.\n"
+			. "- Do NOT repeat any text that already exists.\n"
+			. "- Do NOT restate the beginning, summarize, or add a preamble, apology, or commentary.\n"
+			. "- If the text stops mid-sentence or mid-word, resume mid-sentence so the halves join seamlessly.\n"
+			. "- Bring the response to a proper close once the task is fully covered.\n"
+			. "Output only the missing remainder.";
+	}
+
+	/**
+	 * Choose the connection that should write the next chunk.
+	 *
+	 * Prefers a healthy connection that has not been used yet; falls back to
+	 * the most recently used one so single-connection sites still continue.
+	 */
+	private static function pick_continuation_connection( array $connections, array $used_ids, bool $allow_reuse ): ?array {
+		foreach ( $connections as $conn ) {
+			if ( empty( $conn['enabled'] ) || empty( $conn['api_key'] ) || ! self::is_connection_available( $conn ) ) {
+				continue;
+			}
+			if ( in_array( $conn['id'] ?? '', $used_ids, true ) ) {
+				continue;
+			}
+			return $conn;
+		}
+
+		if ( ! $allow_reuse || empty( $used_ids ) ) {
+			return null;
+		}
+
+		$last = (string) end( $used_ids );
+		foreach ( $connections as $conn ) {
+			if ( ( $conn['id'] ?? '' ) === $last && ! empty( $conn['enabled'] ) && ! empty( $conn['api_key'] ) ) {
+				return $conn;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Seconds to wait before hitting the same connection again.
+	 *
+	 * @return int Seconds (0 = go now), or -1 when reuse is pointless
+	 *             (quota exhausted / bad key — waiting will not help).
+	 */
+	private static function reuse_wait_seconds( string $conn_id ): int {
+		$health = self::get_connection_health( $conn_id );
+
+		if ( in_array( $health['reason'] ?? '', array( 'quota_exceeded', 'invalid_key' ), true ) ) {
+			return -1;
+		}
+
+		$retry_after = absint( $health['retry_after'] ?? 0 );
+		if ( $retry_after <= 0 ) {
+			return 0;
+		}
+
+		return max( 0, min( 60, $retry_after - time() ) );
+	}
+
+	/**
+	 * Run a single continuation round against the next eligible connection.
+	 *
+	 * @param string $partial         Text produced so far.
+	 * @param string $instructions    Original task prompt.
+	 * @param int    $max_tokens      Token budget for this round.
+	 * @param array  $options {
+	 *     @type string   $task                 Task type. Default 'text'.
+	 *     @type string[] $used_connection_ids  Connections already used.
+	 *     @type string   $format_hint          e.g. "HTML only (p, h2, h3, ul, li)".
+	 * }
+	 * @return array { success, content, provider, model, connection_id, truncated, finish, message }
+	 */
+	public static function continue_text( string $partial, string $instructions, int $max_tokens = 2048, array $options = array() ): array {
+		$task = (string) ( $options['task'] ?? 'text' );
+
+		return self::continue_once(
+			$partial,
+			$instructions,
+			$task,
+			$max_tokens,
+			$options,
+			self::sorted_connections( $task ),
+			array_values( array_filter( (array) ( $options['used_connection_ids'] ?? array() ) ) ),
+			(string) ( $options['format_hint'] ?? '' )
+		);
+	}
+
+	private static function continue_once( string $partial, string $instructions, string $task, int $max_tokens, array $options, array $connections, array $used_ids, string $format_hint ): array {
+		$failure = array(
+			'success'       => false,
+			'content'       => '',
+			'provider'      => '',
+			'model'         => '',
+			'connection_id' => '',
+			'truncated'     => false,
+			'finish'        => 'unknown',
+			'message'       => '',
+		);
+
+		$conn = self::pick_continuation_connection( $connections, $used_ids, true );
+		if ( ! $conn ) {
+			$failure['message'] = __( 'No AI connection is available to continue the response.', 'ai-marketing-expert' );
+			return $failure;
+		}
+
+		$conn_id = (string) ( $conn['id'] ?? '' );
+
+		if ( in_array( $conn_id, $used_ids, true ) ) {
+			// Single-connection site: reuse the same provider, but only if
+			// waiting can actually help.
+			$wait = self::reuse_wait_seconds( $conn_id );
+
+			if ( $wait < 0 ) {
+				$failure['message'] = __( 'The only available AI connection is out of quota — cannot continue.', 'ai-marketing-expert' );
+				return $failure;
+			}
+
+			if ( $wait > 0 ) {
+				if ( ! self::is_background_context() ) {
+					// Never sleep() in a web request — a blocked PHP worker is
+					// worse than a shorter article.
+					$failure['message'] = __( 'Rate limited and no second provider available. Continue this generation from the background queue.', 'ai-marketing-expert' );
+					return $failure;
+				}
+				aime_log( sprintf( 'Continuation: reusing the same connection after a %ds cooldown.', $wait ), 'info', 'ai' );
+				sleep( $wait );
+			}
+		}
+
+		$resolved = self::resolve_connection( $conn, $task );
+		if ( '' !== $resolved['error'] ) {
+			$failure['message'] = $resolved['error'];
+			return $failure;
+		}
+
+		// A continuation is a fragment, never a standalone JSON document.
+		$round_options = $options;
+		unset( $round_options['json_mode'], $round_options['continuation'] );
+
+		$result = self::dispatch_text(
+			$conn,
+			$resolved['api_key'],
+			$resolved['model'],
+			self::build_continuation_prompt( $instructions, $partial, $format_hint ),
+			$max_tokens,
+			$round_options
+		);
+
+		if ( ! $result || empty( $result['success'] ) ) {
+			if ( $result ) {
+				self::mark_connection_health( $conn, self::classify_failure( $result ), $result['message'] ?? '' );
+				UsageTracker::record( $conn, $resolved['model'], $task, $result['usage'] ?? array(), false );
+				$failure['message'] = self::shorten_api_error( $result['message'] ?? '' );
+			}
+			return $failure;
+		}
+
+		self::clear_connection_health( $conn_id );
+		UsageTracker::record( $conn, $resolved['model'], $task, $result['usage'] ?? array(), true );
+
+		return array(
+			'success'       => true,
+			'content'       => (string) $result['content'],
+			'provider'      => (string) $conn['provider'],
+			'model'         => $resolved['model'],
+			'connection_id' => $conn_id,
+			'truncated'     => ! empty( $result['truncated'] ),
+			'finish'        => (string) ( $result['finish'] ?? 'unknown' ),
+			'message'       => '',
+			'usage'         => $result['usage'] ?? array(),
+		);
+	}
+
+	/**
+	 * Stitch continuation rounds onto a truncated result until it is complete
+	 * or the round budget runs out.
+	 */
+	private static function maybe_continue( array $result, string $prompt, string $task, int $max_tokens, array $options, array $connections, float $started_at ): array {
+		$mode = (string) ( $options['continuation'] ?? 'auto' );
+
+		if ( 'none' === $mode || 'text' !== $task || empty( $result['truncated'] ) ) {
+			return $result;
+		}
+		if ( 'auto' === $mode && $max_tokens < self::CONTINUATION_MIN_TOKENS ) {
+			return $result;
+		}
+
+		$rounds   = self::continuation_rounds_allowed();
+		$used_ids = array_filter( array( (string) ( $result['connection_id'] ?? '' ) ) );
+
+		for ( $round = 1; $round <= $rounds; $round++ ) {
+			if ( ! self::is_background_context() && ( microtime( true ) - $started_at ) > 45 ) {
+				aime_log( 'Continuation skipped: web request already past 45s.', 'warning', 'ai' );
+				break;
+			}
+
+			$next = self::continue_once(
+				(string) $result['content'],
+				$prompt,
+				$task,
+				$max_tokens,
+				$options,
+				$connections,
+				$used_ids,
+				(string) ( $options['format_hint'] ?? '' )
+			);
+
+			if ( empty( $next['success'] ) ) {
+				if ( '' !== $next['message'] ) {
+					aime_log( 'Continuation stopped: ' . $next['message'], 'warning', 'ai' );
+				}
+				break;
+			}
+
+			$before            = strlen( (string) $result['content'] );
+			$result['content'] = self::stitch_text( (string) $result['content'], $next['content'] );
+			$added             = strlen( (string) $result['content'] ) - $before;
+
+			$used_ids[]            = $next['connection_id'];
+			$result['providers'][] = array( 'provider' => $next['provider'], 'model' => $next['model'], 'round' => $round );
+			$result['continued']   = $round;
+			$result['truncated']   = ! empty( $next['truncated'] );
+			$result['finish']      = $next['finish'];
+
+			aime_log( sprintf(
+				'Continuation round %d written by %s / %s (+%d chars, still truncated: %s).',
+				$round,
+				$next['provider'],
+				$next['model'],
+				$added,
+				$result['truncated'] ? 'yes' : 'no'
+			), 'info', 'ai' );
+
+			if ( ! $result['truncated'] || $added < 50 ) {
+				break;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Generate text content using AI connections (tries primary, then fallbacks).
 	 *
 	 * @param string $prompt     The prompt to send.
@@ -1419,16 +1837,17 @@ class AiProvider {
 	 * @return array { success: bool, content: string, provider: string, model: string }
 	 */
 	public static function generate( string $prompt, string $task = 'text', int $max_tokens = 2048, array $options = array() ): array {
-		$connections = self::get_connections();
-
-		// Sort: primary for this task first.
-		usort( $connections, function ( $a, $b ) use ( $task ) {
-			$a_primary = in_array( $task, $a['primary_for'] ?? array(), true );
-			$b_primary = in_array( $task, $b['primary_for'] ?? array(), true );
-			if ( $a_primary && ! $b_primary ) return -1;
-			if ( ! $a_primary && $b_primary ) return 1;
-			return 0;
-		} );
+		/**
+		 * Filter the max output tokens requested from the provider.
+		 * Lowering this is the simplest way to reproduce truncation in testing.
+		 *
+		 * @param int    $max_tokens Requested tokens.
+		 * @param string $task       Task type.
+		 * @param array  $options    Call options.
+		 */
+		$max_tokens  = max( 1, (int) apply_filters( 'aime_ai_max_tokens', $max_tokens, $task, $options ) );
+		$connections = self::sorted_connections( $task );
+		$started_at  = microtime( true );
 
 		$errors = array();
 		$tried  = 0;
@@ -1438,61 +1857,33 @@ class AiProvider {
 				continue;
 			}
 
-			$model_key = $task . '_model';
-			$model     = $conn[ $model_key ] ?? '';
-			if ( 'custom' === $model ) {
-				$model = $conn[ 'custom_' . $model_key ] ?? '';
-			}
-
-			$api_key = Encryption::decrypt( $conn['api_key'] );
-			if ( empty( $api_key ) ) {
-				$errors[] = sprintf(
-					/* translators: %s: connection name */
-					__( '[%s] Stored API key could not be decrypted — security keys may have changed. Re-enter the API key in Settings → AI Providers.', 'ai-marketing-expert' ),
-					$conn['name'] ?? $conn['provider']
-				);
-				continue;
-			}
-			if ( empty( $model ) ) {
-				$errors[] = sprintf(
-					/* translators: 1: connection name, 2: task type */
-					__( '[%1$s] No %2$s model selected for this connection.', 'ai-marketing-expert' ),
-					$conn['name'] ?? $conn['provider'],
-					$task
-				);
+			$resolved = self::resolve_connection( $conn, $task );
+			if ( '' !== $resolved['error'] ) {
+				$errors[] = $resolved['error'];
 				continue;
 			}
 
 			++$tried;
 
-			$result = null;
 			$provider_id = $conn['provider'];
-			$call_label  = sprintf( '%s / %s', $conn['name'] ?? $provider_id, $model );
-
-			switch ( $provider_id ) {
-				case 'google_ai':
-					$result = self::with_retry( fn() => self::generate_google( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
-					break;
-				case 'openai':
-					$result = self::with_retry( fn() => self::generate_openai( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
-					break;
-				case 'openrouter':
-					$result = self::with_retry( fn() => self::generate_openrouter( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
-					break;
-				case 'anthropic':
-					$result = self::with_retry( fn() => self::generate_anthropic( $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
-					break;
-				case 'custom':
-					$result = self::with_retry( fn() => self::generate_custom( $conn, $api_key, $model, $prompt, $max_tokens, $options ), $call_label );
-					break;
-			}
+			$model       = $resolved['model'];
+			$result      = self::dispatch_text( $conn, $resolved['api_key'], $model, $prompt, $max_tokens, $options );
 
 			if ( $result && $result['success'] ) {
 				self::clear_connection_health( $conn['id'] ?? '' );
-				$result['provider'] = $provider_id;
-				$result['model']    = $model;
 				UsageTracker::record( $conn, $model, $task, $result['usage'] ?? array(), true );
-				return $result;
+
+				$result['provider']      = $provider_id;
+				$result['model']         = $model;
+				$result['connection_id'] = (string) ( $conn['id'] ?? '' );
+				$result['continued']     = 0;
+				$result['providers']     = array(
+					array( 'provider' => $provider_id, 'model' => $model, 'round' => 0 ),
+				);
+
+				// Truncated mid-answer? Let another provider (or this one after a
+				// backoff) write the rest instead of throwing the work away.
+				return self::maybe_continue( $result, $prompt, $task, $max_tokens, $options, $connections, $started_at );
 			}
 
 			if ( $result && ! $result['success'] ) {
@@ -2006,6 +2397,111 @@ class AiProvider {
 	 * @param string $format 'openai' | 'google' | 'anthropic'.
 	 * @return array { prompt_tokens: int, completion_tokens: int }
 	 */
+	/**
+	 * Normalize a provider-specific finish / stop reason into a shared vocabulary.
+	 *
+	 * @param string $raw    Raw reason from the API ('' when the provider omits it).
+	 * @param string $format Provider family: google | anthropic | openai.
+	 * @return string One of: stop, length, filter, unknown.
+	 */
+	private static function normalize_finish( string $raw, string $format ): string {
+		$raw = strtoupper( trim( $raw ) );
+		if ( '' === $raw ) {
+			return 'unknown';
+		}
+
+		switch ( $format ) {
+			case 'google':
+				if ( 'MAX_TOKENS' === $raw ) {
+					return 'length';
+				}
+				if ( 'STOP' === $raw ) {
+					return 'stop';
+				}
+				if ( in_array( $raw, array( 'SAFETY', 'RECITATION', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII' ), true ) ) {
+					return 'filter';
+				}
+				return 'unknown';
+
+			case 'anthropic':
+				if ( 'MAX_TOKENS' === $raw ) {
+					return 'length';
+				}
+				if ( in_array( $raw, array( 'END_TURN', 'STOP_SEQUENCE' ), true ) ) {
+					return 'stop';
+				}
+				if ( 'REFUSAL' === $raw ) {
+					return 'filter';
+				}
+				return 'unknown';
+
+			default: // openai / openrouter / custom-openai.
+				if ( 'LENGTH' === $raw ) {
+					return 'length';
+				}
+				if ( 'STOP' === $raw ) {
+					return 'stop';
+				}
+				if ( 'CONTENT_FILTER' === $raw ) {
+					return 'filter';
+				}
+				return 'unknown';
+		}
+	}
+
+	/**
+	 * Heuristic truncation check, used only when a provider omits its finish
+	 * reason. A completion that was cut off mid-flight almost always ends
+	 * inside an unclosed JSON object, inside an HTML tag, or mid-sentence.
+	 *
+	 * @param string $text Completion text.
+	 * @return bool
+	 */
+	private static function looks_truncated( string $text ): bool {
+		$text = rtrim( $text );
+		if ( '' === $text ) {
+			return false;
+		}
+
+		// Unbalanced JSON envelope — cut off mid-object.
+		if ( '{' === $text[0] && substr_count( $text, '{' ) > substr_count( $text, '}' ) ) {
+			return true;
+		}
+
+		// Ends inside an unfinished HTML tag.
+		if ( preg_match( '/<[a-z][^>]*$/i', $text ) ) {
+			return true;
+		}
+
+		// Ends on a character no complete sentence or block ever ends with.
+		return ! preg_match( '/(?:[.!?;:)\]}"\']|>)$/u', $text );
+	}
+
+	/**
+	 * Build a successful text-generation result with normalized completion state.
+	 *
+	 * @param string $text       Completion text.
+	 * @param array  $body       Decoded API response body (for usage extraction).
+	 * @param string $format     Provider family: google | anthropic | openai.
+	 * @param string $raw_finish Raw finish / stop reason from the API.
+	 * @return array
+	 */
+	private static function text_result( string $text, array $body, string $format, string $raw_finish ): array {
+		$finish = self::normalize_finish( $raw_finish, $format );
+
+		if ( 'unknown' === $finish && self::looks_truncated( $text ) ) {
+			$finish = 'length';
+		}
+
+		return array(
+			'success'   => true,
+			'content'   => $text,
+			'usage'     => self::extract_usage( $body, $format ),
+			'finish'    => $finish,
+			'truncated' => 'length' === $finish,
+		);
+	}
+
 	private static function extract_usage( array $body, string $format ): array {
 		switch ( $format ) {
 			case 'google':
@@ -2062,8 +2558,37 @@ class AiProvider {
 			return self::http_failure( $response, $body['error']['message'] ?? __( 'Google AI error.', 'ai-marketing-expert' ) );
 		}
 
-		$text = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'google' ) );
+		$candidate  = $body['candidates'][0] ?? array();
+		$raw_finish = (string) ( $candidate['finishReason'] ?? '' );
+
+		// Gemini can split a single answer across several parts.
+		$text = '';
+		foreach ( (array) ( $candidate['content']['parts'] ?? array() ) as $part ) {
+			if ( isset( $part['text'] ) ) {
+				$text .= (string) $part['text'];
+			}
+		}
+
+		if ( '' === trim( $text ) ) {
+			if ( 'filter' === self::normalize_finish( $raw_finish, 'google' ) ) {
+				return array(
+					'success' => false,
+					'content' => '',
+					'message' => __( 'The model blocked this request (safety filter). Try rewording the topic or switching model.', 'ai-marketing-expert' ),
+				);
+			}
+			return array(
+				'success' => false,
+				'content' => '',
+				'message' => sprintf(
+					/* translators: %s: the finishReason value returned by the Google AI API. */
+					__( 'Google AI returned no content (finish reason: %s).', 'ai-marketing-expert' ),
+					'' !== $raw_finish ? $raw_finish : 'none'
+				),
+			);
+		}
+
+		return self::text_result( $text, (array) $body, 'google', $raw_finish );
 	}
 
 	private static function generate_openrouter( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
@@ -2118,7 +2643,7 @@ class AiProvider {
 			return array( 'success' => false, 'content' => '', 'message' => $reason );
 		}
 
-		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
+		return self::text_result( $text, (array) $body, 'openai', $finish_reason );
 	}
 
 	/* ================================================================
@@ -2182,8 +2707,21 @@ class AiProvider {
 			return self::http_failure( $response, $body['error']['message'] ?? __( 'OpenAI error.', 'ai-marketing-expert' ) );
 		}
 
-		$text = $body['choices'][0]['message']['content'] ?? '';
-		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
+		$choice     = $body['choices'][0] ?? array();
+		$raw_finish = (string) ( $choice['finish_reason'] ?? '' );
+		$text       = isset( $choice['message']['content'] ) ? (string) $choice['message']['content'] : '';
+
+		if ( '' === trim( $text ) ) {
+			return array(
+				'success' => false,
+				'content' => '',
+				'message' => 'content_filter' === $raw_finish
+					? __( 'The model blocked this request due to its content filter.', 'ai-marketing-expert' )
+					: __( 'Model returned empty content. Try a different model.', 'ai-marketing-expert' ),
+			);
+		}
+
+		return self::text_result( $text, (array) $body, 'openai', $raw_finish );
 	}
 
 	private static function generate_anthropic( string $api_key, string $model, string $prompt, int $max_tokens, array $options = array() ): array {
@@ -2218,7 +2756,7 @@ class AiProvider {
 		}
 
 		$text = $body['content'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => $text, 'usage' => self::extract_usage( (array) $body, 'anthropic' ) );
+		return self::text_result( (string) $text, (array) $body, 'anthropic', (string) ( $body['stop_reason'] ?? '' ) );
 	}
 
 	/* ================================================================
@@ -2330,7 +2868,7 @@ class AiProvider {
 		}
 
 		$text = $body['choices'][0]['message']['content'] ?? '';
-		return array( 'success' => true, 'content' => (string) $text, 'usage' => self::extract_usage( (array) $body, 'openai' ) );
+		return self::text_result( (string) $text, (array) $body, 'openai', (string) ( $body['choices'][0]['finish_reason'] ?? '' ) );
 	}
 
 	private static function generate_custom_anthropic( string $api_key, string $model, string $prompt, int $max_tokens, string $base_url, array $options = array() ): array {
@@ -2371,7 +2909,7 @@ class AiProvider {
 		}
 
 		$text = $body['content'][0]['text'] ?? '';
-		return array( 'success' => true, 'content' => (string) $text, 'usage' => self::extract_usage( (array) $body, 'anthropic' ) );
+		return self::text_result( (string) $text, (array) $body, 'anthropic', (string) ( $body['stop_reason'] ?? '' ) );
 	}
 
 	private static function generate_image_custom_openai( string $api_key, string $model, string $prompt, string $base_url ): array {

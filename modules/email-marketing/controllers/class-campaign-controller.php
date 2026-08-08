@@ -395,6 +395,11 @@ class CampaignController {
 		);
 		$body             = $campaign->email_body ?: sprintf( '<p>%s</p>', esc_html__( 'No content', 'ai-marketing-expert' ) );
 
+		// Test mail must look exactly like a real send, footer included. There is
+		// no subscriber behind a test, so the unsubscribe link points at the
+		// preview-safe site URL rather than a signed per-subscriber token.
+		$body = \WPSpace\AiMarketingExpert\Modules\EmailMarketing\Services\CampaignProcessor::render_with_footer( $body, home_url( '/' ) );
+
 		$sent = wp_mail( $email, $subject, $body, $headers );
 
 		return new \WP_REST_Response( array(

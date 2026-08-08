@@ -211,7 +211,7 @@ class ContentRestController {
 			'callback'            => array( $c, 'improve_content' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
-				'content'     => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'wp_kses_post' ),
+				'content'     => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'aime_kses_article' ),
 				'instruction' => array( 'type' => 'string', 'default' => 'Improve this content for clarity and engagement', 'sanitize_callback' => 'sanitize_text_field' ),
 				'tone'        => array( 'type' => 'string', 'default' => 'professional', 'sanitize_callback' => 'sanitize_text_field' ),
 			),
@@ -223,7 +223,7 @@ class ContentRestController {
 			'callback'            => array( $c, 'seo_optimize' ),
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
-				'content'  => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'wp_kses_post' ),
+				'content'  => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'aime_kses_article' ),
 				'keywords' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) ),
 				'title'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
 			),
@@ -236,7 +236,7 @@ class ContentRestController {
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
 				'title'    => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
-				'content'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+				'content'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'aime_kses_article' ),
 				'keywords' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) ),
 			),
 		) );
@@ -248,7 +248,7 @@ class ContentRestController {
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
 				'title'   => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
-				'content' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+				'content' => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'aime_kses_article' ),
 			),
 		) );
 
@@ -259,7 +259,7 @@ class ContentRestController {
 			'permission_callback' => array( $this, 'admin_permission' ),
 			'args'                => array(
 				'title'      => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
-				'content'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'wp_kses_post' ),
+				'content'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'aime_kses_article' ),
 				'article_id' => array( 'type' => 'integer', 'default' => 0, 'sanitize_callback' => 'absint' ),
 			),
 		) );

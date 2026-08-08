@@ -285,6 +285,20 @@ class SettingsController {
 			'emails_per_second' => 'absint',
 		);
 
+		// Free tier: enforce at least one footer line (custom footer, company info, or unsubscribe text).
+		if ( ! aime_has_pro() ) {
+			$footer = wp_kses_post( $request->get_param( 'email_footer' ) ?? '' );
+			$company_name = sanitize_text_field( $request->get_param( 'company_name' ) ?? '' );
+			$company_address = sanitize_textarea_field( $request->get_param( 'company_address' ) ?? '' );
+			$unsubscribe_text = sanitize_text_field( $request->get_param( 'unsubscribe_text' ) ?? '' );
+
+			$has_footer_content = ! empty( $footer ) || ! empty( $company_name ) || ! empty( $company_address ) || ! empty( $unsubscribe_text );
+
+			if ( ! $has_footer_content ) {
+				return new \WP_REST_Response( array( 'message' => __( 'Free version requires at least one footer line: custom footer text, company name/address, or unsubscribe text.', 'ai-marketing-expert' ) ), 400 );
+			}
+		}
+
 		foreach ( $fields as $key => $sanitizer ) {
 			if ( $request->has_param( $key ) ) {
 				$value = call_user_func( $sanitizer, $request->get_param( $key ) );

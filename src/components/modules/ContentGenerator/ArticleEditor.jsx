@@ -455,7 +455,15 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 			const res = await post( '/content/generate', payload );
 			if ( res?.id ) {
 				// Article is auto-saved by the API. Navigate to edit it.
-				toast( __( 'Article generated successfully! Redirecting...', 'ai-marketing-expert' ) );
+				if ( res.partial ) {
+					// A provider ran out of capacity mid-article — say so instead
+					// of claiming success on a short article.
+					toast( res.message || __( 'Article saved, but it may be incomplete.', 'ai-marketing-expert' ), 'warning' );
+				} else if ( res.continued > 0 ) {
+					toast( res.message || __( 'Article generated successfully! Redirecting...', 'ai-marketing-expert' ), 'success' );
+				} else {
+					toast( __( 'Article generated successfully! Redirecting...', 'ai-marketing-expert' ) );
+				}
 				onNavigate( 'edit-article', { id: res.id } );
 				return;
 			}

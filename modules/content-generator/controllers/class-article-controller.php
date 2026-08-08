@@ -76,15 +76,15 @@ class ArticleController {
 	}
 
 	/**
-	 * Sanitize content HTML: run wp_kses_post and strip browser-injected junk
-	 * (e.g. Google Translate widgets).
+	 * Sanitize content HTML: run aime_kses_article (post tags + embeds) and
+	 * strip browser-injected junk (e.g. Google Translate widgets).
 	 */
 	private static function clean_content( string $content ): string {
 		// Strip Google Translate injected div.
 		$content = preg_replace( '/<div\b[^>]*id\s*=\s*["\']gtx-trans["\'][^>]*>.*?<\/div>/si', '', $content );
 		// Strip any remaining empty divs that may have been wrappers.
 		$content = preg_replace( '/<div\b[^>]*class\s*=\s*["\']gtx-[^"\']*["\'][^>]*>.*?<\/div>/si', '', $content );
-		return wp_kses_post( trim( $content ) );
+		return aime_kses_article( trim( $content ) );
 	}
 
 	/* ── LIST articles ───────────────────────────────── */
@@ -180,7 +180,7 @@ class ArticleController {
 
 		$clean_content = GenerateController::clean_ai_body( (string) $article->content );
 		if ( $clean_content && $clean_content !== $article->content ) {
-			$clean_content = wp_kses_post( $clean_content );
+			$clean_content = aime_kses_article( $clean_content );
 			$wpdb->update(
 				"{$p}aime_content_articles",
 				array( 'content' => $clean_content, 'updated_at' => current_time( 'mysql', true ) ),

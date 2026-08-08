@@ -129,7 +129,7 @@ class GenerateController {
 		$wpdb->insert( "{$p}aime_content_articles", array(
 			'title'             => sanitize_text_field( $article_title ),
 			'slug'              => sanitize_title( $article_title ),
-			'content'           => wp_kses_post( $article_body ),
+			'content'           => aime_kses_article( $article_body ),
 			'excerpt'           => sanitize_textarea_field( $excerpt ),
 			'status'            => 'ready',
 			'post_type'         => $post_type,
@@ -164,7 +164,7 @@ class GenerateController {
 			try {
 				$meta_result = $this->generator->generate_meta(
 					sanitize_text_field( $article_title ),
-					wp_kses_post( $article_body ),
+					aime_kses_article( $article_body ),
 					$keywords
 				);
 				if ( ! empty( $meta_result['success'] ) && ! empty( $meta_result['meta'] ) ) {
@@ -195,7 +195,7 @@ class GenerateController {
 			try {
 				$excerpt_result = $this->generator->generate_excerpt(
 					sanitize_text_field( $article_title ),
-					wp_kses_post( $article_body )
+					aime_kses_article( $article_body )
 				);
 				if ( ! empty( $excerpt_result['success'] ) && ! empty( $excerpt_result['excerpt'] ) ) {
 					$excerpt = sanitize_textarea_field( $excerpt_result['excerpt'] );
@@ -220,6 +220,9 @@ class GenerateController {
 				'topic'     => $topic,
 				'provider'  => $result['provider'] ?? '',
 				'model'     => $result['model'] ?? '',
+				'providers' => $result['providers'] ?? array(),
+				'continued' => (int) ( $result['continued'] ?? 0 ),
+				'partial'   => ! empty( $result['truncated'] ),
 				'words'     => str_word_count( wp_strip_all_tags( $article_body ) ),
 			) ),
 			'created_at' => $now,
@@ -233,13 +236,35 @@ class GenerateController {
 
 		$article = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$p}aime_content_articles WHERE id = %d", $article_id ) );
 
+		$continued = (int) ( $result['continued'] ?? 0 );
+		$partial   = ! empty( $result['truncated'] );
+
+		if ( $continued > 0 ) {
+			aime_log( sprintf(
+				'Article #%d completed across %d provider(s) after the first one stopped early.',
+				$article_id,
+				count( $result['providers'] ?? array() )
+			), 'info', 'content-generator' );
+		}
+
+		if ( $partial ) {
+			$message = __( 'Article saved, but the AI providers ran out of capacity before finishing it. Review the ending in the editor and use Improve Content to extend it.', 'ai-marketing-expert' );
+		} elseif ( $continued > 0 ) {
+			$message = __( 'Article generated successfully (finished by a second AI provider after the first hit its limit).', 'ai-marketing-expert' );
+		} else {
+			$message = __( 'Article generated successfully.', 'ai-marketing-expert' );
+		}
+
 		return new \WP_REST_Response( array(
 			'id'           => $article_id,
 			'article'      => $article,
 			'provider'     => $result['provider'] ?? '',
 			'model'        => $result['model'] ?? '',
+			'providers'    => $result['providers'] ?? array(),
+			'continued'    => $continued,
+			'partial'      => $partial,
 			'image_search' => sanitize_text_field( (string) ( $generated['image_search'] ?? '' ) ),
-			'message'      => __( 'Article generated successfully.', 'ai-marketing-expert' ),
+			'message'      => $message,
 		), 201 );
 	}
 
@@ -294,7 +319,7 @@ class GenerateController {
 			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
 		}
 
-		$content     = wp_kses_post( $request->get_param( 'content' ) );
+		$content     = aime_kses_article( $request->get_param( 'content' ) );
 		$instruction = sanitize_text_field( $request->get_param( 'instruction' ) );
 		$tone        = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
 
@@ -310,7 +335,7 @@ class GenerateController {
 	/* ── SEO OPTIMIZE ────────────────────────────────── */
 
 	public function seo_optimize( \WP_REST_Request $request ): \WP_REST_Response {
-		$content  = wp_kses_post( $request->get_param( 'content' ) );
+		$content  = aime_kses_article( $request->get_param( 'content' ) );
 		$keywords = array_map( 'sanitize_text_field', $request->get_param( 'keywords' ) ?: array() );
 		$title    = sanitize_text_field( $request->get_param( 'title' ) ?: '' );
 
@@ -328,7 +353,7 @@ class GenerateController {
 
 	public function generate_meta( \WP_REST_Request $request ): \WP_REST_Response {
 		$title    = sanitize_text_field( $request->get_param( 'title' ) );
-		$content  = wp_kses_post( $request->get_param( 'content' ) ?: '' );
+		$content  = aime_kses_article( $request->get_param( 'content' ) ?: '' );
 		$keywords = array_map( 'sanitize_text_field', $request->get_param( 'keywords' ) ?: array() );
 
 		$result = $this->generator->generate_meta( $title, $content, $keywords );
@@ -352,7 +377,7 @@ class GenerateController {
 		}
 
 		$title   = sanitize_text_field( $request->get_param( 'title' ) );
-		$content = wp_kses_post( $request->get_param( 'content' ) ?: '' );
+		$content = aime_kses_article( $request->get_param( 'content' ) ?: '' );
 
 		$result = $this->generator->generate_image_prompt( $title, $content );
 
@@ -425,7 +450,7 @@ class GenerateController {
 		}
 
 		$title      = sanitize_text_field( $request->get_param( 'title' ) );
-		$content    = wp_kses_post( $request->get_param( 'content' ) ?: '' );
+		$content    = aime_kses_article( $request->get_param( 'content' ) ?: '' );
 		$article_id = absint( $request->get_param( 'article_id' ) );
 
 		// Build a descriptive prompt from the article.

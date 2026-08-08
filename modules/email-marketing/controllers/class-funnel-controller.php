@@ -348,6 +348,20 @@ class FunnelController {
 			if ( empty( $settings['email_body'] ) && ! empty( $settings['body'] ) ) {
 				$settings['email_body'] = $settings['body'];
 			}
+
+			// One source only. Whatever the client sent, the unused source's
+			// fields are dropped here so a step can never carry both.
+			$source = (string) ( $settings['email_source'] ?? '' );
+			if ( ! in_array( $source, array( 'plain_text', 'campaign' ), true ) ) {
+				$source = ! empty( $settings['campaign_id'] ) ? 'campaign' : 'plain_text';
+			}
+			$settings['email_source'] = $source;
+
+			if ( 'campaign' === $source ) {
+				unset( $settings['email_subject'], $settings['email_body'], $settings['subject'], $settings['body'] );
+			} else {
+				unset( $settings['campaign_id'] );
+			}
 		}
 
 		if ( in_array( $action, array( 'add_tag', 'remove_tag' ), true ) && empty( $settings['tag_ids'] ) && ! empty( $settings['tag_id'] ) ) {

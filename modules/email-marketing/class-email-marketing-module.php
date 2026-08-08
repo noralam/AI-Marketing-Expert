@@ -262,7 +262,21 @@ class EmailMarketingModule extends Module {
 	}
 
 	public function handle_automations(): void {
-		( new Services\FunnelProcessor() )->followUpActions();
+		// Same guard the email queue uses. Without it an overlapping cron tick
+		// could pick up a funnel_subscribers row that another worker had already
+		// sent but not yet advanced, delivering the step's email twice.
+		$lock_key = 'aime_automations_runner_lock';
+		if ( get_transient( $lock_key ) ) {
+			return;
+		}
+
+		set_transient( $lock_key, 1, 5 * MINUTE_IN_SECONDS );
+
+		try {
+			( new Services\FunnelProcessor() )->followUpActions();
+		} finally {
+			delete_transient( $lock_key );
+		}
 	}
 
 	public function add_cron_schedules( array $schedules ): array {
