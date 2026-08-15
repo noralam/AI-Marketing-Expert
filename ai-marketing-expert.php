@@ -29,8 +29,8 @@ define( 'AIME_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AIME_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Schema versions. Bump only when database tables or migrations change.
-define( 'AIME_DB_VERSION', '1.2.3' );
-define( 'AIME_EMAIL_DB_VERSION', '1.2.3' );
+define( 'AIME_DB_VERSION', '1.2.4' );
+define( 'AIME_EMAIL_DB_VERSION', '1.2.4' );
 
 define( 'AIME_MIN_PHP', '8.0' );
 define( 'AIME_MIN_WP', '6.2' );
