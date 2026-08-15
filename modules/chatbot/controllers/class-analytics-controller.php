@@ -27,6 +27,13 @@ class AnalyticsController {
 		$bot_id              = absint( $request->get_param( 'bot_id' ) );
 		$since               = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
 
+		// Only real chats count: the visitor must have written at least one message.
+		// Bot greetings alone do not make a conversation.
+		$real = "EXISTS (
+			SELECT 1 FROM {$messages_table} mv
+			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
+		)";
+
 		if ( $bot_id ) {
 			$agg = $wpdb->get_row( $wpdb->prepare(
 				"SELECT
@@ -44,10 +51,10 @@ class AnalyticsController {
 				$bot_id
 			) );
 
-			$active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status IN ('active','human_takeover') AND bot_id = %d", $conversations_table, $bot_id ) );
-			$human_takeover_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'human_takeover' AND bot_id = %d", $conversations_table, $bot_id ) );
-			$active_status_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'active' AND bot_id = %d", $conversations_table, $bot_id ) );
-			$closed_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'closed' AND bot_id = %d", $conversations_table, $bot_id ) );
+			$active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status IN ('active','human_takeover') AND c.bot_id = %d AND {$real}", $conversations_table, $bot_id ) );
+			$human_takeover_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'human_takeover' AND c.bot_id = %d AND {$real}", $conversations_table, $bot_id ) );
+			$active_status_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'active' AND c.bot_id = %d AND {$real}", $conversations_table, $bot_id ) );
+			$closed_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'closed' AND c.bot_id = %d AND {$real}", $conversations_table, $bot_id ) );
 		} else {
 			$agg = $wpdb->get_row( $wpdb->prepare(
 				"SELECT
@@ -64,10 +71,10 @@ class AnalyticsController {
 				$since
 			) );
 
-			$active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status IN ('active','human_takeover')", $conversations_table ) );
-			$human_takeover_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'human_takeover'", $conversations_table ) );
-			$active_status_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'active'", $conversations_table ) );
-			$closed_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status = 'closed'", $conversations_table ) );
+			$active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status IN ('active','human_takeover') AND {$real}", $conversations_table ) );
+			$human_takeover_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'human_takeover' AND {$real}", $conversations_table ) );
+			$active_status_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'active' AND {$real}", $conversations_table ) );
+			$closed_conversations = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.status = 'closed' AND {$real}", $conversations_table ) );
 		}
 
 		$total_bots = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $bots_table ) );
@@ -79,12 +86,12 @@ class AnalyticsController {
 		}
 
 		$month_start = gmdate( 'Y-m-01 00:00:00' );
-		$conversations_this_month = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE created_at >= %s", $conversations_table, $month_start ) );
+		$conversations_this_month = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i c WHERE c.created_at >= %s AND {$real}", $conversations_table, $month_start ) );
 
 		$bots_list = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT b.id, b.name, b.status, (b.status = 'active') AS is_active,
-						(SELECT COUNT(*) FROM %i c WHERE c.bot_id = b.id) AS conversation_count
+						(SELECT COUNT(*) FROM %i c WHERE c.bot_id = b.id AND {$real}) AS conversation_count
 				 FROM %i b ORDER BY b.created_at DESC",
 				$conversations_table,
 				$bots_table
@@ -95,10 +102,10 @@ class AnalyticsController {
 			$recent_conversations = $wpdb->get_results( $wpdb->prepare(
 				"SELECT c.id, c.visitor_name, c.visitor_email, c.status, c.created_at,
 						b.name AS bot_name,
-						(SELECT COUNT(*) FROM %i m WHERE m.conversation_id = c.id) AS message_count
+						(SELECT COUNT(*) FROM %i m WHERE m.conversation_id = c.id AND m.sender_type != 'system') AS message_count
 				 FROM %i c
 				 LEFT JOIN %i b ON b.id = c.bot_id
-				 WHERE c.bot_id = %d
+				 WHERE c.bot_id = %d AND {$real}
 				 ORDER BY c.created_at DESC LIMIT 10",
 				$messages_table,
 				$conversations_table,
@@ -110,9 +117,10 @@ class AnalyticsController {
 				$wpdb->prepare(
 					"SELECT c.id, c.visitor_name, c.visitor_email, c.status, c.created_at,
 							b.name AS bot_name,
-							(SELECT COUNT(*) FROM %i m WHERE m.conversation_id = c.id) AS message_count
+							(SELECT COUNT(*) FROM %i m WHERE m.conversation_id = c.id AND m.sender_type != 'system') AS message_count
 					 FROM %i c
 					 LEFT JOIN %i b ON b.id = c.bot_id
+					 WHERE {$real}
 					 ORDER BY c.created_at DESC LIMIT 10",
 					$messages_table,
 					$conversations_table,

@@ -574,15 +574,21 @@ class ChatbotModule extends Module {
 			return $empty;
 		}
 
+		// Only real chats count: the visitor must have written at least one message.
+		$real = "EXISTS (
+			SELECT 1 FROM {$p}aime_chatbot_messages mv
+			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
+		)";
+
 		$stats = array(
-			'total_conversations'  => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_chatbot_conversations" ),
+			'total_conversations'  => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_chatbot_conversations c WHERE {$real}" ),
 			'active_conversations' => (int) $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM {$p}aime_chatbot_conversations WHERE status = %s",
+				"SELECT COUNT(*) FROM {$p}aime_chatbot_conversations c WHERE c.status = %s AND {$real}",
 				'active'
 			) ),
-			'total_messages'       => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_chatbot_messages" ),
+			'total_messages'       => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_chatbot_messages WHERE sender_type != 'system'" ),
 			'leads_captured'       => (int) $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM {$p}aime_chatbot_conversations WHERE lead_captured = %d",
+				"SELECT COUNT(*) FROM {$p}aime_chatbot_conversations c WHERE c.lead_captured = %d AND {$real}",
 				1
 			) ),
 			'total_bots'           => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_chatbot_bots" ),

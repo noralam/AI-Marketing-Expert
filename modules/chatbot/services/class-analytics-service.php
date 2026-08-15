@@ -38,6 +38,13 @@ class AnalyticsService {
 		$date_start = $date . ' 00:00:00';
 		$date_end   = $date . ' 23:59:59';
 
+		// Only real chats count: the visitor must have written at least one message.
+		// Bot greetings alone do not make a conversation.
+		$real = "EXISTS (
+			SELECT 1 FROM {$messages_table} mv
+			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
+		)";
+
 		// Get all bots.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation must read the current bot list.
 		$bots = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM %i', $bots_table ) );
@@ -51,7 +58,7 @@ class AnalyticsService {
 			// Total conversations started on this date.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh conversation totals.
 			$total_conversations = (int) $wpdb->get_var( $wpdb->prepare(
-				'SELECT COUNT(*) FROM %i WHERE bot_id = %d AND created_at BETWEEN %s AND %s',
+				"SELECT COUNT(*) FROM %i c WHERE c.bot_id = %d AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );
@@ -59,7 +66,7 @@ class AnalyticsService {
 			// Get conversation IDs for this bot on this date.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh conversation ids.
 			$conv_ids = $wpdb->get_col( $wpdb->prepare(
-				'SELECT id FROM %i WHERE bot_id = %d AND created_at BETWEEN %s AND %s',
+				"SELECT c.id FROM %i c WHERE c.bot_id = %d AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );
@@ -80,7 +87,7 @@ class AnalyticsService {
 						SUM(CASE WHEN sender_type = 'agent' THEN 1 ELSE 0 END) AS human_messages,
 						SUM(CASE WHEN sender_type = 'visitor' THEN 1 ELSE 0 END) AS visitor_messages
 					 FROM %%i
-					 WHERE conversation_id IN (%s)", $placeholders ),
+					 WHERE conversation_id IN (%s) AND sender_type != 'system'", $placeholders ),
 					$messages_table,
 					...$conv_ids
 				) );
@@ -96,7 +103,7 @@ class AnalyticsService {
 			// Leads captured.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh lead totals.
 			$leads_captured = (int) $wpdb->get_var( $wpdb->prepare(
-				'SELECT COUNT(*) FROM %i WHERE bot_id = %d AND lead_captured = 1 AND created_at BETWEEN %s AND %s',
+				"SELECT COUNT(*) FROM %i c WHERE c.bot_id = %d AND c.lead_captured = 1 AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );
@@ -104,7 +111,7 @@ class AnalyticsService {
 			// Human takeovers.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh takeover totals.
 			$human_takeovers = (int) $wpdb->get_var( $wpdb->prepare(
-				'SELECT COUNT(*) FROM %i WHERE bot_id = %d AND agent_id IS NOT NULL AND created_at BETWEEN %s AND %s',
+				"SELECT COUNT(*) FROM %i c WHERE c.bot_id = %d AND c.agent_id IS NOT NULL AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );
@@ -112,7 +119,7 @@ class AnalyticsService {
 			// Average satisfaction.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh satisfaction data.
 			$avg_satisfaction = $wpdb->get_var( $wpdb->prepare(
-				'SELECT AVG(satisfaction_rating) FROM %i WHERE bot_id = %d AND satisfaction_rating IS NOT NULL AND created_at BETWEEN %s AND %s',
+				"SELECT AVG(c.satisfaction_rating) FROM %i c WHERE c.bot_id = %d AND c.satisfaction_rating IS NOT NULL AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );
@@ -120,7 +127,7 @@ class AnalyticsService {
 			// Unique visitors.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Daily aggregation intentionally reads fresh visitor totals.
 			$unique_visitors = (int) $wpdb->get_var( $wpdb->prepare(
-				'SELECT COUNT(DISTINCT visitor_id) FROM %i WHERE bot_id = %d AND created_at BETWEEN %s AND %s',
+				"SELECT COUNT(DISTINCT c.visitor_id) FROM %i c WHERE c.bot_id = %d AND c.created_at BETWEEN %s AND %s AND {$real}",
 				$conversations_table,
 				$bot_id, $date_start, $date_end
 			) );

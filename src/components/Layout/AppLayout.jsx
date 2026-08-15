@@ -42,6 +42,15 @@ const AppLayout = ( { children, sidebar, subHeading, module } ) => {
 				<div className="aime-top-bar-right">
 					{ ! hasPro && <ProUpgradeButton /> }
 					<a
+						href="https://www.youtube.com/watch?v=BiYoVVesf1s"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="aime-top-bar-link"
+					>
+						<span className="dashicons dashicons-video-alt3"></span>
+						{ __( 'Video Tutorial', 'ai-marketing-expert' ) }
+					</a>
+					<a
 						href="https://wpthemespace.com/ai-marketing-expert-documentation/"
 						target="_blank"
 						rel="noopener noreferrer"

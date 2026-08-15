@@ -55,6 +55,12 @@ class ConversationController {
 			$args[] = $like;
 		}
 
+		// Only real chats: the visitor must have written at least one message.
+		$where .= " AND EXISTS (
+			SELECT 1 FROM {$p}aime_chatbot_messages mv
+			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
+		)";
+
 		// Free tier: limit to last 7 days.
 		if ( ! aime_has_pro() ) {
 			$where .= ' AND c.created_at >= %s';
@@ -69,8 +75,8 @@ class ConversationController {
 					c.status, c.agent_id, c.lead_captured, c.satisfaction_rating,
 					c.source, c.page_url, c.is_public, c.started_at, c.ended_at, c.created_at,
 					b.name AS bot_name,
-					(SELECT COUNT(*) FROM {$p}aime_chatbot_messages m WHERE m.conversation_id = c.id) AS message_count,
-					(SELECT m2.content FROM {$p}aime_chatbot_messages m2 WHERE m2.conversation_id = c.id ORDER BY m2.id DESC LIMIT 1) AS last_message
+					(SELECT COUNT(*) FROM {$p}aime_chatbot_messages m WHERE m.conversation_id = c.id AND m.sender_type != 'system') AS message_count,
+					(SELECT m2.content FROM {$p}aime_chatbot_messages m2 WHERE m2.conversation_id = c.id AND m2.sender_type != 'system' ORDER BY m2.id DESC LIMIT 1) AS last_message
 				  FROM {$p}aime_chatbot_conversations c
 				  LEFT JOIN {$p}aime_chatbot_bots b ON b.id = c.bot_id
 				  {$where}
@@ -103,10 +109,14 @@ class ConversationController {
 				c.status, c.agent_id, c.lead_captured, c.page_url, c.updated_at,
 				b.name AS bot_name,
 				(SELECT COUNT(*) FROM {$p}aime_chatbot_messages m WHERE m.conversation_id = c.id AND m.is_read = 0 AND m.sender_type = 'visitor') AS unread_count,
-				(SELECT m2.content FROM {$p}aime_chatbot_messages m2 WHERE m2.conversation_id = c.id ORDER BY m2.id DESC LIMIT 1) AS last_message
+				(SELECT m2.content FROM {$p}aime_chatbot_messages m2 WHERE m2.conversation_id = c.id AND m2.sender_type != 'system' ORDER BY m2.id DESC LIMIT 1) AS last_message
 			 FROM {$p}aime_chatbot_conversations c
 			 LEFT JOIN {$p}aime_chatbot_bots b ON b.id = c.bot_id
 			 WHERE c.status IN ('active','human_takeover')
+			 AND EXISTS (
+				SELECT 1 FROM {$p}aime_chatbot_messages mv
+				WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
+			 )
 			 ORDER BY c.updated_at DESC
 			 LIMIT 100"
 		);
@@ -135,11 +145,11 @@ class ConversationController {
 
 		$conversation->metadata = json_decode( $conversation->metadata ?: '{}', true );
 
-		// Get all messages.
+		// Get all messages except system messages.
 		$conversation->messages = $wpdb->get_results( $wpdb->prepare(
 			"SELECT id, sender_type, sender_id, content, content_type, metadata, is_read, created_at
 			 FROM {$p}aime_chatbot_messages
-			 WHERE conversation_id = %d
+			 WHERE conversation_id = %d AND sender_type != 'system'
 			 ORDER BY created_at ASC",
 			$id
 		) );

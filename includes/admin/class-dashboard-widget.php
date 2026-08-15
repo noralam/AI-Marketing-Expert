@@ -147,10 +147,12 @@ class DashboardWidget {
 			)
 		);
 
+		// Only count visitor messages so welcome/system/AI messages don't inflate the total.
 		$messages_today = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$messages} WHERE created_at >= %s",
-				$today
+				"SELECT COUNT(*) FROM {$messages} WHERE created_at >= %s AND sender_type = %s",
+				$today,
+				'visitor'
 			)
 		);
 

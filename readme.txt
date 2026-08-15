@@ -24,6 +24,8 @@ Whether you are a blogger, a small business owner, a WooCommerce store, or a fre
 
 ---
 
+▶️ **[Watch Video Tutorial](https://www.youtube.com/watch?v=BiYoVVesf1s)**
+
 = ✅ Why AI Marketing Expert? =
 
 * **All-in-one** — Six complete marketing tools in a single WordPress plugin
@@ -339,6 +341,13 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 8. Subscriber management with segmentation
 
 == Changelog ==
+
+= 1.2.1 =
+* Fixed: Email Footer issue
+* Fixed: Email A/B Test Subject B loading spinner
+* Fixed: chatbot Now only counts actual visitor messages.
+* Fixed: Automation double email bug issue fixed
+* Fixed: chatbot widget not displaying on mobile devices due to CSS transform breaking position:fixed full-screen layout.
 
 = 1.2.0 =
 * New: Workflow Automation module for connecting and orchestrating marketing tasks.

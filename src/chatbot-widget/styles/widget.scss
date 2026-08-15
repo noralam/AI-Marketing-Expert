@@ -864,6 +864,13 @@
 
 /* ── Responsive: Full-screen on mobile ───────────── */
 @media screen and (max-width: 767px) {
+	// Remove transform from the widget wrapper so that position:fixed on
+	// .aime-chat-window is relative to the viewport, not the transformed ancestor.
+	// A CSS transform creates a new containing block that breaks fixed positioning.
+	.aime-chat-widget {
+		transform: none !important;
+	}
+
 	.aime-chat-window {
 		position: fixed;
 		top: 0;

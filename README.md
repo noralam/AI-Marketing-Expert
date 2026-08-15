@@ -24,6 +24,8 @@
 
 Whether you're a solo blogger, a small business owner, or an agency managing multiple client sites, AI Marketing Expert gives you enterprise-grade marketing automation without the enterprise price tag.
 
+[![▶️ Watch Video Tutorial](https://img.shields.io/badge/Watch-Video_Tutorial-red?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=BiYoVVesf1s)
+
 ### Why AI Marketing Expert?
 
 - **All-in-One** — No more switching between Mailchimp, Jasper, Semrush, Hootsuite, and Intercom. Everything lives in one plugin.

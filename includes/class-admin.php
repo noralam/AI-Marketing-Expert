@@ -450,19 +450,29 @@ class Admin {
 	 */
 	private function get_active_conversation_count(): int {
 		global $wpdb;
-		$table = $wpdb->prefix . 'aime_chatbot_conversations';
+		$table    = $wpdb->prefix . 'aime_chatbot_conversations';
+		$messages = $wpdb->prefix . 'aime_chatbot_messages';
 
-		// Bail if the table doesn't exist yet (before activation).
-		if ( ! $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) ) {
+		// Bail if the tables don't exist yet (before activation).
+		if ( ! $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) )
+			|| ! $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $messages ) ) ) {
 			return 0;
 		}
 
+		// Count only real chats: the visitor must have written at least one message.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT COUNT(*) FROM %i WHERE status IN (%s, %s)',
+				'SELECT COUNT(*) FROM %i c
+				 WHERE c.status IN (%s, %s)
+				 AND EXISTS (
+					SELECT 1 FROM %i mv
+					WHERE mv.conversation_id = c.id AND mv.sender_type = %s
+				 )',
 				$table,
 				'active',
-				'human_takeover'
+				'human_takeover',
+				$messages,
+				'visitor'
 			)
 		);
 	}
