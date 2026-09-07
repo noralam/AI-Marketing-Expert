@@ -158,15 +158,15 @@ class OAuthService {
 					return array( 'success' => false, 'message' => __( 'Facebook/Instagram App ID not configured.', 'ai-marketing-expert' ) );
 				}
 				$scopes = 'facebook' === $platform
-					? 'pages_manage_posts,pages_read_engagement'
-				: 'instagram_business_basic,instagram_business_content_publish';
+					? 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata'
+					: 'instagram_business_basic,instagram_business_content_publish';
 				$url = add_query_arg( array(
 					'client_id'    => $app_id,
 					'redirect_uri' => rawurlencode( $callback ),
 					'scope'        => $scopes,
 					'state'        => $state,
 					'response_type' => 'code',
-				), 'https://www.facebook.com/v21.0/dialog/oauth' );
+				), 'https://www.facebook.com/v25.0/dialog/oauth' );
 				return array( 'success' => true, 'url' => $url );
 
 			case 'x':
@@ -188,7 +188,7 @@ class OAuthService {
 			case 'instagram':
 				$app_id     = $settings[ $platform . '_app_id' ] ?? '';
 				$app_secret = $settings[ $platform . '_app_secret' ] ?? '';
-				$response   = wp_remote_post( 'https://graph.facebook.com/v21.0/oauth/access_token', array(
+				$response   = wp_remote_post( 'https://graph.facebook.com/v25.0/oauth/access_token', array(
 					'timeout' => 30,
 					'body'    => array(
 						'client_id'     => $app_id,
@@ -215,7 +215,7 @@ class OAuthService {
 					'client_id'     => $app_id,
 					'client_secret' => $app_secret,
 					'fb_exchange_token' => $refresh_token,
-				), 'https://graph.facebook.com/v21.0/oauth/access_token' ), array( 'timeout' => 30 ) );
+				), 'https://graph.facebook.com/v25.0/oauth/access_token' ), array( 'timeout' => 30 ) );
 				return $this->parse_facebook_token_response( $response, $platform );
 
 			default:
@@ -266,7 +266,7 @@ class OAuthService {
 		}
 
 		// Fetch profile info.
-		$profile_response = wp_remote_get( 'https://graph.facebook.com/v21.0/me?fields=id,name,picture&access_token=' . $body['access_token'], array( 'timeout' => 15 ) );
+		$profile_response = wp_remote_get( 'https://graph.facebook.com/v25.0/me?fields=id,name,picture&access_token=' . $body['access_token'], array( 'timeout' => 15 ) );
 		$profile = json_decode( wp_remote_retrieve_body( $profile_response ), true );
 
 		return array(

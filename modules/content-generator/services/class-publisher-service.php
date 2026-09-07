@@ -55,7 +55,11 @@ class PublisherService {
 				continue;
 			}
 
-			if ( 'future' === $post->post_status && strtotime( $post->post_date ) <= current_time( 'timestamp' ) ) {
+			// get_post_time('U', false) returns the post date as a site-timezone
+			// epoch — matching current_time('timestamp'). strtotime() would parse
+			// the same wall-clock string in the SERVER timezone and fire early
+			// wherever the two offsets differ.
+			if ( 'future' === $post->post_status && get_post_time( 'U', false, $post ) <= current_time( 'timestamp' ) ) {
 				wp_publish_post( $post );
 				$post = get_post( (int) $article->wp_post_id );
 			}
@@ -94,8 +98,17 @@ class PublisherService {
 			return array( 'success' => false, 'error' => __( 'Scheduled publish date is required.', 'ai-marketing-expert' ) );
 		}
 
-		if ( 'future' === $post_status && strtotime( $scheduled_at ) <= current_time( 'timestamp' ) ) {
-			return array( 'success' => false, 'error' => __( 'Scheduled publish date must be in the future.', 'ai-marketing-expert' ) );
+		if ( 'future' === $post_status ) {
+			// $scheduled_at is a site-timezone wall-clock string from the client;
+			// anchor it to wp_timezone() rather than the server timezone.
+			try {
+				$scheduled_dt = new \DateTimeImmutable( $scheduled_at, wp_timezone() );
+			} catch ( \Exception $e ) {
+				return array( 'success' => false, 'error' => __( 'Scheduled publish date is invalid.', 'ai-marketing-expert' ) );
+			}
+			if ( $scheduled_dt <= new \DateTimeImmutable( 'now', wp_timezone() ) ) {
+				return array( 'success' => false, 'error' => __( 'Scheduled publish date must be in the future.', 'ai-marketing-expert' ) );
+			}
 		}
 
 		$post_type = sanitize_key( $article->post_type ?? 'post' );
@@ -103,7 +116,7 @@ class PublisherService {
 			$post_type = 'post';
 		}
 
-		$clean_content = GenerateController::clean_ai_body( (string) $article->content );
+		$clean_content = GenerateController::clean_ai_body( (string) $article->content, (string) ( $article->title ?? '' ) );
 		if ( $clean_content && $clean_content !== $article->content ) {
 			$wpdb->update(
 				$table,
@@ -268,34 +281,47 @@ class PublisherService {
 
 	private function set_seo_meta( int $wp_post_id, object $article ): void {
 		$meta_title = sanitize_text_field( $article->meta_title ?? '' );
-		$meta_desc  = sanitize_text_field( $article->meta_description ?? '' );
+		$meta_desc  = sanitize_textarea_field( $article->meta_description ?? '' );
 
-		if ( ! $meta_title && ! $meta_desc ) {
+		// Focus keyword: first article keyword (Brain puts focus first).
+		$focus = '';
+		$kw_raw = json_decode( $article->keywords ?? '[]', true );
+		if ( is_array( $kw_raw ) && ! empty( $kw_raw[0] ) ) {
+			$focus = sanitize_text_field( (string) $kw_raw[0] );
+		}
+
+		if ( ! $meta_title && ! $meta_desc && '' === $focus ) {
 			return;
 		}
 
-		// Yoast SEO.
+		// Canonical store + multi-plugin sync (Yoast, RankMath, AIOSEO,
+		// SEOPress, Slim SEO, TSF) + aime_seo_sync hook for the long tail.
+		if ( class_exists( '\\WPSpace\\AiMarketingExpert\\Modules\\Seo\\Services\\SeoAdapterService' ) ) {
+			\WPSpace\AiMarketingExpert\Modules\Seo\Services\SeoAdapterService::sync( $wp_post_id, $focus, $meta_title, $meta_desc );
+			return;
+		}
+
+		// Fallback when SEO module inactive: legacy direct keys only.
 		if ( $meta_title ) {
 			update_post_meta( $wp_post_id, '_yoast_wpseo_title', $meta_title );
 		}
 		if ( $meta_desc ) {
 			update_post_meta( $wp_post_id, '_yoast_wpseo_metadesc', $meta_desc );
 		}
-
-		// Rank Math.
 		if ( $meta_title ) {
 			update_post_meta( $wp_post_id, 'rank_math_title', $meta_title );
 		}
 		if ( $meta_desc ) {
 			update_post_meta( $wp_post_id, 'rank_math_description', $meta_desc );
 		}
-
-		// All-in-One SEO.
 		if ( $meta_title ) {
 			update_post_meta( $wp_post_id, '_aioseo_title', $meta_title );
 		}
 		if ( $meta_desc ) {
 			update_post_meta( $wp_post_id, '_aioseo_description', $meta_desc );
+		}
+		if ( '' !== $focus ) {
+			update_post_meta( $wp_post_id, 'aime_seo_keyword', $focus );
 		}
 	}
 

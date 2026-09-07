@@ -296,6 +296,56 @@
 	color: #996800;
 }
 
+/* Help / Go Pro footer links — centered between the timestamp and refresh. */
+.aime-dw__footer-links {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.aime-dw__footer-sep {
+	width: 1px;
+	height: 14px;
+	background: #dcdcde;
+}
+
+.aime-dw__ext-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
+	text-decoration: none;
+}
+
+.aime-dw__ext-link .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	line-height: 1.4;
+}
+
+.aime-dw__ext-link--help {
+	color: #2271b1;
+}
+
+.aime-dw__ext-link--help:hover,
+.aime-dw__ext-link--help:focus {
+	color: #135e96;
+}
+
+.aime-dw__ext-link--pro {
+	color: #00a32a;
+}
+
+.aime-dw__ext-link--pro:hover,
+.aime-dw__ext-link--pro:focus {
+	color: #007f17;
+}
+
 .aime-dw__refresh {
 	background: none;
 	border: none;

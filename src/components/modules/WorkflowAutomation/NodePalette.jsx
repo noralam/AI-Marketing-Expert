@@ -18,6 +18,17 @@ const NodePalette = ( { actions, hasPro, onAdd } ) => {
 		( groups[ mod ] = groups[ mod ] || [] ).push( a );
 	} );
 
+	// AI modules first, then alphabetical.
+	const moduleOrder = [ 'AI', __( 'General', 'ai-marketing-expert' ) ];
+	const sortedGroups = Object.entries( groups ).sort( ( [ a ], [ b ] ) => {
+		const idxA = moduleOrder.indexOf( a );
+		const idxB = moduleOrder.indexOf( b );
+		if ( idxA !== -1 && idxB !== -1 ) return idxA - idxB;
+		if ( idxA !== -1 ) return -1;
+		if ( idxB !== -1 ) return 1;
+		return a.localeCompare( b );
+	} );
+
 	const handleClick = ( a ) => {
 		if ( a.is_pro && ! hasPro ) {
 			toast( proFeatureMessage(), 'warning' );
@@ -37,7 +48,7 @@ const NodePalette = ( { actions, hasPro, onAdd } ) => {
 				<p className="aime-wf-palette__hint">{ __( 'Drag onto the canvas or click to add.', 'ai-marketing-expert' ) }</p>
 			</div>
 			<div className="aime-wf-palette__groups">
-				{ Object.entries( groups ).map( ( [ mod, items ] ) => (
+				{ sortedGroups.map( ( [ mod, items ] ) => (
 					<div key={ mod } className="aime-wf-palette__group">
 						<div className="aime-wf-palette__group-label">{ mod }</div>
 						<div className="aime-wf-palette__group-items">

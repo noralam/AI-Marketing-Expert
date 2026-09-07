@@ -75,7 +75,7 @@ class PlatformApiService {
 		switch ( $platform ) {
 			case 'facebook':
 				$response = wp_remote_get(
-					'https://graph.facebook.com/v21.0/me?fields=id,name,picture.width(100).height(100)&access_token=' . $access_token,
+					'https://graph.facebook.com/v25.0/me?fields=id,name,picture.width(100).height(100)&access_token=' . $access_token,
 					array( 'timeout' => 15 )
 				);
 				if ( is_wp_error( $response ) ) {
@@ -206,7 +206,7 @@ class PlatformApiService {
 	 * ----------------------------------------------------------------*/
 
 	private function publish_facebook( string $token, string $page_id, string $content, array $media_urls ): array {
-		$endpoint = "https://graph.facebook.com/v21.0/{$page_id}/feed";
+		$endpoint = "https://graph.facebook.com/v25.0/{$page_id}/feed";
 
 		$body = array(
 			'message'      => $content,
@@ -235,7 +235,7 @@ class PlatformApiService {
 		$photo_ids = array();
 
 		foreach ( $media_urls as $url ) {
-			$response = wp_remote_post( "https://graph.facebook.com/v21.0/{$page_id}/photos", array(
+			$response = wp_remote_post( "https://graph.facebook.com/v25.0/{$page_id}/photos", array(
 				'timeout' => 60,
 				'body'    => array(
 					'url'           => $url,
@@ -266,7 +266,7 @@ class PlatformApiService {
 			$post_body[ "attached_media[{$i}]" ] = wp_json_encode( array( 'media_fbid' => $pid ) );
 		}
 
-		$response = wp_remote_post( "https://graph.facebook.com/v21.0/{$page_id}/feed", array(
+		$response = wp_remote_post( "https://graph.facebook.com/v25.0/{$page_id}/feed", array(
 			'timeout' => 30,
 			'body'    => $post_body,
 		) );
@@ -295,7 +295,7 @@ class PlatformApiService {
 
 	private function validate_facebook_token( string $token ): array {
 		$response = wp_remote_get(
-			'https://graph.facebook.com/v21.0/me?access_token=' . $token,
+			'https://graph.facebook.com/v25.0/me?access_token=' . $token,
 			array( 'timeout' => 10 )
 		);
 

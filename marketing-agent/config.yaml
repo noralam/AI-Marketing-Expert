@@ -1,0 +1,84 @@
+﻿# Autonomous Marketing Agent Configuration - Multi-Platform with Facebook Groups & Pages
+
+general:
+  headless: false
+  session_dir: "sessions"
+  log_level: "INFO"
+  
+behavior:
+  min_delay_seconds: 60
+  max_delay_seconds: 180
+  typing_speed_min_ms: 60
+  typing_speed_max_ms: 140
+  scroll_pause_min_sec: 3
+  scroll_pause_max_sec: 7
+
+loop_schedule:
+  min_interval_hours: 2.1
+  max_interval_hours: 4.8
+
+limits:
+  daily_max_x_posts: 2
+  daily_max_x_likes: 3
+  daily_max_x_follows: 2
+  daily_max_ph_upvotes: 3
+  daily_max_ph_comments: 1
+  daily_max_reddit_comments: 2
+  daily_max_fb_posts: 2
+
+facebook_pages:
+  - name: "AI Marketing Expert"
+    url: "https://www.facebook.com/profile.php?id=61589222139426"
+    language: "english"
+    comment_links:
+      - "https://wordpress.org/plugins/ai-marketing-expert/"
+      - "https://wpthemespace.com/ai-marketing-expert/"
+      - "https://wpthemespace.com/product/ai-marketing-expert/"
+
+facebook_targeting:
+  group_search_queries:
+    - "WordPress Developers"
+    - "WordPress Speed Optimization"
+    - "Elementor Community"
+    - "WordPress Plugins & Themes"
+    - "WordPress SEO & Marketing"
+  post_search_queries:
+    - "#WordPress web design"
+    - "wordpress email marketing"
+    - "wordpress seo tips"
+    - "wordpress speed optimization"
+  page_networking_queries:
+    - "WordPress Web Agency"
+    - "WordPress Developer"
+
+reddit_targeting:
+  subreddits:
+    - "Wordpress"
+    - "web_design"
+    - "freelance"
+    - "SideProject"
+    - "Entrepreneur"
+
+x_targeting:
+  search_queries:
+    - "#WordPress web design"
+    - "wordpress email marketing"
+    - "wordpress seo tips"
+    - "wordpress speed optimization"
+    - "#buildinpublic wordpress"
+    - "wordpress ai plugin"
+  people_search_queries:
+    - "wordpress developer"
+    - "wordpress agency"
+    - "web designer"
+    - "elementor developer"
+    - "wordpress founder"
+    - "web agency founder"
+    - "freelance wordpress"
+
+product_hunt_targeting:
+  categories:
+    - "marketing"
+    - "artificial-intelligence"
+    - "developer-tools"
+    - "wordpress"

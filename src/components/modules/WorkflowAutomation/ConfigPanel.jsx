@@ -158,7 +158,10 @@ const ConfigPanel = ( {
 	onDeselect,
 	hasPro = false,
 	keywordSuggestions = [],
+	tagSuggestions = [],
 	brandVoices = [],
+	nodes = [],
+	edges = [],
 } ) => {
 	const backLink = onDeselect && (
 		<Button variant="link" size="small" className="aime-wf-config__back" onClick={ onDeselect }>
@@ -207,6 +210,7 @@ const ConfigPanel = ( {
 						config={ workflow.trigger_config || {} }
 						hasPro={ hasPro }
 						keywordSuggestions={ keywordSuggestions }
+						tagSuggestions={ tagSuggestions }
 						onChange={ ( key, value ) =>
 							setWorkflowField( {
 								trigger_config: { ...( workflow.trigger_config || {} ), [ key ]: value },
@@ -222,6 +226,13 @@ const ConfigPanel = ( {
 	if ( selectedNode ) {
 		const step = selectedNode.data?.step || {};
 		const def = actionsByType[ step.action_type ];
+
+		// Compute parent_key from edges to evaluate field visibility rules
+		const parentEdge = edges.find( ( e ) => e.target === selectedNode.id );
+		const parentKey = parentEdge && parentEdge.source !== 'trigger' ? parentEdge.source : '';
+		const parentStep = parentKey ? nodes.find( ( n ) => n.id === parentKey )?.data?.step : null;
+		const parentActionType = parentStep?.action_type || '';
+
 		return (
 			<div className="aime-wf-config">
 				{ backLink }
@@ -244,12 +255,21 @@ const ConfigPanel = ( {
 						message={ __( 'The module for this action is not active. This step will be skipped until you enable the module.', 'ai-marketing-expert' ) }
 					/>
 				) }
+				{ parentActionType === 'ai_brain' && step.action_type === 'generate_blog_post' && (
+					<Notice
+						type="info"
+						dismissible={ false }
+						message={ __( 'Some fields are hidden because AI Brain provides topic and keywords automatically.', 'ai-marketing-expert' ) }
+					/>
+				) }
 				<ConfigFields
 					fields={ def?.fields || [] }
 					config={ step.config || {} }
 					hasPro={ hasPro }
 					keywordSuggestions={ keywordSuggestions }
+					tagSuggestions={ tagSuggestions }
 					onChange={ ( key, value ) => onUpdateStepConfig( selectedNode.id, key, value ) }
+					parentActionType={ parentActionType }
 				/>
 				<ToneSelect
 					label={ __( 'Tone override (optional)', 'ai-marketing-expert' ) }

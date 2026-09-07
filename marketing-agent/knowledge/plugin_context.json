@@ -1,0 +1,42 @@
+﻿{
+  "brands": {
+    "plugin": {
+      "name": "AI Marketing Expert",
+      "tagline": "All-in-One AI-Powered Marketing Suite for WordPress",
+      "wporg_url": "https://wordpress.org/plugins/ai-marketing-expert/",
+      "landing_url": "https://wpthemespace.com/ai-marketing-expert/",
+      "sell_url": "https://wpthemespace.com/product/ai-marketing-expert/",
+      "features": [
+        "Native Email Marketing & CRM funnels inside WordPress (Unlimited subscribers)",
+        "AI Content Generator with SEO keyword scoring & brand voice presets",
+        "On-Page SEO Analyzer & Topical Authority Pillar maps",
+        "Social Media Scheduler with privacy-first OAuth proxy",
+        "Ads Plan & Digital Campaign Copy Generator"
+      ],
+      "value_props": [
+        "Replaces 5+ monthly subscriptions (Mailchimp, Jasper, Semrush, Hootsuite)",
+        "API keys encrypted at rest with AES-256-GCM authenticated encryption",
+        "Full data privacy & 100% self-hosted inside WordPress admin"
+      ]
+    },
+    "wpthemespace": {
+      "name": "WPThemeSpace",
+      "url": "https://wpthemespace.com/",
+      "description": "Clean, Smart, Secure & SEO-Friendly WordPress Free and Premium Themes Marketplace, Elementor Addons, and Custom Web Design Services."
+    },
+    "bijtec": {
+      "name": "Bijtec",
+      "url": "https://bijtec.com/",
+      "description": "Digital engineering agency specializing in WordPress AI Automations, High-Speed Web Platforms, iOS & Android Mobile Apps (Flutter)."
+    }
+  },
+  "hashtags": [
+    "#WordPress",
+    "#WebDesign",
+    "#EmailMarketing",
+    "#SEO",
+    "#AIMarketing",
+    "#BuildInPublic",
+    "#IndieHackers"
+  ]
+}

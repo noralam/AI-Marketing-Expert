@@ -14935,22 +14935,39 @@ input.aime-premium-input[type=color]
 		flex-direction: column;
 		align-items: stretch;
 		height: var(--aime-wf-h);
-		gap: 10px;
-		padding: 12px;
+		gap: 0;
+		padding: 20px;
+		box-shadow: var(--aime-shadow-md);
 	}
 
 	.aime-wf-palette__intro {
 		border-right: 0;
-		border-bottom: 1px solid var(--aime-border);
+		border-bottom: 1px solid var(--aime-border-light);
 		padding-right: 0;
-		padding-bottom: 10px;
+		padding-bottom: 16px;
+		margin-bottom: 16px;
 		max-width: none;
+	}
+
+	.aime-wf-palette__title {
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--aime-text);
+		margin-bottom: 4px;
+	}
+
+	.aime-wf-palette__help {
+		font-size: 12px;
+		line-height: 1.4;
+		color: var(--aime-text-muted);
 	}
 
 	.aime-wf-palette__groups {
 		flex-direction: column;
 		align-items: stretch;
-		gap: 14px;
+		gap: 20px;
 		overflow-x: hidden;
 		overflow-y: auto;
 		padding-bottom: 0;
@@ -14958,14 +14975,23 @@ input.aime-premium-input[type=color]
 
 	.aime-wf-palette__group + .aime-wf-palette__group {
 		padding-left: 0;
-		padding-top: 14px;
+		padding-top: 20px;
 		border-left: 0;
-		border-top: 1px dashed var(--aime-border);
+		border-top: 1px solid var(--aime-border-light);
+	}
+
+	.aime-wf-palette__group-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--aime-text-light);
+		margin-bottom: 10px;
 	}
 
 	.aime-wf-palette__group-items {
 		flex-direction: column;
-		gap: 4px;
+		gap: 6px;
 	}
 
 	// Full-width targets that wrap: "Create Email Campaign (Draft)" is a real
@@ -14975,7 +15001,27 @@ input.aime-premium-input[type=color]
 		justify-content: flex-start;
 		white-space: normal;
 		text-align: left;
-		line-height: 1.35;
+		line-height: 1.4;
+		padding: 10px 12px;
+		font-size: 13px;
+		border-radius: var(--aime-radius-sm);
+		transition: all var(--aime-transition-fast);
+
+		&:hover {
+			background: var(--aime-primary-light);
+			border-color: var(--aime-primary);
+			transform: translateX(2px);
+			box-shadow: var(--aime-shadow);
+		}
+
+		&:active {
+			transform: translateX(1px);
+		}
+	}
+
+	.aime-wf-palette__icon {
+		font-size: 16px;
+		flex-shrink: 0;
 	}
 }
 
@@ -14986,11 +15032,12 @@ input.aime-premium-input[type=color]
 	background: var(--aime-white);
 	border: 1px solid var(--aime-border);
 	border-radius: var(--aime-radius);
-	padding: 14px;
+	padding: 20px;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	height: var(--aime-wf-h);
 	min-height: 0;
+	box-shadow: var(--aime-shadow-md);
 
 	// Sits above __head. Styled explicitly rather than leaning on WP's is-link,
 	// which renders at 11px in an undefined admin-theme colour here.
@@ -14999,67 +15046,89 @@ input.aime-premium-input[type=color]
 		flex: 0 0 auto;
 		height: auto;
 		min-height: 0;
-		margin: 0 0 10px;
+		margin: 0 0 14px;
 		padding: 0;
 		background: none;
 		border: 0;
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 600;
 		line-height: 1.4;
-		color: var(--aime-primary);
+		color: var(--aime-text-muted);
 		text-decoration: none;
 		cursor: pointer;
+		transition: color var(--aime-transition);
 
 		&:hover:not(:disabled),
 		&:focus:not(:disabled) {
-			color: var(--aime-primary-dark, var(--aime-primary));
-			text-decoration: underline;
+			color: var(--aime-primary);
 		}
 	}
 
 	&__head {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 8px;
+		align-items: flex-start;
+		gap: 12px;
+		margin-bottom: 16px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--aime-border-light);
 		// The panel scrolls; its own header should not scroll away from the
 		// field the reader is editing.
 		position: sticky;
 		z-index: 2;
 		background: var(--aime-white);
-		border-bottom: 1px solid var(--aime-border-light);
 		// Default: the head is the first thing in the panel, so it pulls up
-		// over the panel's own 14px padding and sticks flush to the top.
-		top: -14px;
-		padding: 14px 0 8px;
-		margin-top: -14px;
+		// over the panel's own 20px padding and sticks flush to the top.
+		top: -20px;
+		padding-top: 20px;
+		margin-top: -20px;
 
 		// When a back link precedes it, that negative pull dragged the opaque
 		// header up over the link and hid it. Nothing to reclaim in that case.
 		&:not(:first-child) {
 			top: 0;
-			padding: 8px 0;
+			padding-top: 0;
 			margin-top: 0;
 		}
 	}
 
 	&__title {
-		margin: 0 0 8px;
-		font-size: 14px;
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
 		color: var(--aime-text);
+		line-height: 1.3;
 	}
 
 	&__desc {
-		font-size: 12px;
+		font-size: 13px;
+		line-height: 1.5;
 		color: var(--aime-text-light);
-		margin-top: 0;
+		margin: 8px 0 0;
 	}
 
 	&__hint {
 		font-size: 12px;
 		color: var(--aime-text-muted);
-		margin-top: 12px;
+		margin-top: 16px;
+		padding: 12px;
+		background: var(--aime-bg-subtle);
+		border-radius: var(--aime-radius-sm);
+		border-left: 3px solid var(--aime-primary-light);
+	}
+
+	// Add spacing between form fields
+	.components-base-control {
+		margin-bottom: 20px;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	// Improve notice styling within config panel
+	.aime-notice {
+		margin-bottom: 16px;
 	}
 
 	// RangeControl's companion number input is too narrow for 4-digit
@@ -15073,6 +15142,188 @@ input.aime-premium-input[type=color]
 	.components-range-control .components-input-control__input {
 		min-width: 70px;
 		padding-right: 4px;
+	}
+}
+
+// Prompt textarea with the "Prompt library" browse button. Own header row
+// replaces TextareaControl's label so the button can sit right-aligned.
+.aime-wf-promptfield {
+	&__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	&__label {
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--aime-text);
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
+
+	&__browse {
+		height: auto;
+		min-height: 0;
+		padding: 3px 10px;
+		border: 1px solid var(--aime-border);
+		border-radius: var(--aime-radius-sm, 4px);
+		background: var(--aime-white);
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.6;
+		color: var(--aime-primary);
+		cursor: pointer;
+		transition:
+			border-color var(--aime-transition, 0.15s),
+			background var(--aime-transition, 0.15s);
+
+		&:hover:not(:disabled),
+		&:focus-visible:not(:disabled) {
+			border-color: var(--aime-primary);
+			background: var(--aime-bg-subtle);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+}
+
+// Clickable {token} chips under token-capable workflow fields.
+.aime-wf-tokens {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	// Sits outside the .components-base-control rhythm, so it must carry its
+	// own spacing on both sides — otherwise the next field crowds it.
+	margin-top: 8px;
+	margin-bottom: 18px;
+
+	&__label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+		color: var(--aime-text-light);
+		margin-right: 2px;
+	}
+
+	&__chip {
+		height: auto;
+		min-height: 0;
+		padding: 2px 8px;
+		border: 1px solid var(--aime-border);
+		border-radius: 999px;
+		background: var(--aime-bg-subtle);
+		font-family: var(--aime-mono, monospace);
+		font-size: 11.5px;
+		line-height: 1.5;
+		color: var(--aime-text-muted);
+		cursor: pointer;
+		transition:
+			color var(--aime-transition, 0.15s),
+			border-color var(--aime-transition, 0.15s),
+			background var(--aime-transition, 0.15s);
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--aime-primary);
+			background: var(--aime-white);
+			color: var(--aime-primary);
+			outline: none;
+		}
+	}
+}
+
+// Prompt library modal — searchable list of pre-made prompt cards.
+.aime-wf-promptlib {
+	max-width: 560px;
+
+	.components-modal__content {
+		padding: 0 32px 28px;
+	}
+
+	&__intro {
+		margin: 0 0 14px;
+		font-size: 13px;
+		line-height: 1.5;
+		color: var(--aime-text-muted);
+	}
+
+	&__search {
+		margin-bottom: 16px;
+	}
+
+	&__list {
+		max-height: 46vh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding-right: 4px;
+	}
+
+	&__group {
+		margin: 18px 0 10px;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--aime-text-light);
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	&__card {
+		display: block;
+		width: 100%;
+		margin-bottom: 10px;
+		padding: 12px 14px;
+		text-align: left;
+		background: var(--aime-white);
+		border: 1px solid var(--aime-border);
+		border-radius: var(--aime-radius-sm, 4px);
+		cursor: pointer;
+		transition:
+			border-color var(--aime-transition, 0.15s),
+			box-shadow var(--aime-transition, 0.15s);
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--aime-primary);
+			box-shadow: var(--aime-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.08));
+			outline: none;
+		}
+	}
+
+	&__card-title {
+		display: block;
+		margin-bottom: 4px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--aime-text);
+	}
+
+	&__card-text {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		font-size: 12.5px;
+		line-height: 1.5;
+		color: var(--aime-text-muted);
+	}
+
+	&__empty {
+		margin: 24px 0;
+		text-align: center;
+		font-size: 13px;
+		color: var(--aime-text-muted);
 	}
 }
 

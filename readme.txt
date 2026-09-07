@@ -24,7 +24,8 @@ Whether you are a blogger, a small business owner, a WooCommerce store, or a fre
 
 ---
 
-▶️ **[Watch Video Tutorial](https://www.youtube.com/watch?v=BiYoVVesf1s)**
+### 🎬 Watch The Setup Video
+[youtube https://www.youtube.com/watch?v=BiYoVVesf1s]
 
 = ✅ Why AI Marketing Expert? =
 
@@ -342,12 +343,43 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 
 == Changelog ==
 
+= 1.2.3 =
+* New: AI Brain Skills — reusable rule blocks (SEO Strategist, Readability Coach free; Image Director, Link Planner, WordPress Expert, Social Hook Writer plus custom skills on Pro) merged into the strategist prompt; Skill library popup and per-workflow selection.
+* New: Universal SEO contract for generated posts — AI Brain now outputs focus keyword, SEO title, meta description, short slug and image queries; the writer enforces keyword placement, TOC, link minimums and keyword image alts so RankMath/Yoast score green.
+* New: Global SEO adapter — canonical SEO store synced to Yoast, Rank Math, All in One SEO, SEOPress, Slim SEO and The SEO Framework, with aime_seo_sync hook for any other plugin; lightweight frontend meta fallback when no SEO plugin is active.
+* New: Stock image controls — landscape orientation filter, automatic portrait skipping, duplicate avoidance within a configurable reuse window (new usage log table), and max-width display hardening.
+* Fixed: generated article body no longer repeats the post title as a leading heading (single-H1 rule with prompt + automatic stripping on generate, save and publish paths).
+* Improved: Prompt library and Skill library are now separate single-purpose popups; skill selection lives only in the popup with a compact sidebar summary.
+* Improved: workflow blog posts auto-generate meta title/description (previously only manual generation did) and use short keyword slugs under 75 characters.
+
+= 1.2.2 =
+* New: Prompt Library — browse professionally written starting points for the AI Brain strategy prompt, Custom AI Prompt step and a new blog "Writing brief" field; pick one and edit freely.
+* New: Generate Blog Post step now supports multiple categories (multi-select with search) and an optional writing brief with its own prompt library.
+* New: Enroll in Funnel step can add contacts to Lists and Tags, and can create the contact automatically when the email is new.
+* New: clickable {token} chips under token-capable fields (Custom Prompt, notification and campaign fields) so dynamic values are easy to discover.
+* New: Dashboard widget footer with Help and Go Pro links.
+* Fixed: social posts scheduled from a device in a different timezone could publish hours early or late — schedule times are now converted to the site timezone.
+* Fixed: social posts that crashed mid-publish no longer stay stuck forever; the queue reclaims them and gives up cleanly after 3 attempts.
+* Fixed: Facebook publishing and OAuth unified on Graph API v25.0, and manual Facebook connections now request all required Page permissions.
+* Fixed: scheduled articles in the Content Generator could publish early when the server timezone differed from the site timezone.
+* Fixed: bulk-deleting articles in the Content Generator now also deletes their published WordPress posts instead of leaving them live.
+* Fixed: a failed article save no longer returns a phantom empty article; the real database error is shown.
+* Fixed: workflow templates now open the step that still needs setup (e.g. picking a funnel) right after applying.
+* Fixed: legacy single-category selections remain visible and editable after the multi-category upgrade.
+* Improved: word count default for generated posts is now 1500; AI Brain URL cache default extended to 30 days.
+* Improved: free-tier ad-copy runs log clearly when WooCommerce product rotation (Pro) is skipped.
+* Improved: AI Brain custom JSON output now uses provider-native structured output (JSON schema), so the model returns the brief in a guaranteed shape instead of free-form text that had to be parsed.
+* Fixed: reasoning models (for example muse-spark-1.2, DeepSeek R1, o-series) leaked their internal thinking text into AI Brain custom JSON output, which could break the JSON or produce an empty topic.
+* Fixed: models that return their answer in a separate reasoning field are now read correctly on OpenAI, OpenRouter and custom OpenAI-compatible connections, instead of being treated as an empty response.
+* Improved: JSON recovery is more robust when a provider does not support structured output — leftover reasoning text before the JSON is stripped and the JSON is located by structure rather than by known phrases, so new models work without plugin updates.
+
 = 1.2.1 =
 * Fixed: Email Footer issue
 * Fixed: Email A/B Test Subject B loading spinner
 * Fixed: chatbot Now only counts actual visitor messages.
 * Fixed: Automation double email bug issue fixed
 * Fixed: chatbot widget not displaying on mobile devices due to CSS transform breaking position:fixed full-screen layout.
+* Added: translate .pot file
 
 = 1.2.0 =
 * New: Workflow Automation module for connecting and orchestrating marketing tasks.
@@ -383,6 +415,12 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 * React-based unified admin dashboard
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+AI Brain Skills, universal SEO output, global SEO plugin support, smarter stock images without repeats, and no more duplicate titles. Recommended for all users.
+
+= 1.2.2 =
+Prompt Library, multi-category blog steps, smarter Funnel enrollment, timezone-safe social scheduling, and reliable AI Brain JSON output with reasoning models. Recommended for all users.
 
 = 1.1.0 =
 Initial public release. Install and activate to get started with the full AI marketing suite.

@@ -178,7 +178,7 @@ class ArticleController {
 			return new \WP_REST_Response( array( 'message' => __( 'Article not found.', 'ai-marketing-expert' ) ), 404 );
 		}
 
-		$clean_content = GenerateController::clean_ai_body( (string) $article->content );
+		$clean_content = GenerateController::clean_ai_body( (string) $article->content, (string) ( $article->title ?? '' ) );
 		if ( $clean_content && $clean_content !== $article->content ) {
 			$clean_content = aime_kses_article( $clean_content );
 			$wpdb->update(
@@ -585,9 +585,20 @@ class ArticleController {
 		if ( 'delete' === $action ) {
 			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+			$wp_post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT wp_post_id FROM {$p}aime_content_articles WHERE id IN ($placeholders) AND wp_post_id IS NOT NULL", ...$ids ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$p}aime_content_articles WHERE id IN ($placeholders)", ...$ids ) );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$p}aime_content_history WHERE article_id IN ($placeholders)", ...$ids ) );
+
+			// Mirror single-article destroy(): removing the article also removes
+			// the live WordPress post, otherwise bulk delete orphans it.
+			foreach ( $wp_post_ids as $wp_post_id ) {
+				if ( $wp_post_id && get_post( (int) $wp_post_id ) ) {
+					wp_delete_post( (int) $wp_post_id, true );
+				}
+			}
+
 			$count = count( $ids );
 			self::bump_cache_version();
 		}

@@ -157,6 +157,32 @@ class WorkflowRestController {
 				'permission_callback' => $perm,
 			),
 		) );
+
+		register_rest_route( $this->ns, $base . '/skills', array(
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_skills' ),
+				'permission_callback' => $perm,
+			),
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'create_skill' ),
+				'permission_callback' => $perm,
+				'args'                => array(
+					'title'        => array( 'type' => 'string', 'required' => true ),
+					'instructions' => array( 'type' => 'string', 'required' => true ),
+					'description'  => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+				),
+			),
+		) );
+
+		register_rest_route( $this->ns, $base . '/skills/(?P<id>[a-z0-9_-]+)', array(
+			array(
+				'methods'             => 'DELETE',
+				'callback'            => array( $this, 'delete_skill' ),
+				'permission_callback' => $perm,
+			),
+		) );
 	}
 
 	/* ── Handlers ───────────────────────────────────────── */
@@ -179,6 +205,44 @@ class WorkflowRestController {
 
 	public function get_actions(): \WP_REST_Response {
 		return new \WP_REST_Response( array( 'actions' => ActionRegistry::for_api() ), 200 );
+	}
+
+	public function get_skills(): \WP_REST_Response {
+		return new \WP_REST_Response( array( 'skills' => \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::for_api() ), 200 );
+	}
+
+	public function create_skill( \WP_REST_Request $req ): \WP_REST_Response {
+		// Custom skills are Pro-only (creation gate; built-in Pro skills are
+		// filtered at runtime by SkillRegistry::resolve()).
+		if ( class_exists( '\\WPSpace\\AiMarketingExpert\\Pro' ) ) {
+			$gate = \WPSpace\AiMarketingExpert\Pro::gate( 'Custom Brain Skills' );
+			if ( is_wp_error( $gate ) ) {
+				return new \WP_REST_Response( array( 'message' => $gate->get_error_message(), 'pro_required' => true ), 403 );
+			}
+		}
+		$id = \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::create( array(
+			'title'        => sanitize_text_field( (string) $req->get_param( 'title' ) ),
+			'instructions' => sanitize_textarea_field( (string) $req->get_param( 'instructions' ) ),
+			'description'  => sanitize_text_field( (string) $req->get_param( 'description' ) ),
+		) );
+		if ( is_wp_error( $id ) ) {
+			return new \WP_REST_Response( array( 'message' => $id->get_error_message() ), 400 );
+		}
+		return new \WP_REST_Response( array( 'id' => $id, 'skills' => \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::for_api() ), 201 );
+	}
+
+	public function delete_skill( \WP_REST_Request $req ): \WP_REST_Response {
+		if ( class_exists( '\\WPSpace\\AiMarketingExpert\\Pro' ) ) {
+			$gate = \WPSpace\AiMarketingExpert\Pro::gate( 'Custom Brain Skills' );
+			if ( is_wp_error( $gate ) ) {
+				return new \WP_REST_Response( array( 'message' => $gate->get_error_message(), 'pro_required' => true ), 403 );
+			}
+		}
+		$ok = \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::delete( sanitize_key( (string) $req['id'] ) );
+		if ( ! $ok ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Skill not found or cannot be deleted.', 'ai-marketing-expert' ) ), 404 );
+		}
+		return new \WP_REST_Response( array( 'success' => true ), 200 );
 	}
 
 	public function get_triggers(): \WP_REST_Response {
@@ -289,7 +353,13 @@ class WorkflowRestController {
 			return new \WP_REST_Response( array( 'message' => __( 'Could not create workflow.', 'ai-marketing-expert' ) ), 500 );
 		}
 
-		$this->save_steps( $id, $params );
+		$steps_error = $this->save_steps( $id, $params );
+		if ( $steps_error ) {
+			// Roll back the just-created workflow so a rejected payload never
+			// leaves an empty draft behind.
+			$this->repo->delete( $id );
+			return $steps_error;
+		}
 		$this->recompute_next_run( $id, $params );
 
 		$show_req = new \WP_REST_Request( 'GET', '' );
@@ -339,7 +409,10 @@ class WorkflowRestController {
 		$this->repo->update( $id, $this->sanitize_workflow( $params ) );
 
 		if ( isset( $params['steps'] ) ) {
-			$this->save_steps( $id, $params );
+			$steps_error = $this->save_steps( $id, $params );
+			if ( $steps_error ) {
+				return $steps_error;
+			}
 		}
 		$this->recompute_next_run( $id, $params );
 
@@ -634,12 +707,86 @@ class WorkflowRestController {
 		return $out;
 	}
 
-	private function save_steps( int $workflow_id, array $params ): void {
+	private function save_steps( int $workflow_id, array $params ): ?\WP_REST_Response {
 		$steps = $params['steps'] ?? array();
 		if ( ! is_array( $steps ) ) {
-			return;
+			return null;
 		}
+
+		// The engine walks the parent_key graph unguarded at runtime; the
+		// client-side validator is advisory only. Reject malformed graphs
+		// (duplicate/missing keys, dangling parents, cycles) here so a bad
+		// payload can never wedge a cron worker into an infinite loop.
+		$graph_error = $this->validate_step_graph( $steps );
+		if ( $graph_error ) {
+			return $graph_error;
+		}
+
 		$this->repo->replace_steps( $workflow_id, $steps );
+		return null;
+	}
+
+	/**
+	 * Validate the submitted step graph before anything touches the database.
+	 *
+	 * @param array $steps Raw steps from the request.
+	 * @return \WP_REST_Response|null Error response, or null when valid.
+	 */
+	private function validate_step_graph( array $steps ): ?\WP_REST_Response {
+		$keys = array();
+
+		foreach ( array_values( $steps ) as $i => $step ) {
+			$key         = sanitize_text_field( (string) ( $step['step_key'] ?? '' ) );
+			$action_type = sanitize_text_field( (string) ( $step['action_type'] ?? '' ) );
+
+			if ( '' === $action_type ) {
+				return new \WP_REST_Response( array(
+					/* translators: %d: position of the invalid step. */
+					'message' => sprintf( __( 'Step #%1$d has no action type.', 'ai-marketing-expert' ), $i + 1 ),
+				), 400 );
+			}
+			if ( '' === $key ) {
+				return new \WP_REST_Response( array(
+					/* translators: 1: action type label. */
+					'message' => sprintf( __( 'The "%1$s" step is missing its identifier. Reload the builder and try again.', 'ai-marketing-expert' ), ActionRegistry::get( $action_type )['label'] ?? $action_type ),
+				), 400 );
+			}
+			if ( isset( $keys[ $key ] ) ) {
+				return new \WP_REST_Response( array(
+					/* translators: %s: duplicated step key. */
+					'message' => sprintf( __( 'Duplicate step identifier "%s" — reload the builder and try again.', 'ai-marketing-expert' ), $key ),
+				), 400 );
+			}
+			$keys[ $key ] = sanitize_text_field( (string) ( $step['parent_key'] ?? '' ) );
+		}
+
+		foreach ( $keys as $key => $parent ) {
+			if ( '' !== $parent && ! isset( $keys[ $parent ] ) ) {
+				return new \WP_REST_Response( array(
+					/* translators: %s: step identifier whose parent is missing. */
+					'message' => sprintf( __( 'The step "%s" points to a parent step that no longer exists. Remove and re-add the connection.', 'ai-marketing-expert' ), $parent ),
+				), 400 );
+			}
+		}
+
+		// Cycle detection: every chain of parents must terminate at the root
+		// ('') within N hops. A revisited node means a loop.
+		foreach ( $keys as $start => $unused_parent ) {
+			$visited = array();
+			$cursor  = $start;
+			while ( '' !== $cursor ) {
+				if ( isset( $visited[ $cursor ] ) ) {
+					return new \WP_REST_Response( array(
+						'message' => __( 'The workflow contains a circular connection. Every step must ultimately hang off the trigger.', 'ai-marketing-expert' ),
+					), 400 );
+				}
+				$visited[ $cursor ] = true;
+				$cursor             = $keys[ $cursor ] ?? '';
+			}
+			unset( $visited );
+		}
+
+		return null;
 	}
 
 	/**

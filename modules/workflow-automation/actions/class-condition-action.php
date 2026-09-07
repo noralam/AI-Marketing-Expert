@@ -9,6 +9,8 @@
 
 namespace WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions;
 
+use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\WorkflowTokens;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -21,8 +23,9 @@ class ConditionAction extends BaseAction {
 	 * @return array
 	 */
 	public static function run( array $config, array $context ): array {
-		$check = (string) ( $config['check'] ?? 'previous_step_succeeded' );
-		$value = (string) ( $config['value'] ?? '' );
+		$check       = (string) ( $config['check'] ?? 'previous_step_succeeded' );
+		$value       = (string) ( $config['value'] ?? '' );
+		$branch_error = '';
 
 		switch ( $check ) {
 			case 'previous_output_contains':
@@ -31,11 +34,20 @@ class ConditionAction extends BaseAction {
 				break;
 
 			case 'event_field_contains':
-				$field    = (string) ( $config['field'] ?? '' );
-				$haystack = (string) self::event_field( $context['event'] ?? array(), $field );
+				$field    = trim( (string) ( $config['field'] ?? '' ) );
+				$haystack = WorkflowTokens::dot_path(
+					is_array( $context['event'] ?? null ) ? $context['event'] : array(),
+					$field
+				);
 				$matched  = '' !== $value && false !== mb_stripos( $haystack, $value );
 				break;
 
+			case 'reference_compare':
+				// Numeric compare against an upstream step's structured
+				// reference field — e.g. gate publishing on the SEO audit's
+				// score: ref_field "score", compare ">=", value 80.
+				$matched = self::reference_compare( $config, $context, $branch_error );
+				break;
 			case 'previous_step_succeeded':
 			default:
 				// The engine passes the parent's success flag through the queue;
@@ -46,34 +58,74 @@ class ConditionAction extends BaseAction {
 
 		$branch = $matched ? 'yes' : 'no';
 
-		return self::ok(
-			sprintf(
-				/* translators: %s: taken branch (yes/no) */
-				__( 'Condition → %s', 'ai-marketing-expert' ),
-				$branch
-			),
-			array( 'branch' => $branch )
+		$preview = sprintf(
+			/* translators: %s: taken branch (yes/no) */
+			__( 'Condition → %s', 'ai-marketing-expert' ),
+			$branch
 		);
+		if ( '' !== $branch_error ) {
+			$preview .= ' (' . $branch_error . ')';
+		}
+
+		return self::ok( $preview, array( 'branch' => $branch ) );
 	}
 
 	/**
-	 * Resolve a dot-notation field from the event payload (e.g. metadata.page_url).
+	 * Numeric comparison of a reference field from upstream output.
 	 *
-	 * @param array  $event Event payload.
-	 * @param string $field Dot-notation path.
-	 * @return string
+	 * Source priority: parent output reference → most recent matching output
+	 * in `previous`. Non-numeric or missing fields take the No branch (with a
+	 * logged reason rather than silently passing).
+	 *
+	 * @param array  $config       Step config: ref_field, compare, value.
+	 * @param array  $context      Workflow context.
+	 * @param string &$error_msg   Set when the comparison could not run.
+	 * @return bool
 	 */
-	private static function event_field( array $event, string $field ): string {
-		if ( '' === $field ) {
-			return '';
-		}
-		$node = $event;
-		foreach ( explode( '.', $field ) as $part ) {
-			if ( ! is_array( $node ) || ! array_key_exists( $part, $node ) ) {
-				return '';
+	private static function reference_compare( array $config, array $context, ?string &$error_msg = null ): bool {
+		$path    = trim( (string) ( $config['ref_field'] ?? 'score' ) );
+		$compare = (string) ( $config['compare'] ?? '>=' );
+		$target  = (float) ( $config['value'] ?? 0 );
+
+		$source_ref = is_array( $context['parent_output']['reference'] ?? null ) ? $context['parent_output']['reference'] : array();
+		if ( ! WorkflowTokens::has_path( $source_ref, $path ) ) {
+			foreach ( array_reverse( is_array( $context['previous'] ?? null ) ? $context['previous'] : array() ) as $entry ) {
+				$ref = is_array( $entry['reference'] ?? null ) ? $entry['reference'] : array();
+				if ( WorkflowTokens::has_path( $ref, $path ) ) {
+					$source_ref = $ref;
+					break;
+				}
 			}
-			$node = $node[ $part ];
 		}
-		return is_scalar( $node ) ? (string) $node : (string) wp_json_encode( $node );
+
+		if ( '' === $path || ! WorkflowTokens::has_path( $source_ref, $path ) ) {
+			$error_msg = __( 'Reference field not found on any previous step output.', 'ai-marketing-expert' );
+			return false;
+		}
+
+		$raw = WorkflowTokens::dot_path( $source_ref, $path );
+		if ( ! is_numeric( $raw ) ) {
+			/* translators: %s: reference field path. */
+			$error_msg = sprintf( __( 'Reference field "%s" is not numeric.', 'ai-marketing-expert' ), $path );
+			return false;
+		}
+
+		$actual = (float) $raw;
+		switch ( $compare ) {
+			case '>':
+				return $actual > $target;
+			case '<':
+				return $actual < $target;
+			case '<=':
+				return $actual <= $target;
+			case '=':
+			case '==':
+				return abs( $actual - $target ) < PHP_FLOAT_EPSILON;
+			case '!=':
+				return abs( $actual - $target ) >= PHP_FLOAT_EPSILON;
+			case '>=':
+			default:
+				return $actual >= $target;
+		}
 	}
 }

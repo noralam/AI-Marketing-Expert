@@ -49,9 +49,16 @@ class SocialPostAction extends BaseAction {
 		}
 		$platform = $account->platform ?: $platform;
 
-		// Generate the caption.
+		// Generate the caption. Context = what upstream steps produced
+		// (article title when chained after Blog Post), not an arbitrary step.
 		$ai      = new AiSocialService();
-		$caption = $ai->generate_caption( $platform, $topic, $tone, (string) ( $context['previous'][0]['preview'] ?? '' ) );
+		$caption = $ai->generate_caption(
+			$platform,
+			$topic,
+			$tone,
+			self::ancestor_context( $context, 600 ),
+			self::brand_voice_system_prompt( $context )
+		);
 		if ( empty( $caption['success'] ) ) {
 			return self::fail( $caption['error'] ?? __( 'Caption generation failed.', 'ai-marketing-expert' ) );
 		}
@@ -84,6 +91,18 @@ class SocialPostAction extends BaseAction {
 			? sprintf( /* translators: %s: platform */ __( 'Scheduled %s post (publisher cron will send it).', 'ai-marketing-expert' ), $platform )
 			: sprintf( /* translators: %s: platform */ __( 'Saved %s post as draft for review.', 'ai-marketing-expert' ), $platform );
 
-		return self::ok( $preview, array( 'social_post_id' => $post_id, 'status' => $status, 'link' => self::module_link( 'social' ) ) );
+		$reference = array( 'social_post_id' => $post_id, 'status' => $status, 'link' => self::module_link( 'social' ) );
+		// Carry the promoted article's identifiers downstream (tokens/conditions)
+		// when this step follows a Blog Post step.
+		$source_wp_post_id = self::resolve_from_context( $context, 'wp_post_id', 'generate_blog_post' );
+		if ( '' !== $source_wp_post_id ) {
+			$reference['source_post_id'] = (int) $source_wp_post_id;
+		}
+		$source_edit_url = self::resolve_from_context( $context, 'edit_url', 'generate_blog_post' );
+		if ( '' !== $source_edit_url ) {
+			$reference['source_edit_url'] = $source_edit_url;
+		}
+
+		return self::ok( $preview, $reference );
 	}
 }

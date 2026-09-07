@@ -119,14 +119,14 @@ class GenerateController {
 		$excerpt       = $generated['excerpt'] ?? '';
 
 		// Clean up the body: remove any residual JSON wrapper and convert literal \n to real newlines.
-		$article_body = self::clean_ai_body( $article_body );
+		$article_body = self::clean_ai_body( $article_body, sanitize_text_field( (string) $article_title ) );
 
 		// Swap AI image placeholders for stock photos (fail-soft; also strips
 		// any leftover placeholders when the feature is off).
 		$stock_service = new \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService();
 		$article_body  = $stock_service->embed_inline_images( $article_body, $inline_images, $topic );
 
-		$wpdb->insert( "{$p}aime_content_articles", array(
+		$inserted = $wpdb->insert( "{$p}aime_content_articles", array(
 			'title'             => sanitize_text_field( $article_title ),
 			'slug'              => sanitize_title( $article_title ),
 			'content'           => aime_kses_article( $article_body ),
@@ -149,6 +149,15 @@ class GenerateController {
 			'created_at'        => $now,
 			'updated_at'        => $now,
 		) );
+
+		// A failed insert must not fall through: the AI cost was already paid,
+		// but returning id:0 would create a phantom history row and a broken
+		// 201 response. Surface the failure instead.
+		if ( false === $inserted || 0 === (int) $wpdb->insert_id ) {
+			return new \WP_REST_Response( array(
+				'message' => __( 'The article was generated but could not be saved: ', 'ai-marketing-expert' ) . ( $wpdb->last_error ?: __( 'unknown database error.', 'ai-marketing-expert' ) ),
+			), 500 );
+		}
 
 		$article_id = (int) $wpdb->insert_id;
 		WorkflowController::save_article_version( $article_id, 'Generated' );
@@ -393,9 +402,13 @@ class GenerateController {
 	 *
 	 * Strips leftover JSON wrappers, converts literal \n to real newlines,
 	 * removes blank lines, strips AI safety-classification lines (e.g.
-	 * "User Safety: safe"), and ensures proper HTML.
+	 * "User Safety: safe"), drops a duplicate title heading (theme already
+	 * renders H1), and ensures proper HTML.
+	 *
+	 * @param string $body  Raw body HTML.
+	 * @param string $title Optional article title for duplicate-H1 stripping.
 	 */
-	public static function clean_ai_body( string $body ): string {
+	public static function clean_ai_body( string $body, string $title = '' ): string {
 		$body = trim( $body );
 
 		// Remove Markdown code fences such as ```json ... ``` before JSON cleanup.
@@ -432,6 +445,12 @@ class GenerateController {
 
 		// Convert double-newline separated blocks into paragraphs if not already wrapped in tags.
 		$body = trim( $body );
+
+		// Single-H1 rule: drop a leading duplicate title heading when the
+		// title is known (theme renders H1; body must not repeat it).
+		if ( '' !== $title && '' !== $body ) {
+			$body = ContentGeneratorService::strip_duplicate_title_heading( $body, $title );
+		}
 
 		// If any raw text remains un-wrapped, let wpautop handle it.
 		if ( $body && ! preg_match( '/^\s*</', $body ) ) {

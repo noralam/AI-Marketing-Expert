@@ -23,6 +23,9 @@ class TriggerDispatcher {
 	/** Debounce window for identical event payloads per workflow. */
 	private const DEBOUNCE_TTL = 60;
 
+	/** Option-name prefix for atomic debounce entries. */
+	public const DEBOUNCE_PREFIX = 'aime_wf_evt_';
+
 	private WorkflowRepository $repo;
 
 	public function __construct( ?WorkflowRepository $repo = null ) {
@@ -89,14 +92,55 @@ class TriggerDispatcher {
 			}
 
 			// Debounce identical payloads (double-fired hooks, quick re-saves).
-			$debounce_key = 'aime_wf_evt_' . $workflow->id . '_' . md5( (string) wp_json_encode( $payload ) );
-			if ( get_transient( $debounce_key ) ) {
+			// add_option() is an atomic INSERT, so two concurrent consumers of
+			// the same hook cannot both pass the gate (transient get/set could).
+			$debounce_key = self::DEBOUNCE_PREFIX . $workflow->id . '_' . md5( (string) wp_json_encode( $payload ) );
+			if ( ! self::acquire_debounce( $debounce_key ) ) {
 				continue;
 			}
-			set_transient( $debounce_key, 1, self::DEBOUNCE_TTL );
 
 			$this->queue_execution( (int) $workflow->id, $payload );
 		}
+	}
+
+	/**
+	 * Atomic debounce gate. Returns true once per key per DEBOUNCE_TTL window.
+	 *
+	 * Expired entries are swept lazily here and in the module's daily cleanup,
+	 * so keys never accumulate.
+	 */
+	public function acquire_debounce( string $key ): bool {
+		global $wpdb;
+
+		$existing = $wpdb->get_var( $wpdb->prepare(
+			"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+			$key
+		) );
+
+		if ( null !== $existing ) {
+			if ( ( time() - (int) $existing ) < self::DEBOUNCE_TTL ) {
+				return false;
+			}
+			delete_option( $key );
+		}
+
+		return (bool) add_option( $key, time(), '', 'no' );
+	}
+
+	/**
+	 * Delete every expired debounce entry (daily hygiene).
+	 *
+	 * @return int Rows deleted.
+	 */
+	public static function purge_expired_debounce(): int {
+		global $wpdb;
+		return (int) $wpdb->query( $wpdb->prepare(
+			"DELETE FROM {$wpdb->options}
+			  WHERE option_name LIKE %s
+			    AND option_value < %d",
+			$wpdb->esc_like( self::DEBOUNCE_PREFIX ) . '%',
+			time() - self::DEBOUNCE_TTL
+		) );
 	}
 
 	/**

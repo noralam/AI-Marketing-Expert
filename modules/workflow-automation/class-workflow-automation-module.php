@@ -26,6 +26,7 @@ use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\SocialPostActio
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\EmailCampaignAction;
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\AdCopyAction;
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\CustomPromptAction;
+use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\AiBrainAction;
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\ConditionAction;
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions\SendNotificationAction;
 use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\TriggerDispatcher;
@@ -36,8 +37,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class WorkflowAutomationModule extends Module {
-
-	const DB_VERSION = '2.0.0';
 
 	/** Dispatch hook — polls for due workflows on the five-minute interval. */
 	const HOOK_DISPATCH = 'aime_workflow_dispatch';
@@ -78,6 +77,7 @@ class WorkflowAutomationModule extends Module {
 			'conditional_steps'   => __( 'Conditional branching with Yes/No paths', 'ai-marketing-expert' ),
 			'topic_rotation'      => __( 'Topic & product rotation on generation steps', 'ai-marketing-expert' ),
 			'workflow_templates'  => __( 'Full workflow templates library', 'ai-marketing-expert' ),
+			'brain_skills'        => __( 'Pro AI Brain skills (image, links, social) + custom skills', 'ai-marketing-expert' ),
 		);
 	}
 
@@ -119,6 +119,9 @@ class WorkflowAutomationModule extends Module {
 
 		// Prune old executions on the existing daily-cleanup cron.
 		add_action( 'aime_daily_cleanup', array( $this, 'prune_history' ) );
+
+		// Daily hygiene for the dispatcher's atomic debounce entries.
+		add_action( 'aime_daily_cleanup', array( 'WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\TriggerDispatcher', 'purge_expired_debounce' ) );
 
 		// Dashboard stats hook.
 		add_filter( 'aime_workflow-automation_dashboard_stats', array( $this, 'get_stats' ) );
@@ -191,27 +194,72 @@ class WorkflowAutomationModule extends Module {
 			'is_pro'      => false,
 			'available'   => static fn (): bool => $module_active( 'content-generator' ),
 			'fields'      => array(
-				array( 'key' => 'topic', 'label' => __( 'Topic', 'ai-marketing-expert' ), 'type' => 'text', 'help' => __( 'Leave blank to use the workflow topic.', 'ai-marketing-expert' ) ),
 				array(
-					'key'    => 'topics',
-					'label'  => __( 'Topic rotation', 'ai-marketing-expert' ),
-					'type'   => 'tokens',
-					'is_pro' => true,
-					'help'   => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above.', 'ai-marketing-expert' ),
+					'key'          => 'topic',
+					'label'        => __( 'Topic', 'ai-marketing-expert' ),
+					'type'         => 'text',
+					'help'         => __( 'Leave blank to inherit from AI Brain or workflow topic.', 'ai-marketing-expert' ),
+					// Hidden when the direct parent is an AI Brain step (the
+					// Brain provides the topic). Evaluated client-side by the
+					// builder; see ActionRegistry::resolve_fields().
+					'visible_rule' => array( 'type' => 'parent_not', 'action' => 'ai_brain' ),
 				),
-				array( 'key' => 'keywords', 'label' => __( 'Target keywords', 'ai-marketing-expert' ), 'type' => 'tokens', 'help' => __( 'Separate with commas or the Enter key.', 'ai-marketing-expert' ) ),
-				array( 'key' => 'word_count', 'label' => __( 'Word count', 'ai-marketing-expert' ), 'type' => 'range', 'default' => 1000, 'min' => 300, 'max' => 5000, 'step' => 100 ),
+				array(
+					'key'          => 'topics',
+					'label'        => __( 'Topic rotation', 'ai-marketing-expert' ),
+					'type'         => 'tokens',
+					'is_pro'       => true,
+					'help'         => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above. Hidden when AI Brain step is parent.', 'ai-marketing-expert' ),
+					'visible_rule' => array( 'type' => 'parent_not', 'action' => 'ai_brain' ),
+				),
+				array(
+					'key'            => 'keywords',
+					'label'          => __( 'Target keywords', 'ai-marketing-expert' ),
+					'type'           => 'tokens',
+					'help'           => __( 'Separate with commas or Enter key. Leave blank to inherit from AI Brain.', 'ai-marketing-expert' ),
+					'visible_rule'   => array( 'type' => 'parent_not', 'action' => 'ai_brain' ),
+				),
+				array(
+					'key'            => 'writing_brief',
+					'label'          => __( 'Writing brief', 'ai-marketing-expert' ),
+					'type'           => 'textarea',
+					'help'           => __( 'Optional extra instructions for the writer: structure, angle, must-include points. Combined with the AI Brain brief when both are set.', 'ai-marketing-expert' ),
+					// Shows the "Prompt library" browse button (pre-made prompts).
+					'prompt_library' => true,
+				),
+				array(
+					'key'     => 'word_count',
+					'label'   => __( 'Minimum word count', 'ai-marketing-expert' ),
+					'type'    => 'range',
+					'default' => 1500,
+					'min'     => 300,
+					'max'     => 5000,
+					'step'    => 100,
+					'help'    => __( 'The floor: the writer is pushed to reach this length, and a short draft is extended until it does.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'     => 'word_count_max',
+					'label'   => __( 'Maximum word count', 'ai-marketing-expert' ),
+					'type'    => 'range',
+					'default' => 2500,
+					'min'     => 0,
+					'max'     => 8000,
+					'step'    => 100,
+					'help'    => __( 'The ceiling the writer plans against, so long-winded models finish inside the budget instead of being cut off mid-sentence. Set 0 for no upper bound.', 'ai-marketing-expert' ),
+				),
 				array( 'key' => 'language', 'label' => __( 'Language', 'ai-marketing-expert' ), 'type' => 'language', 'default' => 'en' ),
 				array(
-					'key'     => 'category_id',
-					'label'   => __( 'Category', 'ai-marketing-expert' ),
-					'type'    => 'select',
-					'default' => 0,
-					'help'    => __( 'Category for the published post.', 'ai-marketing-expert' ),
-					'options' => static function (): array {
-						$options = array(
-							array( 'value' => 0, 'label' => __( 'Site default category', 'ai-marketing-expert' ) ),
-						);
+					'key'        => 'category_ids',
+					'label'      => __( 'Categories', 'ai-marketing-expert' ),
+					'type'       => 'select',
+					'multiple'   => true,
+					'default'    => [],
+					// Pre-rename configs stored a single id here; the editor
+					// seeds the multi-select from it until first change.
+					'legacy_key' => 'category_id',
+					'help'       => __( 'Pick one or more categories for the published post (type to search, Enter to add). Leave empty for the site default category.', 'ai-marketing-expert' ),
+					'options'  => static function (): array {
+						$options = array();
 						$cats = get_categories( array( 'hide_empty' => false, 'number' => 200 ) );
 						foreach ( $cats as $cat ) {
 							$options[] = array( 'value' => (int) $cat->term_id, 'label' => $cat->name );
@@ -237,7 +285,7 @@ class WorkflowAutomationModule extends Module {
 					},
 				),
 				array( 'key' => 'auto_tags', 'label' => __( 'AI-generated tags', 'ai-marketing-expert' ), 'type' => 'checkbox', 'default' => true, 'help' => __( 'Let the AI suggest 3-5 relevant tags for each article.', 'ai-marketing-expert' ) ),
-				array( 'key' => 'tags', 'label' => __( 'Fixed tags', 'ai-marketing-expert' ), 'type' => 'tokens', 'help' => __( 'Always added to every generated post, in addition to AI tags.', 'ai-marketing-expert' ) ),
+				array( 'key' => 'tags', 'label' => __( 'Fixed tags', 'ai-marketing-expert' ), 'type' => 'tokens', 'suggest' => 'post_tags', 'help' => __( 'Always added to every generated post, in addition to AI tags.', 'ai-marketing-expert' ) ),
 				array(
 					'key'     => 'featured_image',
 					'label'   => __( 'Featured image', 'ai-marketing-expert' ),
@@ -263,7 +311,17 @@ class WorkflowAutomationModule extends Module {
 						array( 'value' => 3, 'label' => __( '3 images', 'ai-marketing-expert' ) ),
 					),
 				),
-				array( 'key' => 'publish', 'label' => __( 'Publish immediately', 'ai-marketing-expert' ), 'type' => 'checkbox', 'default' => false ),
+				array(
+						'key'     => 'post_status',
+						'label'   => __( 'Post status', 'ai-marketing-expert' ),
+						'type'    => 'select',
+						'default' => 'draft',
+						'help'    => __( 'Draft = save for review, Publish = go live immediately.', 'ai-marketing-expert' ),
+						'options' => array(
+							array( 'value' => 'draft', 'label' => __( 'Draft', 'ai-marketing-expert' ) ),
+							array( 'value' => 'publish', 'label' => __( 'Publish', 'ai-marketing-expert' ) ),
+						),
+					),
 			),
 			'handler'     => array( BlogPostAction::class, 'run' ),
 		);
@@ -277,11 +335,13 @@ class WorkflowAutomationModule extends Module {
 			'fields'      => array(
 				array(
 					'key'     => 'wp_post_id',
-					'label'   => __( 'Post', 'ai-marketing-expert' ),
+					'label'   => __( 'Post to audit', 'ai-marketing-expert' ),
 					'type'    => 'select',
-					'default' => 0,
+					'default' => -1,
+					'help'    => __( 'Previous step = post created by parent action (Blog Post, etc). Latest published = most recent live post.', 'ai-marketing-expert' ),
 					'options' => static function (): array {
 						$options = array(
+							array( 'value' => -1, 'label' => __( 'Previous step (default)', 'ai-marketing-expert' ) ),
 							array( 'value' => 0, 'label' => __( 'Latest published post', 'ai-marketing-expert' ) ),
 						);
 						$posts = get_posts(
@@ -300,7 +360,7 @@ class WorkflowAutomationModule extends Module {
 					},
 				),
 				array( 'key' => 'url', 'label' => __( 'URL (optional)', 'ai-marketing-expert' ), 'type' => 'text' ),
-				array( 'key' => 'keyword_focus', 'label' => __( 'Focus keyword', 'ai-marketing-expert' ), 'type' => 'text' ),
+				array( 'key' => 'keyword_focus', 'label' => __( 'Focus keyword (optional)', 'ai-marketing-expert' ), 'type' => 'text', 'help' => __( 'Leave blank for smart detection: inherits from AI Brain, Yoast SEO, RankMath, or post title.', 'ai-marketing-expert' ) ),
 			),
 			'handler'     => array( SeoAuditAction::class, 'run' ),
 		);
@@ -316,8 +376,10 @@ class WorkflowAutomationModule extends Module {
 					'key'      => 'funnel_id',
 					'label'    => __( 'Funnel', 'ai-marketing-expert' ),
 					'type'     => 'select',
-					'required' => true,
-					'options'  => static function (): array {
+					'required' => false,
+					'default'  => '',
+					'help'     => __( 'Optional. Email automation from Email Marketing → Automations.', 'ai-marketing-expert' ),
+					'options' => static function (): array {
 						global $wpdb;
 						$table = $wpdb->prefix . 'aime_funnels';
 						if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
@@ -332,6 +394,35 @@ class WorkflowAutomationModule extends Module {
 							);
 						}
 						return $options;
+					},
+				),
+				array(
+					'key'     => 'create_if_missing',
+					'label'   => __( 'Create contact if missing', 'ai-marketing-expert' ),
+					'type'    => 'checkbox',
+					'default' => true,
+					'help'    => __( 'When the email is not in Contacts yet, create it first instead of failing.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'      => 'list_ids',
+					'label'    => __( 'Lists', 'ai-marketing-expert' ),
+					'type'     => 'select',
+					'multiple' => true,
+					'default'  => [],
+					'help'     => __( 'Optional. Adds the contact to these lists without removing existing ones.', 'ai-marketing-expert' ),
+					'options'  => static function (): array {
+						return self::email_pivot_options( 'lists' );
+					},
+				),
+				array(
+					'key'      => 'tag_ids',
+					'label'    => __( 'Tags', 'ai-marketing-expert' ),
+					'type'     => 'select',
+					'multiple' => true,
+					'default'  => [],
+					'help'     => __( 'Optional. Adds these tags to the contact without removing existing ones.', 'ai-marketing-expert' ),
+					'options'  => static function (): array {
+						return self::email_pivot_options( 'tags' );
 					},
 				),
 				array( 'key' => 'subscriber_email', 'label' => __( 'Subscriber email', 'ai-marketing-expert' ), 'type' => 'text', 'help' => __( 'Blank = email from the trigger event.', 'ai-marketing-expert' ) ),
@@ -370,11 +461,12 @@ class WorkflowAutomationModule extends Module {
 				),
 				array( 'key' => 'topic', 'label' => __( 'Topic (blank = workflow topic)', 'ai-marketing-expert' ), 'type' => 'text' ),
 				array(
-					'key'    => 'topics',
-					'label'  => __( 'Topic rotation', 'ai-marketing-expert' ),
-					'type'   => 'tokens',
-					'is_pro' => true,
-					'help'   => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above.', 'ai-marketing-expert' ),
+					'key'          => 'topics',
+					'label'        => __( 'Topic rotation', 'ai-marketing-expert' ),
+					'type'         => 'tokens',
+					'is_pro'       => true,
+					'help'         => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above. Hidden when AI Brain step is parent.', 'ai-marketing-expert' ),
+					'visible_rule' => array( 'type' => 'parent_not', 'action' => 'ai_brain' ),
 				),
 				array( 'key' => 'schedule', 'label' => __( 'Schedule (save as draft if off)', 'ai-marketing-expert' ), 'type' => 'checkbox', 'default' => true ),
 			),
@@ -390,13 +482,14 @@ class WorkflowAutomationModule extends Module {
 			'fields'      => array(
 				array( 'key' => 'topic', 'label' => __( 'Email topic (blank = workflow topic)', 'ai-marketing-expert' ), 'type' => 'text' ),
 				array(
-					'key'    => 'topics',
-					'label'  => __( 'Topic rotation', 'ai-marketing-expert' ),
-					'type'   => 'tokens',
-					'is_pro' => true,
-					'help'   => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above.', 'ai-marketing-expert' ),
+					'key'          => 'topics',
+					'label'        => __( 'Topic rotation', 'ai-marketing-expert' ),
+					'type'         => 'tokens',
+					'is_pro'       => true,
+					'help'         => __( 'Add several topics and each run picks a different one — no repeats until every topic has been used. Overrides the single topic above. Hidden when AI Brain step is parent.', 'ai-marketing-expert' ),
+					'visible_rule' => array( 'type' => 'parent_not', 'action' => 'ai_brain' ),
 				),
-				array( 'key' => 'title', 'label' => __( 'Internal campaign title', 'ai-marketing-expert' ), 'type' => 'text' ),
+				array( 'key' => 'title', 'label' => __( 'Internal campaign title', 'ai-marketing-expert' ), 'type' => 'text', 'token_hints' => true, 'help' => __( 'Click a {token} below to insert it — the workflow fills it at run time.', 'ai-marketing-expert' ) ),
 			),
 			'handler'     => array( EmailCampaignAction::class, 'run' ),
 		);
@@ -411,14 +504,101 @@ class WorkflowAutomationModule extends Module {
 				array( 'key' => 'product', 'label' => __( 'Product / offer (blank = workflow topic)', 'ai-marketing-expert' ), 'type' => 'text' ),
 				array(
 					'key'    => 'products',
-					'label'  => __( 'Product rotation', 'ai-marketing-expert' ),
+					'label'  => __( 'Product rotation (manual)', 'ai-marketing-expert' ),
 					'type'   => 'tokens',
 					'is_pro' => true,
-					'help'   => __( 'Add several products/offers and each run picks a different one — no repeats until every entry has been used. Overrides the single product above.', 'ai-marketing-expert' ),
+					'help'   => __( 'Add several products/offers and each run picks a different one — no repeats until every entry has been used.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'          => 'wc_products',
+					'label'        => __( 'WooCommerce products', 'ai-marketing-expert' ),
+					'type'         => 'select',
+					'multiple'     => true,
+					'is_pro'       => true,
+					'help'         => __( 'Pro: each run picks a different product (rotation) and the AI also receives price and short description. On the free tier this selection is ignored and the product comes from the fields below instead.', 'ai-marketing-expert' ),
+					'options'      => static function(): array {
+						if ( ! class_exists( 'WooCommerce' ) ) {
+							return array();
+						}
+						$products = wc_get_products( array( 'limit' => 100, 'status' => 'publish' ) );
+						$options  = array();
+						foreach ( $products as $product ) {
+							$options[] = array(
+								'value' => $product->get_id(),
+								'label' => $product->get_name() . ' (#' . $product->get_id() . ')',
+							);
+						}
+						return $options;
+					},
+					// Static rule: resolved server-side at API time (ActionRegistry).
+					'visible_rule' => array( 'type' => 'class_exists', 'class' => 'WooCommerce' ),
 				),
 				array( 'key' => 'variations', 'label' => __( 'Number of variations', 'ai-marketing-expert' ), 'type' => 'number', 'default' => 3 ),
 			),
 			'handler'     => array( AdCopyAction::class, 'run' ),
+		);
+
+		$actions['ai_brain'] = array(
+			'label'       => __( 'AI Brain', 'ai-marketing-expert' ),
+			'module'      => 'ai',
+			'description' => __( 'AI strategist reads your instructions, avoids recent repeats, analyzes context URLs, and generates a content brief for the next step.', 'ai-marketing-expert' ),
+			'is_pro'      => false,
+			'available'   => static fn (): bool => true,
+			'fields'      => array(
+				array(
+					'key'            => 'strategy_prompt',
+					'label'          => __( 'Strategy prompt', 'ai-marketing-expert' ),
+					'type'           => 'textarea',
+					'required'       => true,
+					'help'           => __( 'Full instructions for the AI strategist.', 'ai-marketing-expert' ),
+					// Shows the "Prompt library" browse button (pre-made prompts).
+					'prompt_library' => true,
+				),
+				array(
+					'key'  => 'context_urls',
+					'label' => __( 'Context URLs (optional)', 'ai-marketing-expert' ),
+					'type' => 'textarea',
+					'help' => __( 'One URL per line, max 5. AI reads these pages for product context. Cached 30 days by default.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'     => 'lookback_days',
+					'label'   => __( 'Avoid repeating within (days)', 'ai-marketing-expert' ),
+					'type'    => 'number',
+					'default' => 30,
+					'help'    => __( 'Topics written in this many days are treated as recently used.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'     => 'cache_duration',
+					'label'   => __( 'URL cache duration', 'ai-marketing-expert' ),
+					'type'    => 'select',
+					'default' => 2592000,
+					'help'    => __( 'How long to cache fetched URL content.', 'ai-marketing-expert' ),
+					'options' => array(
+						array( 'value' => 86400, 'label' => __( '1 day', 'ai-marketing-expert' ) ),
+						array( 'value' => 604800, 'label' => __( '7 days', 'ai-marketing-expert' ) ),
+						array( 'value' => 1209600, 'label' => __( '14 days', 'ai-marketing-expert' ) ),
+						array( 'value' => 2592000, 'label' => __( '30 days', 'ai-marketing-expert' ) ),
+					),
+				),
+				array(
+					'key'     => 'skill_ids',
+					'label'   => __( 'Skills', 'ai-marketing-expert' ),
+					'type'    => 'skills',
+					'help'    => __( 'Reusable rule blocks merged into the strategist prompt. Pick SEO + Image for daily blogs.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'     => 'output_format',
+					'label'   => __( 'Output format', 'ai-marketing-expert' ),
+					'type'    => 'select',
+					'default' => 'brief',
+					'help'    => __( 'Content Brief = structured markdown for next step. Custom JSON (Pro) = machine-readable brief, also exposed as {ai_brain.json} for downstream steps.', 'ai-marketing-expert' ),
+					'options' => array(
+						array( 'value' => 'brief', 'label' => __( 'Content Brief', 'ai-marketing-expert' ) ),
+						array( 'value' => 'json', 'label' => __( 'Custom JSON (Pro)', 'ai-marketing-expert' ) ),
+					),
+				),
+			),
+			'handler'     => array( AiBrainAction::class, 'run' ),
 		);
 
 		$actions['custom_prompt'] = array(
@@ -428,7 +608,15 @@ class WorkflowAutomationModule extends Module {
 			'is_pro'      => false,
 			'available'   => static fn (): bool => true,
 			'fields'      => array(
-				array( 'key' => 'prompt', 'label' => __( 'Prompt', 'ai-marketing-expert' ), 'type' => 'textarea', 'required' => true ),
+				array(
+					'key'            => 'prompt',
+					'label'          => __( 'Prompt', 'ai-marketing-expert' ),
+					'type'           => 'textarea',
+					'required'       => true,
+					'prompt_library' => true,
+					'token_hints'    => true,
+					'help'           => __( 'Click a {token} below to insert it — the workflow fills it at run time.', 'ai-marketing-expert' ),
+				),
 				array( 'key' => 'save_as_draft', 'label' => __( 'Save output as draft article', 'ai-marketing-expert' ), 'type' => 'checkbox', 'default' => false ),
 			),
 			'handler'     => array( CustomPromptAction::class, 'run' ),
@@ -450,10 +638,32 @@ class WorkflowAutomationModule extends Module {
 						array( 'value' => 'previous_step_succeeded', 'label' => __( 'Previous step succeeded', 'ai-marketing-expert' ) ),
 						array( 'value' => 'previous_output_contains', 'label' => __( 'Previous output contains…', 'ai-marketing-expert' ) ),
 						array( 'value' => 'event_field_contains', 'label' => __( 'Event field contains…', 'ai-marketing-expert' ) ),
+						array( 'value' => 'reference_compare', 'label' => __( 'Numeric compare on a step result (score ≥ 80…)', 'ai-marketing-expert' ) ),
 					),
 				),
 				array( 'key' => 'field', 'label' => __( 'Event field (for event checks)', 'ai-marketing-expert' ), 'type' => 'text' ),
 				array( 'key' => 'value', 'label' => __( 'Value to look for', 'ai-marketing-expert' ), 'type' => 'text' ),
+				array(
+					'key'     => 'ref_field',
+					'label'   => __( 'Reference field (for numeric compare)', 'ai-marketing-expert' ),
+					'type'    => 'text',
+					'default' => 'score',
+					'help'    => __( 'Dot-path into an upstream result, e.g. "score" from the SEO audit. Falls back through previous steps automatically.', 'ai-marketing-expert' ),
+				),
+				array(
+					'key'     => 'compare',
+					'label'   => __( 'Comparison (for numeric compare)', 'ai-marketing-expert' ),
+					'type'    => 'select',
+					'default' => '>=',
+					'options' => array(
+						array( 'value' => '>=', 'label' => __( '≥ greater or equal', 'ai-marketing-expert' ) ),
+						array( 'value' => '>', 'label' => __( '> greater than', 'ai-marketing-expert' ) ),
+						array( 'value' => '<=', 'label' => __( '≤ less or equal', 'ai-marketing-expert' ) ),
+						array( 'value' => '<', 'label' => __( '< less than', 'ai-marketing-expert' ) ),
+						array( 'value' => '==', 'label' => __( '= equals', 'ai-marketing-expert' ) ),
+						array( 'value' => '!=', 'label' => __( '≠ not equals', 'ai-marketing-expert' ) ),
+					),
+				),
 			),
 			'handler'     => array( ConditionAction::class, 'run' ),
 		);
@@ -465,9 +675,9 @@ class WorkflowAutomationModule extends Module {
 			'is_pro'      => false,
 			'available'   => static fn (): bool => true,
 			'fields'      => array(
-				array( 'key' => 'to', 'label' => __( 'To (blank = admin email)', 'ai-marketing-expert' ), 'type' => 'text' ),
-				array( 'key' => 'subject', 'label' => __( 'Subject', 'ai-marketing-expert' ), 'type' => 'text' ),
-				array( 'key' => 'body', 'label' => __( 'Body — tokens: {topic} {workflow_name} {previous_preview} {event.field}', 'ai-marketing-expert' ), 'type' => 'textarea' ),
+				array( 'key' => 'to', 'label' => __( 'To (blank = admin email)', 'ai-marketing-expert' ), 'type' => 'text', 'token_hints' => true ),
+				array( 'key' => 'subject', 'label' => __( 'Subject', 'ai-marketing-expert' ), 'type' => 'text', 'token_hints' => true, 'help' => __( 'Click a {token} below to insert it — the workflow fills it at run time.', 'ai-marketing-expert' ) ),
+				array( 'key' => 'body', 'label' => __( 'Body', 'ai-marketing-expert' ), 'type' => 'textarea', 'token_hints' => true, 'help' => __( 'Click a {token} below to insert it — the workflow fills it at run time. Example: {generate_blog_post.edit_url} links the new post.', 'ai-marketing-expert' ) ),
 			),
 			'handler'     => array( SendNotificationAction::class, 'run' ),
 		);
@@ -640,7 +850,7 @@ class WorkflowAutomationModule extends Module {
 
 	private function maybe_create_tables(): void {
 		$installed = get_option( 'aime_workflow_automation_db_version', '' );
-		if ( version_compare( $installed, self::DB_VERSION, '>=' ) ) {
+		if ( version_compare( $installed, AIME_WORKFLOW_DB_VERSION, '>=' ) ) {
 			return;
 		}
 
@@ -653,7 +863,7 @@ class WorkflowAutomationModule extends Module {
 			$this->migrate_to_v2();
 		}
 
-		update_option( 'aime_workflow_automation_db_version', self::DB_VERSION );
+		update_option( 'aime_workflow_automation_db_version', AIME_WORKFLOW_DB_VERSION );
 	}
 
 	/**
@@ -807,6 +1017,31 @@ class WorkflowAutomationModule extends Module {
 
 	/* ── Dashboard stats ─────────────────────────────────── */
 
+	/**
+	 * Options for the Enroll-in-Funnel step's Lists/Tags multi-selects.
+	 * Reads straight from the email-marketing tables; empty when the module
+	 * is inactive (the whole action is unavailable then anyway).
+	 *
+	 * @param string $which 'lists' or 'tags'.
+	 * @return array<int, array{value:int,label:string}>
+	 */
+	public static function email_pivot_options( string $which ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . ( 'lists' === $which ? 'aime_lists' : 'aime_tags' );
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return array();
+		}
+		$rows    = $wpdb->get_results( "SELECT id, title FROM {$table} ORDER BY title ASC" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
+		$options = array();
+		foreach ( (array) $rows as $row ) {
+			$options[] = array(
+				'value' => (int) $row->id,
+				'label' => (string) $row->title,
+			);
+		}
+		return $options;
+	}
+
 	public function get_stats(): array {
 		global $wpdb;
 		$p = $wpdb->prefix;
@@ -837,3 +1072,6 @@ class WorkflowAutomationModule extends Module {
 add_action( 'aime_load_module_workflow-automation', function ( $manager ) {
 	$manager->register( new WorkflowAutomationModule() );
 } );
+
+
+

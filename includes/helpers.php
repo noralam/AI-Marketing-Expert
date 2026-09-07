@@ -518,10 +518,14 @@ function aime_strip_thinking_text( string $raw, string $mode = 'json' ): string 
 		return $raw;
 	}
 
+	// === GLOBAL REASONING STRIPPERS (Model-Agnostic) ===
+	// These patterns work for ANY model, present or future, without needing
+	// to know specific thinking markers or prefixes.
+
 	// Strip lines that look like model-reasoning metadata
 	// (e.g. "Plan: - Step 1 ...", "Reasoning: ...", "Note: ...", or
 	// bullet-point planning paragraphs that some models emit before content).
-	$raw = preg_replace( '/^[ \t]*(?:Plan|Reasoning|Reasoning Steps?|Thought Process|Steps?|Approach|Strategy|My approach|My plan|Internal reasoning|Thinking)[ \t]*:[ \t]*[^\n\r]*[\n\r]+/im', '', $raw );
+	$raw = preg_replace( '/^[ \t]*(?:Plan|Reasoning|Reasoning Steps?|Thought Process|Steps?|Approach|Strategy|My approach|My plan|Internal reasoning|Thinking|Analysis)[ \t]*:[ \t]*[^\n\r]*[\n\r]+/im', '', $raw );
 
 	// Strip leading "Here is the JSON:" / "Here is the HTML:" / "Here is the article:" preambles
 	// when they precede a JSON or HTML body.
@@ -530,20 +534,22 @@ function aime_strip_thinking_text( string $raw, string $mode = 'json' ): string 
 	// Strip leading "Sure, ..." / "Of course, ..." / "Certainly, ..." chatty preambles.
 	$raw = preg_replace( '/^[ \t]*(?:Sure|Of course|Certainly|Absolutely|Okay|Ok|Alright|Great)[ \t,]+\S.*?\n+/i', '', $raw );
 
-	// Strip unlabeled chain-of-thought prose that some reasoning models
-	// (notably MiniMax M3 via custom provider, and other models that don't wrap
-	// reasoning in <think> tags) emit as natural-language paragraphs before
-	// the actual JSON/HTML. Common openings include "The user wants...",
-	// "Let me think...", "I need to write...". The regex matches such openings
-	// and walks forward to the first { [ or HTML tag, dropping everything in
-	// between. Conservative: requires the opening phrase + ≥20 chars of text
-	// before the closing boundary, and only strips when the text is multi-line
-	// (≥2 newlines) — avoids false positives on short legitimate text.
-	$raw = preg_replace(
-		'/^[ \t]*(?:The user wants|Let me (?:think|create|draft|analyze|review|plan|write|start)|I need to (?:write|create|plan|consider|think|generate|draft|figure)|I (?:will|\'ll) (?:write|create|generate|start|produce|build|make|now )|First,? I (?:need|should|will)|Now (?:let me|I need|I should|I will)|Looking at the (?:requirements|request|prompt|task)|I should (?:create|write|generate|make)|Let\'?s (?:write|create|make|build))[^\n\r]{20,}[\s\S]*?(?=(?:\{|\[|<[a-zA-Z!\\/]|\Z))/iu',
-		'',
-		$raw
-	);
+	// AGGRESSIVE: Strip any multi-line prose paragraph that appears before
+	// the first JSON/HTML structure. This catches unlabeled reasoning from
+	// ANY model without needing to enumerate every possible prefix pattern.
+	// Logic: If there's 2+ lines of text before the first { [ or HTML tag,
+	// and those lines contain common English words, it's probably reasoning.
+	if ( preg_match( '/^([^\{\[<]+)(?=[\{\[<])/s', $raw, $prefix_match ) ) {
+		$prefix        = $prefix_match[1];
+		$prefix_length = strlen( trim( $prefix ) );
+		$line_count    = substr_count( $prefix, "\n" );
+
+		// If prefix is multi-line (2+ \n) OR longer than 100 chars, it's reasoning.
+		// AND it must contain word characters (not just symbols/punctuation).
+		if ( ( $line_count >= 2 || $prefix_length > 100 ) && preg_match( '/[a-zA-Z]{4,}/', $prefix ) ) {
+			$raw = preg_replace( '/^[^\{\[<]+(?=[\{\[<])/s', '', $raw );
+		}
+	}
 
 	$raw = trim( $raw );
 
@@ -557,7 +563,9 @@ function aime_strip_thinking_text( string $raw, string $mode = 'json' ): string 
 		return $raw;
 	}
 
-	// Find the first { or [ that might start JSON.
+	// FINAL FALLBACK: If we still haven't found JSON/HTML start, aggressively
+	// find the first { or [ and drop everything before it (this is the most
+	// aggressive model-agnostic approach — works for any unknown model).
 	$brace   = strpos( $raw, '{' );
 	$bracket = strpos( $raw, '[' );
 
@@ -574,9 +582,11 @@ function aime_strip_thinking_text( string $raw, string $mode = 'json' ): string 
 		return $raw;
 	}
 
-	// Only strip if the prefix looks like natural language (contains words).
+	// Always strip if there's a significant amount of text before JSON starts.
+	// Small prefix (< 50 chars) might be legitimate (e.g., a label), but
+	// anything longer is almost certainly reasoning/thinking text.
 	$prefix = substr( $raw, 0, $json_start );
-	if ( preg_match( '/[a-zA-Z]{3,}/', $prefix ) ) {
+	if ( strlen( trim( $prefix ) ) > 50 || preg_match( '/[a-zA-Z]{10,}/', $prefix ) ) {
 		return substr( $raw, $json_start );
 	}
 
@@ -869,6 +879,29 @@ function aime_parse_ai_json( string $raw ): ?array {
 		$decoded = json_decode( trim( $m[1] ), true );
 		if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
 			return $decoded;
+		}
+	}
+
+	// Stage 2.5 — GLOBAL FALLBACK: Find first valid JSON by scanning for
+	// { or [ and attempting parse from every position. This catches ANY
+	// reasoning model output pattern without needing to know specific prefixes.
+	// Works for unknown future models and custom reasoning formats.
+	$first_brace   = strpos( $raw, '{' );
+	$first_bracket = strpos( $raw, '[' );
+
+	if ( false !== $first_brace || false !== $first_bracket ) {
+		// Try every position where JSON might start, earliest first.
+		$positions = array_filter( array( $first_brace, $first_bracket ), function ( $pos ) {
+			return false !== $pos;
+		} );
+		sort( $positions );
+
+		foreach ( $positions as $try_pos ) {
+			$candidate = substr( $raw, $try_pos );
+			$decoded   = json_decode( $candidate, true );
+			if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) && ! empty( $decoded ) ) {
+				return $decoded;
+			}
 		}
 	}
 

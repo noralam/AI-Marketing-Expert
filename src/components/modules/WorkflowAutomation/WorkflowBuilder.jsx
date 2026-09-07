@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/el
 import { __, sprintf } from '@wordpress/i18n';
 import { useNodesState, useEdgesState, addEdge } from '@xyflow/react';
 import { apiGet, apiPost, apiPut } from '../../../utils/api';
+import apiFetch from '@wordpress/api-fetch';
 import { toast } from '../../common/Toast';
 import Loader from '../../common/Loader';
 import LoadingBtn from '../../common/LoadingBtn';
@@ -52,6 +53,17 @@ const configSummary = ( step, def ) => {
 	return parts.join( ' · ' );
 };
 
+/** Short weekday labels keyed by JS getDay numbers (0=Sun … 6=Sat). */
+const DAY_LABELS = {
+	0: __( 'Sun', 'ai-marketing-expert' ),
+	1: __( 'Mon', 'ai-marketing-expert' ),
+	2: __( 'Tue', 'ai-marketing-expert' ),
+	3: __( 'Wed', 'ai-marketing-expert' ),
+	4: __( 'Thu', 'ai-marketing-expert' ),
+	5: __( 'Fri', 'ai-marketing-expert' ),
+	6: __( 'Sat', 'ai-marketing-expert' ),
+};
+
 /** One-line summary of the trigger settings. */
 const triggerSummary = ( wf, triggers ) => {
 	if ( wf.trigger_type !== 'schedule' && wf.trigger_event ) {
@@ -63,8 +75,16 @@ const triggerSummary = ( wf, triggers ) => {
 			return `${ __( 'Once', 'ai-marketing-expert' ) }${ wf.run_at ? ` · ${ wf.run_at }` : '' }`;
 		case 'daily':
 			return `${ __( 'Daily', 'ai-marketing-expert' ) } · ${ wf.schedule_time }`;
-		case 'weekly':
-			return `${ __( 'Weekly', 'ai-marketing-expert' ) } · ${ wf.schedule_time }`;
+		case 'weekly': {
+			const days = ( wf.schedule_days || '' )
+				.split( ',' )
+				.map( Number )
+				.filter( ( d ) => d >= 0 && d <= 6 )
+				.sort( ( a, b ) => a - b )
+				.map( ( d ) => DAY_LABELS[ d ] );
+			const daysLabel = days.length ? ` · ${ days.join( ', ' ) }` : '';
+			return `${ __( 'Weekly', 'ai-marketing-expert' ) } · ${ wf.schedule_time }${ daysLabel }`;
+		}
 		case 'monthly':
 			return `${ __( 'Monthly', 'ai-marketing-expert' ) } · ${ __( 'day', 'ai-marketing-expert' ) } ${ wf.schedule_day_of_month }`;
 		case 'custom':
@@ -89,13 +109,18 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 	const [ selectedId, setSelectedId ] = useState( null );
 	const [ confirmBack, setConfirmBack ] = useState( false );
 	const [ testRunOpen, setTestRunOpen ] = useState( false );
+	const [ queuing, setQueuing ] = useState( false ); // click → server ack window
 	const [ runState, setRunState ] = useState( null ); // { executionId, status, outputs }
 	const [ vaultKeywords, setVaultKeywords ] = useState( [] );
+	const [ wpTags, setWpTags ] = useState( [] );
 	const [ brandVoices, setBrandVoices ] = useState( [] );
 
 	const [ nodes, setNodes, onNodesChange ] = useNodesState( [] );
 	const [ edges, setEdges, onEdgesChange ] = useEdgesState( [] );
 	const pollRef = useRef( null );
+	// Guards the finish toast: setInterval callbacks can overlap on a slow
+	// request, and each would otherwise fire its own notice for the same run.
+	const finishedRef = useRef( null );
 
 	const actionsByType = useMemo( () => {
 		const map = {};
@@ -125,6 +150,12 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 				// SEO module inactive — no suggestions.
 			}
 			try {
+				const tags = await apiFetch( { path: '/wp/v2/tags?per_page=100&hide_empty=false&_fields=id,name' } );
+				setWpTags( ( tags || [] ).map( ( t ) => t.name ).filter( Boolean ) );
+			} catch ( e ) {
+				// Tags REST unavailable — field stays free-form.
+			}
+			try {
 				const bvRes = await apiGet( '/content/brand-voices' );
 				setBrandVoices( bvRes?.items || [] );
 			} catch ( e ) {
@@ -140,6 +171,32 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 					const flow = stepsToFlow( steps || [], data );
 					setNodes( flow.nodes );
 					setEdges( flow.edges );
+
+					// Templates ship intentionally unconfigured picks (e.g. the
+					// funnel). Auto-open the first step still missing a required
+					// setting so the user lands directly on the work to do.
+					const defMap = {};
+					( actRes?.actions || [] ).forEach( ( a ) => { defMap[ a.type ] = a; } );
+					const needsSetup = ( steps || [] ).find( ( s ) => {
+						const def = defMap[ s.action_type ];
+						if ( ! def ) {
+							return false;
+						}
+						return ( def.fields || [] ).some( ( f ) => {
+							if ( ! f.required ) {
+								return false;
+							}
+							const v = ( s.config || {} )[ f.key ] ?? f.default ?? '';
+							return v === '' || v === null || v === 0 || v === '0';
+						} );
+					} );
+					if ( needsSetup && flow.nodes.some( ( n ) => n.id === needsSetup.step_key ) ) {
+						setSelectedId( needsSetup.step_key );
+						toast(
+							__( 'Template applied — configure the highlighted step, then activate.', 'ai-marketing-expert' ),
+							'warning'
+						);
+					}
 				}
 			} else {
 				setNodes( stepsToFlow( [], null ).nodes );
@@ -321,7 +378,13 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 		if ( pollRef.current ) {
 			clearInterval( pollRef.current );
 		}
+		finishedRef.current = null;
+		let inFlight = false;
 		pollRef.current = setInterval( async () => {
+			if ( inFlight ) {
+				return; // Previous tick still waiting; don't stack requests.
+			}
+			inFlight = true;
 			try {
 				const res = await apiGet( `/workflow-automation/executions/${ executionId }` );
 				const exec = res?.execution;
@@ -330,20 +393,30 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 				}
 				setRunState( { executionId, status: exec.status, outputs: exec.outputs || [] } );
 				if ( ! [ 'queued', 'running' ].includes( exec.status ) ) {
-					clearInterval( pollRef.current );
-					pollRef.current = null;
-					toast(
-						exec.status === 'success'
-							? __( 'Workflow run finished successfully.', 'ai-marketing-expert' )
-							: `${ __( 'Workflow run finished:', 'ai-marketing-expert' ) } ${ exec.status }`,
-						exec.status === 'success' ? 'success' : 'warning'
-					);
+					if ( pollRef.current ) {
+						clearInterval( pollRef.current );
+						pollRef.current = null;
+					}
+					// One finish notice per execution, whichever tick gets here first.
+					if ( finishedRef.current !== executionId ) {
+						finishedRef.current = executionId;
+						toast(
+							exec.status === 'success'
+								? __( 'Workflow run finished successfully.', 'ai-marketing-expert' )
+								: `${ __( 'Workflow run finished:', 'ai-marketing-expert' ) } ${ exec.status }`,
+							exec.status === 'success' ? 'success' : 'warning'
+						);
+					}
 				}
-			} catch ( e ) { /* transient poll errors are ignored */ }
+			} catch ( e ) { /* transient poll errors are ignored */ } finally {
+				inFlight = false;
+			}
 		}, 3000 );
 	}, [] );
 
 	const queueRun = useCallback( async ( event = null ) => {
+		setQueuing( true );
+		setRunState( null ); // Drop the previous run's result so the UI reads as "starting".
 		try {
 			const res = await apiPost(
 				`/workflow-automation/workflows/${ id }/run`,
@@ -356,10 +429,15 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 			}
 		} catch ( e ) {
 			toast( e?.message || __( 'Run failed.', 'ai-marketing-expert' ), 'error' );
+		} finally {
+			setQueuing( false );
 		}
 	}, [ id, pollExecution ] );
 
 	const runNow = async () => {
+		if ( queuing || ( runState && [ 'queued', 'running' ].includes( runState.status ) ) ) {
+			return; // Already starting or in progress.
+		}
 		if ( ! id ) {
 			toast( __( 'Save the workflow before running it.', 'ai-marketing-expert' ), 'warning' );
 			return;
@@ -438,7 +516,7 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 	}
 
 	const selectedNode = selectedId ? displayNodes.find( ( n ) => n.id === selectedId ) : null;
-	const running = runState && [ 'queued', 'running' ].includes( runState.status );
+	const running = queuing || ( runState && [ 'queued', 'running' ].includes( runState.status ) );
 
 	return (
 		<div className="aime-wf-builder">
@@ -478,7 +556,11 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 					/>
 					<Button variant="secondary" onClick={ relayout }>{ __( 'Auto layout', 'ai-marketing-expert' ) }</Button>
 					{ running ? (
-						<LoadingBtn>{ __( 'Running…', 'ai-marketing-expert' ) }</LoadingBtn>
+						<LoadingBtn>
+							{ queuing && ! runState
+								? __( 'Starting…', 'ai-marketing-expert' )
+								: __( 'Running…', 'ai-marketing-expert' ) }
+						</LoadingBtn>
 					) : (
 						<Button variant="secondary" onClick={ runNow } disabled={ ! id }>
 							{ __( 'Run now', 'ai-marketing-expert' ) }
@@ -515,7 +597,10 @@ const WorkflowBuilder = ( { id, onBack, onNavigate } ) => {
 					onDeselect={ deselect }
 					hasPro={ hasPro }
 					keywordSuggestions={ vaultKeywords }
+					tagSuggestions={ wpTags }
 					brandVoices={ brandVoices }
+					nodes={ nodes }
+					edges={ edges }
 				/>
 			</div>
 

@@ -374,6 +374,7 @@ class Admin {
 			'freeLimits'     => aime_free_limits(),
 			'siteUrl'        => home_url(),
 			'siteName'       => get_bloginfo( 'name' ),
+			'timezone'       => wp_timezone_string(),
 			'adminEmail'     => get_option( 'admin_email' ),
 			'currentPage'    => $current_page,
 			'hasWooCommerce' => class_exists( 'WooCommerce' ),

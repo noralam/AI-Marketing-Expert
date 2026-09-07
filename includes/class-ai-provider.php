@@ -2603,7 +2603,13 @@ class AiProvider {
 			),
 		);
 
-		if ( ! empty( $options['json_mode'] ) ) {
+		// Structured output (json_schema) takes precedence over basic json_mode.
+		if ( ! empty( $options['json_schema'] ) ) {
+			$request['response_format'] = array(
+				'type'        => 'json_schema',
+				'json_schema' => $options['json_schema'],
+			);
+		} elseif ( ! empty( $options['json_mode'] ) ) {
 			$request['response_format'] = array( 'type' => 'json_object' );
 		}
 
@@ -2628,8 +2634,16 @@ class AiProvider {
 
 		$choice        = $body['choices'][0] ?? array();
 		$finish_reason = $choice['finish_reason'] ?? '';
-		// content can be null when the model applies a content filter or refuses.
-		$text          = isset( $choice['message']['content'] ) ? (string) $choice['message']['content'] : null;
+
+		// Extract content — reasoning models may return thinking in reasoning_content.
+		// Prefer content over reasoning_content (content is the actual answer).
+		$message = $choice['message'] ?? array();
+		$text    = isset( $message['content'] ) ? (string) $message['content'] : null;
+
+		// Fallback: if content is empty but reasoning_content exists, extract it.
+		if ( ( null === $text || '' === $text ) && ! empty( $message['reasoning_content'] ) ) {
+			$text = (string) $message['reasoning_content'];
+		}
 
 		if ( null === $text || '' === trim( $text ) ) {
 			if ( 'content_filter' === $finish_reason ) {
@@ -2675,7 +2689,17 @@ class AiProvider {
 			),
 		);
 
-		if ( ! empty( $options['json_mode'] ) ) {
+		// Structured output (json_schema) takes precedence over basic json_mode.
+		// This is how coding agents (Copilot, Cursor, Claude Code) get reliable
+		// JSON with thinking separated automatically by the model.
+		if ( ! empty( $options['json_schema'] ) ) {
+			$body['response_format'] = array(
+				'type'        => 'json_schema',
+				'json_schema' => $options['json_schema'],
+			);
+		} elseif ( ! empty( $options['json_mode'] ) ) {
+			// Fallback: basic json_object mode (model returns JSON but structure
+			// not enforced; may include thinking text around it).
 			$body['response_format'] = array( 'type' => 'json_object' );
 		}
 
@@ -2709,7 +2733,16 @@ class AiProvider {
 
 		$choice     = $body['choices'][0] ?? array();
 		$raw_finish = (string) ( $choice['finish_reason'] ?? '' );
-		$text       = isset( $choice['message']['content'] ) ? (string) $choice['message']['content'] : '';
+
+		// Extract content — reasoning models may return thinking in reasoning_content.
+		// Prefer content over reasoning_content (content is the actual answer).
+		$message = $choice['message'] ?? array();
+		$text    = isset( $message['content'] ) ? (string) $message['content'] : '';
+
+		// Fallback: if content is empty but reasoning_content exists, extract it.
+		if ( '' === $text && ! empty( $message['reasoning_content'] ) ) {
+			$text = (string) $message['reasoning_content'];
+		}
 
 		if ( '' === trim( $text ) ) {
 			return array(
@@ -2844,7 +2877,12 @@ class AiProvider {
 			),
 		);
 
-		if ( ! empty( $options['json_mode'] ) ) {
+		if ( ! empty( $options['json_schema'] ) ) {
+			$request['response_format'] = array(
+				'type'        => 'json_schema',
+				'json_schema' => $options['json_schema'],
+			);
+		} elseif ( ! empty( $options['json_mode'] ) ) {
 			$request['response_format'] = array( 'type' => 'json_object' );
 		}
 
@@ -2867,7 +2905,18 @@ class AiProvider {
 			return self::http_failure( $response, $body['error']['message'] ?? __( 'Custom provider error.', 'ai-marketing-expert' ) );
 		}
 
-		$text = $body['choices'][0]['message']['content'] ?? '';
+		// Extract content — reasoning models (muse-spark, deepseek-r1, etc.) may
+		// return thinking in a separate reasoning_content field. Prefer content
+		// over reasoning_content (reasoning is internal, content is the answer).
+		$message = $body['choices'][0]['message'] ?? array();
+		$text    = $message['content'] ?? '';
+
+		// Fallback: if content is empty but reasoning_content exists, some models
+		// put everything in reasoning_content when json_mode is enabled.
+		if ( '' === $text && ! empty( $message['reasoning_content'] ) ) {
+			$text = (string) $message['reasoning_content'];
+		}
+
 		return self::text_result( (string) $text, (array) $body, 'openai', (string) ( $body['choices'][0]['finish_reason'] ?? '' ) );
 	}
 

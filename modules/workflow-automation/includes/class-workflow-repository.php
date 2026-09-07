@@ -127,16 +127,38 @@ class WorkflowRepository {
 		);
 	}
 
+	/**
+	 * Record a completed run and advance the schedule in ONE statement.
+	 *
+	 * Previously two queries (run counter, then next_run_at): a crash between
+	 * them left next_run_at in the past and caused a duplicate run on the next
+	 * tick. A single UPDATE is atomic regardless of storage engine.
+	 */
 	public function mark_ran( int $id, ?string $next_run_at ): void {
 		global $wpdb;
 		$now = current_time( 'mysql', true );
+
+		if ( null === $next_run_at ) {
+			$wpdb->query( $wpdb->prepare(
+				"UPDATE {$this->workflows}
+				    SET last_run_at = %s, run_count = run_count + 1, next_run_at = NULL, updated_at = %s
+				  WHERE id = %d",
+				$now,
+				$now,
+				$id
+			) );
+			return;
+		}
+
 		$wpdb->query( $wpdb->prepare(
-			"UPDATE {$this->workflows} SET last_run_at = %s, run_count = run_count + 1, updated_at = %s WHERE id = %d",
+			"UPDATE {$this->workflows}
+			    SET last_run_at = %s, run_count = run_count + 1, next_run_at = %s, updated_at = %s
+			  WHERE id = %d",
 			$now,
+			$next_run_at,
 			$now,
 			$id
 		) );
-		$this->set_next_run( $id, $next_run_at );
 	}
 
 	/* ── Steps ──────────────────────────────────────────── */
@@ -215,9 +237,15 @@ class WorkflowRepository {
 	}
 
 	/**
-	 * Runs counted against the free monthly cap: every execution row created
-	 * this calendar month (UTC), except 'skipped' rows — those are the record
-	 * of runs the cap itself blocked and must not consume budget.
+	 * Runs counted against the free monthly cap: successful and partly
+	 * successful executions this calendar month (UTC).
+	 *
+	 * Excluded on purpose:
+	 *  - 'skipped' rows — the record of runs the cap itself blocked;
+	 *  - 'failed' rows — a debugging session retrying broken steps must not
+	 *    burn the same budget as real runs.
+	 * Queued/running rows are not finished yet; they are counted the moment
+	 * they land in an included state.
 	 *
 	 * @param int $exclude_id Execution row to leave out of the count — pass the
 	 *                        current run's own pre-created row so it does not
@@ -226,7 +254,9 @@ class WorkflowRepository {
 	public function count_runs_this_month( int $exclude_id = 0 ): int {
 		global $wpdb;
 		return (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$this->executions} WHERE status != 'skipped' AND started_at >= %s AND id != %d",
+			"SELECT COUNT(*) FROM {$this->executions}
+			  WHERE status IN ('success','partial','queued','running')
+			    AND started_at >= %s AND id != %d",
 			gmdate( 'Y-m-01 00:00:00' ),
 			$exclude_id
 		) );

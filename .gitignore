@@ -51,3 +51,10 @@ AI_workflow_Automation_PRD.md
 
 # Plugin zip
 *.zip
+
+# Marketing agent local profiles & environments
+marketing-agent/.venv/
+marketing-agent/sessions/
+marketing-agent/temp_images/
+__pycache__/
+*.pyc

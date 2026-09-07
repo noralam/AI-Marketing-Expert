@@ -109,15 +109,15 @@ class WorkflowEngine {
 		}
 
 		// Concurrency guard: skip if a run is already in flight for this workflow.
-		$lock_key = 'aime_wf_lock_' . $workflow_id;
-		if ( get_transient( $lock_key ) ) {
+		// add_option() is an atomic DB insert — two concurrent consumers cannot
+		// both win it, unlike a transient check-then-set pair.
+		if ( ! $this->acquire_lock( $workflow_id ) ) {
 			aime_log( sprintf( 'Workflow #%d already running; skipping overlapping dispatch.', $workflow_id ), 'info', 'workflow-automation' );
 			if ( $execution_id > 0 ) {
 				$this->repo->finish_execution( $execution_id, 'failed', array(), __( 'Workflow already running.', 'ai-marketing-expert' ) );
 			}
 			return $this->fail_result( 'Workflow already running.' );
 		}
-		set_transient( $lock_key, 1, self::LOCK_TTL );
 		self::$executing = true;
 
 		// Give long AI generations room to run.
@@ -244,7 +244,6 @@ class WorkflowEngine {
 				$this->record_output( $execution_id, $workflow_id, $step, 'failed', $result['preview'], $result['reference'], $result['error'] );
 				$counts['failed']++;
 				$step_errors[] = $this->label_error( $step, $result['error'] );
-				$this->notify_failure( $workflow, $step, $result['error'] );
 
 				if ( 'stop' === $policy ) {
 					$halted = true;
@@ -307,8 +306,14 @@ class WorkflowEngine {
 		// Recompute the schedule.
 		$this->reschedule( $workflow );
 
-		delete_transient( $lock_key );
+		$this->release_lock( $workflow_id );
 		self::$executing = false;
+
+		// One digest per run (not one email per failed step) so a multi-step
+		// failure cannot flood the admin inbox.
+		if ( $step_errors ) {
+			$this->send_failure_digest( $workflow, $step_errors, $execution_id, $status );
+		}
 
 		aime_log(
 			sprintf( 'Workflow #%d "%s" ran (%s): %d ok, %d failed, %d skipped.', $workflow_id, $workflow->name, $status, $counts['success'], $counts['failed'], $counts['skipped'] ),
@@ -475,28 +480,84 @@ class WorkflowEngine {
 		return $label . ': ' . $error;
 	}
 
-	private function notify_failure( object $workflow, object $step, string $error ): void {
-		// Respect a per-workflow / global notification preference stored in settings.
+	/**
+	 * Send ONE digest email per execution summarizing every failed step.
+	 * @param object            $workflow     Workflow row.
+	 * @param array<int,string> $step_errors  Labeled step error messages.
+	 * @param int               $execution_id Execution row ID (0 when unknown).
+	 * @param string            $status       Final execution status.
+	 */
+	private function send_failure_digest( object $workflow, array $step_errors, int $execution_id = 0, string $status = 'failed' ): void {
 		$settings = get_option( 'aime_workflow-automation_settings', array() );
 		if ( isset( $settings['failure_notifications'] ) && ! $settings['failure_notifications'] ) {
 			return;
 		}
 
-		$to      = get_option( 'admin_email' );
+		$to   = get_option( 'admin_email' );
+		$list = '';
+		foreach ( array_slice( array_filter( $step_errors ), 0, 5 ) as $i => $err ) {
+			$list .= sprintf( "%d) %s\n", $i + 1, $err );
+		}
+		$extra_total = max( 0, count( $step_errors ) - 5 );
+		if ( $extra_total > 0 ) {
+			/* translators: %d: number of additional errors not shown. */
+			$list .= sprintf( __( '…and %d more.', 'ai-marketing-expert' ), $extra_total ) . "\n";
+		}
+
 		$subject = sprintf(
-			/* translators: %s: workflow name */
-			__( '[%s] Workflow step failed', 'ai-marketing-expert' ),
-			get_bloginfo( 'name' )
-		);
-		$body = sprintf(
-			/* translators: 1: workflow name, 2: action type, 3: error */
-			__( "Workflow: %1\$s\nStep: %2\$s\nError: %3\$s", 'ai-marketing-expert' ),
+			/* translators: 1: site name, 2: workflow name, 3: run status */
+			__( '[%1$s] Workflow issue: %2$s (%3$s)', 'ai-marketing-expert' ),
+			get_bloginfo( 'name' ),
 			$workflow->name,
-			$step->action_type,
-			$error
+			$status
 		);
 
+		$body = sprintf(
+			/* translators: 1: workflow name, 2: run status */
+			__( "The workflow \"%1\$s\" finished with status: %2\$s.\n\nFailed steps:\n%3\$s", 'ai-marketing-expert' ),
+			$workflow->name,
+			$status,
+			$list
+		);
+		if ( $execution_id > 0 ) {
+			$body .= __( 'Open the workflow history for details:', 'ai-marketing-expert' ) . "\n"
+				. admin_url( 'admin.php?page=ai-marketing-expert-workflow-automation' ) . "\n";
+		}
+
 		wp_mail( $to, $subject, $body );
+	}
+
+	/**
+	 * Atomic per-workflow run lock.
+	 *
+	 * add_option() fails when a row already exists — that INSERT is the mutex,
+	 * safe against concurrent cron workers where a transient check-then-set is
+	 * not. A lock older than LOCK_TTL belongs to a dead worker and is swept so
+	 * one fatal error cannot wedge a workflow forever (the execution row itself
+	 * is closed separately by fail_stale_running()).
+	 */
+	private function acquire_lock( int $workflow_id ): bool {
+		global $wpdb;
+
+		$key      = 'aime_wf_lock_' . $workflow_id;
+		$existing = $wpdb->get_var( $wpdb->prepare(
+			"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+			$key
+		) );
+
+		if ( null !== $existing ) {
+			if ( ( time() - (int) $existing ) < self::LOCK_TTL ) {
+				return false;
+			}
+			// Stale lock from a crashed worker — clear it so add_option can win.
+			delete_option( $key );
+		}
+
+		return (bool) add_option( $key, time(), '', 'no' );
+	}
+
+	private function release_lock( int $workflow_id ): void {
+		delete_option( 'aime_wf_lock_' . $workflow_id );
 	}
 
 	private function fail_result( string $error ): array {

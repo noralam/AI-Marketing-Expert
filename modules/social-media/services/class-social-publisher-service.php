@@ -34,6 +34,25 @@ class SocialPublisherService {
 		$accounts_table = $p . 'aime_social_accounts';
 		$now = $this->get_scheduler_now();
 
+		// Reclaim posts stuck in 'publishing' (a crash or timeout between the
+		// status flip and the API response). After a 10-minute grace period
+		// they are re-queued; three strikes mark them failed for good so a
+		// deterministically crashing publish cannot loop forever.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cron queue maintenance needs current rows.
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE %i SET
+				status        = IF( retry_count >= 2, 'failed', 'scheduled' ),
+				error_message = IF( retry_count >= 2, %s, error_message ),
+				retry_count   = retry_count + 1,
+				updated_at    = %s
+			 WHERE status = 'publishing'
+			   AND updated_at < %s",
+			$posts_table,
+			__( 'Publishing timed out repeatedly; giving up after 3 attempts.', 'ai-marketing-expert' ),
+			current_time( 'mysql', true ),
+			gmdate( 'Y-m-d H:i:s', time() - 10 * MINUTE_IN_SECONDS )
+		) );
+
 		// Fetch due posts.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cron queue processing needs current scheduled posts.
 		$posts = $wpdb->get_results( $wpdb->prepare(

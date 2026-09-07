@@ -12,6 +12,7 @@
 namespace WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions;
 
 use WPSpace\AiMarketingExpert\AiProvider;
+use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\WorkflowTokens;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -28,10 +29,17 @@ class EmailCampaignAction extends BaseAction {
 			return self::fail( __( 'No topic provided for the email campaign.', 'ai-marketing-expert' ) );
 		}
 		$tone  = self::tone( $context );
-		$title = sanitize_text_field( (string) ( $config['title'] ?? '' ) );
+		$title = sanitize_text_field( WorkflowTokens::replace( (string) ( $config['title'] ?? '' ), $context ) );
 		if ( '' === $title ) {
 			/* translators: %s: email campaign topic. */
 			$title = sprintf( __( 'Draft: %s', 'ai-marketing-expert' ), wp_trim_words( $topic, 8, '' ) );
+		}
+
+		// Enrich the prompt with the upstream strategist brief and the
+		// workflow's brand voice so campaigns match the rest of the batch.
+		$brief = self::resolve_from_context( $context, 'full_output', 'ai_brain' );
+		if ( '' === $brief ) {
+			$brief = self::resolve_from_context( $context, 'full_output', 'custom_prompt' );
 		}
 
 		$prompt = sprintf(
@@ -40,7 +48,17 @@ class EmailCampaignAction extends BaseAction {
 			$topic,
 			$tone
 		);
-		$result = AiProvider::generate( $prompt, 'text', 2048 );
+		if ( '' !== $brief ) {
+			$prompt .= "\n\nContent brief from the AI strategist (context only, follow its angle):\n" . mb_substr( $brief, 0, 1500 );
+		}
+		$voice_prompt = self::brand_voice_system_prompt( $context );
+		if ( '' !== $voice_prompt ) {
+			$prompt .= "\n\nBrand voice guidelines:\n" . mb_substr( $voice_prompt, 0, 800 );
+		}
+
+		// json_mode asks JSON-capable providers for native structured output;
+		// aime_parse_ai_json remains the fallback parser either way.
+		$result = AiProvider::generate( $prompt, 'text', 2048, array( 'json_mode' => true ) );
 		if ( empty( $result['success'] ) ) {
 			return self::fail( $result['message'] ?? __( 'Email generation failed.', 'ai-marketing-expert' ) );
 		}
@@ -66,7 +84,7 @@ class EmailCampaignAction extends BaseAction {
 			'email_subject' => sanitize_text_field( $subject ),
 			'email_body'   => wp_kses_post( $body ),
 			'design_template' => 'simple',
-			'created_by'   => get_current_user_id() ?: null,
+			'created_by'   => get_current_user_id() ?: (int) ( $context['created_by'] ?? 0 ) ?: null,
 			'created_at'   => $now,
 			'updated_at'   => $now,
 		) );

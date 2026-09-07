@@ -40,12 +40,70 @@ abstract class BaseAction {
 	}
 
 	/**
-	 * Resolve the effective topic: step config topic, else workflow context topic.
+	 * Resolve a value from upstream step outputs.
+	 *
+	 * Walks the direct parent's reference first, then the full `previous`
+	 * history newest→oldest — so chained steps (Brain → Blog → Audit → Social)
+	 * still find the Brain brief several hops away, and sibling branches are
+	 * visible to steps that follow them. Optionally restricted to outputs of
+	 * one action type.
+	 *
+	 * @param array       $context     Workflow context.
+	 * @param string      $ref_key     Reference key to look for (e.g. 'selected_topic').
+	 * @param string|null $action_type When set, only outputs of this action type match.
+	 * @return string Empty string when nothing upstream provides the key.
+	 */
+	protected static function resolve_from_context( array $context, string $ref_key, ?string $action_type = null ): string {
+		// 1. Direct parent output (the common case).
+		$parent_ref = is_array( $context['parent_output']['reference'] ?? null ) ? $context['parent_output']['reference'] : array();
+		if ( ! empty( $parent_ref[ $ref_key ] ) && is_scalar( $parent_ref[ $ref_key ] )
+			&& ( null === $action_type || ( $context['parent_output']['action_type'] ?? '' ) === $action_type ) ) {
+			return trim( (string) $parent_ref[ $ref_key ] );
+		}
+
+		// 2. Full previous-step history, newest first.
+		$previous = is_array( $context['previous'] ?? null ) ? $context['previous'] : array();
+		foreach ( array_reverse( $previous ) as $entry ) {
+			if ( ! is_array( $entry ) || null !== $action_type && (string) ( $entry['action_type'] ?? '' ) !== $action_type ) {
+				continue;
+			}
+			$reference = is_array( $entry['reference'] ?? null ) ? $entry['reference'] : array();
+			if ( ! empty( $reference[ $ref_key ] ) && is_scalar( $reference[ $ref_key ] ) ) {
+				return trim( (string) $reference[ $ref_key ] );
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Resolve the effective topic:
+	 * step config → workflow topic → any upstream AI Brain / Custom Prompt
+	 * selection (ancestor-aware) → trigger-event fallback (post_title/name).
 	 */
 	protected static function topic( array $config, array $context, string $key = 'topic' ): string {
 		$topic = trim( (string) ( $config[ $key ] ?? '' ) );
 		if ( '' === $topic ) {
 			$topic = trim( (string) ( $context['topic'] ?? '' ) );
+		}
+		if ( '' === $topic ) {
+			$topic = self::resolve_from_context( $context, 'selected_topic', 'ai_brain' );
+		}
+		if ( '' === $topic ) {
+			// Custom Prompt steps can also steer downstream topics via their output.
+			$topic = self::resolve_from_context( $context, 'full_output', 'custom_prompt' );
+			if ( '' !== $topic ) {
+				$topic = wp_trim_words( preg_replace( '/\s+/u', ' ', $topic ), 12, '' );
+			}
+		}
+		// Event-triggered runs without any topic config: promote from the event.
+		if ( '' === $topic && is_array( $context['event'] ?? null ) ) {
+			foreach ( array( 'post_title', 'name', 'title' ) as $event_key ) {
+				if ( ! empty( $context['event'][ $event_key ] ) && is_scalar( $context['event'][ $event_key ] ) ) {
+					$topic = trim( (string) $context['event'][ $event_key ] );
+					break;
+				}
+			}
 		}
 		return $topic;
 	}
@@ -133,13 +191,108 @@ abstract class BaseAction {
 	}
 
 	/**
+	 * Brand-voice system instructions for the workflow (Pro).
+	 *
+	 * Shared by every AI-generating step so a selected brand voice applies
+	 * consistently — not only to blog posts.
+	 *
+	 * @param array $context Workflow context (brand_voice_id).
+	 * @return string Prompt text ('' when no voice applies).
+	 */
+	protected static function brand_voice_system_prompt( array $context ): string {
+		if ( ! aime_has_pro() ) {
+			return '';
+		}
+		$brand_voice_id = (int) ( $context['brand_voice_id'] ?? 0 );
+		if ( $brand_voice_id <= 0 ) {
+			return '';
+		}
+		$voice_controller = '\\WPSpace\\AiMarketingExpert\\Modules\\ContentGenerator\\Controllers\\WorkflowController';
+		if ( ! class_exists( $voice_controller ) ) {
+			return '';
+		}
+		return (string) $voice_controller::get_brand_voice_prompt( $brand_voice_id );
+	}
+
+	/**
+	 * Build a compact context block from upstream step outputs, newest first.
+	 *
+	 * Used by caption/ad prompts that want to "see" what earlier steps produced
+	 * (e.g. the article title a social post is promoting). Unlike the legacy
+	 * `previous[0]` lookup this reflects the actual chain order and prefers
+	 * article-producing steps when present.
+	 *
+	 * @param array  $context   Workflow context.
+	 * @param int    $max_chars Output length cap.
+	 * @return string '' when nothing upstream succeeded.
+	 */
+	protected static function ancestor_context( array $context, int $max_chars = 800 ): string {
+		$previous = is_array( $context['previous'] ?? null ) ? $context['previous'] : array();
+		// Article outputs first (most relevant for promo copy), then the rest newest→oldest.
+		$priorities = array( 'generate_blog_post', 'custom_prompt', 'ai_brain' );
+		$ordered    = array();
+		foreach ( $priorities as $type ) {
+			foreach ( array_reverse( $previous ) as $entry ) {
+				if ( is_array( $entry ) && (string) ( $entry['action_type'] ?? '' ) === $type && ! empty( $entry['preview'] ) ) {
+					$ordered[] = (string) $entry['preview'];
+				}
+			}
+		}
+		foreach ( array_reverse( $previous ) as $entry ) {
+			if ( is_array( $entry ) && ! empty( $entry['preview'] ) && ! in_array( (string) $entry['preview'], $ordered, true ) ) {
+				$ordered[] = (string) $entry['preview'];
+			}
+		}
+
+		$out = implode( "\n", $ordered );
+		return mb_strlen( $out ) > $max_chars ? mb_substr( $out, 0, $max_chars ) : $out;
+	}
+
+	/**
 	 * Deep link to a plugin module admin page (used as reference['link'] so
 	 * execution history can jump straight to the produced artifact).
 	 *
+	 * Module pages route their sub-views off the URL hash, so a link without
+	 * one lands on the module's default tab rather than the artifact.
+	 *
 	 * @param string $page Module page suffix (content|email|seo|social|...).
+	 * @param string $view Optional sub-view key routed via the hash (e.g. 'articles').
 	 */
-	protected static function module_link( string $page ): string {
-		return admin_url( 'admin.php?page=ai-marketing-expert-' . $page );
+	protected static function module_link( string $page, string $view = '' ): string {
+		$url = admin_url( 'admin.php?page=ai-marketing-expert-' . $page );
+		return '' !== $view ? $url . '#' . $view : $url;
+	}
+
+	/**
+	 * Return distinct topics covered in the last $days days.
+	 *
+	 * Queries the content articles table. Fail-soft — returns empty array if
+	 * the table doesn't exist. Used by AI Brain to avoid repeating recent topics.
+	 *
+	 * @param int $days  Look-back window in days.
+	 * @param int $limit Maximum topics to return.
+	 * @return string[] Array of topic strings.
+	 */
+	protected static function recent_topics( int $days = 60, int $limit = 30 ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'aime_content_articles';
+
+		// Guard: table must exist.
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return array();
+		}
+
+		$rows = $wpdb->get_col( $wpdb->prepare(
+			"SELECT DISTINCT topic FROM {$table}
+			 WHERE topic != '' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+			 ORDER BY created_at DESC LIMIT %d",
+			$days,
+			$limit
+		) );
+
+		return is_array( $rows )
+			? array_values( array_filter( array_map( 'sanitize_text_field', $rows ) ) )
+			: array();
 	}
 
 	/**

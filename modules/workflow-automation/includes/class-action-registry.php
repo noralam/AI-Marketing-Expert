@@ -87,7 +87,13 @@ class ActionRegistry {
 				'description' => $def['description'] ?? '',
 				'is_pro'      => (bool) ( $def['is_pro'] ?? false ),
 				'available'   => $available,
-				'fields'      => self::resolve_fields( $def['fields'] ?? array() ),
+				// Fields statically ruled invisible server-side (e.g.
+				// WooCommerce-only fields on non-WooCommerce sites) are dropped
+				// from the payload rather than shipped as empty husks.
+				'fields'      => array_values( array_filter(
+					self::resolve_fields( $def['fields'] ?? array() ),
+					static fn ( array $f ): bool => false !== ( $f['visible'] ?? true )
+				) ),
 			);
 		}
 		return $out;
@@ -97,6 +103,17 @@ class ActionRegistry {
 	 * Resolve dynamic field options: a field's 'options' may be a callable that
 	 * queries live data (accounts, funnels, posts…); resolve it here so the API
 	 * payload is plain JSON. Failures degrade to an empty options list.
+	 *
+	 * Visibility rules are serialized for frontend evaluation:
+	 *
+	 *  - Declarative `visible_rule` arrays pass through. Static rules
+	 *    (class_exists / module_active) are evaluated right here and collapsed
+	 *    to a boolean `visible` flag; parent-dependent rules
+	 *    (`parent_not` / `parent_is`) stay declarative — the builder knows the
+	 *    graph and evaluates them per step.
+	 *  - Legacy `visible` callables from third parties cannot cross the JSON
+	 *    boundary; they keep the historical `'not_parent_ai_brain'` marker so
+	 *    existing behaviour is unchanged.
 	 *
 	 * @param array $fields Field definitions.
 	 * @return array<int,array>
@@ -112,6 +129,36 @@ class ActionRegistry {
 				}
 				$field['options'] = is_array( $options ) ? array_values( $options ) : array();
 			}
+
+			$rule = $field['visible_rule'] ?? null;
+			if ( is_array( $rule ) && ! empty( $rule['type'] ) ) {
+				switch ( $rule['type'] ) {
+					case 'class_exists':
+						$field['visible'] = class_exists( (string) ( $rule['class'] ?? '' ) );
+						unset( $field['visible_rule'] );
+						break;
+					case 'module_active':
+						try {
+							$field['visible'] = \WPSpace\AiMarketingExpert\Plugin::instance()->modules()->is_active( (string) ( $rule['module'] ?? '' ) );
+						} catch ( \Throwable $e ) {
+							$field['visible'] = false;
+						}
+						unset( $field['visible_rule'] );
+						break;
+					case 'parent_not':
+					case 'parent_is':
+						// Parent-dependent: leave the rule in place for the builder.
+						break;
+					default:
+						unset( $field['visible_rule'] );
+						break;
+				}
+			} elseif ( is_callable( $field['visible'] ?? null ) ) {
+				// Legacy third-party callable: preserve historical serialization.
+				$field['visible_rule'] = 'not_parent_ai_brain';
+				unset( $field['visible'] );
+			}
+
 			$out[] = $field;
 		}
 		return $out;

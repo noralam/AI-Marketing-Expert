@@ -34,11 +34,14 @@ class AiSocialService {
 	 * @param string $topic      Topic or brief.
 	 * @param string $tone       Tone of voice.
 	 * @param string $context    Additional context.
+	 * @param string $extra_instructions Optional extra system instructions
+	 *                                   (e.g. workflow brand voice). Appended
+	 *                                   verbatim before the untrusted brief.
 	 * @return array { success: bool, content?: string, message?: string }
 	 */
-	public function generate_caption( string $platform, string $topic, string $tone, string $context = '' ): array {
+	public function generate_caption( string $platform, string $topic, string $tone, string $context = '', string $extra_instructions = '' ): array {
 		$char_limit = self::CHAR_LIMITS[ $platform ] ?? 2200;
-		$prompt     = $this->build_caption_prompt( $platform, $topic, $tone, $context, $char_limit );
+		$prompt     = $this->build_caption_prompt( $platform, $topic, $tone, $context, $char_limit, $extra_instructions );
 		$last_error = __( 'AI generation failed.', 'ai-marketing-expert' );
 
 		for ( $attempt = 0; $attempt < 2; $attempt++ ) {
@@ -76,7 +79,7 @@ class AiSocialService {
 	/**
 	 * Build a platform-aware prompt for caption generation.
 	 */
-	private function build_caption_prompt( string $platform, string $topic, string $tone, string $context, int $char_limit ): string {
+	private function build_caption_prompt( string $platform, string $topic, string $tone, string $context, int $char_limit, string $extra_instructions = '' ): string {
 		$platform_rules = $this->get_caption_platform_rules( $platform, $char_limit );
 
 		return sprintf(
@@ -91,7 +94,7 @@ class AiSocialService {
 			"Do NOT include hashtags because they are handled separately.\n" .
 			"Include a CTA only if it fits naturally.\n" .
 			"Use emojis sparingly.\n" .
-			"%s\n\n" .
+			"%s%s\n\n" .
 			"Brief:\n<<<%s>>>\n\n" .
 			"Existing draft context:\n<<<%s>>>\n\n" .
 			"Return only the final post text.",
@@ -99,6 +102,7 @@ class AiSocialService {
 			$tone,
 			$char_limit,
 			$platform_rules,
+			'' !== $extra_instructions ? "\nAdditional voice guidelines (trusted):\n" . $extra_instructions . "\n" : '',
 			$topic,
 			$context
 		);

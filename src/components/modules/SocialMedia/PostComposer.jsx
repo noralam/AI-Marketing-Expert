@@ -15,6 +15,7 @@ import Notice from '../../common/Notice';
 import { ProUpgradeButton } from '../../common/ProLock';
 import { toast } from '../../common/Toast';
 import { SOCIAL_POST_STATUS, SOCIAL_CHAR_LIMITS, FREE_LIMITS } from '../../../utils/constants';
+import { browserToSiteWall, siteToBrowserWall, siteTimezone, tzDiffers } from '../../../utils/wallClock';
 
 const PostComposer = ( { id, onBack, onNavigate } ) => {
 	const { get, post, put } = useApi();
@@ -70,8 +71,9 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 				account_id: String( res.account_id || '' ),
 				content: res.content || '',
 				hashtags: res.hashtags || '',
-				media_urls: res.media_urls || [],
-				scheduled_at: res.scheduled_at || '',
+			media_urls: res.media_urls || [],
+			// Stored value is site-tz wall time; the input edits browser time.
+			scheduled_at: res.scheduled_at ? siteToBrowserWall( res.scheduled_at ).replace( ' ', 'T' ).substring( 0, 16 ) : '',
 				publish_now: false,
 				ai_generated: !! res.ai_generated,
 			} );
@@ -156,6 +158,8 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 		try {
 			const data = {
 				...form,
+				// Input is browser wall time; the queue compares site wall time.
+				scheduled_at: form.scheduled_at ? browserToSiteWall( form.scheduled_at ) : '',
 				publish_now: publishNow,
 			};
 
@@ -437,11 +441,20 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 										toast( __( 'Free plan allows 3 scheduled posts at a time. Upgrade to Pro for unlimited scheduling.', 'ai-marketing-expert' ), 'error' );
 										return;
 									}
-									updateForm( 'scheduled_at', e.target.value ? e.target.value.replace( 'T', ' ' ) + ':00' : '' );
+									updateForm( 'scheduled_at', e.target.value || '' );
 								} }
 								disabled={ scheduleLimitReached }
 								style={ { padding: '8px 12px', border: '1px solid var(--aime-border)', borderRadius: 6, fontSize: 14 } }
 							/>
+							{ tzDiffers() && (
+								<p style={ { color: 'var(--aime-text-muted)', fontSize: 12, margin: '6px 0 0' } }>
+									{ sprintf(
+										/* translators: %s: site timezone name. */
+										__( 'Your entry is converted to the site timezone (%s) when saved.', 'ai-marketing-expert' ),
+										siteTimezone()
+									) }
+								</p>
+							) }
 							{ scheduleLimitReached && <ProUpgradeButton /> }
 							{ form.scheduled_at && (
 								<Button variant="link" size="compact" onClick={ () => updateForm( 'scheduled_at', '' ) } style={ { marginLeft: 8 } }>

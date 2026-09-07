@@ -7,6 +7,8 @@
 
 namespace WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Actions;
 
+use WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\WorkflowTokens;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -19,7 +21,7 @@ class SendNotificationAction extends BaseAction {
 	 * @return array
 	 */
 	public static function run( array $config, array $context ): array {
-		$to = sanitize_email( (string) ( $config['to'] ?? '' ) );
+		$to = sanitize_email( WorkflowTokens::replace( (string) ( $config['to'] ?? '' ), $context ) );
 		if ( '' === $to ) {
 			$to = (string) get_option( 'admin_email' );
 		}
@@ -54,41 +56,13 @@ class SendNotificationAction extends BaseAction {
 	}
 
 	/**
-	 * Replace {topic} {workflow_name} {previous_preview} and {event.field}
-	 * (dot notation) tokens in a template string.
+	 * Replace workflow tokens in a template string.
+	 *
+	 * Delegates to the shared WorkflowTokens engine so every step resolves the
+	 * same vocabulary: {topic} {workflow_name} {previous_preview}
+	 * {event.dot.path} {previous.reference_field} {action_type.reference_field}.
 	 */
 	private static function replace_tokens( string $template, array $context ): string {
-		$previous         = $context['previous'] ?? array();
-		$previous_preview = '';
-		if ( ! empty( $previous ) ) {
-			$last             = end( $previous );
-			$previous_preview = (string) ( $last['preview'] ?? '' );
-		}
-		if ( '' === $previous_preview && isset( $context['parent_output']['preview'] ) ) {
-			$previous_preview = (string) $context['parent_output']['preview'];
-		}
-
-		$out = strtr( $template, array(
-			'{topic}'            => (string) ( $context['topic'] ?? '' ),
-			'{workflow_name}'    => (string) ( $context['workflow_name'] ?? '' ),
-			'{previous_preview}' => $previous_preview,
-		) );
-
-		// {event.field} tokens with dot-notation paths into the event payload.
-		$event = is_array( $context['event'] ?? null ) ? $context['event'] : array();
-		return (string) preg_replace_callback(
-			'/\{event\.([a-zA-Z0-9_.]+)\}/',
-			static function ( array $m ) use ( $event ): string {
-				$node = $event;
-				foreach ( explode( '.', $m[1] ) as $part ) {
-					if ( ! is_array( $node ) || ! array_key_exists( $part, $node ) ) {
-						return '';
-					}
-					$node = $node[ $part ];
-				}
-				return is_scalar( $node ) ? (string) $node : (string) wp_json_encode( $node );
-			},
-			$out
-		);
+		return WorkflowTokens::replace( $template, $context );
 	}
 }

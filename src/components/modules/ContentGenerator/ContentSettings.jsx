@@ -81,6 +81,18 @@ const INLINE_IMAGE_SIZES = [
 	{ label: __( 'Full Size', 'ai-marketing-expert' ), value: 'full' },
 ];
 
+const IMAGE_ORIENTATIONS = [
+	{ label: __( 'Landscape (recommended)', 'ai-marketing-expert' ), value: 'landscape' },
+	{ label: __( 'Any orientation', 'ai-marketing-expert' ), value: 'any' },
+];
+
+const IMAGE_REUSE_OPTIONS = [
+	{ label: __( '30 days', 'ai-marketing-expert' ), value: '30' },
+	{ label: __( '60 days (recommended)', 'ai-marketing-expert' ), value: '60' },
+	{ label: __( '90 days', 'ai-marketing-expert' ), value: '90' },
+	{ label: __( 'Allow repeats', 'ai-marketing-expert' ), value: '0' },
+];
+
 const ContentSettings = ( { initialTab } ) => {
 	const { get, post, loading, error, clearError } = useApi();
 	const hasPro = isProActive();
@@ -273,14 +285,30 @@ const ContentSettings = ( { initialTab } ) => {
 											onChange={ ( v ) => setField( 'inline_images', parseInt( v, 10 ) || 0 ) }
 											__nextHasNoMarginBottom
 										/>
-										<SelectControl
-											label={ __( 'In-body Image Size', 'ai-marketing-expert' ) }
-											help={ __( 'Display size of stock photos embedded inside articles.', 'ai-marketing-expert' ) }
-											value={ settings.inline_image_size || 'large' }
-											options={ INLINE_IMAGE_SIZES }
-											onChange={ ( v ) => setField( 'inline_image_size', v ) }
-											__nextHasNoMarginBottom
-										/>
+									<SelectControl
+										label={ __( 'In-body Image Size', 'ai-marketing-expert' ) }
+										help={ __( 'Display size of stock photos embedded inside articles.', 'ai-marketing-expert' ) }
+										value={ settings.inline_image_size || 'large' }
+										options={ INLINE_IMAGE_SIZES }
+										onChange={ ( v ) => setField( 'inline_image_size', v ) }
+										__nextHasNoMarginBottom
+									/>
+									<SelectControl
+										label={ __( 'Image Orientation', 'ai-marketing-expert' ) }
+										help={ __( 'Landscape keeps auto-picked photos wide. Portraits can render as huge vertical blocks.', 'ai-marketing-expert' ) }
+										value={ settings.image_orientation || 'landscape' }
+										options={ IMAGE_ORIENTATIONS }
+										onChange={ ( v ) => setField( 'image_orientation', v ) }
+										__nextHasNoMarginBottom
+									/>
+									<SelectControl
+										label={ __( 'Avoid Reusing Images Within', 'ai-marketing-expert' ) }
+										help={ __( 'Auto-pick skips stock photos used within this window so daily posts stay varied.', 'ai-marketing-expert' ) }
+										value={ String( settings.image_reuse_days ?? '60' ) }
+										options={ IMAGE_REUSE_OPTIONS }
+										onChange={ ( v ) => setField( 'image_reuse_days', parseInt( v, 10 ) || 0 ) }
+										__nextHasNoMarginBottom
+									/>
 									</div>
 									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving
