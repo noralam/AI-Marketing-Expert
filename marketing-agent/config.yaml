@@ -1,4 +1,4 @@
-﻿# Autonomous Marketing Agent Configuration - Multi-Platform with Facebook Groups & Pages
+﻿# Autonomous Marketing Agent Configuration - Multi-Platform Optimized
 
 general:
   headless: false
@@ -6,12 +6,12 @@ general:
   log_level: "INFO"
   
 behavior:
-  min_delay_seconds: 60
-  max_delay_seconds: 180
-  typing_speed_min_ms: 60
-  typing_speed_max_ms: 140
-  scroll_pause_min_sec: 3
-  scroll_pause_max_sec: 7
+  min_delay_seconds: 5
+  max_delay_seconds: 15
+  typing_speed_min_ms: 40
+  typing_speed_max_ms: 90
+  scroll_pause_min_sec: 2
+  scroll_pause_max_sec: 4
 
 loop_schedule:
   min_interval_hours: 2.1
@@ -23,7 +23,7 @@ limits:
   daily_max_x_follows: 2
   daily_max_ph_upvotes: 3
   daily_max_ph_comments: 1
-  daily_max_reddit_comments: 2
+  daily_max_reddit_comments: 3
   daily_max_fb_posts: 2
 
 facebook_pages:
@@ -52,12 +52,14 @@ facebook_targeting:
     - "WordPress Developer"
 
 reddit_targeting:
+  # Safe Subreddits for Zero-Karma & Early Stage Accounts (No instant auto-mod removal)
   subreddits:
+    - "WordPressPlugins"
+    - "webdev"
     - "Wordpress"
-    - "web_design"
-    - "freelance"
     - "SideProject"
     - "Entrepreneur"
+    - "web_design"
 
 x_targeting:
   search_queries:

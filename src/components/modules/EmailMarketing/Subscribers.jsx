@@ -264,8 +264,8 @@ const Subscribers = ( { onNavigate } ) => {
 				sub.last_name,
 				sub.phone,
 				sub.status,
-				( sub.lists || [] ).map( ( list ) => list.title || list ).join( '; ' ),
-				( sub.tags || [] ).map( ( tag ) => tag.title || tag ).join( '; ' ),
+				( sub.lists || [] ).map( ( list ) => ( typeof list === 'string' ? list : ( list?.title || list?.name || '' ) ) ).filter( Boolean ).join( '; ' ),
+				( sub.tags || [] ).map( ( tag ) => ( typeof tag === 'string' ? tag : ( tag?.title || tag?.name || '' ) ) ).filter( Boolean ).join( '; ' ),
 				sub.created_at,
 			].map( csvValue ).join( ',' ) );
 			const csv = [ 'email,first_name,last_name,phone,status,lists,tags,created_at', ...rows ].join( '\n' );
@@ -446,14 +446,22 @@ const Subscribers = ( { onNavigate } ) => {
 										</td>
 										<td><span className={ `aime-badge ${ STATUS_BADGES[ sub.status ] || '' }` }>{ sub.status }</span></td>
 										<td>
-											{ ( sub.tags || [] ).map( ( t ) => (
-												<span key={ t.id || t } className="aime-tag-pill">{ t.title || t }</span>
-											) ) }
+											{ ( sub.tags || [] ).map( ( t ) => {
+												const label = typeof t === 'string' ? t : ( t?.title || t?.name || '' );
+												if ( ! label ) return null;
+												return (
+													<span key={ t?.id || label } className="aime-tag-pill">{ label }</span>
+												);
+											} ) }
 										</td>
 										<td>
-											{ ( sub.lists || [] ).map( ( l ) => (
-												<span key={ l.id || l } className="aime-tag-pill aime-list-pill">{ l.title || l }</span>
-											) ) }
+											{ ( sub.lists || [] ).map( ( l ) => {
+												const label = typeof l === 'string' ? l : ( l?.title || l?.name || '' );
+												if ( ! label ) return null;
+												return (
+													<span key={ l?.id || label } className="aime-tag-pill aime-list-pill">{ label }</span>
+												);
+											} ) }
 										</td>
 										<td className="aime-date-cell">{ sub.created_at ? sub.created_at.split( ' ' )[ 0 ] : '\u2014' }</td>
 										<td>

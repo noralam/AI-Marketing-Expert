@@ -246,7 +246,7 @@ class UpgradeNotice {
 					<div class="aime-pro-notice-actions">
 						<a href="<?php echo esc_url( $quick_buy_url ); ?>" class="button button-primary aime-btn-quickbuy" target="_blank" rel="noopener noreferrer">
 							<span class="aime-btn-bolt">⚡</span>
-							<?php esc_html_e( 'Quick Buy Single Site ($39/yr)', 'ai-marketing-expert' ); ?>
+							<?php esc_html_e( 'Quick Buy Single Site - $39', 'ai-marketing-expert' ); ?>
 						</a>
 
 						<a href="<?php echo esc_url( $pricing_url ); ?>" class="button button-secondary aime-btn-plans" target="_blank" rel="noopener noreferrer">

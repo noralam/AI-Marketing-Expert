@@ -1,0 +1,15 @@
+﻿{
+  "manifest_version": 3,
+  "name": "SocialPulse AI - Post & Visual Creator",
+  "version": "1.0.0",
+  "description": "AI-powered assistant for creators and online businesses. Create engaging posts with contextual visuals and insert them directly into social platforms.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "SocialPulse AI Assistant"
+  }
+}

@@ -1,10 +1,17 @@
-﻿import asyncio
+import sys
+import asyncio
 import argparse
 import random
 import yaml
 import datetime
 import json
 from pathlib import Path
+
+# Enforce UTF-8 on Windows terminal so emojis never crash print()
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 from core.browser import BrowserManager
 from core.human import HumanBehavior
 from core.ai_generator import ContentGenerator
@@ -40,15 +47,15 @@ def save_last_run_time():
         pass
 
 async def run_single_session(args, config):
-    min_d = 5 if args.fast else config.get("behavior", {}).get("min_delay_seconds", 60)
-    max_d = 15 if args.fast else config.get("behavior", {}).get("max_delay_seconds", 180)
+    min_d = 3 if args.fast else config.get("behavior", {}).get("min_delay_seconds", 5)
+    max_d = 8 if args.fast else config.get("behavior", {}).get("max_delay_seconds", 15)
     headless = args.headless or config.get("general", {}).get("headless", False)
 
     now_str = datetime.datetime.now().strftime("%I:%M:%S %p")
     print("\n" + "="*50)
     print(f"🤖 [Session Started at {now_str}]")
     print(f"🎯 Target Platform: {args.platform.upper()}")
-    print(f"⚙️  Lazy Delays: {min_d}s - {max_d}s")
+    print(f"⚡ Smart Pacing Active: {min_d}s - {max_d}s")
     print("="*50)
 
     human = HumanBehavior(min_delay=min_d, max_delay=max_d)
@@ -64,7 +71,7 @@ async def run_single_session(args, config):
             await x_agent.run_session()
 
         if args.platform in ["all"]:
-            await human.lazy_delay("Switching naturally from X to Product Hunt")
+            await human.fast_switch("Moving to Product Hunt")
 
         # 2. Product Hunt
         if args.platform in ["ph", "all"]:
@@ -72,7 +79,7 @@ async def run_single_session(args, config):
             await ph_agent.run_session()
 
         if args.platform in ["all"]:
-            await human.lazy_delay("Switching naturally from Product Hunt to LinkedIn")
+            await human.fast_switch("Moving to LinkedIn")
 
         # 3. LinkedIn
         if args.platform in ["linkedin", "all"]:
@@ -80,7 +87,7 @@ async def run_single_session(args, config):
             await li_agent.run_session()
 
         if args.platform in ["all"]:
-            await human.lazy_delay("Switching naturally from LinkedIn to Reddit")
+            await human.fast_switch("Moving to Reddit")
 
         # 4. Reddit
         if args.platform in ["reddit", "all"]:
@@ -88,7 +95,7 @@ async def run_single_session(args, config):
             await reddit_agent.run_session()
 
         if args.platform in ["all"]:
-            await human.lazy_delay("Switching naturally from Reddit to Facebook")
+            await human.fast_switch("Moving to Facebook")
 
         # 5. Facebook (Page Post + 1st Comment Link)
         if args.platform in ["facebook", "all"]:
@@ -128,14 +135,13 @@ async def main():
             print(f"⏳ Campaign Duration: {days_limit} DAYS (Ends on {end_time.strftime('%Y-%m-%d %I:%M %p')})")
         else:
             print("⏳ Campaign Duration: Continuous (Runs until manually stopped)")
-        print("Dynamic Intervals: Fully randomized (2.1h to 4.8h) between cycles.")
+        print("⚡ Optimized Pacing: Natural 3-6s transitions, no idle delays.")
         print("Press Ctrl + C anytime in this terminal to stop.")
         print("#"*55)
 
         min_hours = config.get("loop_schedule", {}).get("min_interval_hours", 2.1)
         max_hours = config.get("loop_schedule", {}).get("max_interval_hours", 4.8)
 
-        # Smart Random Cooldown Check if started recently
         last_run = get_last_run_time()
         if last_run and not args.fast:
             elapsed = (datetime.datetime.now() - last_run).total_seconds()
@@ -144,7 +150,7 @@ async def main():
                 remaining_cooldown = random_cooldown - elapsed
                 wake_up_time = datetime.datetime.now() + datetime.timedelta(seconds=remaining_cooldown)
                 print(f"🧠 [Smart Memory] Agent ran {(elapsed/60):.1f} mins ago.")
-                print(f"⏳ Randomized human pause active. Sleeping until: {wake_up_time.strftime('%I:%M:%S %p')}...")
+                print(f"⏳ Sleeping until: {wake_up_time.strftime('%I:%M:%S %p')}...")
                 await asyncio.sleep(remaining_cooldown)
 
         session_count = 1
