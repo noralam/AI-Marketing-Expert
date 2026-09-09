@@ -23,7 +23,7 @@ class SmtpProvider {
 	 * Option key for SMTP connections.
 	 */
 	const OPTION_KEY = 'aime_smtp_connections';
-	const DEFAULT_DAILY_LIMIT = 90;
+	const DEFAULT_DAILY_LIMIT = 50000;
 
 	/**
 	 * Stable marker stored in aime_campaign_emails.note when a queued email is
@@ -1134,7 +1134,7 @@ class SmtpProvider {
 			'smtp_password'   => $settings['smtp_password'] ?? '',
 			'from_name'       => $settings['from_name'] ?? '',
 			'from_email'      => $settings['from_email'] ?? '',
-			'sending_limit'   => self::DEFAULT_DAILY_LIMIT,
+			'sending_limit'   => 'wp_mail' === $method ? 0 : self::DEFAULT_DAILY_LIMIT,
 			'sort_order'      => 0,
 			'is_primary'      => true,
 			'enabled'         => true,
@@ -1288,9 +1288,18 @@ class SmtpProvider {
 	}
 
 	private static function has_reached_daily_limit( array $conn ): bool {
-		$limit = max( 1, absint( $conn['sending_limit'] ?? self::DEFAULT_DAILY_LIMIT ) );
-		$usage = self::get_connection_usage( $conn );
-		$count = $usage['count'];
+		// WordPress default (wp_mail) delegates to server/plugins (SES, Bit-SMTP, etc.) and should not be capped by default.
+		if ( 'wp_mail' === ( $conn['provider'] ?? '' ) ) {
+			$custom_limit = absint( $conn['sending_limit'] ?? $conn['daily_limit'] ?? 0 );
+			if ( 0 === $custom_limit || 90 === $custom_limit ) {
+				return false;
+			}
+		}
+
+		$default_limit = (int) apply_filters( 'aime_smtp_default_daily_limit', self::DEFAULT_DAILY_LIMIT, $conn );
+		$limit         = max( 1, absint( $conn['sending_limit'] ?? $conn['daily_limit'] ?? $default_limit ) );
+		$usage         = self::get_connection_usage( $conn );
+		$count         = $usage['count'];
 
 		return $count >= $limit;
 	}
