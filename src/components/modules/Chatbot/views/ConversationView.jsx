@@ -11,7 +11,7 @@ import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
 import ProGate from '../../../common/ProGate';
-import { ProUpgradeButton } from '../../../common/ProLock';
+import { ProUpgradeButton, openProUpgrade } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 import { renderMarkdown } from '../../../../utils/renderMessage';
 import sanitizeHtml from '../../../../utils/sanitizeHtml';
@@ -39,6 +39,7 @@ const ConversationView = ( { id, onBack } ) => {
 	const [ messages, setMessages ] = useState( [] );
 	const [ reply, setReply ] = useState( '' );
 	const [ sending, setSending ] = useState( false );
+	const [ takingOver, setTakingOver ] = useState( false );
 	const messagesEndRef = useRef( null );
 	const threadRef = useRef( null );
 	// Only auto-scroll when the admin is already near the bottom, so reading
@@ -91,12 +92,16 @@ const ConversationView = ( { id, onBack } ) => {
 	}, [ messages ] );
 
 	const handleTakeover = async () => {
+		if ( takingOver ) return;
+		setTakingOver( true );
 		try {
 			await post( `/chatbot/conversations/${ id }/takeover` );
 			toast( __( 'You have taken over this conversation.', 'ai-marketing-expert' ) );
 			fetchConversation();
 		} catch ( e ) {
 			toast( e.message, 'error' );
+		} finally {
+			setTakingOver( false );
 		}
 	};
 
@@ -165,7 +170,12 @@ const ConversationView = ( { id, onBack } ) => {
 						{ hasPro ? __( 'Export CSV', 'ai-marketing-expert' ) : __( 'Export CSV (Pro)', 'ai-marketing-expert' ) }
 					</Button>
 					{ isActive && ! isTakeover && (
-						<Button variant="primary" onClick={ hasPro ? handleTakeover : undefined } disabled={ ! hasPro }>
+						<Button
+							variant="primary"
+							onClick={ hasPro ? handleTakeover : undefined }
+							disabled={ ! hasPro || takingOver }
+							isBusy={ takingOver }
+						>
 							{ hasPro ? __( 'Take Over', 'ai-marketing-expert' ) : __( 'Take Over (Pro)', 'ai-marketing-expert' ) }
 						</Button>
 					) }
@@ -279,7 +289,21 @@ const ConversationView = ( { id, onBack } ) => {
 						) : (
 							<Notice
 								type="info"
-								message={ __( 'Click "Take Over" to reply to this conversation as an agent. The AI will stop responding.', 'ai-marketing-expert' ) }
+								message={
+									<span>
+										{ __( 'Click ', 'ai-marketing-expert' ) }
+										<button
+											type="button"
+											className="aime-notice-action-link"
+											onClick={ hasPro ? handleTakeover : openProUpgrade }
+											disabled={ takingOver }
+											title={ __( 'Take over this conversation', 'ai-marketing-expert' ) }
+										>
+											{ takingOver ? __( 'Taking over...', 'ai-marketing-expert' ) : __( '"Take Over"', 'ai-marketing-expert' ) }
+										</button>
+										{ __( ' to reply to this conversation as an agent. The AI will stop responding.', 'ai-marketing-expert' ) }
+									</span>
+								}
 							/>
 						) }
 					</div>

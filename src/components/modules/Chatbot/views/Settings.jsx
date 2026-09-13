@@ -128,6 +128,12 @@ const Settings = () => {
 							return (
 								<div className="aime-settings-form">
 									<ToggleControl
+										label={ __( 'Auto-Sync Knowledge Base', 'ai-marketing-expert' ) }
+										help={ __( 'Automatically ingest new and updated WordPress posts, pages, and WooCommerce products into the chatbot knowledge base upon publication.', 'ai-marketing-expert' ) }
+										checked={ settings.auto_sync_knowledge !== false }
+										onChange={ ( v ) => setField( 'auto_sync_knowledge', v ) }
+									/>
+									<ToggleControl
 										label={ __( 'Sound Notifications', 'ai-marketing-expert' ) }
 										help={ __( 'Play a sound when a new message arrives in the widget.', 'ai-marketing-expert' ) }
 										checked={ !! settings.enable_sound_notification }

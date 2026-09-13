@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextControl, Spinner } from '@aime/wp-components';
 import {
-	ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend,
+	ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
@@ -16,6 +16,26 @@ import ProLock, { isProActive, ProLabel } from '../../common/ProLock';
 import { toSiteInput, siteInputToUtc } from '../../../utils/datetime';
 
 const COLORS = [ '#3858e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6' ];
+
+const getCountryFlag = ( code ) => {
+	if ( ! code || typeof code !== 'string' || code.length !== 2 ) return '🌐';
+	try {
+		return String.fromCodePoint(
+			...code.toUpperCase().split( '' ).map( ( c ) => 0x1F1E6 + c.charCodeAt( 0 ) - 65 )
+		);
+	} catch ( e ) {
+		return '🌐';
+	}
+};
+
+const getCountryName = ( code ) => {
+	if ( ! code ) return __( 'Unknown location', 'ai-marketing-expert' );
+	try {
+		return new Intl.DisplayNames( [ 'en' ], { type: 'region' } ).of( code.toUpperCase() ) || code;
+	} catch ( e ) {
+		return code;
+	}
+};
 
 const formatDuration = ( seconds ) => {
 	const total = Math.max( 0, Number( seconds ) || 0 );
@@ -47,20 +67,10 @@ const getLinkLabel = ( url ) => {
 			}
 		}
 
-		const path = `${ parsed.pathname }${ parsed.search }`.replace( /\/$/, '' );
-
-		// If the URL is the site root (or any URL where the only meaningful
-		// information is the host), the path is just "/" or empty. Show the
-		// host without scheme or "www." prefix so the label reads naturally
-		// (e.g. "wpcolors.net" instead of "https://www.wpcolors.net/").
-		if ( ! path || '/' === path ) {
-			const host = ( parsed.host || '' ).replace( /^www\./, '' );
-			return host || url;
-		}
-
-		return path.length > 50 ? `${ path.slice( 0, 47 ) }...` : path;
+		// Return the full destination URL.
+		return parsed.href;
 	} catch ( e ) {
-		return url.length > 50 ? `${ url.slice( 0, 47 ) }...` : url;
+		return url;
 	}
 };
 
@@ -84,6 +94,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 	const [ recipientPage, setRecipientPage ] = useState( 1 );
 	const [ nowTick, setNowTick ] = useState( Date.now() );
 	const [ loadFailed, setLoadFailed ] = useState( false );
+	const [ showTemplatePreview, setShowTemplatePreview ] = useState( false );
 	const pollRef = useRef();
 	const processRef = useRef( false );
 	const lastCompletedRef = useRef( null );
@@ -277,6 +288,9 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 	const clickToOpenRate = data.opened > 0 ? Math.round( ( ( data.clicks || 0 ) / data.opened ) * 1000 ) / 10 : 0;
 	const topLinks = report?.top_links?.slice( 0, 5 ) || [];
 	const maxLinkClicks = Math.max( 1, ...topLinks.map( ( link ) => Number( link.clicks ) || 0 ) );
+	const topLocations = report?.top_locations_by_opens || [];
+	const maxLocationOpens = Math.max( 1, ...topLocations.map( ( loc ) => Number( loc.opens ) || 0 ) );
+	const totalReportOpens = Number( report?.opens_count ?? data.opened ) || 0;
 	const countdown = formatDuration( scheduledTimeRemaining );
 	const countdownItems = [
 		{ label: __( 'Days', 'ai-marketing-expert' ), value: countdown.days, color: '#3858e9' },
@@ -432,27 +446,71 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 
 			{ showReports && (
 				<>
-				<div className="aime-campaign-report-grid">
-					<Card title={ __( 'Campaign Performance', 'ai-marketing-expert' ) }>
-						<div className="aime-report-metric-list">
-							<div><span>{ __( 'Sent Emails', 'ai-marketing-expert' ) }</span><strong>{ data.sent || 0 }</strong></div>
-							<div><span>{ __( 'Open Rate', 'ai-marketing-expert' ) } ({ data.opened || 0 })</span><strong>{ data.open_rate || 0 }%</strong></div>
-							<div><span>{ __( 'Click Rate', 'ai-marketing-expert' ) } ({ data.clicks || 0 })</span><strong>{ data.click_rate || 0 }%</strong></div>
-							<div><span>{ __( 'Click To Open Rate', 'ai-marketing-expert' ) }</span><strong>{ clickToOpenRate }%</strong></div>
-							<div><span>{ __( 'Unsubscribes', 'ai-marketing-expert' ) } ({ data.unsubscribes || 0 })</span><strong>{ data.sent > 0 ? Math.round( ( ( data.unsubscribes || 0 ) / data.sent ) * 1000 ) / 10 : 0 }%</strong></div>
-						</div>
-					</Card>
+				<div className="aime-campaign-kpi-cards">
+					<div className="aime-kpi-card">
+						<span className="aime-kpi-label">{ __( 'Total Sent', 'ai-marketing-expert' ) }</span>
+						<strong className="aime-kpi-value">{ data.sent || 0 }</strong>
+						<span className="aime-kpi-subtext">{ totalRecipients } { __( 'queued', 'ai-marketing-expert' ) }</span>
+					</div>
+					<div className="aime-kpi-card">
+						<span className="aime-kpi-label">{ __( 'Open Rate', 'ai-marketing-expert' ) }</span>
+						<strong className="aime-kpi-value" style={ { color: '#3858e9' } }>{ data.open_rate || 0 }%</strong>
+						<span className="aime-kpi-subtext">{ data.opened || 0 } { __( 'unique opens', 'ai-marketing-expert' ) }</span>
+					</div>
+					<div className="aime-kpi-card">
+						<span className="aime-kpi-label">{ __( 'Click Rate', 'ai-marketing-expert' ) }</span>
+						<strong className="aime-kpi-value" style={ { color: '#10b981' } }>{ data.click_rate || 0 }%</strong>
+						<span className="aime-kpi-subtext">{ data.clicks || 0 } { __( 'unique clicks', 'ai-marketing-expert' ) }</span>
+					</div>
+					<div className="aime-kpi-card">
+						<span className="aime-kpi-label">{ __( 'Click to Open (CTOR)', 'ai-marketing-expert' ) }</span>
+						<strong className="aime-kpi-value" style={ { color: '#8b5cf6' } }>{ clickToOpenRate }%</strong>
+						<span className="aime-kpi-subtext">{ __( 'of openers clicked', 'ai-marketing-expert' ) }</span>
+					</div>
+					<div className="aime-kpi-card">
+						<span className="aime-kpi-label">{ __( 'Unsubscribes / Bounces', 'ai-marketing-expert' ) }</span>
+						<strong className="aime-kpi-value" style={ { color: '#f59e0b' } }>
+							{ data.sent > 0 ? Math.round( ( ( ( data.unsubscribes || 0 ) + ( data.bounces || data.failed || 0 ) ) / data.sent ) * 1000 ) / 10 : 0 }%
+						</strong>
+						<span className="aime-kpi-subtext">{ data.unsubscribes || 0 } { __( 'unsub', 'ai-marketing-expert' ) } · { data.bounces || data.failed || 0 } { __( 'bounced', 'ai-marketing-expert' ) }</span>
+					</div>
+				</div>
 
-					<Card title={ __( 'Email Stats', 'ai-marketing-expert' ) }>
-						<ResponsiveContainer width="100%" height={ 260 }>
-							<PieChart>
-								<Pie data={ pieData } dataKey="value" cx="50%" cy="50%" outerRadius={ 90 }>
-									{ pieData.map( ( _, i ) => <Cell key={ i } fill={ COLORS[ i ] } /> ) }
-								</Pie>
-								<Legend />
-								<Tooltip />
-							</PieChart>
-						</ResponsiveContainer>
+				<div className="aime-campaign-dual-grid">
+					<Card title={ __( 'Top locations by opens', 'ai-marketing-expert' ) }>
+						{ topLocations.length > 0 ? (
+							<div className="aime-locations-list">
+								{ topLocations.slice( 0, 5 ).map( ( loc, index ) => {
+									const opens = Number( loc.opens ) || 0;
+									const pct = loc.pct != null ? loc.pct : ( totalReportOpens > 0 ? Math.round( ( opens / totalReportOpens ) * 1000 ) / 10 : 0 );
+									const barWidth = Math.max( 5, Math.min( 100, Math.round( ( opens / maxLocationOpens ) * 100 ) ) );
+									const countryCode = ( loc.country || '' ).toUpperCase();
+									return (
+										<div className="aime-location-item" key={ `${ countryCode || 'unk' }-${ index }` }>
+											<div className="aime-location-row">
+												<div className="aime-location-country">
+													<span className="aime-location-flag">{ getCountryFlag( countryCode ) }</span>
+													<span className="aime-location-name" title={ countryCode }>{ getCountryName( countryCode ) }</span>
+												</div>
+												<div className="aime-location-stats">
+													<strong className="aime-location-opens">{ opens }</strong>
+													<span className="aime-location-pct">{ pct }%</span>
+												</div>
+											</div>
+											<div className="aime-location-bar" aria-hidden="true">
+												<span style={ { width: `${ barWidth }%` } } />
+											</div>
+										</div>
+									);
+								} ) }
+							</div>
+						) : (
+							<div className="aime-report-empty">
+								<span style={ { fontSize: 32, marginBottom: 8, display: 'block' } }>🌍</span>
+								<strong>{ __( 'No location data yet', 'ai-marketing-expert' ) }</strong>
+								<p>{ __( 'Country opens are automatically resolved from incoming tracking requests as recipients open this campaign.', 'ai-marketing-expert' ) }</p>
+							</div>
+						)}
 					</Card>
 
 					<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Link Activity', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
@@ -460,12 +518,13 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 							<div className="aime-link-activity-list">
 								{ topLinks.map( ( link, index ) => {
 									const clicks = Number( link.clicks ) || 0;
+									const fullUrl = getLinkLabel( link.url );
 									return (
 										<div className="aime-link-activity-item" key={ `${ link.url }-${ index }` }>
 											<div className="aime-link-activity-row">
 												<span className="aime-link-activity-rank">#{ index + 1 }</span>
-												<a href={ link.url } target="_blank" rel="noopener noreferrer" className="aime-link-activity-url" title={ link.url }>
-													{ getLinkLabel( link.url ) }
+												<a href={ fullUrl } target="_blank" rel="noopener noreferrer" className="aime-link-activity-url" title={ fullUrl }>
+													{ fullUrl }
 												</a>
 												<strong className="aime-link-activity-clicks">{ clicks }</strong>
 											</div>
@@ -478,12 +537,33 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 							</div>
 						) : (
 							<div className="aime-report-empty">
+								<span style={ { fontSize: 32, marginBottom: 8, display: 'block' } }>🔗</span>
 								<strong>{ __( 'No link clicks yet', 'ai-marketing-expert' ) }</strong>
 								<p>{ __( 'Tracked links will appear here after recipients click campaign links.', 'ai-marketing-expert' ) }</p>
 							</div>
 						) }
 					</Card></ProLock>
 				</div>
+
+				{ Boolean( report?.opens_timeline?.length > 0 ) && (
+					<Card title={ __( 'Opens Over Time', 'ai-marketing-expert' ) }>
+						<ResponsiveContainer width="100%" height={ 220 }>
+							<AreaChart data={ report.opens_timeline } margin={ { top: 10, right: 20, left: -10, bottom: 0 } }>
+								<defs>
+									<linearGradient id="aimeOpensGradient" x1="0" y1="0" x2="0" y2="1">
+										<stop offset="5%" stopColor="#3858e9" stopOpacity={ 0.25 } />
+										<stop offset="95%" stopColor="#3858e9" stopOpacity={ 0.0 } />
+									</linearGradient>
+								</defs>
+								<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={ false } />
+								<XAxis dataKey="date" tick={ { fontSize: 11, fill: '#64748b' } } stroke="#e2e8f0" />
+								<YAxis tick={ { fontSize: 11, fill: '#64748b' } } stroke="#e2e8f0" allowDecimals={ false } />
+								<Tooltip contentStyle={ { background: '#ffffff', borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' } } />
+								<Area type="monotone" dataKey="count" stroke="#3858e9" strokeWidth={ 2.5 } fillOpacity={ 1 } fill="url(#aimeOpensGradient)" name={ __( 'Opens', 'ai-marketing-expert' ) } />
+							</AreaChart>
+						</ResponsiveContainer>
+					</Card>
+				) }
 
 				<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Recipient Activity', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
 					<div className="aime-recipient-tabs" role="tablist" aria-label={ __( 'Campaign recipient activity', 'ai-marketing-expert' ) }>
@@ -545,28 +625,13 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 				</>
 			) }
 
-			{ /* Opens timeline */ }
-			{ Boolean( showReports && report?.opens_timeline?.length > 0 ) && (
-				<Card title={ __( 'Opens Over Time', 'ai-marketing-expert' ) }>
-					<ResponsiveContainer width="100%" height={ 200 }>
-						<BarChart data={ report.opens_timeline }>
-							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-							<XAxis dataKey="date" tick={ { fontSize: 11 } } />
-							<YAxis tick={ { fontSize: 11 } } />
-							<Tooltip />
-							<Bar dataKey="count" fill="#10b981" radius={ [ 4, 4, 0, 0 ] } name={ __( 'Opens', 'ai-marketing-expert' ) } />
-						</BarChart>
-					</ResponsiveContainer>
-				</Card>
-			) }
-
 			{ /* Email template preview + reuse action */ }
 			{ Boolean( data.campaign?.email_body ) && (
 				<Card
 					title={
 						<span className="aime-pro-card-header" style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' } }>
 							<span>
-								{ __( 'Email Template', 'ai-marketing-expert' ) }
+								{ __( 'Email Template Preview', 'ai-marketing-expert' ) }
 								{ data.campaign?.email_subject && (
 									<span style={ { display: 'block', fontSize: 13, fontWeight: 400, color: '#6b7280', marginTop: 2 } }>
 										{ __( 'Subject:', 'ai-marketing-expert' ) } { data.campaign.email_subject }
@@ -575,6 +640,13 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 							</span>
 							<span style={ { display: 'inline-flex', alignItems: 'center', gap: 8 } }>
 								{ ! hasPro && <ProLabel /> }
+								<Button
+									variant="secondary"
+									size="small"
+									onClick={ () => setShowTemplatePreview( ( prev ) => ! prev ) }
+								>
+									{ showTemplatePreview ? __( 'Hide Preview', 'ai-marketing-expert' ) : __( 'Show Preview', 'ai-marketing-expert' ) }
+								</Button>
 								<Button
 									variant="primary"
 									size="small"
@@ -588,14 +660,18 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 						</span>
 					}
 				>
-					{ /* Sandboxed iframe: keeps the email's own styles from leaking into
-					     the admin UI and blocks any scripts inside stored email HTML. */ }
-					<iframe
-						title={ __( 'Sent email preview', 'ai-marketing-expert' ) }
-						sandbox=""
-						srcDoc={ data.campaign.email_body }
-						style={ { width: '100%', height: 600, border: '1px solid #e5e7eb', borderRadius: 8, background: '#ffffff' } }
-					/>
+					{ showTemplatePreview ? (
+						<iframe
+							title={ __( 'Sent email preview', 'ai-marketing-expert' ) }
+							sandbox=""
+							srcDoc={ data.campaign.email_body }
+							style={ { width: '100%', height: 600, border: '1px solid #e5e7eb', borderRadius: 8, background: '#ffffff', marginTop: 12 } }
+						/>
+					) : (
+						<p style={ { margin: 0, color: '#6b7280', fontSize: 13 } }>
+							{ __( 'Click "Show Preview" above to inspect the rendered HTML email content sent to recipients.', 'ai-marketing-expert' ) }
+						</p>
+					) }
 				</Card>
 			) }
 		</div>

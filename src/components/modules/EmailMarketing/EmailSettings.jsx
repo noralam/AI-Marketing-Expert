@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import {
-	Button, TextControl, TextareaControl, CheckboxControl, ToggleControl, TabPanel, Spinner,
+	Button, TextControl, TextareaControl, CheckboxControl, ToggleControl, SelectControl, TabPanel, Spinner,
 } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
@@ -23,6 +23,20 @@ const EmailSettings = () => {
 	const [ pluginSettings, setPluginSettings ] = useState( {} );
 	const [ savingPlugin, setSavingPlugin ] = useState( false );
 
+	/* Bounce & IMAP settings */
+	const [ imapSettings, setImapSettings ] = useState( {
+		enabled: false,
+		host: '',
+		port: 993,
+		encryption: 'ssl',
+		username: '',
+		password: '',
+		delete_after_process: true,
+	} );
+	const [ testingImap, setTestingImap ] = useState( false );
+	const [ imapTestNotice, setImapTestNotice ] = useState( null );
+	const [ savingImap, setSavingImap ] = useState( false );
+
 	/* Custom field modal */
 	const [ showCfModal, setShowCfModal ] = useState( false );
 	const [ cfForm, setCfForm ] = useState( { label: '', field_key: '', field_type: 'text', options: '' } );
@@ -38,6 +52,13 @@ const EmailSettings = () => {
 			setSettings( s || {} );
 			setCustomFields( cf.data || cf || [] );
 			setPluginSettings( ps.settings || {} );
+			if ( ps?.settings?.bounce_imap ) {
+				setImapSettings( ( prev ) => ( {
+					...prev,
+					...ps.settings.bounce_imap,
+					password: '',
+				} ) );
+			}
 		} catch ( e ) { /* */ }
 	}, [ get ] );
 
@@ -70,6 +91,29 @@ const EmailSettings = () => {
 			setSuccess( __( 'Sending & tracking settings saved.', 'ai-marketing-expert' ) );
 		} catch ( e ) { /* */ }
 		setSavingPlugin( false );
+	};
+
+	/* Bounce & IMAP handlers */
+	const handleTestImap = async () => {
+		setTestingImap( true );
+		setImapTestNotice( null );
+		try {
+			const res = await post( '/system/test-imap', imapSettings );
+			setImapTestNotice( { type: 'success', message: res.message || __( 'Connected to IMAP bounce mailbox successfully!', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setImapTestNotice( { type: 'error', message: err.message || __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' ) } );
+		}
+		setTestingImap( false );
+	};
+
+	const handleSaveImap = async () => {
+		setSavingImap( true );
+		setSuccess( '' );
+		try {
+			await post( '/settings', { bounce_imap: imapSettings } );
+			setSuccess( __( 'Bounce mailbox settings saved.', 'ai-marketing-expert' ) );
+		} catch ( err ) { /* */ }
+		setSavingImap( false );
 	};
 
 	/* Custom fields */
@@ -109,6 +153,7 @@ const EmailSettings = () => {
 	const TABS = [
 		{ name: 'general', title: __( 'General', 'ai-marketing-expert' ) },
 		{ name: 'sending', title: __( 'Sending & Tracking', 'ai-marketing-expert' ) },
+		{ name: 'bounce', title: __( 'Bounce & Deliverability', 'ai-marketing-expert' ) },
 		{ name: 'custom-fields', title: __( 'Custom Fields', 'ai-marketing-expert' ) },
 	];
 
@@ -221,6 +266,153 @@ const EmailSettings = () => {
 											: __( 'Save Settings', 'ai-marketing-expert' )
 										}
 									</Button>
+								</div>
+							);
+						}
+
+						/* Bounce & Deliverability */
+						if ( tab.name === 'bounce' ) {
+							return (
+								<div className="aime-settings-form">
+									<Card title={ __( 'Deliverability & Domain Protection', 'ai-marketing-expert' ) }>
+										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
+											{ __( 'Automated mechanisms protect your sender score, domain reputation, and inbox delivery rates.', 'ai-marketing-expert' ) }
+										</p>
+										<div className="aime-cf-how-it-works">
+											<strong>{ __( 'Active Deliverability Guardrails:', 'ai-marketing-expert' ) }</strong>
+											<ul>
+												<li>
+													<strong>{ __( 'DNS MX Domain Validation:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Recipient domains are checked for real DNS Mail Exchange (MX) records before dispatch to avoid sending to dead domains.', 'ai-marketing-expert' ) }
+												</li>
+												<li>
+													<strong>{ __( 'Instant 5xx Hard Bounce Detection:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Permanent SMTP rejections (such as mailbox not found or invalid user) are flagged as bounced immediately, aborting retries to protect sender reputation.', 'ai-marketing-expert' ) }
+												</li>
+												<li>
+													<strong>{ __( 'ESP Webhook Listeners:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Transactional providers (Amazon SES SNS, SendGrid, Mailgun, Postmark, Brevo) can post bounce and spam complaint notifications to your webhook endpoints in Settings → API & Webhooks.', 'ai-marketing-expert' ) }
+												</li>
+											</ul>
+										</div>
+									</Card>
+
+									<Card title={ __( 'IMAP Bounce Mailbox Reader (For Standard SMTP / cPanel / Hostinger)', 'ai-marketing-expert' ) }>
+										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
+											{ __( 'When using custom SMTP (cPanel, Hostinger, Gmail, etc.), bounce notifications arrive as Non-Delivery Reports (NDRs) in your inbox. Configure your dedicated bounce email account below. AI Marketing Expert will periodically check this mailbox via IMAP, extract the failed email addresses, and automatically mark them as bounced.', 'ai-marketing-expert' ) }
+										</p>
+
+										<div style={ { marginBottom: 16 } }>
+											<ToggleControl
+												label={ __( 'Enable IMAP Bounce Checking', 'ai-marketing-expert' ) }
+												checked={ !! imapSettings.enabled }
+												onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, enabled: v } ) ) }
+												help={ __( 'Periodically inspect mailbox for bounce delivery status notifications.', 'ai-marketing-expert' ) }
+											/>
+										</div>
+
+										{ imapSettings.enabled && (
+											<>
+												<div className="aime-form-grid aime-form-grid-2">
+													<TextControl
+														label={ __( 'IMAP Host', 'ai-marketing-expert' ) }
+														value={ imapSettings.host || '' }
+														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, host: v } ) ) }
+														placeholder="mail.yourdomain.com"
+														__nextHasNoMarginBottom
+													/>
+													<div className="aime-form-row">
+														<TextControl
+															label={ __( 'Port', 'ai-marketing-expert' ) }
+															type="number"
+															value={ imapSettings.port || 993 }
+															onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, port: parseInt( v ) || 993 } ) ) }
+															__nextHasNoMarginBottom
+														/>
+														<SelectControl
+															label={ __( 'Encryption', 'ai-marketing-expert' ) }
+															value={ imapSettings.encryption || 'ssl' }
+															options={ [
+																{ label: 'SSL / TLS (Port 993)', value: 'ssl' },
+																{ label: 'STARTTLS (Port 143)', value: 'tls' },
+																{ label: 'None (Insecure)', value: 'none' },
+															] }
+															onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, encryption: v } ) ) }
+														/>
+													</div>
+													<TextControl
+														label={ __( 'Username / Email', 'ai-marketing-expert' ) }
+														value={ imapSettings.username || '' }
+														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, username: v } ) ) }
+														placeholder="bounce@yourdomain.com"
+														__nextHasNoMarginBottom
+													/>
+													<TextControl
+														label={ __( 'Password', 'ai-marketing-expert' ) }
+														type="password"
+														value={ imapSettings.password || '' }
+														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, password: v } ) ) }
+														help={ imapSettings.has_password ? __( 'Password is saved. Leave blank to keep existing password.', 'ai-marketing-expert' ) : '' }
+														placeholder={ imapSettings.has_password ? '••••••••••••' : '' }
+														__nextHasNoMarginBottom
+													/>
+												</div>
+
+												<div style={ { marginTop: 12, marginBottom: 16 } }>
+													<CheckboxControl
+														label={ __( 'Delete emails after processing', 'ai-marketing-expert' ) }
+														checked={ !! imapSettings.delete_after_process }
+														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, delete_after_process: v } ) ) }
+														help={ __( 'Removes processed bounce messages from the mailbox to prevent inbox overflow.', 'ai-marketing-expert' ) }
+														__nextHasNoMarginBottom
+													/>
+												</div>
+
+												{ imapTestNotice && (
+													<div style={ { marginBottom: 16 } }>
+														<Notice type={ imapTestNotice.type } message={ imapTestNotice.message } dismissible onDismiss={ () => setImapTestNotice( null ) } />
+													</div>
+												) }
+
+												<div className="aime-settings-btn-row" style={ { marginTop: 8 } }>
+													<Button
+														variant="secondary"
+														onClick={ handleTestImap }
+														isBusy={ testingImap }
+														disabled={ testingImap || ! imapSettings.host || ! imapSettings.username }
+													>
+														{ testingImap ? __( 'Testing Connection...', 'ai-marketing-expert' ) : __( 'Test IMAP Connection', 'ai-marketing-expert' ) }
+													</Button>
+													<Button
+														variant="primary"
+														onClick={ handleSaveImap }
+														isBusy={ savingImap }
+														disabled={ savingImap }
+													>
+														{ savingImap
+															? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+															: __( 'Save Bounce Settings', 'ai-marketing-expert' )
+														}
+													</Button>
+												</div>
+											</>
+										) }
+
+										{ ! imapSettings.enabled && (
+											<Button
+												variant="primary"
+												onClick={ handleSaveImap }
+												isBusy={ savingImap }
+												disabled={ savingImap }
+												style={ { marginTop: 8 } }
+											>
+												{ savingImap
+													? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+													: __( 'Save Settings', 'ai-marketing-expert' )
+												}
+											</Button>
+										) }
+									</Card>
 								</div>
 							);
 						}

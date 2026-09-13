@@ -65,6 +65,20 @@ const PLATFORM_GUIDE = {
 			{ n: 6, text: __( 'You do not need the Bearer Token for this plugin. Paste only those four values in the fields below.', 'ai-marketing-expert' ) },
 		],
 	},
+	linkedin: {
+		color:       '#0A66C2',
+		tokenLabel:  __( 'LinkedIn Access Token', 'ai-marketing-expert' ),
+		nameLabel:    __( 'Account / Company Name', 'ai-marketing-expert' ),
+		namePlaceholder: __( 'LinkedIn account or page name', 'ai-marketing-expert' ),
+		nameHelp:     __( 'This is the label shown inside the plugin for the connected LinkedIn profile or company page.', 'ai-marketing-expert' ),
+		needsSecret: false,
+		steps: [
+			{ n: 1, text: __( 'Go to', 'ai-marketing-expert' ), link: { href: 'https://www.linkedin.com/developers/apps', label: 'linkedin.com/developers' }, after: __( 'and create an App (linked to your LinkedIn Page or Personal profile).', 'ai-marketing-expert' ) },
+			{ n: 2, text: __( 'Under the Products tab, request access to "Share on LinkedIn" and "Sign In with LinkedIn using OpenID Connect".', 'ai-marketing-expert' ) },
+			{ n: 3, text: __( 'Under the Auth tab, generate an OAuth 2.0 token with permissions (w_member_social or w_organization_social), or use the token tool.', 'ai-marketing-expert' ) },
+			{ n: 4, text: __( 'Paste the Access Token below. The plugin will automatically detect your member or organization URN.', 'ai-marketing-expert' ) },
+		],
+	},
 };
 
 const GuideStep = ( { step } ) => (
@@ -111,6 +125,13 @@ const platforms = [
 		color: '#000000',
 		icon: pluginUrl + 'assets/img/x-logo.svg',
 		description: __( 'Connect your X account to post tweets.', 'ai-marketing-expert' ),
+	},
+	{
+		id: 'linkedin',
+		name: 'LinkedIn',
+		color: '#0A66C2',
+		icon: pluginUrl + 'assets/img/linkedin-logo.svg',
+		description: __( 'Connect your LinkedIn Profile or Company Page to publish professional updates.', 'ai-marketing-expert' ),
 	},
 ];
 

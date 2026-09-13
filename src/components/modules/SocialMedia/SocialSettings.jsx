@@ -125,6 +125,28 @@ const SocialSettings = () => {
 					</div>
 				</Card>
 
+				{ /* Auto-Share Settings */ }
+				<Card title={ __( 'Auto-Share on Post Publish', 'ai-marketing-expert' ) }>
+					<div style={ { display: 'flex', flexDirection: 'column', gap: 16 } }>
+						<ToggleControl
+							label={ __( 'Auto-Share New Posts & Products', 'ai-marketing-expert' ) }
+							help={ __( 'Automatically generate AI captions and schedule social posts whenever a blog post or WooCommerce product is published.', 'ai-marketing-expert' ) }
+							checked={ !! settings.auto_share_on_publish }
+							onChange={ ( v ) => update( 'auto_share_on_publish', v ) }
+							__nextHasNoMarginBottom
+						/>
+
+						{ !! settings.auto_share_on_publish && (
+							<ToggleControl
+								label={ __( 'Save as Draft instead of auto-scheduling', 'ai-marketing-expert' ) }
+								help={ __( 'Creates draft social posts so you can review and polish captions before scheduling.', 'ai-marketing-expert' ) }
+								checked={ !! settings.auto_share_as_draft }
+								onChange={ ( v ) => update( 'auto_share_as_draft', v ) }
+								__nextHasNoMarginBottom
+							/>
+						) }
+					</div>
+				</Card>
 			</div>
 
 			{ /* Save button (bottom) */ }

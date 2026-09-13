@@ -61,6 +61,17 @@ const ChatbotPage = () => {
 		return () => clearInterval( interval );
 	}, [] );
 
+	/* Listen to hash changes for deep linking (e.g. from dashboard widget) */
+	useEffect( () => {
+		const onHashChange = () => {
+			const { key, params } = parseHash();
+			setView( key );
+			setViewParams( params );
+		};
+		window.addEventListener( 'hashchange', onHashChange );
+		return () => window.removeEventListener( 'hashchange', onHashChange );
+	}, [] );
+
 	const navigate = useCallback( ( key, params = {} ) => {
 		setView( key );
 		setViewParams( params );
@@ -103,10 +114,16 @@ const ChatbotPage = () => {
 		}
 	};
 
+	const getActiveSidebarKey = () => {
+		if ( view === 'conversation' ) return 'conversations';
+		if ( view === 'edit-bot' || view === 'new-bot' ) return 'bots';
+		return view;
+	};
+
 	const sidebar = (
 		<InternalSidebar
 			items={ sidebarItems }
-			activeKey={ view }
+			activeKey={ getActiveSidebarKey() }
 			onNavigate={ navigate }
 		/>
 	);

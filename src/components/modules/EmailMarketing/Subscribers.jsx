@@ -11,6 +11,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import CsvImportModal from '../../common/CsvImportModal';
 import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
+import ProBadge from '../../Layout/ProBadge';
 
 const STATUS_OPTIONS = [
 	{ label: __( 'All Statuses', 'ai-marketing-expert' ), value: '' },
@@ -321,6 +322,12 @@ const Subscribers = ( { onNavigate } ) => {
 			<div className="aime-page-header">
 				<h2>{ __( 'Contacts', 'ai-marketing-expert' ) } <span className="aime-count">({ total })</span></h2>
 				<div className="aime-page-header-actions">
+					<Button variant="secondary" onClick={ () => onNavigate && onNavigate( 'lead-finder' ) }>
+						<span className="aime-pro-inline-action">
+							{ __( 'Find Leads', 'ai-marketing-expert' ) }
+							{ ! hasPro && <ProBadge /> }
+						</span>
+					</Button>
 					<Button variant="secondary" onClick={ () => hasPro ? setShowExportModal( true ) : handleExport() }>
 						<span className="aime-pro-inline-action">{ __( 'Export Contacts', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
 					</Button>
@@ -825,6 +832,21 @@ const Subscribers = ( { onNavigate } ) => {
 										<span className="dashicons dashicons-cart" />
 										<span className="aime-import-source-title">{ __( 'WooCommerce Customers', 'ai-marketing-expert' ) }</span>
 										<span className="aime-import-source-desc">{ __( 'Import all WooCommerce customers', 'ai-marketing-expert' ) }</span>
+									</button>
+									<button
+										type="button"
+										className="aime-import-source-card"
+										onClick={ () => {
+											setShowImportModal( false );
+											if ( onNavigate ) onNavigate( 'lead-finder' );
+										} }
+									>
+										<span className="dashicons dashicons-search" />
+										<span className="aime-import-source-title">
+											{ __( 'B2B Lead Finder', 'ai-marketing-expert' ) }
+											{ ! hasPro && <ProBadge /> }
+										</span>
+										<span className="aime-import-source-desc">{ __( 'Discover verified B2B prospects with AI', 'ai-marketing-expert' ) }</span>
 									</button>
 								</div>
 							</div>

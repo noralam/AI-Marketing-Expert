@@ -104,12 +104,14 @@ export const SOCIAL_PLATFORMS = {
 	facebook: { label: 'Facebook', icon: '📘', color: '#1877F2' },
 	instagram: { label: 'Instagram', icon: '📸', color: '#E4405F' },
 	x: { label: 'X (Twitter)', icon: '𝕏', color: '#000000' },
+	linkedin: { label: 'LinkedIn', icon: '💼', color: '#0A66C2' },
 };
 
 export const SOCIAL_CHAR_LIMITS = {
 	facebook: 63206,
 	instagram: 2200,
 	x: 280,
+	linkedin: 3000,
 };
 
 // Free-tier limits (merged from server via aimeData).

@@ -20,12 +20,14 @@ const platformColors = {
 	facebook: '#1877F2',
 	instagram: '#E4405F',
 	x: '#000000',
+	linkedin: '#0A66C2',
 };
 
 const platformLabels = {
 	facebook: 'Facebook',
 	instagram: 'Instagram',
 	x: 'X (Twitter)',
+	linkedin: 'LinkedIn',
 };
 
 const Accounts = ( { onNavigate } ) => {

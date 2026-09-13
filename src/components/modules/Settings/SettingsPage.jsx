@@ -3,9 +3,9 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import {
-	ToggleControl, Button, SelectControl, Spinner,
+	ToggleControl, Button, SelectControl, Spinner, Modal,
 } from '@aime/wp-components';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
@@ -61,11 +61,16 @@ const SettingsPage = () => {
 			: null
 	);
 
-	/* API Key */
+	/* API Key & Webhooks */
 	const [ apiKeyFull, setApiKeyFull ] = useState( '' );
 	const [ apiKeyBusy, setApiKeyBusy ] = useState( false );
 	const [ apiKeyCopied, setApiKeyCopied ] = useState( false );
 	const [ webhookCopied, setWebhookCopied ] = useState( false );
+	const [ cronUrlCopied, setCronUrlCopied ] = useState( false );
+	const [ cronCmdCopied, setCronCmdCopied ] = useState( false );
+	const [ cronTokenBusy, setCronTokenBusy ] = useState( false );
+	const [ bounceWebhookCopied, setBounceWebhookCopied ] = useState( false );
+	const [ complaintWebhookCopied, setComplaintWebhookCopied ] = useState( false );
 
 	/* Logs */
 	const [ logs, setLogs ] = useState( [] );
@@ -75,9 +80,14 @@ const SettingsPage = () => {
 	const [ logModule, setLogModule ] = useState( '' );
 	const [ logsLoading, setLogsLoading ] = useState( false );
 
-	/* Import / Export */
+	/* Import / Export & Database Hygiene */
 	const [ exporting, setExporting ] = useState( false );
 	const [ importing, setImporting ] = useState( false );
+	const [ pruningDb, setPruningDb ] = useState( false );
+	const [ showPruneModal, setShowPruneModal ] = useState( false );
+	const [ dbStats, setDbStats ] = useState( null );
+	const [ dbStatsLoading, setDbStatsLoading ] = useState( false );
+	const [ pruneMode, setPruneMode ] = useState( 'expired' );
 
 	useEffect( () => {
 		loadData();
@@ -85,19 +95,30 @@ const SettingsPage = () => {
 
 	const loadData = async () => {
 		try {
-			const [ settingsData, modulesData, cronData ] = await Promise.all( [
+			const [ settingsData, modulesData, cronData, hygieneData ] = await Promise.all( [
 				get( '/settings' ),
 				get( '/modules' ),
 				get( '/system/cron-status' ),
+				get( '/system/database-hygiene' ),
 			] );
 			setSettings( settingsData.settings || {} );
 			setModules( modulesData.modules || [] );
 			setCronStatus( cronData || null );
+			setDbStats( hygieneData || null );
 		} catch ( err ) {
 			// Handled.
 		} finally {
 			setBooting( false );
 		}
+	};
+
+	const fetchDbStats = async () => {
+		setDbStatsLoading( true );
+		try {
+			const res = await get( '/system/database-hygiene' );
+			setDbStats( res || null );
+		} catch ( e ) { /* silent */ }
+		setDbStatsLoading( false );
 	};
 
 	const loadCronStatus = async () => {
@@ -184,6 +205,26 @@ const SettingsPage = () => {
 		setApiKeyBusy( false );
 	};
 
+	const handleRegenerateCronToken = async () => {
+		if ( ! window.confirm( __( 'Regenerate external cron token? Any existing server cron jobs using the old URL will need to be updated.', 'ai-marketing-expert' ) ) ) return;
+		setCronTokenBusy( true );
+		try {
+			const res = await post( '/system/cron-token/regenerate' );
+			setSettings( ( prev ) => ( {
+				...prev,
+				cron_token: res.cron_token,
+				cron_runner_url: res.cron_runner_url,
+				cron_cli_command: res.cron_cli_command,
+				webhook_bounce_url: res.cron_runner_url ? res.cron_runner_url.replace( '/system/cron-runner', '/email/webhook/bounce' ) : prev.webhook_bounce_url,
+				webhook_complaint_url: res.cron_runner_url ? res.cron_runner_url.replace( '/system/cron-runner', '/email/webhook/complaint' ) : prev.webhook_complaint_url,
+			} ) );
+			setNotice( { type: 'success', message: __( 'New cron token generated.', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		}
+		setCronTokenBusy( false );
+	};
+
 	const copyToClipboard = ( text, setter ) => {
 		navigator.clipboard.writeText( text ).then( () => {
 			setter( true );
@@ -250,6 +291,38 @@ const SettingsPage = () => {
 			setImporting( false );
 		};
 		reader.readAsText( file );
+	};
+
+	const handlePruneDatabase = () => {
+		setShowPruneModal( true );
+	};
+
+	const executePruneDatabase = async () => {
+		setPruningDb( true );
+		try {
+			const res = await post( '/system/prune-database', {
+				force_logs: pruneMode === 'force_logs',
+			} );
+			const deleted = res?.deleted || res?.details?.details || {};
+			const total = Object.values( deleted ).reduce( ( acc, n ) => acc + ( Number( n ) || 0 ), 0 );
+			setNotice( {
+				type: 'success',
+				message: res?.message || ( total > 0
+					? `${ total } ${ __( 'old records cleaned from database.', 'ai-marketing-expert' ) }`
+					: __( 'Database is already clean and optimal. No expired records found.', 'ai-marketing-expert' )
+				),
+			} );
+			if ( res?.stats ) {
+				setDbStats( res.stats );
+			} else {
+				fetchDbStats();
+			}
+			setShowPruneModal( false );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		} finally {
+			setPruningDb( false );
+		}
 	};
 
 	if ( booting ) {
@@ -338,7 +411,7 @@ const SettingsPage = () => {
 								</p>
 							</Card>
 
-							<Card title={ __( 'Data Management', 'ai-marketing-expert' ) }>
+							<Card title={ __( 'Data Management & Database Hygiene', 'ai-marketing-expert' ) }>
 								<ToggleControl
 									label={ __( 'Delete data on uninstall', 'ai-marketing-expert' ) }
 									checked={ !! settings.delete_data_on_uninstall }
@@ -356,7 +429,217 @@ const SettingsPage = () => {
 									} }
 									help={ __( 'Remove all plugin data when the plugin is deleted.', 'ai-marketing-expert' ) }
 								/>
+
+								<div style={ { marginTop: 20, paddingTop: 16, borderTop: '1px solid #e2e8f0', maxWidth: 360 } }>
+									<SelectControl
+										label={ __( 'Log & Automation History Retention', 'ai-marketing-expert' ) }
+										value={ settings.retention_days ?? 60 }
+										options={ [
+											{ label: __( '30 days', 'ai-marketing-expert' ), value: 30 },
+											{ label: __( '60 days (Recommended)', 'ai-marketing-expert' ), value: 60 },
+											{ label: __( '90 days', 'ai-marketing-expert' ), value: 90 },
+											{ label: __( '180 days (6 months)', 'ai-marketing-expert' ), value: 180 },
+											{ label: __( '365 days (1 year)', 'ai-marketing-expert' ), value: 365 },
+											{ label: __( 'Keep indefinitely', 'ai-marketing-expert' ), value: 0 },
+										] }
+										onChange={ async ( v ) => {
+											const val = parseInt( v, 10 );
+											const nextSettings = { ...settings, retention_days: isNaN( val ) ? 60 : val };
+											setSettings( nextSettings );
+											try {
+												const result = await post( '/settings', nextSettings );
+												setSettings( result.settings || nextSettings );
+												setNotice( { type: 'success', message: __( 'Retention setting saved.', 'ai-marketing-expert' ) } );
+											} catch ( err ) {
+												setSettings( settings );
+												setNotice( { type: 'error', message: err.message } );
+											}
+										} }
+										help={ __( 'Automatically prunes expired logs and workflow execution rows in daily background tasks to keep your database fast.', 'ai-marketing-expert' ) }
+									/>
+								</div>
+
+								{ /* Live DB Hygiene Status Box */ }
+								<div style={ {
+									marginTop: 20,
+									padding: '14px 16px',
+									background: '#f8fafc',
+									border: '1px solid #e2e8f0',
+									borderRadius: '8px',
+								} }>
+									<div style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 } }>
+										<strong style={ { fontSize: '13px', color: '#1e293b' } }>
+											{ __( 'Database Health & Record Status', 'ai-marketing-expert' ) }
+										</strong>
+										<button
+											type="button"
+											onClick={ fetchDbStats }
+											disabled={ dbStatsLoading }
+											style={ { border: 'none', background: 'transparent', color: '#6366f1', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 } }
+											title={ __( 'Refresh database counts', 'ai-marketing-expert' ) }
+										>
+											<span className={ `dashicons dashicons-update ${ dbStatsLoading ? 'aime-spin' : '' }` } style={ { fontSize: '14px', width: '14px', height: '14px', lineHeight: '14px' } }></span>
+											{ __( 'Refresh Stats', 'ai-marketing-expert' ) }
+										</button>
+									</div>
+
+									<div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' } }>
+										<div style={ { background: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' } }>
+											<div style={ { fontSize: '11px', color: '#64748b' } }>{ __( 'Total Records', 'ai-marketing-expert' ) }</div>
+											<div style={ { fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: 2 } }>
+												{ dbStats?.total_rows ?? '—' }
+											</div>
+										</div>
+										<div style={ { background: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' } }>
+											<div style={ { fontSize: '11px', color: '#64748b' } }>{ __( 'Expired (> retention)', 'ai-marketing-expert' ) }</div>
+											<div style={ { fontSize: '16px', fontWeight: 700, color: ( dbStats?.expired_rows || 0 ) > 0 ? '#ef4444' : '#10b981', marginTop: 2 } }>
+												{ dbStats?.expired_rows ?? '0' }
+											</div>
+										</div>
+										<div style={ { background: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' } }>
+											<div style={ { fontSize: '11px', color: '#64748b' } }>{ __( 'Debug Logs', 'ai-marketing-expert' ) }</div>
+											<div style={ { fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: 2 } }>
+												{ dbStats?.tables?.aime_log?.total ?? '0' }
+											</div>
+										</div>
+										<div style={ { background: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' } }>
+											<div style={ { fontSize: '11px', color: '#64748b' } }>{ __( 'Activity Logs', 'ai-marketing-expert' ) }</div>
+											<div style={ { fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: 2 } }>
+												{ dbStats?.tables?.aime_activity_log?.total ?? '0' }
+											</div>
+										</div>
+									</div>
+
+									<p style={ { fontSize: '12px', color: ( dbStats?.expired_rows || 0 ) > 0 ? '#b45309' : '#166534', margin: '12px 0 0 0', display: 'flex', alignItems: 'center', gap: '6px' } }>
+										<span className={ `dashicons ${ ( dbStats?.expired_rows || 0 ) > 0 ? 'dashicons-warning' : 'dashicons-yes-alt' }` } style={ { fontSize: '16px', width: '16px', height: '16px', lineHeight: '16px' } }></span>
+										{ ( dbStats?.expired_rows || 0 ) > 0
+											? sprintf( __( '%d expired record(s) ready for cleanup.', 'ai-marketing-expert' ), dbStats.expired_rows )
+											: __( 'Database is optimal. All records are recent and within your active retention window.', 'ai-marketing-expert' )
+										}
+									</p>
+								</div>
+
+								<div style={ { marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' } }>
+									<strong style={ { display: 'block', fontSize: '13px', marginBottom: 4 } }>
+										{ __( 'Manual Database Cleanup', 'ai-marketing-expert' ) }
+									</strong>
+									<p className="aime-card-description" style={ { marginBottom: 12 } }>
+										{ __( 'Immediately purge expired debug logs, activity logs, and old workflow outputs according to your retention period.', 'ai-marketing-expert' ) }
+									</p>
+									<Button
+										variant="secondary"
+										onClick={ handlePruneDatabase }
+										isBusy={ pruningDb }
+										disabled={ pruningDb }
+									>
+										{ __( 'Clean Database Now', 'ai-marketing-expert' ) }
+									</Button>
+								</div>
 							</Card>
+
+							{ showPruneModal && (
+								<Modal
+									title={ __( 'Confirm Database Cleanup', 'ai-marketing-expert' ) }
+									onRequestClose={ () => ! pruningDb && setShowPruneModal( false ) }
+									className="aime-confirm-modal"
+								>
+									<div style={ { padding: '8px 0', maxWidth: '480px' } }>
+										<div style={ { display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' } }>
+											<span className="dashicons dashicons-database" style={ { fontSize: '26px', width: '26px', height: '26px', color: '#6366f1', flexShrink: 0, marginTop: '2px' } }></span>
+											<div>
+												<p style={ { margin: '0 0 6px 0', fontSize: '14px', fontWeight: 600, color: '#1e293b' } }>
+													{ __( 'Clean and optimize database records', 'ai-marketing-expert' ) }
+												</p>
+												<p style={ { margin: 0, fontSize: '12px', lineHeight: 1.5, color: '#64748b' } }>
+													{ sprintf(
+														/* translators: %d: retention days */
+														__( 'Active retention setting: %d days. Active funnels and subscribers are never touched.', 'ai-marketing-expert' ),
+														settings.retention_days ?? 60
+													) }
+												</p>
+											</div>
+										</div>
+
+										{ /* DB Overview Table */ }
+										<div style={ { background: '#f8fafc', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px', border: '1px solid #e2e8f0' } }>
+											<div style={ { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', padding: '3px 0' } }>
+												<span>{ __( 'System Debug Logs:', 'ai-marketing-expert' ) }</span>
+												<strong>{ dbStats?.tables?.aime_log?.total ?? 0 } { __( 'records', 'ai-marketing-expert' ) }</strong>
+											</div>
+											<div style={ { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', padding: '3px 0' } }>
+												<span>{ __( 'Activity History Logs:', 'ai-marketing-expert' ) }</span>
+												<strong>{ dbStats?.tables?.aime_activity_log?.total ?? 0 } { __( 'records', 'ai-marketing-expert' ) }</strong>
+											</div>
+											<div style={ { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', padding: '3px 0' } }>
+												<span>{ __( 'Workflow Execution Logs:', 'ai-marketing-expert' ) }</span>
+												<strong>{ dbStats?.tables?.workflow_executions?.total ?? 0 } { __( 'records', 'ai-marketing-expert' ) }</strong>
+											</div>
+											<div style={ { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#0f172a', fontWeight: 600, paddingTop: '6px', marginTop: '4px', borderTop: '1px solid #e2e8f0' } }>
+												<span>{ sprintf( __( 'Expired (> %d days):', 'ai-marketing-expert' ), settings.retention_days ?? 60 ) }</span>
+												<span style={ { color: ( dbStats?.expired_rows || 0 ) > 0 ? '#ef4444' : '#10b981' } }>
+													{ dbStats?.expired_rows ?? 0 } { __( 'ready to clean', 'ai-marketing-expert' ) }
+												</span>
+											</div>
+										</div>
+
+										{ /* Cleanup mode choice */ }
+										<div style={ { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' } }>
+											<label style={ { display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', cursor: 'pointer' } }>
+												<input
+													type="radio"
+													name="aime_prune_mode"
+													checked={ pruneMode === 'expired' }
+													onChange={ () => setPruneMode( 'expired' ) }
+													style={ { marginTop: '2px' } }
+												/>
+												<span>
+													<strong>{ __( 'Standard Cleanup (Expired records only)', 'ai-marketing-expert' ) }</strong>
+													<span style={ { display: 'block', color: '#64748b', fontSize: '11px', marginTop: '2px' } }>
+														{ sprintf( __( 'Only removes records older than %d days. Recent logs remain preserved.', 'ai-marketing-expert' ), settings.retention_days ?? 60 ) }
+													</span>
+												</span>
+											</label>
+											<label style={ { display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', cursor: 'pointer' } }>
+												<input
+													type="radio"
+													name="aime_prune_mode"
+													checked={ pruneMode === 'force_logs' }
+													onChange={ () => setPruneMode( 'force_logs' ) }
+													style={ { marginTop: '2px' } }
+												/>
+												<span>
+													<strong>{ __( 'Purge All Debug & Activity Logs', 'ai-marketing-expert' ) }</strong>
+													<span style={ { display: 'block', color: '#64748b', fontSize: '11px', marginTop: '2px' } }>
+														{ __( 'Empties debug and activity log tables immediately (useful for testing on localhost or clearing testing junk).', 'ai-marketing-expert' ) }
+													</span>
+												</span>
+											</label>
+										</div>
+
+										<div style={ { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' } }>
+											<Button
+												variant="secondary"
+												onClick={ () => setShowPruneModal( false ) }
+												disabled={ pruningDb }
+											>
+												{ __( 'Cancel', 'ai-marketing-expert' ) }
+											</Button>
+											<Button
+												variant="primary"
+												isDestructive={ pruneMode === 'force_logs' }
+												isBusy={ pruningDb }
+												disabled={ pruningDb }
+												onClick={ executePruneDatabase }
+											>
+												{ pruneMode === 'force_logs'
+													? __( 'Purge Logs Now', 'ai-marketing-expert' )
+													: __( 'Clean Expired Records', 'ai-marketing-expert' )
+												}
+											</Button>
+										</div>
+									</div>
+								</Modal>
+							) }
 						</>
 					) }
 
@@ -447,6 +730,50 @@ const SettingsPage = () => {
 									</p>
 								</div>
 							</Card>
+
+							<Card title={ __( 'Dedicated External Server Cron (High Precision)', 'ai-marketing-expert' ) }>
+								<p className="aime-card-description">
+									{ __( 'Run email queue processing, delay timers, and bounce mailbox checks directly from server cron (cPanel Cron Jobs, Linux Crontab, or cloud cron ping services). This guarantees exact sequence timing and high-speed delivery without relying on website visitors.', 'ai-marketing-expert' ) }
+								</p>
+
+								<div style={ { marginBottom: 16 } }>
+									<strong style={ { display: 'block', marginBottom: 6, fontSize: '13px' } }>
+										{ __( 'Direct Cron URL:', 'ai-marketing-expert' ) }
+									</strong>
+									<div className="aime-api-key-value">
+										<code style={ { fontSize: '12px', wordBreak: 'break-all' } }>
+											{ settings.cron_runner_url || '—' }
+										</code>
+										{ settings.cron_runner_url && (
+											<Button variant="secondary" size="small" onClick={ () => copyToClipboard( settings.cron_runner_url, setCronUrlCopied ) }>
+												{ cronUrlCopied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy URL', 'ai-marketing-expert' ) }
+											</Button>
+										) }
+									</div>
+								</div>
+
+								<div style={ { marginBottom: 16 } }>
+									<strong style={ { display: 'block', marginBottom: 6, fontSize: '13px' } }>
+										{ __( 'cPanel / Linux Crontab Command (Every minute):', 'ai-marketing-expert' ) }
+									</strong>
+									<div className="aime-api-key-value">
+										<code style={ { fontSize: '12px', wordBreak: 'break-all' } }>
+											{ settings.cron_cli_command || `wget -q -O - "${ settings.cron_runner_url }" >/dev/null 2>&1` }
+										</code>
+										{ settings.cron_cli_command && (
+											<Button variant="secondary" size="small" onClick={ () => copyToClipboard( settings.cron_cli_command, setCronCmdCopied ) }>
+												{ cronCmdCopied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy Command', 'ai-marketing-expert' ) }
+											</Button>
+										) }
+									</div>
+								</div>
+
+								<div className="aime-settings-btn-row">
+									<Button variant="secondary" onClick={ handleRegenerateCronToken } isBusy={ cronTokenBusy } disabled={ cronTokenBusy }>
+										{ __( 'Regenerate Secret Token', 'ai-marketing-expert' ) }
+									</Button>
+								</div>
+							</Card>
 						</>
 					) }
 
@@ -534,6 +861,53 @@ X-API-Key: your-api-key
 									</div>
 								</Card>
 							) }
+
+							<Card title={ __( 'ESP Bounce & Spam Complaint Webhooks', 'ai-marketing-expert' ) }>
+								<p className="aime-card-description" style={ { marginBottom: 16 } }>
+									{ __( 'If you use transactional email services (Amazon SES, SendGrid, Mailgun, Postmark, Brevo), configure these webhook endpoints in your provider dashboard. Inbound bounces and spam complaints will immediately update contact statuses to protect your sender reputation.', 'ai-marketing-expert' ) }
+								</p>
+
+								<div style={ { marginBottom: 16 } }>
+									<strong style={ { display: 'block', marginBottom: 6, fontSize: '13px' } }>
+										{ __( 'Bounce Webhook URL:', 'ai-marketing-expert' ) }
+									</strong>
+									<div className="aime-api-key-value">
+										<code style={ { fontSize: '12px', wordBreak: 'break-all' } }>
+											{ settings.webhook_bounce_url || '—' }
+										</code>
+										{ settings.webhook_bounce_url && (
+											<Button variant="secondary" size="small" onClick={ () => copyToClipboard( settings.webhook_bounce_url, setBounceWebhookCopied ) }>
+												{ bounceWebhookCopied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy URL', 'ai-marketing-expert' ) }
+											</Button>
+										) }
+									</div>
+								</div>
+
+								<div style={ { marginBottom: 16 } }>
+									<strong style={ { display: 'block', marginBottom: 6, fontSize: '13px' } }>
+										{ __( 'Spam Complaint Webhook URL:', 'ai-marketing-expert' ) }
+									</strong>
+									<div className="aime-api-key-value">
+										<code style={ { fontSize: '12px', wordBreak: 'break-all' } }>
+											{ settings.webhook_complaint_url || '—' }
+										</code>
+										{ settings.webhook_complaint_url && (
+											<Button variant="secondary" size="small" onClick={ () => copyToClipboard( settings.webhook_complaint_url, setComplaintWebhookCopied ) }>
+												{ complaintWebhookCopied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy URL', 'ai-marketing-expert' ) }
+											</Button>
+										) }
+									</div>
+								</div>
+
+								<div className="aime-settings-callout" style={ { marginTop: 12 } }>
+									<strong>{ __( 'Supported Providers & Setup:', 'ai-marketing-expert' ) }</strong>
+									<ul style={ { margin: '8px 0 0 16px', padding: 0 } }>
+										<li><strong>Amazon SES:</strong> { __( 'Create an SNS Topic for Bounces & Complaints, add an HTTPS subscription pointing to this URL. The subscription confirmation is handled automatically.', 'ai-marketing-expert' ) }</li>
+										<li><strong>SendGrid:</strong> { __( 'In Mail Settings → Event Webhook, select "Dropped" and "Bounced" pointing to the Bounce URL.', 'ai-marketing-expert' ) }</li>
+										<li><strong>Mailgun / Postmark / Brevo:</strong> { __( 'Add Webhook in their respective dashboards for permanent failure and complaint events.', 'ai-marketing-expert' ) }</li>
+									</ul>
+								</div>
+							</Card>
 						</>
 					) }
 

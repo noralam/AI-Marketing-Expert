@@ -341,10 +341,27 @@ const Conversations = ( { onNavigate } ) => {
 										<td
 											className="aime-clickable-row"
 											onClick={ () => onNavigate( 'conversation', { id: conv.id } ) }
+											title={ __( 'Click to open conversation', 'ai-marketing-expert' ) }
 										>
 											<div className="aime-contact-cell">
-												<strong>{ conv.visitor_name || __( 'Anonymous', 'ai-marketing-expert' ) }</strong>
-												{ conv.visitor_email && <small>{ conv.visitor_email }</small> }
+												<button
+													type="button"
+													className="aime-link-btn aime-contact-name"
+													onClick={ ( e ) => {
+														e.stopPropagation();
+														onNavigate( 'conversation', { id: conv.id } );
+													} }
+													style={ {
+														textAlign: 'left',
+														padding: 0,
+														border: 'none',
+														background: 'none',
+														cursor: 'pointer',
+													} }
+												>
+													<strong>{ conv.visitor_name || __( 'Anonymous', 'ai-marketing-expert' ) }</strong>
+												</button>
+												{ conv.visitor_email && <small className="aime-table-sub">{ conv.visitor_email }</small> }
 											</div>
 										</td>
 										<td>{ conv.bot_name || '\u2014' }</td>

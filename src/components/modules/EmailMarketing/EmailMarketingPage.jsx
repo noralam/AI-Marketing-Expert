@@ -17,6 +17,7 @@ import {
 	cog,
 	commentContent,
 	starFilled,
+	search,
 } from '@wordpress/icons';
 import AppLayout from '../../Layout/AppLayout';
 import InternalSidebar from '../../Layout/InternalSidebar';
@@ -32,9 +33,11 @@ import EmailLists from './EmailLists';
 import EmailTags from './EmailTags';
 import EmailAnalytics from './EmailAnalytics';
 import ImportExport from './ImportExport';
+import LeadFinder from './LeadFinder';
 import AiTools from './AiTools';
 import SmtpSettings from './SmtpSettings';
 import EmailSettings from './EmailSettings';
+import { isProActive } from '../../common/ProLock';
 
 const EmailMarketingPage = () => {
 	const parseHash = () => {
@@ -45,6 +48,7 @@ const EmailMarketingPage = () => {
 	};
 
 	const initial = parseHash();
+	const hasPro = isProActive();
 	const [ view, setView ] = useState( initial.key );
 	const [ viewParams, setViewParams ] = useState( initial.params );
 
@@ -59,6 +63,7 @@ const EmailMarketingPage = () => {
 		{ key: 'subscribers', label: __( 'Contacts', 'ai-marketing-expert' ), icon: people },
 		{ key: 'lists', label: __( 'Lists', 'ai-marketing-expert' ), icon: category },
 		{ key: 'tags', label: __( 'Tags', 'ai-marketing-expert' ), icon: tag },
+		{ key: 'lead-finder', label: __( 'Lead Finder', 'ai-marketing-expert' ), icon: search, badgeLabel: hasPro ? null : 'PRO' },
 		{ key: 'campaigns', label: __( 'Campaigns', 'ai-marketing-expert' ), icon: megaphone },
 		{ key: 'templates', label: __( 'Templates', 'ai-marketing-expert' ), icon: page },
 		{ key: 'automations', label: __( 'Automations', 'ai-marketing-expert' ), icon: commentContent },
@@ -83,7 +88,7 @@ const EmailMarketingPage = () => {
 			case 'automations':
 				return <Automations onNavigate={ navigate } />;
 			case 'automation-editor':
-				return <AutomationEditor id={ viewParams.id } onBack={ () => navigate( 'automations' ) } />;
+				return <AutomationEditor id={ viewParams.id } initialTab={ viewParams.tab } onBack={ () => navigate( 'automations' ) } onNavigate={ navigate } />;
 			case 'templates':
 				return <EmailTemplates onNavigate={ navigate } />;
 			case 'lists':
@@ -94,6 +99,8 @@ const EmailMarketingPage = () => {
 				return <EmailAnalytics onNavigate={ navigate } />;
 			case 'import-export':
 				return <ImportExport />;
+			case 'lead-finder':
+				return <LeadFinder onNavigate={ navigate } />;
 			case 'ai-tools':
 				return <AiTools />;
 			case 'smtp':

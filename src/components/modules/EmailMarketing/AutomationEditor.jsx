@@ -19,6 +19,7 @@ import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import FunnelAnalytics from './FunnelAnalytics';
 
 /* Custom node */
 const ICON_MAP = {
@@ -406,9 +407,10 @@ const AUTOMATION_TEMPLATES = [
 ];
 
 /* Main component */
-const AutomationEditor = ( { id, onBack } ) => {
+const AutomationEditor = ( { id, initialTab = 'flow', onBack, onNavigate } ) => {
 	const { get, post, put, loading, error, clearError } = useApi();
 	const slowWarning = useSlowWarning();
+	const [ activeTab, setActiveTab ] = useState( initialTab || 'flow' );
 	const [ automation, setAutomation ] = useState( null );
 	const [ sequences, setSequences ] = useState( [] );
 	const [ triggers, setTriggers ] = useState( [] );
@@ -622,21 +624,44 @@ const AutomationEditor = ( { id, onBack } ) => {
 					<Button variant="link" onClick={ onBack }>{ __( '\u2190 Back to Automations', 'ai-marketing-expert' ) }</Button>
 					<h2>{ id ? __( 'Edit Automation', 'ai-marketing-expert' ) : __( 'New Automation', 'ai-marketing-expert' ) }</h2>
 				</div>
-				<div className="aime-header-actions">
-					<Button variant="secondary" onClick={ () => setAiModalOpen( true ) } disabled={ ! isAiConfigured() } title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }>
-						{ __( '\u2728 AI Suggest Steps', 'ai-marketing-expert' ) }
-					</Button>
-					<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving }>
-						{ saving
-							? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
-							: __( 'Save Automation', 'ai-marketing-expert' )
-						}
-					</Button>
-				</div>
+				{ activeTab === 'flow' && (
+					<div className="aime-header-actions">
+						<Button variant="secondary" onClick={ () => setAiModalOpen( true ) } disabled={ ! isAiConfigured() } title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }>
+							{ __( '\u2728 AI Suggest Steps', 'ai-marketing-expert' ) }
+						</Button>
+						<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving }>
+							{ saving
+								? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+								: __( 'Save Automation', 'ai-marketing-expert' )
+							}
+						</Button>
+					</div>
+				) }
 			</div>
 
-			{ /* Top bar - title + trigger + status */ }
-			<Card>
+			{ id && (
+				<div className="aime-tab-buttons" style={ { display: 'flex', gap: '8px', marginBottom: '16px' } }>
+					<Button
+						variant={ activeTab === 'flow' ? 'primary' : 'secondary' }
+						onClick={ () => setActiveTab( 'flow' ) }
+					>
+						{ __( 'Flow Builder', 'ai-marketing-expert' ) }
+					</Button>
+					<Button
+						variant={ activeTab === 'analytics' ? 'primary' : 'secondary' }
+						onClick={ () => setActiveTab( 'analytics' ) }
+					>
+						{ __( '\uD83D\uDCCA Funnel Analytics & Drop-off', 'ai-marketing-expert' ) }
+					</Button>
+				</div>
+			) }
+
+			{ activeTab === 'analytics' && id ? (
+				<FunnelAnalytics funnelId={ id } onNavigate={ onNavigate } />
+			) : (
+				<>
+					{ /* Top bar - title + trigger + status */ }
+					<Card>
 				<div className="aime-form-grid aime-form-grid-3">
 					<TextControl label={ __( 'Title', 'ai-marketing-expert' ) } value={ title } onChange={ setTitle } __nextHasNoMarginBottom />
 					<SelectControl label={ __( 'Trigger', 'ai-marketing-expert' ) } options={ triggerOptions } value={ triggerKey } onChange={ setTriggerKey } __nextHasNoMarginBottom />
@@ -733,6 +758,8 @@ const AutomationEditor = ( { id, onBack } ) => {
 					</div>
 				) ) }
 			</Card>
+				</>
+			) }
 
 			{ aiModalOpen && (
 				<div className="aime-premium-modal-overlay" onClick={ () => ! aiLoading && setAiModalOpen( false ) }>

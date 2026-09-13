@@ -1034,6 +1034,37 @@
 	}
 }
 
+.aime-notice-action-link {
+	background: none;
+	border: none;
+	padding: 0 2px;
+	margin: 0;
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: 700;
+	color: #2563eb;
+	text-decoration: underline;
+	cursor: pointer;
+	display: inline;
+	line-height: inherit;
+	transition: color 0.15s ease, opacity 0.15s ease;
+
+	&:hover {
+		color: #1d4ed8;
+		opacity: 0.85;
+	}
+
+	&:focus {
+		outline: 1px dotted #2563eb;
+		outline-offset: 1px;
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+}
+
 // Loader
 // `.aime-loader` / `.aime-loader-text` (centred spinner) removed with the
 // spinner itself — waiting is now a skeleton. See `.aime-loading` below.
@@ -7842,7 +7873,27 @@ input.aime-premium-input[type=color]
 
 .aime-contact-name {
 	font-size: 13px;
+	font-weight: 600;
 	color: var(--aime-primary);
+	text-decoration: none;
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.aime-clickable-row {
+	cursor: pointer;
+
+	&:hover {
+		.aime-contact-name,
+		.aime-link-btn,
+		strong {
+			color: var(--aime-primary);
+			text-decoration: underline;
+		}
+	}
 }
 
 // Responsive table wrapper
@@ -9770,6 +9821,139 @@ input.aime-premium-input[type=color]
 	margin-bottom: 24px;
 }
 
+.aime-campaign-kpi-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin-bottom: 24px;
+}
+
+.aime-kpi-card {
+	background: var(--aime-white);
+	border: 1px solid var(--aime-border);
+	border-radius: var(--aime-radius);
+	padding: 18px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+	&:hover {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+	}
+
+	.aime-kpi-label {
+		font-size: 12px;
+		font-weight: 700;
+		color: var(--aime-text-light);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.aime-kpi-value {
+		font-size: 26px;
+		font-weight: 800;
+		color: var(--aime-text);
+		line-height: 1.15;
+	}
+
+	.aime-kpi-subtext {
+		font-size: 12px;
+		color: var(--aime-text-light);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+}
+
+.aime-campaign-dual-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+	gap: 20px;
+	margin-bottom: 24px;
+}
+
+.aime-locations-list {
+	min-height: 240px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 14px;
+	padding: 12px 4px;
+}
+
+.aime-location-item {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.aime-location-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.aime-location-country {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.aime-location-flag {
+	font-size: 20px;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.aime-location-name {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--aime-text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.aime-location-stats {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.aime-location-opens {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--aime-text);
+}
+
+.aime-location-pct {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--aime-text-light);
+	min-width: 44px;
+	text-align: right;
+}
+
+.aime-location-bar {
+	height: 8px;
+	border-radius: 999px;
+	background: #edf2f7;
+	overflow: hidden;
+
+	span {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: #3858e9;
+		transition: width 0.3s ease;
+	}
+}
+
 .aime-report-metric-list {
 	display: flex;
 	flex-direction: column;
@@ -10035,7 +10219,8 @@ input.aime-premium-input[type=color]
 }
 
 @media (max-width: 1200px) {
-	.aime-campaign-report-grid {
+	.aime-campaign-report-grid,
+	.aime-campaign-dual-grid {
 		grid-template-columns: 1fr;
 	}
 
