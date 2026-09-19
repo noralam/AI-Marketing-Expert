@@ -216,6 +216,10 @@ class CartTracker {
 	 * Listener: Called whenever WooCommerce updates the cart.
 	 */
 	public function on_cart_updated(): void {
+		if ( function_exists( 'wc_load_cart' ) && function_exists( 'WC' ) && ! WC()->cart ) {
+			wc_load_cart();
+		}
+
 		if ( ! function_exists( 'WC' ) || ! WC()->cart || is_admin() && ! wp_doing_ajax() ) {
 			return;
 		}
@@ -429,6 +433,10 @@ class CartTracker {
 	 */
 	public function ajax_capture_guest_cart(): void {
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+
+		if ( function_exists( 'wc_load_cart' ) && function_exists( 'WC' ) && ! WC()->cart ) {
+			wc_load_cart();
+		}
 
 		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
 		if ( ! is_email( $email ) ) {
