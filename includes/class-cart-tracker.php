@@ -75,15 +75,43 @@ class CartTracker {
 		add_action( 'woocommerce_thankyou', array( $this, 'on_order_completed' ), 10, 1 );
 		add_action( 'woocommerce_order_status_completed', array( $this, 'on_order_completed' ), 10, 1 );
 
-		// 1-Click Cart Restoration Deep-Link.
+		// 1-Click Cart Restoration Deep-Link & Checkout Auto-Sync.
 		add_action( 'template_redirect', array( $this, 'handle_cart_restore_redirect' ) );
+		add_action( 'template_redirect', array( $this, 'maybe_track_checkout_visit' ) );
 
 		// Background Cron Detection.
+		add_filter( 'cron_schedules', array( $this, 'add_cron_schedules' ) );
 		add_action( self::CRON_HOOK, array( $this, 'process_abandoned_carts' ) );
+		add_action( 'aime_minutely_tasks', array( $this, 'process_abandoned_carts' ) );
 		$this->schedule_cron();
 
 		// Auto-check table exists on init (migration safety).
 		$this->ensure_table_exists();
+	}
+
+	/**
+	 * Automatically ensure cart is tracked when visitor visits checkout directly.
+	 */
+	public function maybe_track_checkout_visit(): void {
+		if ( function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page() ) {
+			$this->on_cart_updated();
+		}
+	}
+
+	/**
+	 * Register the 15-minute cron schedule if not already present.
+	 *
+	 * @param array $schedules Registered schedules.
+	 * @return array
+	 */
+	public function add_cron_schedules( array $schedules ): array {
+		if ( ! isset( $schedules['fifteen_minutes'] ) ) {
+			$schedules['fifteen_minutes'] = array(
+				'interval' => 15 * MINUTE_IN_SECONDS,
+				'display'  => __( 'Every 15 Minutes', 'ai-marketing-expert' ),
+			);
+		}
+		return $schedules;
 	}
 
 	/**
@@ -316,7 +344,7 @@ class CartTracker {
 	}
 
 	/**
-	 * Enqueue small frontend capture script on WooCommerce checkout page.
+	 * Enqueue frontend capture script on WooCommerce checkout page.
 	 */
 	public function enqueue_checkout_scripts(): void {
 		if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || is_order_received_page() ) {
@@ -331,7 +359,10 @@ class CartTracker {
 		$script = "
 		(function() {
 			function captureGuestEmail() {
-				var emailInput = document.getElementById('billing_email') || document.querySelector('input[name=\"billing_email\"]');
+				var emailInput = document.getElementById('billing_email')
+					|| document.querySelector('input[name=\"billing_email\"]')
+					|| document.querySelector('input[type=\"email\"]')
+					|| document.querySelector('input[autocomplete=\"email\"]');
 				if (!emailInput) return;
 				
 				var lastSent = '';
@@ -339,9 +370,17 @@ class CartTracker {
 					var email = (emailInput.value || '').trim();
 					if (!email || email === lastSent || !email.includes('@')) return;
 					
-					var firstNameInput = document.getElementById('billing_first_name') || document.querySelector('input[name=\"billing_first_name\"]');
-					var lastNameInput = document.getElementById('billing_last_name') || document.querySelector('input[name=\"billing_last_name\"]');
-					var phoneInput = document.getElementById('billing_phone') || document.querySelector('input[name=\"billing_phone\"]');
+					var firstNameInput = document.getElementById('billing_first_name')
+						|| document.querySelector('input[name=\"billing_first_name\"]')
+						|| document.querySelector('input[autocomplete=\"given-name\"]')
+						|| document.querySelector('#shipping-first_name');
+					var lastNameInput = document.getElementById('billing_last_name')
+						|| document.querySelector('input[name=\"billing_last_name\"]')
+						|| document.querySelector('input[autocomplete=\"family-name\"]')
+						|| document.querySelector('#shipping-last_name');
+					var phoneInput = document.getElementById('billing_phone')
+						|| document.querySelector('input[name=\"billing_phone\"]')
+						|| document.querySelector('input[autocomplete=\"tel\"]');
 					
 					var name = ((firstNameInput ? firstNameInput.value : '') + ' ' + (lastNameInput ? lastNameInput.value : '')).trim();
 					var phone = phoneInput ? phoneInput.value : '';
@@ -364,6 +403,11 @@ class CartTracker {
 				
 				emailInput.addEventListener('blur', sendData);
 				emailInput.addEventListener('change', sendData);
+				var debounceTimer = null;
+				emailInput.addEventListener('input', function() {
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(sendData, 2000);
+				});
 			}
 			
 			if (document.readyState === 'loading') {
@@ -374,7 +418,10 @@ class CartTracker {
 		})();
 		";
 
-		wp_add_inline_script( 'woocommerce', $script );
+		// Dedicated handle ensures script is always output regardless of theme or block checkout.
+		wp_register_script( 'aime-checkout-cart-tracker', '', array(), AIME_VERSION, true );
+		wp_enqueue_script( 'aime-checkout-cart-tracker' );
+		wp_add_inline_script( 'aime-checkout-cart-tracker', $script );
 	}
 
 	/**
@@ -401,6 +448,16 @@ class CartTracker {
 			self::STATUS_IN_PROGRESS
 		) );
 
+		if ( ! $existing_id ) {
+			// In case cart row wasn't recorded yet (e.g. direct Buy Now redirect), record it now from active session.
+			$this->on_cart_updated();
+			$existing_id = $wpdb->get_var( $wpdb->prepare(
+				"SELECT id FROM {$table} WHERE cart_token = %s AND status = %s ORDER BY id DESC LIMIT 1",
+				$cart_token,
+				self::STATUS_IN_PROGRESS
+			) );
+		}
+
 		if ( $existing_id ) {
 			$wpdb->update(
 				$table,
@@ -426,8 +483,13 @@ class CartTracker {
 		global $wpdb;
 		$table = self::get_table_name();
 
-		$cutoff_minutes = apply_filters( 'aime_abandoned_cart_cutoff_minutes', self::DEFAULT_INACTIVITY_MINUTES );
-		$cutoff_time    = gmdate( 'Y-m-d H:i:s', time() - ( $cutoff_minutes * MINUTE_IN_SECONDS ) );
+		$settings       = get_option( 'aime_settings', array() );
+		$cutoff_minutes = isset( $settings['woo_cart_cutoff_minutes'] ) ? (int) $settings['woo_cart_cutoff_minutes'] : (int) get_option( 'aime_abandoned_cart_cutoff_minutes', self::DEFAULT_INACTIVITY_MINUTES );
+		$cutoff_minutes = (int) apply_filters( 'aime_abandoned_cart_cutoff_minutes', $cutoff_minutes );
+		if ( $cutoff_minutes < 1 ) {
+			$cutoff_minutes = self::DEFAULT_INACTIVITY_MINUTES;
+		}
+		$cutoff_time = gmdate( 'Y-m-d H:i:s', time() - ( $cutoff_minutes * MINUTE_IN_SECONDS ) );
 
 		// Only carts with captured email and status = in_progress are eligible for recovery workflows.
 		$abandoned_rows = $wpdb->get_results( $wpdb->prepare(
@@ -476,6 +538,7 @@ class CartTracker {
 				'customer_email' => (string) $row->email,
 				'email'          => (string) $row->email,
 				'customer_name'  => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
+				'name'           => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
 				'phone'          => (string) $row->phone,
 				'cart_total'     => (float) $row->cart_total,
 				'currency'       => (string) $row->currency,

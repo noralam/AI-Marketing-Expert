@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-19T06:09:19+00:00\n"
+"POT-Creation-Date: 2026-09-19T09:27:10+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: ai-marketing-expert\n"
@@ -124,7 +124,7 @@ msgstr ""
 #: build/index.js:52
 #: src/components/modules/EmailMarketing/FunnelAnalytics.jsx:311
 #: src/components/modules/Seo/views/SeoAutomation.jsx:445
-#: src/components/modules/Settings/SettingsPage.jsx:947
+#: src/components/modules/Settings/SettingsPage.jsx:975
 #: src/components/modules/SocialMedia/Accounts.jsx:228
 #: src/components/modules/WorkflowAutomation/ErrorLog.jsx:100
 msgid "Refresh"
@@ -207,7 +207,7 @@ msgstr ""
 
 #: includes/admin/class-dashboard-widget.php:426
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:710
+#: src/components/modules/Settings/SettingsPage.jsx:738
 msgid "Overdue"
 msgstr ""
 
@@ -217,7 +217,7 @@ msgstr ""
 
 #: includes/admin/class-dashboard-widget.php:433
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:698
+#: src/components/modules/Settings/SettingsPage.jsx:726
 msgid "Next Run"
 msgstr ""
 
@@ -339,7 +339,7 @@ msgstr ""
 #: build/index.js:52
 #: src/components/modules/EmailMarketing/Campaigns.jsx:18
 #: src/components/modules/Overview/OverviewPage.jsx:426
-#: src/components/modules/Settings/SettingsPage.jsx:710
+#: src/components/modules/Settings/SettingsPage.jsx:738
 #: src/components/modules/SocialMedia/SocialDashboard.jsx:72
 #: src/components/modules/WorkflowAutomation/ErrorLog.jsx:27
 msgid "Scheduled"
@@ -473,12 +473,12 @@ msgid "Plugin Activation Error"
 msgstr ""
 
 #. translators: %s: site name.
-#: includes/class-activator.php:143
+#: includes/class-activator.php:144
 #, php-format
 msgid "You are receiving this email because you subscribed to %s."
 msgstr ""
 
-#: includes/class-activator.php:157
+#: includes/class-activator.php:158
 #: build/index.js:9
 #: src/components/modules/EmailMarketing/Subscribers.jsx:368
 msgid "Unsubscribe"
@@ -813,12 +813,17 @@ msgstr ""
 msgid "Enter a base URL before fetching models."
 msgstr ""
 
-#: includes/class-cart-tracker.php:478
+#: includes/class-cart-tracker.php:111
+msgid "Every 15 Minutes"
+msgstr ""
+
+#: includes/class-cart-tracker.php:540
+#: includes/class-cart-tracker.php:541
 #: modules/workflow-automation/class-workflow-automation-module.php:1083
 msgid "Customer"
 msgstr ""
 
-#: includes/class-cart-tracker.php:601
+#: includes/class-cart-tracker.php:664
 msgid "Your saved cart link has expired, but you can continue shopping our latest collections below."
 msgstr ""
 
@@ -1110,71 +1115,71 @@ msgstr ""
 msgid "Database is already clean and optimal. No records older than retention period were found."
 msgstr ""
 
-#: includes/class-rest-api.php:844
+#: includes/class-rest-api.php:846
 msgid "Settings saved successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:1074
+#: includes/class-rest-api.php:1076
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:242
 msgid "Logs cleared."
 msgstr ""
 
 #. translators: %d: number of free AI provider connections
-#: includes/class-rest-api.php:1161
+#: includes/class-rest-api.php:1166
 #, php-format
 msgid "AI provider limit reached. Free plan allows %d AI provider connections. Upgrade to Pro for unlimited providers."
 msgstr ""
 
-#: includes/class-rest-api.php:1173
+#: includes/class-rest-api.php:1178
 msgid "AI connection saved successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:1190
+#: includes/class-rest-api.php:1195
 msgid "AI connection deleted."
 msgstr ""
 
-#: includes/class-rest-api.php:1225
+#: includes/class-rest-api.php:1230
 msgid "AI provider order could not be changed."
 msgstr ""
 
-#: includes/class-rest-api.php:1231
+#: includes/class-rest-api.php:1236
 #: build/index.js:48
 #: src/components/modules/Settings/AiProvidersPage.jsx:457
 msgid "AI provider fallback order updated."
 msgstr ""
 
-#: includes/class-rest-api.php:1274
+#: includes/class-rest-api.php:1279
 msgid "Provider and API key are required."
 msgstr ""
 
 #. translators: %d: number of background jobs allowed on the free plan
-#: includes/class-rest-api.php:1358
+#: includes/class-rest-api.php:1363
 #, php-format
 msgid "Background job limit reached. Free plan allows %d queued jobs at a time. Upgrade to Pro for unlimited jobs."
 msgstr ""
 
-#: includes/class-rest-api.php:1399
+#: includes/class-rest-api.php:1404
 msgid "Job not found."
 msgstr ""
 
-#: includes/class-rest-api.php:1495
+#: includes/class-rest-api.php:1500
 msgid "Invalid import file. Expected an AI Marketing Expert settings export."
 msgstr ""
 
-#: includes/class-rest-api.php:1554
+#: includes/class-rest-api.php:1559
 msgid "Import complete."
 msgstr ""
 
-#: includes/class-rest-api.php:1579
+#: includes/class-rest-api.php:1584
 msgid "API key generated."
 msgstr ""
 
-#: includes/class-rest-api.php:1584
+#: includes/class-rest-api.php:1589
 msgid "Recommended: sign requests instead of sending the key. Send X-Aime-Timestamp (unix seconds) and X-Aime-Signature: sha256=HEX where HEX = HMAC-SHA256(\"{timestamp}.{raw_body}\", api_key). Plain X-API-Key header also accepted."
 msgstr ""
 
-#: includes/class-rest-api.php:1606
+#: includes/class-rest-api.php:1611
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:201
 msgid "API key revoked."
@@ -5712,7 +5717,7 @@ msgstr ""
 
 #: modules/workflow-automation/class-workflow-automation-module.php:1149
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:969
+#: src/components/modules/Settings/SettingsPage.jsx:997
 msgid "Message"
 msgstr ""
 
@@ -7134,7 +7139,7 @@ msgstr ""
 #: src/components/modules/Seo/views/LinkBuilding.jsx:419
 #: src/components/modules/Seo/views/SeoAutomation.jsx:435
 #: src/components/modules/Seo/views/SeoAutomation.jsx:645
-#: src/components/modules/Settings/SettingsPage.jsx:699
+#: src/components/modules/Settings/SettingsPage.jsx:727
 #: src/components/modules/SocialMedia/Posts.jsx:171
 #: src/components/modules/SocialMedia/Posts.jsx:228
 #: src/components/modules/WorkflowAutomation/WorkflowAnalytics.jsx:544
@@ -7248,7 +7253,7 @@ msgstr ""
 #: src/components/modules/Seo/views/KeywordVault.jsx:294
 #: src/components/modules/Seo/views/SeoAutomation.jsx:544
 #: src/components/modules/Seo/views/SeoAutomation.jsx:686
-#: src/components/modules/Settings/SettingsPage.jsx:986
+#: src/components/modules/Settings/SettingsPage.jsx:1014
 msgid "← Previous"
 msgstr ""
 
@@ -7281,7 +7286,7 @@ msgstr ""
 #: src/components/modules/Seo/views/KeywordVault.jsx:304
 #: src/components/modules/Seo/views/SeoAutomation.jsx:561
 #: src/components/modules/Seo/views/SeoAutomation.jsx:697
-#: src/components/modules/Settings/SettingsPage.jsx:992
+#: src/components/modules/Settings/SettingsPage.jsx:1020
 #: src/components/modules/SocialMedia/Posts.jsx:308
 msgid "Next →"
 msgstr ""
@@ -8492,7 +8497,7 @@ msgstr ""
 #: src/components/modules/Chatbot/views/Analytics.jsx:387
 #: src/components/modules/Seo/views/OnPageAudit.jsx:404
 #: src/components/modules/Seo/views/SeoDashboard.jsx:274
-#: src/components/modules/Settings/SettingsPage.jsx:989
+#: src/components/modules/Settings/SettingsPage.jsx:1017
 msgid "Page"
 msgstr ""
 
@@ -9219,7 +9224,7 @@ msgstr ""
 #: src/components/modules/EmailMarketing/Subscribers.jsx:916
 #: src/components/modules/Seo/views/LinkBuilding.jsx:321
 #: src/components/modules/Settings/AiProvidersPage.jsx:1090
-#: src/components/modules/Settings/SettingsPage.jsx:625
+#: src/components/modules/Settings/SettingsPage.jsx:653
 #: src/components/modules/SocialMedia/ConnectAccountModal.jsx:481
 #: src/components/modules/SocialMedia/PostComposer.jsx:497
 #: src/components/modules/WorkflowAutomation/AiWorkflowModal.jsx:228
@@ -11627,7 +11632,7 @@ msgstr ""
 #: build/index.js:52
 #: src/components/modules/EmailMarketing/CampaignEditor.jsx:1807
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:787
-#: src/components/modules/Settings/SettingsPage.jsx:966
+#: src/components/modules/Settings/SettingsPage.jsx:994
 msgid "Time"
 msgstr ""
 
@@ -13915,12 +13920,12 @@ msgstr ""
 #: build/index.js:52
 #: src/components/modules/Chatbot/views/Conversations.jsx:476
 #: src/components/modules/EmailMarketing/AiTools.jsx:193
-#: src/components/modules/Settings/SettingsPage.jsx:749
-#: src/components/modules/Settings/SettingsPage.jsx:765
-#: src/components/modules/Settings/SettingsPage.jsx:798
-#: src/components/modules/Settings/SettingsPage.jsx:836
-#: src/components/modules/Settings/SettingsPage.jsx:880
-#: src/components/modules/Settings/SettingsPage.jsx:896
+#: src/components/modules/Settings/SettingsPage.jsx:777
+#: src/components/modules/Settings/SettingsPage.jsx:793
+#: src/components/modules/Settings/SettingsPage.jsx:826
+#: src/components/modules/Settings/SettingsPage.jsx:864
+#: src/components/modules/Settings/SettingsPage.jsx:908
+#: src/components/modules/Settings/SettingsPage.jsx:924
 msgid "Copied!"
 msgstr ""
 
@@ -13929,8 +13934,8 @@ msgstr ""
 #: build/index.js:52
 #: src/components/modules/Chatbot/views/Conversations.jsx:476
 #: src/components/modules/EmailMarketing/AiTools.jsx:193
-#: src/components/modules/Settings/SettingsPage.jsx:798
-#: src/components/modules/Settings/SettingsPage.jsx:836
+#: src/components/modules/Settings/SettingsPage.jsx:826
+#: src/components/modules/Settings/SettingsPage.jsx:864
 msgid "Copy"
 msgstr ""
 
@@ -18471,7 +18476,7 @@ msgstr ""
 #: build/index.js:28
 #: build/index.js:52
 #: src/components/modules/Chatbot/views/KnowledgeBase.jsx:240
-#: src/components/modules/Settings/SettingsPage.jsx:952
+#: src/components/modules/Settings/SettingsPage.jsx:980
 msgid "entries"
 msgstr ""
 
@@ -20670,7 +20675,7 @@ msgstr ""
 #: build/index.js:51
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:21
-#: src/components/modules/Settings/SettingsPage.jsx:648
+#: src/components/modules/Settings/SettingsPage.jsx:676
 msgid "Modules"
 msgstr ""
 
@@ -20682,21 +20687,21 @@ msgstr ""
 #: build/index.js:51
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:23
-#: src/components/modules/Settings/SettingsPage.jsx:783
+#: src/components/modules/Settings/SettingsPage.jsx:811
 msgid "API & Webhooks"
 msgstr ""
 
 #: build/index.js:51
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:24
-#: src/components/modules/Settings/SettingsPage.jsx:916
+#: src/components/modules/Settings/SettingsPage.jsx:944
 msgid "Debug Log"
 msgstr ""
 
 #: build/index.js:51
 #: build/index.js:52
 #: src/components/modules/Settings/SettingsPage.jsx:29
-#: src/components/modules/Settings/SettingsPage.jsx:707
+#: src/components/modules/Settings/SettingsPage.jsx:735
 msgid "Not scheduled"
 msgstr ""
 
@@ -20807,6 +20812,7 @@ msgstr ""
 
 #: build/index.js:51
 #: src/components/modules/Settings/SettingsPage.jsx:424
+#: src/components/modules/Settings/SettingsPage.jsx:480
 msgid "Setting saved."
 msgstr ""
 
@@ -20851,134 +20857,169 @@ msgid "Automatically prunes expired logs and workflow execution rows in daily ba
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:472
-msgid "Database Health & Record Status"
+#: src/components/modules/Settings/SettingsPage.jsx:464
+msgid "WooCommerce Cart Abandonment Cutoff"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:479
-msgid "Refresh database counts"
+#: src/components/modules/Settings/SettingsPage.jsx:467
+msgid "5 minutes (Fast testing)"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:482
-msgid "Refresh Stats"
+#: src/components/modules/Settings/SettingsPage.jsx:468
+msgid "10 minutes"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:488
-msgid "Total Records"
+#: src/components/modules/Settings/SettingsPage.jsx:469
+msgid "15 minutes (Recommended)"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:494
-msgid "Expired (> retention)"
+#: src/components/modules/Settings/SettingsPage.jsx:470
+msgid "30 minutes (Standard)"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:471
+msgid "60 minutes (1 hour)"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:486
+msgid "Minimum inactivity time on checkout or cart before a session is marked abandoned and recovery triggers run."
 msgstr ""
 
 #: build/index.js:51
 #: src/components/modules/Settings/SettingsPage.jsx:500
-msgid "Debug Logs"
+msgid "Database Health & Record Status"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:506
-msgid "Activity Logs"
+#: src/components/modules/Settings/SettingsPage.jsx:507
+msgid "Refresh database counts"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:510
+msgid "Refresh Stats"
 msgstr ""
 
 #: build/index.js:51
 #: src/components/modules/Settings/SettingsPage.jsx:516
+msgid "Total Records"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:522
+msgid "Expired (> retention)"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:528
+msgid "Debug Logs"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:534
+msgid "Activity Logs"
+msgstr ""
+
+#: build/index.js:51
+#: src/components/modules/Settings/SettingsPage.jsx:544
 #, js-format
 msgid "%d expired record(s) ready for cleanup."
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:517
+#: src/components/modules/Settings/SettingsPage.jsx:545
 msgid "Database is optimal. All records are recent and within your active retention window."
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:524
+#: src/components/modules/Settings/SettingsPage.jsx:552
 msgid "Manual Database Cleanup"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:527
+#: src/components/modules/Settings/SettingsPage.jsx:555
 msgid "Immediately purge expired debug logs, activity logs, and old workflow outputs according to your retention period."
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:535
+#: src/components/modules/Settings/SettingsPage.jsx:563
 msgid "Clean Database Now"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:542
+#: src/components/modules/Settings/SettingsPage.jsx:570
 msgid "Confirm Database Cleanup"
 msgstr ""
 
 #: build/index.js:51
-#: src/components/modules/Settings/SettingsPage.jsx:551
+#: src/components/modules/Settings/SettingsPage.jsx:579
 msgid "Clean and optimize database records"
 msgstr ""
 
 #. translators: %d: retention days
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:556
+#: src/components/modules/Settings/SettingsPage.jsx:584
 #, js-format
 msgid "Active retention setting: %d days. Active funnels and subscribers are never touched."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:566
+#: src/components/modules/Settings/SettingsPage.jsx:594
 msgid "System Debug Logs:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:567
-#: src/components/modules/Settings/SettingsPage.jsx:571
-#: src/components/modules/Settings/SettingsPage.jsx:575
+#: src/components/modules/Settings/SettingsPage.jsx:595
+#: src/components/modules/Settings/SettingsPage.jsx:599
+#: src/components/modules/Settings/SettingsPage.jsx:603
 msgid "records"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:570
+#: src/components/modules/Settings/SettingsPage.jsx:598
 msgid "Activity History Logs:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:574
+#: src/components/modules/Settings/SettingsPage.jsx:602
 msgid "Workflow Execution Logs:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:578
+#: src/components/modules/Settings/SettingsPage.jsx:606
 #, js-format
 msgid "Expired (> %d days):"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:580
+#: src/components/modules/Settings/SettingsPage.jsx:608
 msgid "ready to clean"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:596
+#: src/components/modules/Settings/SettingsPage.jsx:624
 msgid "Standard Cleanup (Expired records only)"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:598
+#: src/components/modules/Settings/SettingsPage.jsx:626
 #, js-format
 msgid "Only removes records older than %d days. Recent logs remain preserved."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:611
+#: src/components/modules/Settings/SettingsPage.jsx:639
 msgid "Purge All Debug & Activity Logs"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:613
+#: src/components/modules/Settings/SettingsPage.jsx:641
 msgid "Empties debug and activity log tables immediately (useful for testing on localhost or clearing testing junk)."
 msgstr ""
 
@@ -20993,109 +21034,109 @@ msgid "Database is already clean and optimal. No expired records found."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:635
+#: src/components/modules/Settings/SettingsPage.jsx:663
 msgid "Purge Logs Now"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:636
+#: src/components/modules/Settings/SettingsPage.jsx:664
 msgid "Clean Expired Records"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:650
+#: src/components/modules/Settings/SettingsPage.jsx:678
 msgid "Enable or disable marketing modules."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:672
+#: src/components/modules/Settings/SettingsPage.jsx:700
 msgid "Cron Status"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:674
+#: src/components/modules/Settings/SettingsPage.jsx:702
 msgid "Email queues and automations run through WordPress cron. For accurate automation timing, configure real server cron."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:679
+#: src/components/modules/Settings/SettingsPage.jsx:707
 msgid "Cron is overdue."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:680
+#: src/components/modules/Settings/SettingsPage.jsx:708
 msgid "Automations can run later than the wait time you set. Configure server cron to call wp-cron.php every minute for reliable timing."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:686
+#: src/components/modules/Settings/SettingsPage.jsx:714
 msgid "Refresh Status"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:689
+#: src/components/modules/Settings/SettingsPage.jsx:717
 msgid "Run Due Automations Now"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:696
+#: src/components/modules/Settings/SettingsPage.jsx:724
 msgid "Job"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:697
+#: src/components/modules/Settings/SettingsPage.jsx:725
 msgid "Hook"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:710
+#: src/components/modules/Settings/SettingsPage.jsx:738
 msgid "Missing"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:721
+#: src/components/modules/Settings/SettingsPage.jsx:749
 msgid "Recommended server cron"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:728
+#: src/components/modules/Settings/SettingsPage.jsx:756
 msgid "DISABLE_WP_CRON is enabled. Make sure a real server cron is configured."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:729
+#: src/components/modules/Settings/SettingsPage.jsx:757
 msgid "For best reliability, disable visitor-triggered WP-Cron and run wp-cron.php from your hosting cron every minute."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:734
+#: src/components/modules/Settings/SettingsPage.jsx:762
 msgid "Dedicated External Server Cron (High Precision)"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:736
+#: src/components/modules/Settings/SettingsPage.jsx:764
 msgid "Run email queue processing, delay timers, and bounce mailbox checks directly from server cron (cPanel Cron Jobs, Linux Crontab, or cloud cron ping services). This guarantees exact sequence timing and high-speed delivery without relying on website visitors."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:741
+#: src/components/modules/Settings/SettingsPage.jsx:769
 msgid "Direct Cron URL:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:749
-#: src/components/modules/Settings/SettingsPage.jsx:880
-#: src/components/modules/Settings/SettingsPage.jsx:896
+#: src/components/modules/Settings/SettingsPage.jsx:777
+#: src/components/modules/Settings/SettingsPage.jsx:908
+#: src/components/modules/Settings/SettingsPage.jsx:924
 msgid "Copy URL"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:757
+#: src/components/modules/Settings/SettingsPage.jsx:785
 msgid "cPanel / Linux Crontab Command (Every minute):"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:765
+#: src/components/modules/Settings/SettingsPage.jsx:793
 msgid "Copy Command"
 msgstr ""
 
@@ -21105,27 +21146,27 @@ msgid "Regenerate external cron token? Any existing server cron jobs using the o
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:773
+#: src/components/modules/Settings/SettingsPage.jsx:801
 msgid "Regenerate Secret Token"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:785
+#: src/components/modules/Settings/SettingsPage.jsx:813
 msgid "Generate an API key to connect external tools, forms, and services — allowing them to add subscribers to your email lists automatically via webhook."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:793
+#: src/components/modules/Settings/SettingsPage.jsx:821
 msgid "Copy your API key now — it won't be shown again!"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:804
+#: src/components/modules/Settings/SettingsPage.jsx:832
 msgid "API key:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:809
+#: src/components/modules/Settings/SettingsPage.jsx:837
 msgid "Regenerate Key"
 msgstr ""
 
@@ -21135,92 +21176,92 @@ msgid "Revoke API key? All webhook integrations will stop working."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:812
+#: src/components/modules/Settings/SettingsPage.jsx:840
 msgid "Revoke Key"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:819
+#: src/components/modules/Settings/SettingsPage.jsx:847
 msgid "No API key generated yet. Generate one to enable webhook integrations."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:822
+#: src/components/modules/Settings/SettingsPage.jsx:850
 msgid "Generate API Key"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:829
+#: src/components/modules/Settings/SettingsPage.jsx:857
 msgid "Webhook Endpoint"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:831
+#: src/components/modules/Settings/SettingsPage.jsx:859
 msgid "Send a POST request to this URL with your API key to create subscribers from any external tool."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:841
+#: src/components/modules/Settings/SettingsPage.jsx:869
 msgid "Request format:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:859
+#: src/components/modules/Settings/SettingsPage.jsx:887
 msgid "Only \"email\" is required. All other fields are optional. Rate limit: 60 requests per minute."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:865
+#: src/components/modules/Settings/SettingsPage.jsx:893
 msgid "ESP Bounce & Spam Complaint Webhooks"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:867
+#: src/components/modules/Settings/SettingsPage.jsx:895
 msgid "If you use transactional email services (Amazon SES, SendGrid, Mailgun, Postmark, Brevo), configure these webhook endpoints in your provider dashboard. Inbound bounces and spam complaints will immediately update contact statuses to protect your sender reputation."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:872
+#: src/components/modules/Settings/SettingsPage.jsx:900
 msgid "Bounce Webhook URL:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:888
+#: src/components/modules/Settings/SettingsPage.jsx:916
 msgid "Spam Complaint Webhook URL:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:903
+#: src/components/modules/Settings/SettingsPage.jsx:931
 msgid "Supported Providers & Setup:"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:905
+#: src/components/modules/Settings/SettingsPage.jsx:933
 msgid "Create an SNS Topic for Bounces & Complaints, add an HTTPS subscription pointing to this URL. The subscription confirmation is handled automatically."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:906
+#: src/components/modules/Settings/SettingsPage.jsx:934
 msgid "In Mail Settings → Event Webhook, select \"Dropped\" and \"Bounced\" pointing to the Bounce URL."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:907
+#: src/components/modules/Settings/SettingsPage.jsx:935
 msgid "Add Webhook in their respective dashboards for permanent failure and complaint events."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:918
+#: src/components/modules/Settings/SettingsPage.jsx:946
 msgid "Plugin activity log. Only visible when WP_DEBUG is enabled."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:926
+#: src/components/modules/Settings/SettingsPage.jsx:954
 msgid "All Levels"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:936
+#: src/components/modules/Settings/SettingsPage.jsx:964
 msgid "All Modules"
 msgstr ""
 
@@ -21230,27 +21271,27 @@ msgid "Clear all plugin logs?"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:950
+#: src/components/modules/Settings/SettingsPage.jsx:978
 msgid "Clear All"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:956
+#: src/components/modules/Settings/SettingsPage.jsx:984
 msgid "Loading log entries…"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:959
+#: src/components/modules/Settings/SettingsPage.jsx:987
 msgid "No log entries found."
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:967
+#: src/components/modules/Settings/SettingsPage.jsx:995
 msgid "Level"
 msgstr ""
 
 #: build/index.js:52
-#: src/components/modules/Settings/SettingsPage.jsx:968
+#: src/components/modules/Settings/SettingsPage.jsx:996
 msgid "Module"
 msgstr ""
 

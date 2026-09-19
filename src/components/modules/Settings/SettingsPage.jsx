@@ -459,6 +459,34 @@ const SettingsPage = () => {
 									/>
 								</div>
 
+								<div style={ { marginTop: 20, paddingTop: 16, borderTop: '1px solid #e2e8f0', maxWidth: 360 } }>
+									<SelectControl
+										label={ __( 'WooCommerce Cart Abandonment Cutoff', 'ai-marketing-expert' ) }
+										value={ settings.woo_cart_cutoff_minutes ?? 30 }
+										options={ [
+											{ label: __( '5 minutes (Fast testing)', 'ai-marketing-expert' ), value: 5 },
+											{ label: __( '10 minutes', 'ai-marketing-expert' ), value: 10 },
+											{ label: __( '15 minutes (Recommended)', 'ai-marketing-expert' ), value: 15 },
+											{ label: __( '30 minutes (Standard)', 'ai-marketing-expert' ), value: 30 },
+											{ label: __( '60 minutes (1 hour)', 'ai-marketing-expert' ), value: 60 },
+										] }
+										onChange={ async ( v ) => {
+											const val = parseInt( v, 10 );
+											const nextSettings = { ...settings, woo_cart_cutoff_minutes: isNaN( val ) ? 30 : val };
+											setSettings( nextSettings );
+											try {
+												const result = await post( '/settings', nextSettings );
+												setSettings( result.settings || nextSettings );
+												setNotice( { type: 'success', message: __( 'Setting saved.', 'ai-marketing-expert' ) } );
+											} catch ( err ) {
+												setSettings( settings );
+												setNotice( { type: 'error', message: err.message } );
+											}
+										} }
+										help={ __( 'Minimum inactivity time on checkout or cart before a session is marked abandoned and recovery triggers run.', 'ai-marketing-expert' ) }
+									/>
+								</div>
+
 								{ /* Live DB Hygiene Status Box */ }
 								<div style={ {
 									marginTop: 20,
