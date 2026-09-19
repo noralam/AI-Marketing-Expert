@@ -8,11 +8,11 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-All-in-one AI marketing: Email campaigns, AI content generator, AI SEO analyzer, social scheduling, AI chatbot, AI workflows, and AI B2B lead finder.
+All-in-one AI marketing: Email campaigns, B2B lead finder, AI content generator, SEO analyzer, social scheduling, AI chatbot, workflow automation, and WooCommerce abandoned cart recovery.
 
 == Description ==
 
-**AI Marketing Expert** is the most complete AI-powered marketing suite for WordPress. Instead of paying for Apollo/Hunter, Mailchimp, Jasper, Semrush, Hootsuite, Intercom, and Zapier separately, you get all in one place — B2B lead finder, email marketing, content generation, SEO, social media, a live AI chatbot, and workflow automation — built right into your WordPress admin.
+**AI Marketing Expert** is the most complete AI-powered marketing suite for WordPress. Instead of paying for Apollo/Hunter, Mailchimp, Jasper, Semrush, Hootsuite, Intercom, CartBounty, and Zapier separately, you get all in one place — B2B lead finder, email marketing, content generation, SEO, social media, a live AI chatbot, workflow automation, and WooCommerce abandoned cart recovery — built right into your WordPress admin.
 
 Powered by your choice of leading AI models (ChatGPT, Claude, Gemini, or OpenRouter), every module is designed to save you hours every week and help you grow your audience consistently without burnout.
 
@@ -20,7 +20,7 @@ The built-in **SEO Analyzer** module gives you AI-powered keyword research, on-p
 
 🔗 **[View Plugin Website](https://wpthemespace.com/ai-marketing-expert/)** | 🚀 **[Upgrade to Pro](https://wpthemespace.com/product/ai-marketing-expert/)**
 
-Whether you are a blogger, a small business owner, a WooCommerce store, or a freelancer managing client sites, AI Marketing Expert gives you enterprise-grade marketing automation at zero extra tool cost.
+Whether you are a blogger, an e-commerce store owner, a small business, or a freelancer managing client sites, AI Marketing Expert gives you enterprise-grade marketing automation at zero extra tool cost.
 
 ---
 
@@ -99,6 +99,9 @@ A complete email CRM, cold outreach, and campaign system built inside WordPress 
 Write complete, SEO-optimized blog posts with one click using the AI content generator.
 
 * Generate full articles: title, introduction, structured body sections, and CTA
+* **Deep Humanize (Enhanced in 1.2.6)** — Rewrite and polish text with strict structural preservation of Table of Contents, Quick Answer boxes, FAQs, intro paragraphs, and media elements
+* **Contextual Internal Linking (NEW in 1.2.6)** — Automatically scans existing articles and contextually injects natural internal links on publish
+* **SEO Multi-Plugin Sync (NEW in 1.2.6)** — Synchronizes Focus Keyword, Meta Title, and Meta Description directly into Yoast SEO, Rank Math, and All-in-One SEO (AIOSEO)
 * Per-section SEO analysis: keyword density and readability scoring
 * Configure word count, tone, target keyword, categories, and tags
 * Publish directly or save as WordPress draft
@@ -179,20 +182,42 @@ Add an intelligent AI chatbot to your WordPress site for 24/7 customer support, 
 
 ---
 
-= ⚙️ Workflow Automation (Free + Pro) =
+= 🛒 WooCommerce Cart Abandonment & Recovery (Free + Pro) =
 
-Chain actions from every module into scheduled, automated marketing workflows — like a built-in Zapier for your marketing stack.
+Recover lost store revenue automatically without paying for separate expensive SaaS tools like CartBounty, Klaviyo, or Abandoned Cart Pro.
 
-* Visual workflow builder with step-by-step action chains
-* Cross-module actions: generate content, send campaigns, post to social media, and more
-* Schedule triggers (hourly, daily, weekly) and event triggers (new subscriber, post published, and more)
-* Run-now manual execution with per-step run history
-* Ready-made workflow templates to start from
+* **Real-Time Session Tracking** — Tracks both logged-in customers and guest visitors across browsing sessions using secure tokens (`aime_cart_token`).
+* **Guest Checkout AJAX Capture** — Automatically captures guest email, name, and phone in the background the moment they type into checkout fields—before an order is placed.
+* **Automated Inactivity Detection** — Scheduled 15-minute WP-Cron evaluates inactive sessions (configurable, default 30 mins) and marks them as abandoned.
+* **1-Click Cart Restoration Deep Links** — Generates encrypted restoration links (`{event.recovery_url}`) that reload items, variations, and quantities in 1-click and direct shoppers straight to checkout.
+* **Order Recovery Detection** — Automatically detects when a customer completes their order, marking carts as recovered and attributing recovered revenue.
+* **Universal Workflow Integration** — Seamlessly triggers automated recovery email sequences, discount offers, and store manager alerts via Workflow Automation.
 
 **Free vs Pro**
 
-* Free: 2 active workflows, 3 steps per workflow, 30 runs/month
-* Pro: Unlimited workflows, unlimited steps, unlimited runs
+* Free: Real-time cart tracking, guest capture, 1-click recovery URLs, 1 active recovery workflow sequence
+* Pro: Unlimited recovery workflows, multi-step timed recovery funnels, dynamic coupons, advanced attribution analytics
+
+---
+
+= ⚙️ Workflow Automation (Free + Pro) =
+
+Chain actions from every module into scheduled, automated marketing workflows — like a built-in Zapier for your WordPress marketing stack.
+
+* **Visual Workflow Builder** — Canvas-based visual step editor with drag-and-drop branching and real-time execution graphs
+* **Text-to-Workflow AI Generator (NEW in 1.2.6)** — Describe your automation in plain natural language (English or Bengali) or pick from 8 high-converting recipes, and AI builds the entire canvas graph automatically
+* **Wait / Delay Step (NEW in 1.2.6)** — Pause workflow execution between steps for seconds, minutes, hours, or days (e.g. Abandoned Cart -> Wait 1 Hour -> Send Email 1 -> Wait 24 Hours -> Send Email 2)
+* **Direct Email Sending** — Dispatch instant emails using your configured multi-connection SMTP pool with dynamic token substitution
+* **E-Commerce Triggers** — WooCommerce Cart Abandoned and WooCommerce Order Completed with minimum value filters and recovery URLs
+* **Lead & Event Triggers** — Inbound Webhook, Contact Form 7 Submission, User Registered, Comment Posted, New Subscriber, and Post Published
+* **Schedule Triggers** — Once, hourly, daily, weekly, monthly, or custom intervals
+* **Conditional Logic** — Branch workflows with Yes/No paths based on upstream step results, text matches, or numeric score comparisons (Pro)
+* **Pre-Built Blueprint Templates** — Instant starter blueprints including Cart Recovery, Post-Purchase Review Requests, CF7 Auto-Responders, and Content Repurposing engines
+
+**Free vs Pro**
+
+* Free: 2 active workflows, 3 steps per workflow, 30 runs/month, core triggers, starter templates
+* Pro: Unlimited workflows, unlimited steps, unlimited runs, all webhook & event triggers, conditional logic, full template library
 
 ---
 
