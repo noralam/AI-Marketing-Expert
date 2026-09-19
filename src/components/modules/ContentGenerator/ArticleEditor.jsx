@@ -89,6 +89,8 @@ const defaultArticle = {
 	brand_voice_id: '',
 	serp_outline_context: '',
 	include_table_of_contents: false,
+	include_quick_answer: true,
+	include_faq: true,
 	scheduled_publish_at: '',
 	preset_id: '',
 	status: 'draft',
@@ -446,6 +448,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 				outline: article.outline,
 				serp_context: article.serp_outline_context,
 				include_table_of_contents: hasPro && !! article.include_table_of_contents,
+				include_quick_answer: article.include_quick_answer !== false,
+				include_faq: article.include_faq !== false,
 				post_type: article.post_type || 'post',
 				category_ids: ( article.categories || [] ).map( Number ),
 				tag_ids: article.tags || [],
@@ -558,35 +562,53 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 			toast( __( 'Deep Humanize is available in Pro.', 'ai-marketing-expert' ), 'warning' );
 			return;
 		}
-		if ( ! article.content || ! article.content.trim() ) {
+		const activeContent = ( editorReady.current && window.tinymce?.get( editorId )?.getContent() ) || article.content;
+		if ( ! activeContent || ! activeContent.trim() ) {
 			toast( __( 'Generate or write content first before humanizing.', 'ai-marketing-expert' ), 'error' );
 			return;
 		}
 		setHumanizing( true );
 		slowWarning.start();
 		try {
-				const instruction = hasPro
+			const instruction = hasPro
 				? 'Deeply humanize this content to sound completely natural, as if written by an experienced human writer. '
-				  + 'CRITICAL RULES: 1) Keep ALL sections including the conclusion \u2014 do NOT remove any sections. '
-				  + '2) Keep approximately the same word count \u2014 do NOT shorten or truncate the content. '
-				  + '3) Keep the same HTML structure (h2, h3, p, ul, ol, li, strong, em tags). '
-				  + '4) Do NOT add random words, abbreviations, or unrelated text. '
-				  + '5) Vary sentence length, use natural transitions, and remove AI-like patterns. '
-				  + '6) Preserve the original meaning and all key points. '
+				  + 'CRITICAL RULES: 1) Preserve the ENTIRE article from the very beginning — keep all opening introductory paragraphs, lead-in text, and all sections. '
+				  + '2) Do NOT delete or skip the introduction or any paragraphs before headings or images. '
+				  + '3) Keep approximately the same word count — do NOT shorten or truncate the content. '
+				  + '4) Keep the same HTML structure (h2, h3, p, ul, ol, li, strong, em, a tags). '
+				  + '5) Copy all placeholder markers (like [[AIME_...]]) in their exact places. '
+				  + '6) Vary sentence length, use natural transitions, and remove AI-like patterns. '
+				  + '7) Preserve the original meaning and all key points. '
 				  + 'Return ONLY the improved HTML content.'
 				: 'Lightly humanize this content: make it sound more natural and conversational. '
-				  + 'CRITICAL RULES: 1) Keep ALL sections including the conclusion \u2014 do NOT remove any sections. '
-				  + '2) Keep approximately the same word count. '
-				  + '3) Keep the same HTML formatting and structure. '
-				  + '4) Do NOT add random words or unrelated text. '
+				  + 'CRITICAL RULES: 1) Preserve the entire article from the very beginning — keep all opening intro paragraphs. '
+				  + '2) Keep ALL sections including the conclusion — do NOT remove any sections. '
+				  + '3) Keep approximately the same word count. '
+				  + '4) Keep the same HTML formatting and structure. '
+				  + '5) Copy all placeholder markers (like [[AIME_...]]) in their exact places. '
 				  + 'Return ONLY the improved HTML content.';
+
 			const res = await post( '/content/generate/improve', {
-				content: article.content,
+				content: activeContent,
 				instruction,
 				tone: article.tone || 'professional',
+				article_id: id || undefined,
 			} );
 			if ( res?.content ) {
 				setField( 'content', res.content );
+				if ( editorReady.current ) {
+					const inst = window.tinymce?.get( editorId );
+					if ( inst ) {
+						inst.setContent( res.content );
+					}
+				}
+				if ( id ) {
+					get( `/content/articles/${ id }/versions` ).then( ( vRes ) => {
+						if ( vRes?.items ) {
+							setVersions( vRes.items );
+						}
+					} ).catch( () => {} );
+				}
 				toast( hasPro
 					? __( 'Content deeply humanized!', 'ai-marketing-expert' )
 					: __( 'Content lightly humanized. Upgrade to Pro for deeper humanization.', 'ai-marketing-expert' ),
@@ -670,9 +692,16 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 				content: article.content,
 				keywords: article.keywords,
 				title: article.title,
+				article_id: id || undefined,
 			} );
 			if ( res?.analysis ) {
 				setSeoResult( res.analysis );
+				if ( res.analysis.seo_score !== undefined ) {
+					setField( 'seo_score', res.analysis.seo_score );
+				}
+				if ( res.analysis.readability_score !== undefined ) {
+					setField( 'readability_score', res.analysis.readability_score );
+				}
 			}
 			toast( __( 'SEO analysis complete!', 'ai-marketing-expert' ) );
 		} catch ( e ) {
@@ -971,11 +1000,26 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								onChange={ ( v ) => setField( 'brand_voice_id', v ) }
 								disabled={ ! hasPro }
 							/>
+						</div>
+
+						<div className="aime-structure-toggles">
 							<ToggleControl
 								label={ __( 'Table of Contents', 'ai-marketing-expert' ) }
 								help={ __( 'Add a linked table of contents before the first main section.', 'ai-marketing-expert' ) }
 								checked={ !! article.include_table_of_contents }
 								onChange={ ( value ) => setField( 'include_table_of_contents', value ) }
+							/>
+							<ToggleControl
+								label={ __( 'Quick Answer Box (GEO)', 'ai-marketing-expert' ) }
+								help={ __( 'Add direct-answer key takeaways callout for Generative Engine Optimization.', 'ai-marketing-expert' ) }
+								checked={ article.include_quick_answer !== false }
+								onChange={ ( value ) => setField( 'include_quick_answer', value ) }
+							/>
+							<ToggleControl
+								label={ __( 'FAQ Section (AEO)', 'ai-marketing-expert' ) }
+								help={ __( 'Include structured Q&As for Answer Engine Optimization.', 'ai-marketing-expert' ) }
+								checked={ article.include_faq !== false }
+								onChange={ ( value ) => setField( 'include_faq', value ) }
 							/>
 						</div>
 
@@ -1202,18 +1246,18 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 						) }
 
 						{ /* SEO scores */ }
-						{ ( article.seo_score || article.readability_score ) && (
+						{ ( article.seo_score !== undefined && article.seo_score !== null && article.seo_score !== '' ) ? (
 							<div className="aime-scores">
 								<div className="aime-score-item">
 									<span>{ __( 'SEO Score', 'ai-marketing-expert' ) }</span>
-									<strong>{ article.seo_score || 0 }/100</strong>
+									<strong>{ Number( article.seo_score ) || 0 }/100</strong>
 								</div>
 								<div className="aime-score-item">
 									<span>{ __( 'Readability', 'ai-marketing-expert' ) }</span>
-									<strong>{ article.readability_score || 0 }/100</strong>
+									<strong>{ Number( article.readability_score ) || 0 }/100</strong>
 								</div>
 							</div>
-						) }
+						) : null }
 
 						{ /* SEO analysis result */ }
 						{ seoResult && (
@@ -1485,8 +1529,18 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								<div className="aime-version-list">
 									{ versions.map( ( version ) => (
 										<div className="aime-version-row" key={ version.id }>
-											<div><strong>{ version.label }</strong><span>{ version.created_at }</span></div>
-											<Button variant="secondary" isSmall onClick={ () => restoreVersion( version.id ) }>{ __( 'Restore', 'ai-marketing-expert' ) }</Button>
+											<div className="aime-version-meta">
+												<span className="aime-version-label">{ version.label }</span>
+												<span className="aime-version-time">{ version.created_at }</span>
+											</div>
+											<Button
+												variant="secondary"
+												isSmall
+												onClick={ () => restoreVersion( version.id ) }
+												className="aime-version-btn"
+											>
+												{ __( 'Restore', 'ai-marketing-expert' ) }
+											</Button>
 										</div>
 									) ) }
 								</div>

@@ -1,7 +1,14 @@
-﻿import urllib.request
+import urllib.request
 import json
 import random
+import sys
 from pathlib import Path
+
+# Enforce UTF-8 so emoji prints never crash on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 
 class WPOrgTracker:
     def __init__(self, author: str = "nalam-1", cache_file: str = "knowledge/wporg_cache.json"):

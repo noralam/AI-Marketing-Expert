@@ -354,23 +354,23 @@ const WorkflowAnalytics = ( { onNavigate } ) => {
 			  * a fourth gauge. It also explains the grey bars in the chart below,
 			  * which is the only reason a skipped run ever appears.
 			  */ }
-			{ ! stats?.is_pro && usageLimit > 0 && (
+			{ ! stats?.is_pro && usageLimit > 0 && usageUsed > 0 && (
 				<Card title={ __( 'Monthly Runs', 'ai-marketing-expert' ) }>
 					<div className="aime-usage-bar-wrap">
 						<div className="aime-usage-labels">
 							<span>
 								{ sprintf(
-									/* translators: 1: runs used this month, 2: monthly limit. */
-									__( '%1$s of %2$s runs this month', 'ai-marketing-expert' ),
-									usageUsed.toLocaleString(),
+									/* translators: 1: remaining runs, 2: monthly limit. */
+									__( '%1$s of %2$s runs remaining this month', 'ai-marketing-expert' ),
+									Math.max( 0, usageLimit - usageUsed ).toLocaleString(),
 									usageLimit.toLocaleString()
 								) }
 							</span>
 							<span>
 								{ sprintf(
-									/* translators: %s: number of runs left this month. */
-									__( '%s left', 'ai-marketing-expert' ),
-									Math.max( 0, usageLimit - usageUsed ).toLocaleString()
+									/* translators: %s: number of runs used this month. */
+									__( '%s used', 'ai-marketing-expert' ),
+									usageUsed.toLocaleString()
 								) }
 							</span>
 						</div>

@@ -17,9 +17,19 @@ from core.human import HumanBehavior
 from core.ai_generator import ContentGenerator
 from platforms.x_agent import XAgent
 from platforms.ph_agent import ProductHuntAgent
+import socket
 from platforms.linkedin_agent import LinkedInAgent
 from platforms.reddit_agent import RedditAgent
 from platforms.facebook_agent import FacebookAgent
+
+# Enforce single instance to prevent duplicate parallel runs
+_instance_lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    _instance_lock_socket.bind(('127.0.0.1', 48821))
+except socket.error:
+    print("\n⚠️ [Agent] Another instance of MarketingAgent is already running!")
+    print("🛑 Exiting to prevent duplicate sessions, collisions, and double-posting.\n")
+    sys.exit(0)
 
 STATE_FILE = Path("sessions/agent_state.json")
 

@@ -15,6 +15,7 @@ import UsageNotice from '../../common/UsageNotice';
 import usePro from '../../../hooks/usePro';
 import { formatDateTime } from '../../../utils/datetime';
 import { Button } from '../../common/WpComponents';
+import AiWorkflowModal from './AiWorkflowModal';
 
 const STATUS_LABELS = {
 	active: __( 'Active', 'ai-marketing-expert' ),
@@ -36,6 +37,8 @@ const WorkflowList = ( { onNavigate } ) => {
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
 	const [ testRunWf, setTestRunWf ] = useState( null );
 	const [ triggers, setTriggers ] = useState( [] );
+	const [ aiModalOpen, setAiModalOpen ] = useState( false );
+	const [ brandVoices, setBrandVoices ] = useState( [] );
 	const pollsRef = useRef( {} );
 
 	useEffect( () => () => {
@@ -65,7 +68,14 @@ const WorkflowList = ( { onNavigate } ) => {
 		apiGet( '/workflow-automation/triggers' )
 			.then( ( res ) => setTriggers( res?.triggers || [] ) )
 			.catch( () => {} );
+		apiGet( '/content/brand-voices' )
+			.then( ( res ) => setBrandVoices( res?.items || [] ) )
+			.catch( () => {} );
 	}, [ load ] );
+
+	const handleAiGenerated = ( generatedWf ) => {
+		onNavigate( 'edit-workflow', { initialWorkflow: generatedWf } );
+	};
 
 	const pollExecution = useCallback( ( wfId, executionId ) => {
 		if ( pollsRef.current[ wfId ] ) {
@@ -117,6 +127,18 @@ const WorkflowList = ( { onNavigate } ) => {
 		// Event workflows get their data from the trigger; ask for a sample
 		// payload so a manual run behaves like a real one.
 		if ( wf.trigger_type === 'event' ) {
+			const trig = ( triggers || [] ).find( ( t ) => t.key === wf.trigger_event );
+			if ( trig && trig.available === false ) {
+				const req = trig.requires_label || trig.requires_plugin || __( 'Plugin', 'ai-marketing-expert' );
+				toast(
+					sprintf(
+						__( 'Cannot run workflow: Trigger requires "%s", which is not installed or active on this site.', 'ai-marketing-expert' ),
+						req
+					),
+					'error'
+				);
+				return;
+			}
 			setTestRunWf( wf );
 			return;
 		}
@@ -165,9 +187,18 @@ const WorkflowList = ( { onNavigate } ) => {
 		<div className="aime-workflow-list">
 			<div className="aime-page-header" style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 } }>
 				<h2 style={ { margin: 0 } }>{ __( 'Workflows', 'ai-marketing-expert' ) }</h2>
-				<Button variant="primary" onClick={ () => onNavigate( 'new-workflow' ) }>
-					{ __( 'New Workflow', 'ai-marketing-expert' ) }
-				</Button>
+				<div style={ { display: 'flex', gap: 8 } }>
+					<Button
+						variant="secondary"
+						className="aime-btn-ai-autopilot"
+						onClick={ () => setAiModalOpen( true ) }
+					>
+						{ __( '✨ Create with AI', 'ai-marketing-expert' ) }
+					</Button>
+					<Button variant="primary" onClick={ () => onNavigate( 'new-workflow' ) }>
+						{ __( 'New Workflow', 'ai-marketing-expert' ) }
+					</Button>
+				</div>
 			</div>
 
 			<div style={ { display: 'flex', gap: 10, flexWrap: 'wrap' } }>
@@ -186,10 +217,19 @@ const WorkflowList = ( { onNavigate } ) => {
 
 			{ workflows.length === 0 ? (
 				<Card>
-					<p>{ __( 'No workflows yet. Create one to automate content, SEO, email, and social tasks on a schedule.', 'ai-marketing-expert' ) }</p>
-					<Button variant="primary" onClick={ () => onNavigate( 'new-workflow' ) }>
-						{ __( 'Create your first workflow', 'ai-marketing-expert' ) }
-					</Button>
+					<p>{ __( 'No workflows yet. Create one to automate content, SEO, email, and social tasks on a schedule or event.', 'ai-marketing-expert' ) }</p>
+					<div style={ { display: 'flex', gap: 8, marginTop: 12 } }>
+						<Button
+							variant="primary"
+							className="aime-btn-ai-autopilot"
+							onClick={ () => setAiModalOpen( true ) }
+						>
+							{ __( '✨ Create with AI (Autopilot)', 'ai-marketing-expert' ) }
+						</Button>
+						<Button variant="secondary" onClick={ () => onNavigate( 'new-workflow' ) }>
+							{ __( 'Start from Scratch / Templates', 'ai-marketing-expert' ) }
+						</Button>
+					</div>
 				</Card>
 			) : (
 				<div className="aime-table-wrap">
@@ -205,7 +245,16 @@ const WorkflowList = ( { onNavigate } ) => {
 							</tr>
 						</thead>
 						<tbody>
-							{ workflows.map( ( wf ) => (
+							{ workflows.map( ( wf ) => {
+								const trigDef = wf.trigger_type === 'event'
+									? ( triggers || [] ).find( ( t ) => t.key === wf.trigger_event )
+									: null;
+								const isUnavailable = trigDef && trigDef.available === false;
+								const reqLabel = trigDef
+									? ( trigDef.requires_label || trigDef.requires_plugin || __( 'Plugin', 'ai-marketing-expert' ) )
+									: '';
+
+								return (
 								<tr key={ wf.id }>
 									<td>
 										<button
@@ -215,6 +264,27 @@ const WorkflowList = ( { onNavigate } ) => {
 										>
 											{ wf.name || __( '(untitled)', 'ai-marketing-expert' ) }
 										</button>
+										{ isUnavailable && (
+											<div style={ { marginTop: '4px' } }>
+												<span
+													className="aime-wf-dep-badge"
+													style={ {
+														display: 'inline-flex',
+														alignItems: 'center',
+														gap: '4px',
+														fontSize: '11px',
+														color: '#c62828',
+														background: 'rgba(198, 40, 40, 0.08)',
+														padding: '2px 7px',
+														borderRadius: '4px',
+														fontWeight: 500,
+													} }
+													title={ sprintf( __( 'Requires %s plugin which is not installed or active.', 'ai-marketing-expert' ), reqLabel ) }
+												>
+													⚠️ { sprintf( __( 'Requires %s (not installed)', 'ai-marketing-expert' ), reqLabel ) }
+												</span>
+											</div>
+										) }
 										{ wf.description && (
 											<span className="aime-table-sub">{ wf.description }</span>
 										) }
@@ -237,7 +307,13 @@ const WorkflowList = ( { onNavigate } ) => {
 											{ runningId === wf.id || [ 'queued', 'running' ].includes( runStatuses[ wf.id ] ) ? (
 												<LoadingBtn>{ __( 'Running…', 'ai-marketing-expert' ) }</LoadingBtn>
 											) : (
-												<Button variant="secondary" size="small" onClick={ () => runNow( wf ) }>
+												<Button
+													variant="secondary"
+													size="small"
+													style={ isUnavailable ? { opacity: 0.65 } : undefined }
+													title={ isUnavailable ? sprintf( __( 'Cannot run: Requires %s (not installed)', 'ai-marketing-expert' ), reqLabel ) : undefined }
+													onClick={ () => runNow( wf ) }
+												>
 													{ __( 'Run now', 'ai-marketing-expert' ) }
 												</Button>
 											) }
@@ -259,7 +335,7 @@ const WorkflowList = ( { onNavigate } ) => {
 										</div>
 									</td>
 								</tr>
-							) ) }
+							); } ) }
 						</tbody>
 					</table>
 				</div>
@@ -292,6 +368,13 @@ const WorkflowList = ( { onNavigate } ) => {
 					onCancel={ () => setConfirmDelete( null ) }
 				/>
 			) }
+
+			<AiWorkflowModal
+				open={ aiModalOpen }
+				onClose={ () => setAiModalOpen( false ) }
+				onGenerate={ handleAiGenerated }
+				brandVoices={ brandVoices }
+			/>
 		</div>
 	);
 };

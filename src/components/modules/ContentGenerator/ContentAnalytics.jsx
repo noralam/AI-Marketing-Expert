@@ -318,23 +318,23 @@ const ContentAnalytics = ( { onNavigate } ) => {
 			  * rather than becoming a fourth gauge. A quota is a warning, and a
 			  * warning parked in a row of statistics reads as a statistic.
 			  */ }
-			{ ! hasPro && (
+			{ ! hasPro && monthlyCount > 0 && (
 				<Card title={ __( 'Monthly Usage', 'ai-marketing-expert' ) }>
 					<div className="aime-usage-bar-wrap">
 						<div className="aime-usage-labels">
 							<span>
 								{ sprintf(
-									/* translators: 1: articles used this month, 2: monthly limit. */
-									__( '%1$s of %2$s articles this month', 'ai-marketing-expert' ),
-									monthlyCount.toLocaleString(),
+									/* translators: 1: remaining articles, 2: monthly limit. */
+									__( '%1$s of %2$s articles remaining this month', 'ai-marketing-expert' ),
+									Math.max( 0, monthlyLimit - monthlyCount ).toLocaleString(),
 									monthlyLimit.toLocaleString()
 								) }
 							</span>
 							<span>
 								{ sprintf(
-									/* translators: %s: number of articles left this month. */
-									__( '%s left', 'ai-marketing-expert' ),
-									Math.max( 0, monthlyLimit - monthlyCount ).toLocaleString()
+									/* translators: %s: number of articles used this month. */
+									__( '%s used', 'ai-marketing-expert' ),
+									monthlyCount.toLocaleString()
 								) }
 							</span>
 						</div>

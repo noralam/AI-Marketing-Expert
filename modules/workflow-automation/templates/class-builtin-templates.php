@@ -84,6 +84,123 @@ class BuiltinTemplates {
 			),
 		);
 
+		$templates['woo_cart_recovery'] = array(
+			'name'             => __( 'WooCommerce Cart Recovery', 'ai-marketing-expert' ),
+			'description'      => __( 'When a customer abandons their WooCommerce cart, sends a personalized recovery email with their 1-click restore link and notifies your team.', 'ai-marketing-expert' ),
+			'icon'             => 'shopping-cart',
+			'is_pro'           => false,
+			'requires_plugin'  => 'woocommerce',
+			'requires_modules' => array( 'email-marketing' ),
+			'workflow'         => array(
+				'name'          => __( 'WooCommerce Cart Recovery', 'ai-marketing-expert' ),
+				'description'   => __( 'Automatic abandoned cart recovery with 1-click restore link and store alert.', 'ai-marketing-expert' ),
+				'trigger_type'  => 'event',
+				'trigger_event' => 'woo_cart_abandoned',
+			),
+			'steps'            => array(
+				array(
+					'key'         => 'recovery_email',
+					'parent_key'  => '',
+					'branch'      => 'default',
+					'action_type' => 'send_email',
+					'config'      => array(
+						'to'      => '{event.email}',
+						'subject' => __( 'Did you leave something behind, {event.customer_name}?', 'ai-marketing-expert' ),
+						'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left some great items in your cart ({event.product_names}) for a total of {event.cart_total} {event.currency}.\n\nDon't worry, we saved everything for you!\n\nClick below to restore your shopping cart in 1-click and complete your checkout:\n{event.recovery_url}\n\nIf you have any questions, simply reply to this email.\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+					),
+				),
+				array(
+					'key'         => 'notify_admin',
+					'parent_key'  => 'recovery_email',
+					'branch'      => 'default',
+					'action_type' => 'send_notification',
+					'config'      => array(
+						'subject' => __( 'Abandoned Cart Alert: {event.customer_name} ({event.cart_total} {event.currency})', 'ai-marketing-expert' ),
+						'body'    => __( "A customer abandoned their cart.\n\nCustomer: {event.customer_name}\nEmail: {event.email}\nTotal: {event.cart_total} {event.currency}\nItems: {event.product_names}\n\nA personalized recovery email with their 1-click restore link has been sent automatically.", 'ai-marketing-expert' ),
+					),
+				),
+			),
+		);
+
+		$templates['inbound_webhook_lead'] = array(
+			'name'             => __( 'Inbound Webhook Lead Processor', 'ai-marketing-expert' ),
+			'description'      => __( 'Receives leads from external forms or webhooks, enrolls them into an email funnel, and notifies your team.', 'ai-marketing-expert' ),
+			'icon'             => 'zap',
+			'is_pro'           => false,
+			'requires_modules' => array( 'email-marketing' ),
+			'workflow'         => array(
+				'name'          => __( 'Inbound Webhook Lead Processor', 'ai-marketing-expert' ),
+				'description'   => __( 'Ingest webhook leads, enroll into email funnel, and notify team.', 'ai-marketing-expert' ),
+				'trigger_type'  => 'event',
+				'trigger_event' => 'inbound_webhook',
+				'trigger_config' => array(
+					'webhook_token' => 'lead-' . wp_generate_password( 8, false ),
+				),
+			),
+			'steps'            => array(
+				array(
+					'key'         => 'enroll',
+					'parent_key'  => '',
+					'branch'      => 'default',
+					'action_type' => 'enroll_in_funnel',
+					'config'      => array(
+						'subscriber_email'   => '{event.email}',
+						'create_if_missing'  => true,
+					),
+				),
+				array(
+					'key'         => 'notify',
+					'parent_key'  => 'enroll',
+					'branch'      => 'default',
+					'action_type' => 'send_notification',
+					'config'      => array(
+						'subject' => __( 'New Webhook Lead: {event.name} ({event.email})', 'ai-marketing-expert' ),
+						'body'    => __( "A new lead was received via Inbound Webhook.\n\nName: {event.name}\nEmail: {event.email}\nWebhook Token: {event.token}\n\nThey were enrolled into the email funnel automatically.", 'ai-marketing-expert' ),
+					),
+				),
+			),
+		);
+
+		$templates['cf7_lead_auto_responder'] = array(
+			'name'             => __( 'Contact Form 7 Auto-Responder & Alert', 'ai-marketing-expert' ),
+			'description'      => __( 'When someone submits a Contact Form 7 form, sends an instant greeting email to the submitter and alerts your team.', 'ai-marketing-expert' ),
+			'icon'             => 'mail',
+			'is_pro'           => false,
+			'requires_plugin'  => 'contact-form-7',
+			'workflow'         => array(
+				'name'          => __( 'Contact Form 7 Lead Auto-Responder', 'ai-marketing-expert' ),
+				'description'   => __( 'Instant confirmation email to form submitters and internal alert.', 'ai-marketing-expert' ),
+				'trigger_type'  => 'event',
+				'trigger_event' => 'cf7_submission',
+				'trigger_config' => array(
+					'form_id' => 0,
+				),
+			),
+			'steps'            => array(
+				array(
+					'key'         => 'greeting_email',
+					'parent_key'  => '',
+					'branch'      => 'default',
+					'action_type' => 'send_email',
+					'config'      => array(
+						'to'      => '{event.email}',
+						'subject' => __( 'Thank you for reaching out, {event.name}!', 'ai-marketing-expert' ),
+						'body'    => __( "Hi {event.name},\n\nThank you for contacting us! We received your message regarding \"{event.subject}\":\n\n\"{event.message}\"\n\nOur team is reviewing your inquiry and will get back to you shortly.\n\nBest regards,\n{workflow_name}", 'ai-marketing-expert' ),
+					),
+				),
+				array(
+					'key'         => 'notify_team',
+					'parent_key'  => 'greeting_email',
+					'branch'      => 'default',
+					'action_type' => 'send_notification',
+					'config'      => array(
+						'subject' => __( 'New Contact Form Lead: {event.name} ({event.email})', 'ai-marketing-expert' ),
+						'body'    => __( "A new contact form was submitted.\n\nName: {event.name}\nEmail: {event.email}\nSubject: {event.subject}\nForm: {event.form_title}\n\nMessage:\n{event.message}\n\nA confirmation email has already been sent to the visitor.", 'ai-marketing-expert' ),
+					),
+				),
+			),
+		);
+
 		$templates['daily_smart_content'] = array(
 			'name'             => __( 'Daily Smart Content', 'ai-marketing-expert' ),
 			'description'      => __( 'Lightweight daily pair: the Brain rotates a fresh topic, writes a short blog draft, and schedules a matching social post about it.', 'ai-marketing-expert' ),
@@ -443,6 +560,44 @@ class BuiltinTemplates {
 					'subject' => __( '3-email mini-course ready: {event.post_title}', 'ai-marketing-expert' ),
 					'body'    => __( "Your blog post has been transformed into a 3-email mini-course.\n\n📝 Source: {event.post_title}\n🔗 {event.post_url}\n\n━━━ EMAIL 1: Introduction ━━━\n{email1.content}\n\n━━━ EMAIL 2: Deep-Dive ━━━\n{email2.content}\n\n━━━ EMAIL 3: Action Plan ━━━\n{email3.content}\n\n💡 Use these in your nurture sequence or as a lead magnet.", 'ai-marketing-expert' ),
 				) ),
+			),
+		);
+
+		$templates['woo_post_purchase_review'] = array(
+			'name'             => __( 'Post-Purchase Review Request', 'ai-marketing-expert' ),
+			'description'      => __( 'When a WooCommerce order is completed, automatically wait 1 hour and send a personalized thank you email requesting a product review.', 'ai-marketing-expert' ),
+			'icon'             => 'star',
+			'is_pro'           => true,
+			'requires_plugin'  => 'woocommerce',
+			'requires_modules' => array( 'email-marketing' ),
+			'workflow'         => array(
+				'name'          => __( 'Post-Purchase Review Request', 'ai-marketing-expert' ),
+				'description'   => __( 'Follow up on completed WooCommerce orders to gather product reviews.', 'ai-marketing-expert' ),
+				'trigger_type'  => 'event',
+				'trigger_event' => 'woo_order_completed',
+			),
+			'steps'            => array(
+				array(
+					'key'         => 'wait_delay',
+					'parent_key'  => '',
+					'branch'      => 'default',
+					'action_type' => 'delay',
+					'config'      => array(
+						'delay_value' => 1,
+						'delay_unit'  => 'hours',
+					),
+				),
+				array(
+					'key'         => 'review_email',
+					'parent_key'  => 'wait_delay',
+					'branch'      => 'default',
+					'action_type' => 'send_email',
+					'config'      => array(
+						'to'      => '{event.email}',
+						'subject' => __( 'How was your recent order #{event.order_id}, {event.name}?', 'ai-marketing-expert' ),
+						'body'    => __( "Hi {event.name},\n\nThank you for shopping with us! Your order #{event.order_id} ({event.product_names}) has been completed.\n\nWe hope you love your purchase. Could you take 30 seconds to share your thoughts and review your products?\n\nYour feedback helps other shoppers and allows us to keep improving our service.\n\nThank you for being our valued customer!\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+					),
+				),
 			),
 		);
 

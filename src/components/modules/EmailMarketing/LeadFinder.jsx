@@ -207,6 +207,8 @@ const LeadFinder = ( { onNavigate } ) => {
 	const [ leads, setLeads ] = useState( [] );
 	const [ selectedIndices, setSelectedIndices ] = useState( [] );
 	const [ isSearching, setIsSearching ] = useState( false );
+	const [ searchPage, setSearchPage ] = useState( 1 );
+	const [ hasMore, setHasMore ] = useState( false );
 	const [ targetListId, setTargetListId ] = useState( '' );
 	const [ targetTags, setTargetTags ] = useState( 'B2B Lead' );
 	const [ isImporting, setIsImporting ] = useState( false );
@@ -228,6 +230,8 @@ const LeadFinder = ( { onNavigate } ) => {
 	const [ apLastRun, setApLastRun ] = useState( null );
 	const [ apLastResult, setApLastResult ] = useState( null );
 	const [ apStats, setApStats ] = useState( { imported: 0, skipped_dup: 0, skipped_mx: 0 } );
+	const [ apPagePointer, setApPagePointer ] = useState( 1 );
+	const [ isResettingPointer, setIsResettingPointer ] = useState( false );
 	const [ isSavingAp, setIsSavingAp ] = useState( false );
 	const [ isRunningAp, setIsRunningAp ] = useState( false );
 
@@ -287,6 +291,7 @@ const LeadFinder = ( { onNavigate } ) => {
 					skipped_dup: res.total_skipped_dup || 0,
 					skipped_mx: res.total_skipped_mx || 0,
 				} );
+				setApPagePointer( res.page_pointer || 1 );
 			}
 		} catch ( e ) { /* */ }
 	}, [ get ] );
@@ -313,8 +318,8 @@ const LeadFinder = ( { onNavigate } ) => {
 	}
 
 	// Tab 1: Instant Search Handler
-	const handleSearch = async ( e ) => {
-		if ( e ) e.preventDefault();
+	const handleSearch = async ( e, targetPage = 1 ) => {
+		if ( e && e.preventDefault ) e.preventDefault();
 		clearError();
 		setNotice( null );
 
@@ -341,10 +346,15 @@ const LeadFinder = ( { onNavigate } ) => {
 				company_size: companySize,
 				keyword,
 				limit: activeInstantLimit,
+				page: targetPage,
+				per_page: activeInstantLimit,
 			} );
 
 			const items = res?.items || [];
 			setLeads( items );
+			setSearchPage( targetPage );
+			setHasMore( res?.pagination?.has_more ?? ( items.length >= activeInstantLimit ) );
+
 			const initialSelect = [];
 			items.forEach( ( item, idx ) => {
 				if ( ! item.is_in_crm && item.mx_verified ) {
@@ -356,12 +366,14 @@ const LeadFinder = ( { onNavigate } ) => {
 			if ( items.length === 0 ) {
 				setNotice( {
 					type: 'warning',
-					message: __( 'No leads found matching your criteria. Try broadening your role, industry, or location filters.', 'ai-marketing-expert' ),
+					message: targetPage > 1
+						? __( 'No further leads found on this page. Try returning to previous pages or changing filters.', 'ai-marketing-expert' )
+						: __( 'No leads found matching your criteria. Try broadening your role, industry, or location filters.', 'ai-marketing-expert' ),
 				} );
 			} else {
 				setNotice( {
 					type: 'success',
-					message: sprintf( __( 'Found %d B2B prospects! Review the list and select prospects to import.', 'ai-marketing-expert' ), items.length ),
+					message: sprintf( __( 'Found %1$d B2B prospects on Page %2$d! Review the list and select prospects to import.', 'ai-marketing-expert' ), items.length, targetPage ),
 				} );
 			}
 		} catch ( err ) {
@@ -517,6 +529,26 @@ const LeadFinder = ( { onNavigate } ) => {
 		} finally {
 			slowWarning.stop();
 			setIsRunningAp( false );
+		}
+	};
+
+	// Tab 2: Reset Autopilot Page Pointer
+	const handleResetPointer = async () => {
+		setIsResettingPointer( true );
+		try {
+			const res = await post( '/email/leads/autopilot/reset-pointer' );
+			setApPagePointer( 1 );
+			setNotice( {
+				type: 'success',
+				message: res?.message || __( 'Autopilot search pointer reset to Page 1.', 'ai-marketing-expert' ),
+			} );
+		} catch ( err ) {
+			setNotice( {
+				type: 'error',
+				message: err.message || __( 'Failed to reset pointer.', 'ai-marketing-expert' ),
+			} );
+		} finally {
+			setIsResettingPointer( false );
 		}
 	};
 
@@ -1052,6 +1084,51 @@ const LeadFinder = ( { onNavigate } ) => {
 									</tbody>
 								</table>
 							</div>
+
+							{ /* Pagination Controls */ }
+							<div
+								style={ {
+									display: 'flex',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+									padding: '12px 16px',
+									marginTop: '12px',
+									borderTop: '1px solid var(--aime-border-color, #e2e8f0)',
+									background: 'var(--aime-card-bg-alt, #f8fafc)',
+									borderRadius: '0 0 8px 8px',
+									flexWrap: 'wrap',
+									gap: '12px',
+								} }
+							>
+								<div style={ { fontSize: '13px', color: 'var(--aime-muted, #64748b)' } }>
+									{ sprintf( __( 'Page %1$d • %2$d prospects displayed', 'ai-marketing-expert' ), searchPage, leads.length ) }
+								</div>
+								<div style={ { display: 'flex', gap: '8px', alignItems: 'center' } }>
+									<Button
+										variant="secondary"
+										size="small"
+										onClick={ () => handleSearch( null, searchPage - 1 ) }
+										disabled={ searchPage <= 1 || isSearching }
+										style={ { display: 'inline-flex', alignItems: 'center', gap: '4px' } }
+									>
+										<span className="dashicons dashicons-arrow-left-alt2" style={ { fontSize: '14px', width: '14px', height: '14px', lineHeight: '1' } } />
+										<span>{ __( 'Previous', 'ai-marketing-expert' ) }</span>
+									</Button>
+									<span style={ { padding: '4px 10px', fontWeight: 600, fontSize: '13px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px' } }>
+										{ searchPage }
+									</span>
+									<Button
+										variant="secondary"
+										size="small"
+										onClick={ () => handleSearch( null, searchPage + 1 ) }
+										disabled={ ! hasMore || isSearching }
+										style={ { display: 'inline-flex', alignItems: 'center', gap: '4px' } }
+									>
+										<span>{ __( 'Next Page', 'ai-marketing-expert' ) }</span>
+										<span className="dashicons dashicons-arrow-right-alt2" style={ { fontSize: '14px', width: '14px', height: '14px', lineHeight: '1' } } />
+									</Button>
+								</div>
+							</div>
 						</Card>
 					) }
 				</>
@@ -1166,6 +1243,36 @@ const LeadFinder = ( { onNavigate } ) => {
 								</div>
 								<div style={ { fontSize: '20px', fontWeight: 700, color: apEnabled ? '#34d399' : '#059669', marginTop: '2px' } }>
 									{ apStats.skipped_mx }
+								</div>
+							</div>
+
+							<div style={ { background: apEnabled ? 'rgba(255,255,255,0.05)' : '#fff', padding: '10px 14px', borderRadius: '8px', border: apEnabled ? 'none' : '1px solid #e2e8f0' } }>
+								<div style={ { fontSize: '11px', textTransform: 'uppercase', color: apEnabled ? '#94a3b8' : '#64748b', fontWeight: 600 } }>
+									{ __( 'Search Depth Pointer', 'ai-marketing-expert' ) }
+								</div>
+								<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' } }>
+									<span style={ { fontSize: '20px', fontWeight: 700, color: apEnabled ? '#fbbf24' : '#d97706' } }>
+										{ sprintf( __( 'Page %d', 'ai-marketing-expert' ), apPagePointer ) }
+									</span>
+									<button
+										type="button"
+										onClick={ handleResetPointer }
+										disabled={ isResettingPointer || apPagePointer <= 1 }
+										style={ {
+											fontSize: '11px',
+											padding: '2px 8px',
+											borderRadius: '4px',
+											border: '1px solid #cbd5e1',
+											background: '#fff',
+											color: '#0f172a',
+											cursor: apPagePointer > 1 ? 'pointer' : 'default',
+											opacity: apPagePointer > 1 ? 1 : 0.5,
+											fontWeight: 600,
+										} }
+										title={ __( 'Reset Autopilot to start prospecting from Page 1 again', 'ai-marketing-expert' ) }
+									>
+										{ isResettingPointer ? '...' : __( 'Reset', 'ai-marketing-expert' ) }
+									</button>
 								</div>
 							</div>
 

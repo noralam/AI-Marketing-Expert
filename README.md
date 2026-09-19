@@ -7,7 +7,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-6.2%2B-blue?logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.1.1-purple)](https://github.com/noralam/AI-Marketing-Expert)
+[![Version](https://img.shields.io/badge/Version-1.2.6-purple)](https://github.com/noralam/AI-Marketing-Expert)
 [![Live Demo](https://img.shields.io/badge/Live-Plugin_Site-brightgreen?logo=wordpress)](https://wpthemespace.com/ai-marketing-expert/)
 
 **Email Marketing · Content Generation · SEO · Social Media · AI Chatbot · Workflow Automation — All from Your WordPress Dashboard.**
@@ -318,6 +318,56 @@ npm run lint:css
 ---
 
 ## Changelog
+
+### 1.2.6
+* **New: WooCommerce Abandoned Cart Recovery Engine** — Real-time cart session tracking, guest checkout email capture via background AJAX, automated 15-minute cron inactivity detection, and encrypted 1-click cart restoration deep links directly to checkout.
+* **New: Workflow Delay / Wait Step** — Pause execution between automation nodes for seconds, minutes, hours, or days (e.g., Cart Abandoned -> Wait 1 Hour -> Send Recovery Email).
+* **New: Direct Email Send Action** — Dispatch instant, personalized emails with SMTP multi-connection rotation and dynamic workflow tokens (`{event.recovery_url}`, `{event.customer_name}`, `{event.product_names}`).
+* **New: E-Commerce & Event Triggers** — Added WooCommerce Cart Abandoned, WooCommerce Order Completed, User Registered, Approved Comment Posted, Contact Form 7 Submission, and Inbound Webhook triggers.
+* **New: Text-to-Workflow AI Generator** — Natural language automation builder allowing users to describe their marketing workflows in plain text (English or Bengali) with 8 built-in high-converting recipes.
+* **New: E-Commerce & Lead Workflow Templates** — Pre-built templates for Abandoned Cart Recovery, Post-Purchase Review Requests with timed delay, CF7 Lead Auto-Responders, and Inbound Webhook Ingestion.
+* **New: Multi-Plugin SEO Postmeta Synchronization** — Automatic 1-click synchronization of generated SEO Title, Meta Description, and Focus Keyword into Yoast SEO, Rank Math, and All-in-One SEO (AIOSEO), plus lightweight frontend meta fallback.
+* **New: Contextual Internal Link Engine** — Automatically discovers relevant published articles across your WordPress site and contextually injects natural internal links on publish.
+* **New: B2B Lead Scraper & Verifier** — Enhanced lead prospecting with on-site contact extraction and live DNS MX deliverability verification.
+* **Improved: Content Generator Deep Humanize** — Overhauled rewriter with strict structure protection to preserve Table of Contents (TOC), Quick Answer boxes, introductory paragraphs, and media elements without truncation or loss.
+* **Improved: Settings Organization** — Consolidated Automation toggles (Auto SEO Optimize, Auto Generate Meta, Auto Generate Excerpt, Auto Internal Linking) into the Generation tab under Advanced settings for a smoother single-screen experience.
+* **Improved: Workflow Blog Post & Ad Copy Actions** — Added Brand Voice selection, Content Presets, word count ceilings, multi-category taxonomy search, author assignment, and WooCommerce product rotation.
+* **Improved: Facebook Publishing & Error #200 Hints** — Explicit actionable guidance for Facebook permissions (`pages_manage_posts`, `pages_read_engagement`), Page Access Token detection, and separated Instagram validation.
+* **Improved: Unified Smart Usage & Quota Meter** — Real-time progress display for AI tokens, monthly runs, and feature quotas across module dashboards.
+
+### 1.2.5
+* **New: B2B Lead Finder & Autopilot Pipeline** — Discover, filter, and extract high-converting B2B prospects by role, industry, location, and company size with 1-click list collection and recurring autopilot sync.
+* **New: LinkedIn Publishing & OAuth** — Connect LinkedIn personal and organization accounts to schedule and publish AI-generated business updates and articles directly.
+* **New: Social Auto-Share on Publish** — Automatically generate tailored AI captions and schedule social posts across connected channels whenever a blog post or WooCommerce product is published.
+* **New: 1-Click direct deep linking** from the WordPress dashboard widget into specific AI Chatbot conversation threads.
+* **New: Interactive "Take Over" action link** directly inside the conversation view notice to immediately enable human agent takeover.
+* **Improved: Chatbot conversation list table** now features clickable visitor links and full row cursor affordances.
+* **Fixed: Sidebar navigation** now properly maintains the active state on "Conversations" when navigating into a single conversation.
+* **New: Built-in IMAP bounce processing** service for automated email marketing deliverability and list hygiene.
+* **Improved: Lead Finder UX** with responsive search filters, clean custom query layout, and direct Cold Outreach funnel integration.
+
+### 1.2.4
+* **Fixed: React crash** (Minified React Error #31) on the Subscribers page when tags or list objects contained non-string elements.
+* **Fixed: Webhook subscriber rate limiting** now allows authenticated API key requests without hitting false 429 errors during bulk syncs or external integration imports.
+* **Compatibility: Tested up to WordPress 7.1.**
+
+### 1.2.3
+* **New: AI Brain Skills** — Reusable rule blocks (SEO Strategist, Readability Coach, Image Director, Link Planner, WordPress Expert, Social Hook Writer) merged into strategist prompts.
+* **New: Universal SEO Contract** — Enforces keyword placement, TOC, link minimums, and keyword image alts so RankMath/Yoast score green.
+* **New: Global SEO Adapter** — Canonical SEO store synced to Yoast, Rank Math, All in One SEO, SEOPress, Slim SEO, and The SEO Framework.
+* **New: Stock image controls** — Landscape orientation filter, automatic portrait skipping, duplicate avoidance within configurable reuse window.
+
+### 1.2.2
+* **New: Prompt Library** — Browse professionally written starting points for AI Brain, Custom AI Prompt, and blog Writing brief.
+* **New: Multi-category blog generation** and token chips under token-capable fields.
+
+### 1.2.1
+* **Fixed: Chatbot widget** display and mobile layout fixes.
+* **Fixed: Email A/B testing** and automation double email edge-case.
+
+### 1.2.0
+* **New: Workflow Automation module** for visual multi-step marketing orchestration.
+* **New: Multi-provider AI continuation** and stock image support.
 
 ### 1.1.1
 * Fixed: campaign recipient count could double mid-send under concurrent processing (duplicate emails). Added a unique constraint on the send queue and a one-time de-duplication migration.

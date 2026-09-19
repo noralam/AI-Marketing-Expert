@@ -12,12 +12,15 @@ import ProBadge from '../../Layout/ProBadge';
 import { isProActive } from '../../common/ProLock';
 import { Button } from '../../common/WpComponents';
 import { triggerIcon } from './utils/icons';
+import AiWorkflowModal from './AiWorkflowModal';
 
 const TemplatePicker = ( { onBack, onNavigate } ) => {
 	const hasPro = isProActive();
 	const [ loading, setLoading ] = useState( true );
 	const [ templates, setTemplates ] = useState( [] );
 	const [ applyingId, setApplyingId ] = useState( null );
+	const [ aiModalOpen, setAiModalOpen ] = useState( false );
+	const [ brandVoices, setBrandVoices ] = useState( [] );
 
 	const load = useCallback( async () => {
 		setLoading( true );
@@ -33,6 +36,9 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 
 	useEffect( () => {
 		load();
+		apiGet( '/content/brand-voices' )
+			.then( ( res ) => setBrandVoices( res?.items || [] ) )
+			.catch( () => {} );
 	}, [ load ] );
 
 	const apply = async ( tpl ) => {
@@ -49,6 +55,10 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 		}
 	};
 
+	const handleAiGenerated = ( generatedWf ) => {
+		onNavigate( 'edit-workflow', { initialWorkflow: generatedWf } );
+	};
+
 	if ( loading ) {
 		return <Loader />;
 	}
@@ -57,10 +67,31 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 		<div className="aime-wf-templates">
 			<div className="aime-page-header" style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 } }>
 				<h2 style={ { margin: 0 } }>{ __( 'New Workflow', 'ai-marketing-expert' ) }</h2>
-				<Button variant="tertiary" onClick={ onBack }>{ __( 'Back', 'ai-marketing-expert' ) }</Button>
+				<div style={ { display: 'flex', gap: 8 } }>
+					<Button
+						variant="secondary"
+						className="aime-btn-ai-autopilot"
+						onClick={ () => setAiModalOpen( true ) }
+					>
+						{ __( '✨ Create with AI', 'ai-marketing-expert' ) }
+					</Button>
+					<Button variant="tertiary" onClick={ onBack }>{ __( 'Back', 'ai-marketing-expert' ) }</Button>
+				</div>
 			</div>
 
 			<div className="aime-wf-template-grid">
+				<button
+					type="button"
+					className="aime-wf-template-card aime-wf-template-card--ai"
+					onClick={ () => setAiModalOpen( true ) }
+				>
+					<span className="aime-wf-template-card__icon">✨</span>
+					<strong>{ __( 'Create with AI (Autopilot)', 'ai-marketing-expert' ) }</strong>
+					<span className="aime-wf-template-card__desc">
+						{ __( 'Describe your automation in English or Bengali. AI builds the full node graph automatically.', 'ai-marketing-expert' ) }
+					</span>
+				</button>
+
 				<button
 					type="button"
 					className="aime-wf-template-card aime-wf-template-card--blank"
@@ -104,6 +135,13 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 					);
 				} ) }
 			</div>
+
+			<AiWorkflowModal
+				open={ aiModalOpen }
+				onClose={ () => setAiModalOpen( false ) }
+				onGenerate={ handleAiGenerated }
+				brandVoices={ brandVoices }
+			/>
 		</div>
 	);
 };

@@ -101,14 +101,18 @@ const SeoDashboard = ( { onNavigate } ) => {
 				} ) }
 			</div>
 
-			{ /* Monthly usage (free plan) */ }
-			{ ! hasPro && (
+			{ /* Monthly usage (free plan) — revealed progressively once user starts auditing or researching */ }
+			{ ! hasPro && ( ( usage.research_used || 0 ) > 0 || ( usage.audit_used || 0 ) > 0 ) && (
 				<Card title={ __( 'Monthly Usage', 'ai-marketing-expert' ) } className="aime-usage-card">
 					<div className="aime-usage-bar-wrap">
 						<div className="aime-usage-labels">
 							<span>
-								{ usage.research_used || 0 } / { freeLimits?.seo_keyword_research_monthly || 10 }{ ' ' }
-								{ __( 'keyword researches', 'ai-marketing-expert' ) }
+								{ sprintf(
+									/* translators: 1: remaining, 2: total limit */
+									__( '%1$d of %2$d keyword researches remaining', 'ai-marketing-expert' ),
+									Math.max( 0, ( freeLimits?.seo_keyword_research_monthly || 10 ) - ( usage.research_used || 0 ) ),
+									freeLimits?.seo_keyword_research_monthly || 10
+								) }
 							</span>
 							<span>
 								{ Math.round( ( ( usage.research_used || 0 ) / ( freeLimits?.seo_keyword_research_monthly || 10 ) ) * 100 ) }%
@@ -126,8 +130,12 @@ const SeoDashboard = ( { onNavigate } ) => {
 					<div className="aime-usage-bar-wrap" style={ { marginTop: 12 } }>
 						<div className="aime-usage-labels">
 							<span>
-								{ usage.audit_used || 0 } / { freeLimits?.seo_audits_monthly || 5 }{ ' ' }
-								{ __( 'audits', 'ai-marketing-expert' ) }
+								{ sprintf(
+									/* translators: 1: remaining, 2: total limit */
+									__( '%1$d of %2$d audits remaining', 'ai-marketing-expert' ),
+									Math.max( 0, ( freeLimits?.seo_audits_monthly || 5 ) - ( usage.audit_used || 0 ) ),
+									freeLimits?.seo_audits_monthly || 5
+								) }
 							</span>
 							<span>
 								{ Math.round( ( ( usage.audit_used || 0 ) / ( freeLimits?.seo_audits_monthly || 5 ) ) * 100 ) }%

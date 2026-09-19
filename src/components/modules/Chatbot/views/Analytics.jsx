@@ -237,12 +237,19 @@ const Analytics = ( { onNavigate } ) => {
 				) ) }
 			</div>
 
-			{ /* Monthly usage (free plan) */ }
-			{ ! hasPro && (
+			{ /* Monthly usage (free plan) — progressive disclosure */ }
+			{ ! hasPro && monthlyConversations > 0 && (
 				<Card title={ __( 'Monthly Usage', 'ai-marketing-expert' ) }>
 					<div className="aime-usage-bar-wrap">
 						<div className="aime-usage-labels">
-							<span>{ monthlyConversations } / { monthlyLimit } { __( 'conversations', 'ai-marketing-expert' ) }</span>
+							<span>
+								{ sprintf(
+									/* translators: 1: remaining, 2: limit */
+									__( '%1$d of %2$d conversations remaining', 'ai-marketing-expert' ),
+									Math.max( 0, monthlyLimit - monthlyConversations ),
+									monthlyLimit
+								) }
+							</span>
 							<span>{ Math.round( ( monthlyConversations / monthlyLimit ) * 100 ) }%</span>
 						</div>
 						<div className="aime-usage-bar">

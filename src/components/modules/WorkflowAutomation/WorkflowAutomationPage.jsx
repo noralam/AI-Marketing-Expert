@@ -6,7 +6,7 @@
  * edit-workflow/{id} → WorkflowBuilder, history/{id}, upcoming.
  */
 
-import { useState, useEffect, useCallback } from '@wordpress/element';
+import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { chartBar, list, plus, calendar, cog, warning } from '@wordpress/icons';
 import AppLayout from '../../Layout/AppLayout';
@@ -82,9 +82,15 @@ const WorkflowAutomationPage = () => {
 	const [ view, setView ] = useState( initial.key );
 	const [ viewParams, setViewParams ] = useState( initial.params );
 
+	const internalNavRef = useRef( false );
+
 	// Keep state in sync with the hash so back/forward works.
 	useEffect( () => {
 		const onHashChange = () => {
+			if ( internalNavRef.current ) {
+				internalNavRef.current = false;
+				return;
+			}
 			const { key, params } = parseHash();
 			setView( key );
 			setViewParams( params );
@@ -94,11 +100,14 @@ const WorkflowAutomationPage = () => {
 	}, [] );
 
 	const navigate = useCallback( ( key, params = {} ) => {
+		internalNavRef.current = true;
 		setView( key );
 		setViewParams( params );
 		const next = params.id ? `${ key }/${ params.id }` : key;
 		if ( window.location.hash.replace( '#', '' ) !== next ) {
 			window.location.hash = next;
+		} else {
+			internalNavRef.current = false;
 		}
 	}, [] );
 
@@ -123,8 +132,9 @@ const WorkflowAutomationPage = () => {
 			case 'edit-workflow':
 				return (
 					<WorkflowBuilder
-						key={ viewParams.id ? `edit-${ viewParams.id }` : 'new' }
+						key={ viewParams.id ? `edit-${ viewParams.id }` : ( viewParams.initialWorkflow ? `ai-${ Date.now() }` : 'new' ) }
 						id={ viewParams.id }
+						initialWorkflow={ viewParams.initialWorkflow }
 						onBack={ () => navigate( 'workflows' ) }
 						onNavigate={ navigate }
 					/>

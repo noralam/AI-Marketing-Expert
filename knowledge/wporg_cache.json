@@ -1,0 +1,274 @@
+{
+  "plugins": [
+    {
+      "name": "Advanced Customer Account for WooCommerce",
+      "slug": "advanced-customer-account",
+      "version": "1.1.0",
+      "url": "https://wordpress.org/plugins/advanced-customer-account/",
+      "short_description": "A modern, React-powered WooCommerce My Account page replacement with beautiful dashboard, orders management, and enhanced customer experience.",
+      "last_updated": "2026-08-20 1:04am GMT"
+    },
+    {
+      "name": "AI Marketing Expert \u2014 AI Email Marketing, AI Content Generator, SEO Analyzer, AI Workflow Automation, Social Media &amp; Ai Chatbot",
+      "slug": "ai-marketing-expert",
+      "version": "1.2.5",
+      "url": "https://wordpress.org/plugins/ai-marketing-expert/",
+      "short_description": "All-in-one AI marketing: Email campaigns, AI content generator, AI SEO analyzer, social scheduling, AI chatbot, AI workflows, and AI B2B lead finder.",
+      "last_updated": "2026-09-13 10:36am GMT"
+    },
+    {
+      "name": "Be Boost",
+      "slug": "be-boost",
+      "version": "1.1.4",
+      "url": "https://wordpress.org/plugins/be-boost/",
+      "short_description": "You can import free shop demo by Be Boost plugin",
+      "last_updated": "2026-04-30 5:17pm GMT"
+    },
+    {
+      "name": "Click to top",
+      "slug": "click-to-top",
+      "version": "1.3.5",
+      "url": "https://wordpress.org/plugins/click-to-top/",
+      "short_description": "Best WordPress scroll to top plugin. Fully customizable back to top button with smooth scrolling, keyboard shortcut, and advanced styling.",
+      "last_updated": "2026-06-29 6:03am GMT"
+    },
+    {
+      "name": "Customers Mail List",
+      "slug": "woo-customers-mail-list",
+      "version": "1.0.0",
+      "url": "https://wordpress.org/plugins/woo-customers-mail-list/",
+      "short_description": "You can create your woocommece store customers order mail list by this plugin.",
+      "last_updated": "2025-05-12 9:17am GMT"
+    },
+    {
+      "name": "Easy Share Solution For WordPress",
+      "slug": "easy-share-solution",
+      "version": "2.0.3",
+      "url": "https://wordpress.org/plugins/easy-share-solution/",
+      "short_description": "A powerful, easy-to-use WordPress social sharing plugin with modern share buttons, built-in analytics, and smooth dashboard integration.",
+      "last_updated": "2026-05-21 12:25pm GMT"
+    },
+    {
+      "name": "Gallery Box",
+      "slug": "gallery-box",
+      "version": "1.7.40",
+      "url": "https://wordpress.org/plugins/gallery-box/",
+      "short_description": "You can create awesome image, portfolio, audio, video and i-frame gellery with lots of effects By this plugin.",
+      "last_updated": "2026-06-30 3:13am GMT"
+    },
+    {
+      "name": "Guest Checkout Account Creator",
+      "slug": "guest-checkout-account-creator",
+      "version": "1.0.3",
+      "url": "https://wordpress.org/plugins/guest-checkout-account-creator/",
+      "short_description": "Automatically create customer accounts during WooCommerce guest checkout. Boost sales while building your customer database.",
+      "last_updated": "2026-05-21 3:48pm GMT"
+    },
+    {
+      "name": "Home animation slider",
+      "slug": "home-animation-slider",
+      "version": "1.0.0",
+      "url": "https://wordpress.org/plugins/home-animation-slider/",
+      "short_description": "Home animation slider is nice image and text animation slider wordpress plugin. You can use this plugin any wordpress site for create slider.",
+      "last_updated": "2020-04-12 10:35am GMT"
+    },
+    {
+      "name": "Magical Addons For Elementor ( Theme Builder, Header Footer Builder, Free Elementor Widgets, Elementor Templates Library )",
+      "slug": "magical-addons-for-elementor",
+      "version": "1.5.0",
+      "url": "https://wordpress.org/plugins/magical-addons-for-elementor/",
+      "short_description": "Free Elementor Theme Builder, Header Footer Builder, 60+ widgets, 100+ sections, GSAP animations, custom CSS, conditional display &amp; role manager.",
+      "last_updated": "2026-09-07 3:13pm GMT"
+    },
+    {
+      "name": "Magical Posts Display \u2013 Elementor Advanced Posts widgets",
+      "slug": "magical-posts-display",
+      "version": "1.3.0",
+      "url": "https://wordpress.org/plugins/magical-posts-display/",
+      "short_description": "Show your site posts, pages, custom post types &amp; theme builder templates with advanced Elementor widgets.",
+      "last_updated": "2026-09-07 3:26pm GMT"
+    },
+    {
+      "name": "Magical Shop Builder \u2013 WooCommerce Template Builder for Elementor | Shop, Cart, Checkout &amp; Product Page Builder",
+      "slug": "magical-products-display",
+      "version": "2.0.7",
+      "url": "https://wordpress.org/plugins/magical-products-display/",
+      "short_description": "The complete WooCommerce Shop Builder for Elementor. Build custom single product pages, cart, checkout, my account &amp; shop archives with 60+ widgets.",
+      "last_updated": "2026-08-21 12:14pm GMT"
+    },
+    {
+      "name": "Niso Carousel",
+      "slug": "niso-carousel",
+      "version": "1.1.3",
+      "url": "https://wordpress.org/plugins/niso-carousel/",
+      "short_description": "Niso carousel is nice image and video carousel wordpress plugin. You can use this plugin any wordpress site for create carousel.",
+      "last_updated": "2020-04-12 10:42am GMT"
+    },
+    {
+      "name": "Niso Carousel Slider",
+      "slug": "niso-carousel-slider",
+      "version": "1.3.22",
+      "url": "https://wordpress.org/plugins/niso-carousel-slider/",
+      "short_description": "Niso carousel slider is a nice post, image and video carousel and slider wordpress plugin.",
+      "last_updated": "2026-06-29 12:23pm GMT"
+    },
+    {
+      "name": "Palto Carousel",
+      "slug": "palto-carousel",
+      "version": "1.2.6",
+      "url": "https://wordpress.org/plugins/palto-carousel/",
+      "short_description": "Palto Carousel is one of the most user friendly wordpress plugin.",
+      "last_updated": "2021-01-30 9:37am GMT"
+    },
+    {
+      "name": "WPEPP \u2013 Essential Security, Password Protect &amp; Login Page Customizer",
+      "slug": "wp-edit-password-protected",
+      "version": "2.0.5",
+      "url": "https://wordpress.org/plugins/wp-edit-password-protected/",
+      "short_description": "Essential security: password protection, AI crawler blocking, login limits, country restrictions, CPU monitoring &amp; live-preview login customizer.",
+      "last_updated": "2026-08-20 1:05am GMT"
+    }
+  ],
+  "themes": [
+    {
+      "name": "WoWmart Plus",
+      "slug": "wowmart-plus",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/wowmart-plus/",
+      "preview_url": "https://wp-themes.com/wowmart-plus/"
+    },
+    {
+      "name": "Ai WorkFlow",
+      "slug": "ai-workflow",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/ai-workflow/",
+      "preview_url": "https://wp-themes.com/ai-workflow/"
+    },
+    {
+      "name": "ShopVibe",
+      "slug": "shopvibe",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/shopvibe/",
+      "preview_url": "https://wp-themes.com/shopvibe/"
+    },
+    {
+      "name": "WoWmart Lite",
+      "slug": "wowmart-lite",
+      "version": "1.0.3",
+      "url": "https://wordpress.org/themes/wowmart-lite/",
+      "preview_url": "https://wp-themes.com/wowmart-lite/"
+    },
+    {
+      "name": "WoWmart Organic",
+      "slug": "wowmart-organic",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/wowmart-organic/",
+      "preview_url": "https://wp-themes.com/wowmart-organic/"
+    },
+    {
+      "name": "Blog Build Lite",
+      "slug": "blog-build-lite",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/blog-build-lite/",
+      "preview_url": "https://wp-themes.com/blog-build-lite/"
+    },
+    {
+      "name": "WowMart",
+      "slug": "wowmart",
+      "version": "1.1.0",
+      "url": "https://wordpress.org/themes/wowmart/",
+      "preview_url": "https://wp-themes.com/wowmart/"
+    },
+    {
+      "name": "News Axis Plus",
+      "slug": "news-axis-plus",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/news-axis-plus/",
+      "preview_url": "https://wp-themes.com/news-axis-plus/"
+    },
+    {
+      "name": "Shop Toolkit Plus",
+      "slug": "shop-toolkit-plus",
+      "version": "1.0.7",
+      "url": "https://wordpress.org/themes/shop-toolkit-plus/",
+      "preview_url": "https://wp-themes.com/shop-toolkit-plus/"
+    },
+    {
+      "name": "Blog Build",
+      "slug": "blog-build",
+      "version": "1.1.0",
+      "url": "https://wordpress.org/themes/blog-build/",
+      "preview_url": "https://wp-themes.com/blog-build/"
+    },
+    {
+      "name": "Xshop Medico",
+      "slug": "xshop-medico",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/xshop-medico/",
+      "preview_url": "https://wp-themes.com/xshop-medico/"
+    },
+    {
+      "name": "Fossil",
+      "slug": "fossil",
+      "version": "1.0.5",
+      "url": "https://wordpress.org/themes/fossil/",
+      "preview_url": "https://wp-themes.com/fossil/"
+    },
+    {
+      "name": "Portfolio Expert Lite",
+      "slug": "portfolio-expert-lite",
+      "version": "1.0.2",
+      "url": "https://wordpress.org/themes/portfolio-expert-lite/",
+      "preview_url": "https://wp-themes.com/portfolio-expert-lite/"
+    },
+    {
+      "name": "Shop Asthir",
+      "slug": "shop-asthir",
+      "version": "1.0.5",
+      "url": "https://wordpress.org/themes/shop-asthir/",
+      "preview_url": "https://wp-themes.com/shop-asthir/"
+    },
+    {
+      "name": "Newsx Paper Free",
+      "slug": "newsx-paper-free",
+      "version": "1.0.3",
+      "url": "https://wordpress.org/themes/newsx-paper-free/",
+      "preview_url": "https://wp-themes.com/newsx-paper-free/"
+    },
+    {
+      "name": "Build Kit",
+      "slug": "build-kit",
+      "version": "1.0.6",
+      "url": "https://wordpress.org/themes/build-kit/",
+      "preview_url": "https://wp-themes.com/build-kit/"
+    },
+    {
+      "name": "News Axis",
+      "slug": "news-axis",
+      "version": "1.0.7",
+      "url": "https://wordpress.org/themes/news-axis/",
+      "preview_url": "https://wp-themes.com/news-axis/"
+    },
+    {
+      "name": "Resume Kit Dark",
+      "slug": "resume-kit-dark",
+      "version": "1.0.3",
+      "url": "https://wordpress.org/themes/resume-kit-dark/",
+      "preview_url": "https://wp-themes.com/resume-kit-dark/"
+    },
+    {
+      "name": "Blog Rich Lite",
+      "slug": "blog-rich-lite",
+      "version": "1.0.5",
+      "url": "https://wordpress.org/themes/blog-rich-lite/",
+      "preview_url": "https://wp-themes.com/blog-rich-lite/"
+    },
+    {
+      "name": "Realestate Pack Lite",
+      "slug": "realestate-pack-lite",
+      "version": "1.0.3",
+      "url": "https://wordpress.org/themes/realestate-pack-lite/",
+      "preview_url": "https://wp-themes.com/realestate-pack-lite/"
+    }
+  ]
+}

@@ -19,7 +19,7 @@ import { ProUpgradeButton } from './ProLock';
 /** Below this share of the allowance, a meter starts warning. */
 const LOW_RATIO = 0.2;
 
-const QuotaMeters = ( { items = [], className = '' } ) => {
+const QuotaMeters = ( { items = [], className = '', hideWhenZero = true } ) => {
 	const meters = items
 		.filter( ( item ) => item?.usage && item.usage.limit != null )
 		.map( ( item ) => {
@@ -37,6 +37,11 @@ const QuotaMeters = ( { items = [], className = '' } ) => {
 		} );
 
 	if ( meters.length === 0 ) {
+		return null;
+	}
+
+	// Progressive disclosure: hide the entire strip on empty states to avoid premature friction.
+	if ( hideWhenZero && meters.every( ( m ) => m.used === 0 ) ) {
 		return null;
 	}
 
@@ -80,9 +85,9 @@ const QuotaMeters = ( { items = [], className = '' } ) => {
 
 							<p className="aime-quota-meter__note">
 								{ sprintf(
-									/* translators: 1: amount used, 2: total allowance. */
-									__( '%1$d of %2$d used', 'ai-marketing-expert' ),
-									m.used,
+									/* translators: 1: remaining items, 2: total allowance. */
+									__( '%1$d of %2$d remaining', 'ai-marketing-expert' ),
+									m.left,
 									m.limit
 								) }
 								{ m.note ? ` · ${ m.note }` : '' }

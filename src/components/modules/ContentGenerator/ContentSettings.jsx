@@ -59,7 +59,6 @@ const TABS = [
 	{ name: 'generation', title: __( 'Generation', 'ai-marketing-expert' ) },
 	{ name: 'publishing', title: __( 'Publishing', 'ai-marketing-expert' ) },
 	{ name: 'images', title: __( 'Images', 'ai-marketing-expert' ) },
-	{ name: 'automation', title: __( 'Automation', 'ai-marketing-expert' ) },
 ];
 
 const STOCK_PROVIDERS = [
@@ -139,7 +138,7 @@ const ContentSettings = ( { initialTab } ) => {
 	if ( ! settings ) return null;
 
 	const setField = ( key, value ) => {
-		if ( ! hasPro && [ 'auto_seo_optimize', 'auto_generate_meta', 'auto_generate_excerpt' ].includes( key ) ) {
+		if ( ! hasPro && [ 'auto_seo_optimize', 'auto_generate_meta', 'auto_generate_excerpt', 'auto_internal_links' ].includes( key ) ) {
 			toast( __( 'Content automation settings are available in Pro.', 'ai-marketing-expert' ), 'warning' );
 			return;
 		}
@@ -195,7 +194,63 @@ const ContentSettings = ( { initialTab } ) => {
 											__nextHasNoMarginBottom
 										/>
 									</div>
-									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
+
+									<div className="aime-settings-section-head" style={ { marginTop: 24, marginBottom: 14 } }>
+										<h4 style={ { margin: 0, fontSize: '14px', fontWeight: 600, color: '#1e293b' } }>
+											{ __( 'Automation & Content Intelligence', 'ai-marketing-expert' ) }
+										</h4>
+										<p style={ { margin: '4px 0 0', fontSize: '12px', color: '#64748b' } }>
+											{ __( 'Configure automated post-generation enhancements and publishing intelligence.', 'ai-marketing-expert' ) }
+										</p>
+									</div>
+
+									{ ! hasPro && (
+										<div className="aime-pro-inline-action" style={ { marginBottom: 16 } }>
+											<ProLabel>{ __( 'Automation Settings', 'ai-marketing-expert' ) }</ProLabel>
+											<ProUpgradeButton />
+										</div>
+									) }
+
+									<div className="aime-automation-toggles">
+										<div className="aime-toggle-card">
+											<ToggleControl
+												label={ hasPro ? __( 'Auto SEO Optimize', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto SEO Optimize', 'ai-marketing-expert' ) }</ProLabel> }
+												help={ __( 'Automatically run SEO scoring after article generation.', 'ai-marketing-expert' ) }
+												checked={ hasPro ? ( settings.auto_seo_optimize !== false ) : false }
+												onChange={ ( v ) => setField( 'auto_seo_optimize', v ) }
+												disabled={ ! hasPro }
+											/>
+										</div>
+										<div className="aime-toggle-card">
+											<ToggleControl
+												label={ hasPro ? __( 'Auto Generate Meta', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Meta', 'ai-marketing-expert' ) }</ProLabel> }
+												help={ __( 'Automatically generate meta title and description.', 'ai-marketing-expert' ) }
+												checked={ hasPro ? ( settings.auto_generate_meta !== false ) : false }
+												onChange={ ( v ) => setField( 'auto_generate_meta', v ) }
+												disabled={ ! hasPro }
+											/>
+										</div>
+										<div className="aime-toggle-card">
+											<ToggleControl
+												label={ hasPro ? __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) }</ProLabel> }
+												help={ __( 'Automatically generate article excerpt.', 'ai-marketing-expert' ) }
+												checked={ hasPro ? ( settings.auto_generate_excerpt !== false ) : false }
+												onChange={ ( v ) => setField( 'auto_generate_excerpt', v ) }
+												disabled={ ! hasPro }
+											/>
+										</div>
+										<div className="aime-toggle-card">
+											<ToggleControl
+												label={ hasPro ? __( 'Auto Internal Linking', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Internal Linking', 'ai-marketing-expert' ) }</ProLabel> }
+												help={ __( 'Automatically link relevant published articles on publish.', 'ai-marketing-expert' ) }
+												checked={ hasPro ? ( settings.auto_internal_links !== false ) : false }
+												onChange={ ( v ) => setField( 'auto_internal_links', v ) }
+												disabled={ ! hasPro }
+											/>
+										</div>
+									</div>
+
+									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 20 } }>
 										{ saving
 											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
 											: __( 'Save Settings', 'ai-marketing-expert' )
@@ -320,39 +375,7 @@ const ContentSettings = ( { initialTab } ) => {
 							);
 						}
 
-						/* Automation */
-						return (
-							<div className="aime-settings-form">
-								{ ! hasPro && <div className="aime-pro-inline-action" style={ { marginBottom: 12 } }><ProLabel>{ __( 'Automation Settings', 'ai-marketing-expert' ) }</ProLabel><ProUpgradeButton /></div> }
-								<ToggleControl
-									label={ hasPro ? __( 'Auto SEO Optimize', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto SEO Optimize', 'ai-marketing-expert' ) }</ProLabel> }
-									help={ __( 'Automatically run SEO scoring after article generation.', 'ai-marketing-expert' ) }
-									checked={ hasPro && !! settings.auto_seo_optimize }
-									onChange={ ( v ) => setField( 'auto_seo_optimize', v ) }
-									disabled={ ! hasPro }
-								/>
-								<ToggleControl
-									label={ hasPro ? __( 'Auto Generate Meta', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Meta', 'ai-marketing-expert' ) }</ProLabel> }
-									help={ __( 'Automatically generate meta title and description.', 'ai-marketing-expert' ) }
-									checked={ hasPro && !! settings.auto_generate_meta }
-									onChange={ ( v ) => setField( 'auto_generate_meta', v ) }
-									disabled={ ! hasPro }
-								/>
-								<ToggleControl
-									label={ hasPro ? __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) }</ProLabel> }
-									help={ __( 'Automatically generate article excerpt.', 'ai-marketing-expert' ) }
-									checked={ hasPro && !! settings.auto_generate_excerpt }
-									onChange={ ( v ) => setField( 'auto_generate_excerpt', v ) }
-									disabled={ ! hasPro }
-								/>
-								<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
-									{ saving
-										? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
-										: __( 'Save Settings', 'ai-marketing-expert' )
-									}
-								</Button>
-							</div>
-						);
+						return null;
 					} }
 				</TabPanel> }
 			</Card>

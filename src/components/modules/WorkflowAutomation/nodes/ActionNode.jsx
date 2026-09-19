@@ -13,6 +13,7 @@ const ActionNode = ( { data, selected } ) => {
 		'aime-wf-node',
 		'aime-wf-node--action',
 		selected ? 'is-selected' : '',
+		data.invalid ? 'aime-wf-node--invalid' : '',
 		data.runStatus ? `aime-wf-node--run-${ data.runStatus }` : '',
 	].filter( Boolean ).join( ' ' );
 

@@ -282,33 +282,74 @@ export const ConfigField = ( {
 		const options = ( field.options || [] ).map( ( o ) =>
 			typeof o === 'string' ? { value: o, label: o } : o
 		);
-		// Legacy configs can store 0 for entity selects (e.g. funnel_id) where
-		// no option has value 0. Treat that as "nothing chosen" instead of
-		// rendering a meaningless "0" entry.
+
+		// Special case: wp_post_id with token like '{*.post_id}' or '-1' -> normalize to -1 ("Previous step")
+		let currentVal = val;
+		if (
+			field.key === 'wp_post_id' &&
+			( currentVal === -1 ||
+				currentVal === '-1' ||
+				( typeof currentVal === 'string' &&
+					( currentVal.startsWith( '{' ) || currentVal.includes( 'post_id' ) ) ) )
+		) {
+			currentVal = -1;
+		}
+
+		// Entity ID selects (funnel_id, account_id, form_id) should never treat arbitrary strings as selected values.
+		const isEntitySelect =
+			field.key === 'funnel_id' || field.key === 'account_id' || field.key === 'form_id';
+		if (
+			isEntitySelect &&
+			typeof currentVal === 'string' &&
+			! /^\d+$/.test( currentVal ) &&
+			currentVal !== ''
+		) {
+			currentVal = 0;
+		}
+
 		const hasZeroOption = options.some( ( o ) => String( o.value ) === '0' );
+		const knownOption = options.find( ( o ) => String( o.value ) === String( currentVal ) );
 		const isEmptyish =
-			val === '' || val === undefined || val === null || ( val === 0 && ! hasZeroOption );
-		// Required select with nothing chosen yet: show an explicit placeholder
-		// so the dropdown doesn't misleadingly display the first real option.
-		// Optional selects also get a placeholder to allow deselection.
-		if ( isEmptyish || ! field.required ) {
-			const placeholder = field.required
-				? { value: '', label: __( '— Select —', 'ai-marketing-expert' ) }
-				: { value: '', label: __( '— None —', 'ai-marketing-expert' ) };
-			// Only add if not already present
+			currentVal === '' ||
+			currentVal === undefined ||
+			currentVal === null ||
+			( currentVal === 0 && ! hasZeroOption ) ||
+			( ! knownOption && isEntitySelect );
+
+		// Informative placeholder label when no options exist or nothing is chosen.
+		let placeholderLabel = __( '— Select —', 'ai-marketing-expert' );
+		if ( options.length === 0 ) {
+			if ( field.key === 'account_id' ) {
+				placeholderLabel = __( '— No accounts connected —', 'ai-marketing-expert' );
+			} else if ( field.key === 'funnel_id' ) {
+				placeholderLabel = __( '— No funnels created yet —', 'ai-marketing-expert' );
+			} else {
+				placeholderLabel = __( '— None available —', 'ai-marketing-expert' );
+			}
+		} else if ( ! field.required ) {
+			placeholderLabel = __( '— None —', 'ai-marketing-expert' );
+		}
+
+		if ( isEmptyish || ! field.required || ! knownOption ) {
 			if ( ! options.some( ( o ) => o.value === '' ) ) {
-				options.unshift( placeholder );
+				options.unshift( { value: '', label: placeholderLabel } );
 			}
 		}
-		// Keep a legacy/unknown saved value selectable instead of silently jumping.
-		const known = options.some( ( o ) => String( o.value ) === String( val ) );
-		if ( ! known && ! isEmptyish ) {
-			options.push( { value: val, label: `${ val }` } );
+
+		// Only retain unknown value in options if it's a valid numeric ID from a saved workflow
+		if ( ! knownOption && ! isEmptyish && ! isEntitySelect && /^\d+$/.test( String( currentVal ) ) ) {
+			options.push( {
+				value: currentVal,
+				label: sprintf( __( 'Item #%s', 'ai-marketing-expert' ), currentVal ),
+			} );
 		}
+
+		const effectiveVal = knownOption && ! isEmptyish ? currentVal : '';
+
 		return (
 			<SelectControl
 				label={ label }
-				value={ isEmptyish ? '' : val }
+				value={ effectiveVal }
 				options={ options }
 				onChange={ ( v ) => onChange( v ) }
 				help={ field.help }

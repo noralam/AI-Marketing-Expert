@@ -51,6 +51,13 @@ final class Plugin {
 	private ?UpgradeNotice $upgrade_notice = null;
 
 	/**
+	 * WooCommerce Cart Tracker & Recovery Engine.
+	 *
+	 * @var CartTracker|null
+	 */
+	private ?CartTracker $cart_tracker = null;
+
+	/**
 	 * REST API handler.
 	 *
 	 * @var RestApi
@@ -187,6 +194,13 @@ final class Plugin {
 		add_action( 'aime_daily_cleanup', array( UsageTracker::class, 'cleanup' ) );
 		add_action( 'aime_daily_cleanup', 'aime_prune_logs' );
 		add_action( 'aime_process_bounce_mailbox', array( ImapBounceService::class, 'process_mailbox' ) );
+
+		// WooCommerce abandoned cart tracker & recovery engine.
+		if ( class_exists( 'WooCommerce' ) ) {
+			require_once AIME_PLUGIN_DIR . 'includes/class-cart-tracker.php';
+			$this->cart_tracker = new CartTracker();
+			$this->cart_tracker->init();
+		}
 
 		// Direct external server cron execution (?aime_cron=1&token=...).
 		if ( isset( $_GET['aime_cron'] ) && ! empty( $_GET['token'] ) ) {

@@ -4,7 +4,7 @@
  * fields when nothing is selected.
  */
 
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import ConfigFields from './ConfigFields';
 import { Button, SelectControl, TextControl, TextareaControl } from '../../common/WpComponents';
 import Notice from '../../common/Notice';
@@ -176,30 +176,51 @@ const ConfigPanel = ( {
 		return (
 			<div className="aime-wf-config">
 				{ backLink }
-				<h3 className="aime-wf-config__title">{ __( 'Trigger', 'ai-marketing-expert' ) }</h3>
-				<SelectControl
-					label={ __( 'When should this workflow run?', 'ai-marketing-expert' ) }
-					value={ triggerKey || 'schedule' }
-					options={ ( triggers || [] ).map( ( t ) => ( {
-						value: t.key,
-						label: t.available === false
-							? `${ t.label } (${ __( 'module inactive', 'ai-marketing-expert' ) })`
-							: t.label,
-					} ) ) }
-					onChange={ ( v ) => {
-						if ( v === 'schedule' ) {
-							setWorkflowField( { trigger_type: 'schedule', trigger_event: '', trigger_config: {} } );
-						} else {
-							setWorkflowField( { trigger_type: 'event', trigger_event: v, trigger_config: {} } );
-						}
-					} }
-				/>
-				{ triggerDef?.description && <p className="aime-wf-config__desc">{ triggerDef.description }</p> }
+				<div className="aime-wf-config__head">
+					<h3 className="aime-wf-config__title">{ __( 'Trigger Settings', 'ai-marketing-expert' ) }</h3>
+				</div>
+				<div className="aime-wf-trigger-group">
+					<SelectControl
+						label={ __( 'When should this workflow run?', 'ai-marketing-expert' ) }
+						value={ triggerKey || 'schedule' }
+						options={ ( triggers || [] ).map( ( t ) => {
+							let statusLabel = '';
+							if ( t.available === false ) {
+								const req = t.requires_label || t.requires_plugin;
+								statusLabel = req
+									? ` (${ sprintf( __( 'Requires %s — Not Installed', 'ai-marketing-expert' ), req ) })`
+									: ` (${ __( 'inactive', 'ai-marketing-expert' ) })`;
+							}
+							return {
+								value: t.key,
+								label: `${ t.label }${ statusLabel }`,
+							};
+						} ) }
+						onChange={ ( v ) => {
+							if ( v === 'schedule' ) {
+								setWorkflowField( { trigger_type: 'schedule', trigger_event: '', trigger_config: {} } );
+							} else {
+								setWorkflowField( { trigger_type: 'event', trigger_event: v, trigger_config: {} } );
+							}
+						} }
+					/>
+					{ triggerDef?.description && (
+						<p className="aime-wf-trigger-desc">{ triggerDef.description }</p>
+					) }
+				</div>
 				{ triggerDef && triggerDef.available === false && (
 					<Notice
-						type="warning"
+						type="error"
 						dismissible={ false }
-						message={ __( 'The module for this trigger is not active. The workflow will not fire until you enable it.', 'ai-marketing-expert' ) }
+						message={
+							triggerDef.requires_label || triggerDef.requires_plugin
+								? sprintf(
+									__( '⚠️ This trigger requires the %s plugin, which is not installed or active on this site. You can save this workflow as a draft, but it cannot be activated until %s is installed and activated.', 'ai-marketing-expert' ),
+									triggerDef.requires_label || triggerDef.requires_plugin,
+									triggerDef.requires_label || triggerDef.requires_plugin
+								)
+								: __( 'The module or plugin for this trigger is not active. The workflow cannot be activated until it is enabled.', 'ai-marketing-expert' )
+						}
 					/>
 				) }
 				{ workflow.trigger_type === 'schedule' ? (
@@ -294,7 +315,9 @@ const ConfigPanel = ( {
 	// -- Nothing selected: workflow-level settings -------------------------
 	return (
 		<div className="aime-wf-config">
-			<h3 className="aime-wf-config__title">{ __( 'Workflow settings', 'ai-marketing-expert' ) }</h3>
+			<div className="aime-wf-config__head">
+				<h3 className="aime-wf-config__title">{ __( 'Workflow settings', 'ai-marketing-expert' ) }</h3>
+			</div>
 			<TextControl
 				label={ __( 'Name', 'ai-marketing-expert' ) }
 				value={ workflow.name }

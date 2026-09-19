@@ -352,6 +352,22 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 
 == Changelog ==
 
+= 1.2.6 =
+* New: WooCommerce Abandoned Cart Recovery Engine — Real-time cart session tracking, guest checkout email capture via background AJAX, automated 15-minute cron inactivity detection, and encrypted 1-click cart restoration deep links directly to checkout.
+* New: Workflow Delay / Wait Step — Pause execution between automation nodes for seconds, minutes, hours, or days (e.g., Cart Abandoned -> Wait 1 Hour -> Send Recovery Email).
+* New: Direct Email Send Action — Dispatch instant, personalized emails with SMTP multi-connection rotation and dynamic workflow tokens ({event.recovery_url}, {event.customer_name}, {event.product_names}).
+* New: E-Commerce & Event Triggers — Added WooCommerce Cart Abandoned, WooCommerce Order Completed, User Registered, Approved Comment Posted, Contact Form 7 Submission, and Inbound Webhook triggers.
+* New: Text-to-Workflow AI Generator — Natural language automation builder allowing users to describe their marketing workflows in plain text (English or Bengali) with 8 built-in high-converting recipes.
+* New: E-Commerce & Lead Workflow Templates — Pre-built templates for Abandoned Cart Recovery, Post-Purchase Review Requests with timed delay, CF7 Lead Auto-Responders, and Inbound Webhook Ingestion.
+* New: Multi-Plugin SEO Postmeta Synchronization — Automatic 1-click synchronization of generated SEO Title, Meta Description, and Focus Keyword into Yoast SEO, Rank Math, and All-in-One SEO (AIOSEO), plus lightweight frontend meta fallback.
+* New: Contextual Internal Link Engine — Automatically discovers relevant published articles across your WordPress site and contextually injects natural internal links on publish.
+* New: B2B Lead Scraper & Verifier — Enhanced lead prospecting with on-site contact extraction and live DNS MX deliverability verification.
+* Improved: Content Generator Deep Humanize — Overhauled rewriter with strict structure protection to preserve Table of Contents (TOC), Quick Answer boxes, introductory paragraphs, and media elements without truncation or loss.
+* Improved: Settings Organization — Consolidated Automation toggles (Auto SEO Optimize, Auto Generate Meta, Auto Generate Excerpt, Auto Internal Linking) into the Generation tab under Advanced settings for a smoother single-screen experience.
+* Improved: Workflow Blog Post & Ad Copy Actions — Added Brand Voice selection, Content Presets, word count ceilings, multi-category taxonomy search, author assignment, and WooCommerce product rotation.
+* Improved: Facebook Publishing & Error #200 Hints — Explicit actionable guidance for Facebook permissions (pages_manage_posts, pages_read_engagement), Page Access Token detection, and separated Instagram validation.
+* Improved: Unified Smart Usage & Quota Meter — Real-time progress display for AI tokens, monthly runs, and feature quotas across module dashboards.
+
 = 1.2.5 =
 * New: B2B Lead Finder & Autopilot Pipeline — Discover, filter, and extract high-converting B2B prospects by role, industry, location, and company size with 1-click list collection and recurring autopilot sync.
 * New: LinkedIn Publishing & OAuth — Connect LinkedIn personal and organization accounts to schedule and publish AI-generated business updates and articles directly.
@@ -444,6 +460,9 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 * React-based unified admin dashboard
 
 == Upgrade Notice ==
+
+= 1.2.6 =
+Major Release: WooCommerce Abandoned Cart Recovery Engine with 1-click restore links, Workflow Wait/Delay step, AI Text-to-Workflow Generator, new E-Commerce triggers, multi-plugin SEO postmeta sync (Yoast/Rank Math/AIOSEO), Deep Humanize structure protection, and Facebook Error #200 hints. Recommended for all users.
 
 = 1.2.5 =
 Major Release: Brand new B2B Lead Finder & Autopilot Pipeline to discover and collect verified leads automatically, plus Dashboard widget 1-click chatbot deep links, inline human takeover shortcuts, IMAP bounce handling, and database maintenance improvements. Highly recommended for all users.

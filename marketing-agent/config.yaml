@@ -1,4 +1,4 @@
-﻿# Autonomous Marketing Agent Configuration - Multi-Platform Optimized
+# Autonomous Marketing Agent Configuration - Multi-Platform Optimized
 
 general:
   headless: false
@@ -23,43 +23,68 @@ limits:
   daily_max_x_follows: 2
   daily_max_ph_upvotes: 3
   daily_max_ph_comments: 1
+  daily_max_ph_follows: 3
   daily_max_reddit_comments: 3
   daily_max_fb_posts: 2
 
 facebook_pages:
   - name: "AI Marketing Expert"
     url: "https://www.facebook.com/profile.php?id=61589222139426"
+    niche: "ai_marketing"
     language: "english"
     comment_links:
       - "https://wordpress.org/plugins/ai-marketing-expert/"
       - "https://wpthemespace.com/ai-marketing-expert/"
       - "https://wpthemespace.com/product/ai-marketing-expert/"
+    targeting:
+      page_queries:
+        - "WordPress Marketing"
+        - "WordPress Web Agency"
+        - "WordPress SEO"
+        - "WooCommerce Growth"
+      post_queries:
+        - "#WordPress marketing"
+        - "wordpress email marketing"
+        - "wordpress seo tips"
+        - "woocommerce abandoned cart"
+        - "wordpress ai automation"
+      group_queries:
+        - "WordPress Developers"
+        - "WordPress Marketing & SEO"
+        - "WooCommerce Store Owners"
+        - "WordPress Speed & Growth"
 
-facebook_targeting:
-  group_search_queries:
-    - "WordPress Developers"
-    - "WordPress Speed Optimization"
-    - "Elementor Community"
-    - "WordPress Plugins & Themes"
-    - "WordPress SEO & Marketing"
-  post_search_queries:
-    - "#WordPress web design"
-    - "wordpress email marketing"
-    - "wordpress seo tips"
-    - "wordpress speed optimization"
-  page_networking_queries:
-    - "WordPress Web Agency"
-    - "WordPress Developer"
+  - name: "টুকটুকি ওয়ার্ল্ড"
+    url: "https://www.facebook.com/profile.php?id=61589064776882"
+    niche: "parenting_kids"
+    language: "bangla"
+    comment_links: []
+    targeting:
+      page_queries:
+        - "Parenting BD"
+        - "শিশু যত্ন"
+        - "Baby Care Bangladesh"
+        - "বাচ্চাদের খেলনা"
+        - "গর্ভবতী মায়ের যত্ন"
+      post_queries:
+        - "প্যারেন্টিং টিপস"
+        - "শিশুর সঠিক বিকাশ"
+        - "বাচ্চাদের খেলাধুলা"
+        - "গর্ভবতী মায়ের যত্ন"
+      group_queries:
+        - "Parenting in Bangladesh"
+        - "মায়ের যত্ন ও শিশু স্বাস্থ্য"
+        - "Babies & Moms BD"
 
 reddit_targeting:
   # Safe Subreddits for Zero-Karma & Early Stage Accounts (No instant auto-mod removal)
   subreddits:
-    - "WordPressPlugins"
+    - "SideProject"
     - "webdev"
     - "Wordpress"
-    - "SideProject"
-    - "Entrepreneur"
+    - "WordPressPlugins"
     - "web_design"
+    - "EntrepreneurRideAlong"
 
 x_targeting:
   search_queries:

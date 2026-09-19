@@ -39,12 +39,18 @@ const EXHAUSTED_STYLE = {
 	border: '1px solid #f0c33c',
 };
 
-const UsageNotice = ( { usage, featureLabel, proUrl, kind = 'monthly' } ) => {
+const UsageNotice = ( { usage, featureLabel, proUrl, kind = 'monthly', hideWhenZero = true } ) => {
 	if ( ! usage || usage.limit == null ) {
 		return null;
 	}
 
 	const used = usage.used || 0;
+
+	// Progressive disclosure: hide the quota notice on clean zero states
+	if ( hideWhenZero && used <= 0 ) {
+		return null;
+	}
+
 	const left = Math.max( 0, usage.limit - used );
 
 	if ( left > 0 ) {
@@ -54,19 +60,17 @@ const UsageNotice = ( { usage, featureLabel, proUrl, kind = 'monthly' } ) => {
 				<span>
 					{ kind === 'storage'
 						? sprintf(
-							/* translators: 1: rows used, 2: row limit, 3: feature name, 4: rows remaining */
-							__( 'Free plan: %1$d of %2$d %3$s used, %4$d left.', 'ai-marketing-expert' ),
-							used,
+							/* translators: 1: rows remaining, 2: row limit, 3: feature name */
+							__( 'Free plan: %1$d of %2$d %3$s remaining.', 'ai-marketing-expert' ),
+							left,
 							usage.limit,
-							featureLabel,
-							left
+							featureLabel
 						)
 						: sprintf(
-							/* translators: 1: uses spent, 2: monthly limit, 3: uses remaining */
-							__( 'Free plan: %1$d of %2$d uses this month, %3$d left.', 'ai-marketing-expert' ),
-							used,
-							usage.limit,
-							left
+							/* translators: 1: uses remaining, 2: monthly limit */
+							__( 'Free plan: %1$d of %2$d uses remaining this month.', 'ai-marketing-expert' ),
+							left,
+							usage.limit
 						)
 					}
 				</span>

@@ -125,11 +125,23 @@ export const flowToSteps = ( nodes, edges ) => {
  * @param {Array}  edges         Canvas edges.
  * @param {Object} actionsByType Optional map of action type → action def (for required fields).
  */
-export const validate = ( nodes, edges, actionsByType = {} ) => {
+export const validate = ( nodes, edges, actionsByType = {}, triggers = [], workflow = null ) => {
 	const issues = [];
-	const triggers = ( nodes || [] ).filter( ( n ) => n.id === 'trigger' || n.type === 'trigger' );
-	if ( triggers.length !== 1 ) {
+	const triggerNodes = ( nodes || [] ).filter( ( n ) => n.id === 'trigger' || n.type === 'trigger' );
+	if ( triggerNodes.length !== 1 ) {
 		issues.push( { nodeId: null, message: 'The workflow must have exactly one trigger.' } );
+	}
+
+	// Trigger dependency check (e.g. WooCommerce or Contact Form 7 not installed).
+	if ( workflow && workflow.trigger_type === 'event' && workflow.trigger_event ) {
+		const trigDef = ( triggers || [] ).find( ( t ) => t.key === workflow.trigger_event );
+		if ( trigDef && trigDef.available === false ) {
+			const req = trigDef.requires_label || trigDef.requires_plugin || 'required plugin';
+			issues.push( {
+				nodeId: 'trigger',
+				message: `Trigger requires ${ req }, which is not installed or active.`,
+			} );
+		}
 	}
 
 	// Max one inbound edge per node (tree constraint).
@@ -179,9 +191,15 @@ export const validate = ( nodes, edges, actionsByType = {} ) => {
 		if ( ! visited.has( n.id ) ) {
 			issues.push( { nodeId: n.id, message: 'This step is not connected to the trigger.' } );
 		}
-		// Required config fields.
+		// Required config fields & action availability.
 		const step = n.data?.step;
 		const def = step ? actionsByType[ step.action_type ] : null;
+		if ( def && def.available === false ) {
+			issues.push( {
+				nodeId: n.id,
+				message: `Action "${ def.label || step.action_type }" requires an inactive module or plugin.`,
+			} );
+		}
 		( def?.fields || [] ).forEach( ( f ) => {
 			if ( ! f.required ) {
 				return;
@@ -227,7 +245,10 @@ export const autoLayout = ( nodes, edges ) => {
 	};
 	place( 'trigger', 0, 0 );
 
-	return ( nodes || [] ).map( ( n ) =>
+	const result = ( nodes || [] ).map( ( n ) =>
 		positions[ n.id ] ? { ...n, position: positions[ n.id ] } : n
 	);
+	result.nodes = result;
+	result.edges = edges || [];
+	return result;
 };

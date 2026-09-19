@@ -971,6 +971,85 @@
 	border-radius: 4px;
 }
 
+// Smart Usage Meter (Progressive Disclosure UX)
+.aime-smart-meter {
+	margin-bottom: 16px;
+	padding: 12px 16px;
+	background: #ffffff;
+	border: 1px solid var(--aime-border-light, #e2e8f0);
+	border-radius: var(--aime-radius-sm, 6px);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+		font-size: 13px;
+	}
+
+	&__label {
+		font-weight: 600;
+		color: var(--aime-text, #1e293b);
+	}
+
+	&__remaining {
+		color: var(--aime-text-light, #64748b);
+		font-size: 12px;
+	}
+
+	&__track {
+		width: 100%;
+		height: 6px;
+		background: #f1f5f9;
+		border-radius: 3px;
+		overflow: hidden;
+	}
+
+	&__fill {
+		height: 100%;
+		border-radius: 3px;
+		transition: width 0.4s ease;
+
+		&.is-normal {
+			background: #2563eb;
+		}
+		&.is-warning {
+			background: #f59e0b;
+		}
+		&.is-danger {
+			background: #ef4444;
+		}
+	}
+
+	&__footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 10px;
+		padding-top: 8px;
+		border-top: 1px dashed var(--aime-border-light, #e2e8f0);
+		font-size: 12px;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+
+	&__tip {
+		color: var(--aime-text-light, #64748b);
+		flex: 1;
+	}
+
+	&.is-warning {
+		border-color: #fde68a;
+		background: #fffdf5;
+	}
+
+	&.is-blocked {
+		border-color: #fecaca;
+		background: #fffbfb;
+	}
+}
+
 // Notices
 .aime-notice {
 	padding: 12px 16px;
@@ -12199,6 +12278,50 @@ input.aime-premium-input[type=color]
 			margin-bottom: 0;
 		}
 	}
+
+	.aime-card-body {
+		.aime-form-field {
+			margin-bottom: 18px;
+		}
+
+		> .components-base-control {
+			margin-bottom: 16px;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+
+	.aime-form-field {
+		margin-bottom: 18px;
+	}
+
+	.aime-structure-toggles {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 12px;
+		margin: 16px 0;
+		padding: 12px 16px;
+		background: var(--aime-bg, #f8fafc);
+		border: 1px solid var(--aime-border, #e2e8f0);
+		border-radius: var(--aime-radius-sm, 6px);
+
+		.components-base-control {
+			margin-bottom: 0 !important;
+		}
+
+		.components-toggle-control .components-base-control__field {
+			margin-bottom: 0 !important;
+		}
+
+		.components-base-control__help {
+			font-size: 11.5px;
+			margin-top: 3px;
+			color: var(--aime-text-muted, #64748b);
+			line-height: 1.4;
+		}
+	}
 }
 
 .aime-content-editor-grid {
@@ -12771,6 +12894,58 @@ input.aime-premium-input[type=color]
 		font-size: 13px;
 		cursor: pointer;
 	}
+
+	.aime-version-list {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin-top: 4px;
+	}
+
+	.aime-version-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 10px 14px;
+		background: var(--aime-bg, #f8fafc);
+		border: 1px solid var(--aime-border, #e2e8f0);
+		border-radius: var(--aime-radius-sm, 6px);
+		gap: 12px;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+		&:hover {
+			border-color: var(--aime-primary, #3b82f6);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		}
+	}
+
+	.aime-version-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.aime-version-label {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--aime-text, #1e293b);
+		line-height: 1.3;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.aime-version-time {
+		font-size: 11px;
+		color: var(--aime-text-light, #64748b);
+		line-height: 1.3;
+	}
+
+	.aime-version-btn {
+		flex-shrink: 0;
+	}
 }
 
 // ── Presets / Brand Voices card grid ──────────────────────
@@ -12883,6 +13058,50 @@ input.aime-premium-input[type=color]
 		font-weight: 600;
 		color: var(--aime-text);
 		margin-bottom: 16px;
+	}
+
+	.aime-automation-toggles {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		max-width: 680px;
+		margin-bottom: 24px;
+	}
+
+	.aime-toggle-card {
+		padding: 16px 20px;
+		background: var(--aime-card-bg, #ffffff);
+		border: 1px solid var(--aime-border, #e2e8f0);
+		border-radius: var(--aime-radius-sm, 8px);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+		&:hover {
+			border-color: var(--aime-primary, #3b82f6);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		}
+
+		.components-base-control {
+			margin-bottom: 0 !important;
+		}
+
+		.components-toggle-control .components-base-control__field {
+			margin-bottom: 0 !important;
+		}
+
+		.components-base-control__label {
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--aime-text, #1e293b);
+		}
+
+		.components-base-control__help {
+			margin-top: 6px;
+			margin-bottom: 0;
+			font-size: 12.5px;
+			color: var(--aime-text-muted, #64748b);
+			line-height: 1.45;
+		}
 	}
 }
 
@@ -14850,6 +15069,16 @@ input.aime-premium-input[type=color]
 	padding-bottom: 22px;
 }
 
+.aime-wf-node--invalid {
+	border-color: var(--aime-danger, #c62828) !important;
+	background: rgba(198, 40, 40, 0.06) !important;
+
+	.aime-wf-node__summary {
+		color: var(--aime-danger, #c62828);
+		font-weight: 500;
+	}
+}
+
 .aime-wf-node__icon {
 	font-size: 20px;
 	line-height: 1;
@@ -15289,7 +15518,7 @@ input.aime-premium-input[type=color]
 		font-size: 13px;
 		line-height: 1.5;
 		color: var(--aime-text-light);
-		margin: 8px 0 0;
+		margin: 0 0 16px;
 	}
 
 	&__hint {
@@ -15300,6 +15529,29 @@ input.aime-premium-input[type=color]
 		background: var(--aime-bg-subtle);
 		border-radius: var(--aime-radius-sm);
 		border-left: 3px solid var(--aime-primary-light);
+	}
+
+	.aime-wf-trigger-group {
+		margin-bottom: 20px;
+
+		.components-base-control {
+			margin-bottom: 8px;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+
+	.aime-wf-trigger-desc {
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--aime-text-light);
+		margin: 0;
+		padding: 8px 12px;
+		background: var(--aime-bg-subtle);
+		border-radius: var(--aime-radius-sm);
+		border-left: 3px solid var(--aime-accent, #2E7D32);
 	}
 
 	// Add spacing between form fields
@@ -15686,6 +15938,274 @@ input.aime-premium-input[type=color]
 	font-size: 11px;
 	color: #1d2327;
 	white-space: nowrap;
+}
+
+/* AI Autopilot button */
+.aime-btn-ai-autopilot {
+	background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%) !important;
+	color: #ffffff !important;
+	border: none !important;
+	font-weight: 600 !important;
+	box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25) !important;
+	transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+
+	&:hover:not(:disabled) {
+		background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%) !important;
+		box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35) !important;
+		transform: translateY(-1px);
+	}
+
+	&:active:not(:disabled) {
+		transform: translateY(0);
+	}
+}
+
+/* AI Template Card in TemplatePicker */
+.aime-wf-template-card--ai {
+	border-color: #8b5cf6 !important;
+	background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%) !important;
+	position: relative;
+	overflow: hidden;
+
+	strong {
+		color: #6d28d9 !important;
+	}
+
+	&::after {
+		content: 'AI';
+		position: absolute;
+		top: 10px;
+		right: 12px;
+		background: #ede9fe;
+		color: #7c3aed;
+		font-size: 10px;
+		font-weight: 700;
+		padding: 2px 6px;
+		border-radius: 4px;
+		letter-spacing: 0.5px;
+	}
+
+	&:hover {
+		border-color: #7c3aed !important;
+		box-shadow: 0 4px 14px rgba(124, 58, 237, 0.18) !important;
+	}
+}
+
+/* AI Workflow Modal */
+.aime-ai-wf-modal {
+	max-width: 680px;
+
+	.components-modal__content {
+		padding: 0 28px 24px;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	&__subtitle {
+		margin: 0 0 16px;
+		font-size: 13px;
+		line-height: 1.5;
+		color: var(--aime-text-muted, #64748b);
+	}
+
+	&__section {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	&__label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--aime-text, #1e293b);
+	}
+
+	.aime-ai-wf-recipes {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		max-height: 210px;
+		overflow-y: auto;
+		padding: 4px 2px;
+	}
+
+	.aime-ai-wf-recipe-chip {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		padding: 8px 12px;
+		border: 1px solid var(--aime-border, #e2e8f0);
+		border-radius: 6px;
+		background: #ffffff;
+		text-align: left;
+		cursor: pointer;
+		font-size: 12.5px;
+		transition: all 0.15s ease;
+
+		&:hover {
+			border-color: #a78bfa;
+			background: #fdfcff;
+			transform: translateX(2px);
+		}
+
+		&.is-selected {
+			border-color: #7c3aed;
+			background: #f5f3ff;
+			box-shadow: 0 0 0 1px #7c3aed;
+		}
+
+		&__icon {
+			font-size: 16px;
+			line-height: 1;
+			flex-shrink: 0;
+		}
+
+		&__text {
+			flex: 1;
+			font-weight: 600;
+			color: var(--aime-text, #1e293b);
+		}
+
+		&__badge {
+			font-size: 10.5px;
+			font-weight: 500;
+			padding: 2px 7px;
+			border-radius: 4px;
+			background: #f1f5f9;
+			color: #475569;
+			flex-shrink: 0;
+		}
+	}
+
+	.aime-ai-wf-modal__textarea {
+		margin-bottom: 0;
+
+		textarea {
+			min-height: 90px;
+			font-size: 13px;
+			line-height: 1.5;
+			border-radius: 6px;
+			border-color: var(--aime-border, #cbd5e1);
+
+			&:focus {
+				border-color: #7c3aed;
+				box-shadow: 0 0 0 1px #7c3aed;
+			}
+		}
+	}
+
+	.aime-ai-wf-guide {
+		margin-top: 8px;
+		padding: 10px 12px;
+		background: #f8fafc;
+		border: 1px solid #e2e8f0;
+		border-radius: 6px;
+		font-size: 11.5px;
+		line-height: 1.45;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+
+		&__row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		&__tag {
+			font-weight: 600;
+			color: #475569;
+			background: #e2e8f0;
+			padding: 1px 6px;
+			border-radius: 4px;
+			font-size: 11px;
+		}
+
+		&__formula {
+			font-family: monospace;
+			font-size: 11.5px;
+			color: #0f766e;
+			background: #f0fdfa;
+			padding: 2px 6px;
+			border-radius: 4px;
+			border: 1px solid #ccfbf1;
+		}
+
+		&__grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+			padding-top: 4px;
+			border-top: 1px dashed #e2e8f0;
+
+			@media (max-width: 600px) {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		&__item {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		&__item-title {
+			font-weight: 600;
+			color: #334155;
+			font-size: 11px;
+		}
+
+		&__item-desc {
+			color: #64748b;
+			font-size: 11px;
+		}
+
+		&__hint {
+			margin-top: 2px;
+			font-size: 11px;
+			color: #854d0e;
+			background: #fefce8;
+			border: 1px solid #fef08a;
+			padding: 4px 8px;
+			border-radius: 4px;
+		}
+	}
+
+	&__status {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 14px;
+		margin-top: 12px;
+		border-radius: 6px;
+		background: #f5f3ff;
+		border: 1px solid #ddd6fe;
+		color: #6d28d9;
+		font-size: 12.5px;
+		font-weight: 500;
+	}
+
+	&__spinner {
+		width: 16px;
+		height: 16px;
+		border: 2px solid #ddd6fe;
+		border-top-color: #7c3aed;
+		border-radius: 50%;
+		animation: aime-spin 0.8s linear infinite;
+		flex-shrink: 0;
+	}
+}
+
+@keyframes aime-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 // ── AI Usage & Cost panel (AI Providers → Usage & Cost) ───
