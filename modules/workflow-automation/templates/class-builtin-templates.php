@@ -84,16 +84,26 @@ class BuiltinTemplates {
 			),
 		);
 
+		$cutoff_min = (int) ( ( get_option( 'aime_settings', array() )['woo_cart_cutoff_minutes'] ?? 0 ) ?: 30 );
+
 		$templates['woo_cart_recovery'] = array(
 			'name'             => __( 'WooCommerce Cart Recovery', 'ai-marketing-expert' ),
-			'description'      => __( 'When a customer abandons their WooCommerce cart, sends a personalized recovery email with their 1-click restore link and notifies your team.', 'ai-marketing-expert' ),
+			'description'      => sprintf(
+				/* translators: %d: minutes of inactivity */
+				__( 'When a customer abandons their WooCommerce cart (after %d minutes of inactivity), sends a personalized recovery email with their 1-click restore link and notifies your team.', 'ai-marketing-expert' ),
+				$cutoff_min
+			),
 			'icon'             => 'shopping-cart',
 			'is_pro'           => false,
 			'requires_plugin'  => 'woocommerce',
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'WooCommerce Cart Recovery', 'ai-marketing-expert' ),
-				'description'   => __( 'Automatic abandoned cart recovery with 1-click restore link and store alert.', 'ai-marketing-expert' ),
+				'description'   => sprintf(
+					/* translators: %d: minutes of inactivity */
+					__( 'Automatic abandoned cart recovery (triggers after %d minutes of inactivity) with 1-click restore link and store alert.', 'ai-marketing-expert' ),
+					$cutoff_min
+				),
 				'trigger_type'  => 'event',
 				'trigger_event' => 'woo_cart_abandoned',
 			),

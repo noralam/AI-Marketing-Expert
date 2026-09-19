@@ -285,8 +285,31 @@ const WorkflowList = ( { onNavigate } ) => {
 												</span>
 											</div>
 										) }
-										{ wf.description && (
-											<span className="aime-table-sub">{ wf.description }</span>
+										{ ( wf.description || wf.trigger_event === 'woo_cart_abandoned' ) && (
+											<span className="aime-table-sub">
+												{ wf.description }
+												{ wf.trigger_event === 'woo_cart_abandoned' && (
+													<span
+														className="aime-wf-cutoff-badge"
+														style={ {
+															display: 'inline-flex',
+															alignItems: 'center',
+															gap: '4px',
+															marginLeft: wf.description ? '6px' : '0',
+															fontSize: '11px',
+															color: '#0369a1',
+															background: '#e0f2fe',
+															padding: '1px 7px',
+															borderRadius: '4px',
+															fontWeight: 600,
+															verticalAlign: 'middle',
+														} }
+														title={ sprintf( __( 'Inactivity cutoff time before sending recovery email: %d minutes. Change this in Settings > General.', 'ai-marketing-expert' ), wf.woo_cart_cutoff_minutes || window.aimeData?.wooCartCutoffMinutes || 30 ) }
+													>
+														⏱️ { sprintf( __( 'Triggers after %d mins of inactivity', 'ai-marketing-expert' ), wf.woo_cart_cutoff_minutes || window.aimeData?.wooCartCutoffMinutes || 30 ) }
+													</span>
+												) }
+											</span>
 										) }
 									</td>
 									<td>

@@ -207,6 +207,26 @@ const ConfigPanel = ( {
 					{ triggerDef?.description && (
 						<p className="aime-wf-trigger-desc">{ triggerDef.description }</p>
 					) }
+					{ ( triggerKey === 'woo_cart_abandoned' || workflow.trigger_event === 'woo_cart_abandoned' ) && (
+						<div
+							style={ {
+								marginTop: 8,
+								padding: '8px 12px',
+								background: '#f0f9ff',
+								border: '1px solid #bae6fd',
+								borderRadius: '6px',
+								fontSize: '12px',
+								color: '#0369a1',
+								lineHeight: 1.5,
+							} }
+						>
+							<strong>⏱️ { __( 'Inactivity Cutoff:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+							{ sprintf(
+								__( 'This workflow automatically runs after %d minutes of inactivity on checkout/cart. You can change this in Settings > General.', 'ai-marketing-expert' ),
+								workflow.woo_cart_cutoff_minutes || window.aimeData?.wooCartCutoffMinutes || 30
+							) }
+						</div>
+					) }
 				</div>
 				{ triggerDef && triggerDef.available === false && (
 					<Notice
@@ -327,6 +347,7 @@ const ConfigPanel = ( {
 				label={ __( 'Description', 'ai-marketing-expert' ) }
 				value={ workflow.description }
 				onChange={ ( v ) => setWorkflowField( { description: v } ) }
+				help={ workflow.trigger_event === 'woo_cart_abandoned' ? sprintf( __( '⏱️ Runs after %d minutes of inactivity on checkout/cart (configured in Settings > General).', 'ai-marketing-expert' ), workflow.woo_cart_cutoff_minutes || window.aimeData?.wooCartCutoffMinutes || 30 ) : undefined }
 			/>
 			<TextControl
 				label={ __( 'Default topic', 'ai-marketing-expert' ) }

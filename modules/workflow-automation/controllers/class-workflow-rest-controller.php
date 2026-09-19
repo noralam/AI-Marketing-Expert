@@ -1009,6 +1009,7 @@ class WorkflowRestController {
 			'next_run_at'    => $w->next_run_at,
 			'last_run_at'    => $w->last_run_at,
 			'run_count'      => (int) $w->run_count,
+			'woo_cart_cutoff_minutes' => (int) ( ( get_option( 'aime_settings', array() )['woo_cart_cutoff_minutes'] ?? 0 ) ?: 30 ),
 		);
 	}
 
