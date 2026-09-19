@@ -190,6 +190,9 @@ Recover lost store revenue automatically without paying for separate expensive S
 * **Guest Checkout AJAX Capture** — Automatically captures guest email, name, and phone in the background the moment they type into checkout fields—before an order is placed.
 * **Automated Inactivity Detection** — Scheduled 15-minute WP-Cron evaluates inactive sessions (configurable, default 30 mins) and marks them as abandoned.
 * **1-Click Cart Restoration Deep Links** — Generates encrypted restoration links (`{event.recovery_url}`) that reload items, variations, and quantities in 1-click and direct shoppers straight to checkout.
+* **1-Click Single-Quantity Checkout** — Automatically detects accidental duplicate quantities (`cart_type: duplicate_qty`) and provides a 1-click deep link (`{event.single_qty_url}`) to complete checkout with just 1 item without manual cart editing.
+* **1-Click Single-Item Checkout Links** — For carts with multiple products (`cart_type: multiple_items`), generates individual 1-click direct checkout links (`{event.single_item_links}`) so shoppers can easily purchase just the item they want most.
+* **Smart Cart Type Branching** — Branch workflows based on cart contents (`single_item`, `duplicate_qty`, `multiple_items`) with pre-built smart templates and AI text-to-workflow recipes.
 * **Order Recovery Detection** — Automatically detects when a customer completes their order, marking carts as recovered and attributing recovered revenue.
 * **Universal Workflow Integration** — Seamlessly triggers automated recovery email sequences, discount offers, and store manager alerts via Workflow Automation.
 

@@ -690,6 +690,7 @@ class WorkflowAutomationModule extends Module {
 						array( 'value' => 'previous_step_succeeded', 'label' => __( 'Previous step succeeded', 'ai-marketing-expert' ) ),
 						array( 'value' => 'previous_output_contains', 'label' => __( 'Previous output contains…', 'ai-marketing-expert' ) ),
 						array( 'value' => 'event_field_contains', 'label' => __( 'Event field contains…', 'ai-marketing-expert' ) ),
+						array( 'value' => 'event_field_equals', 'label' => __( 'Event field equals…', 'ai-marketing-expert' ) ),
 						array( 'value' => 'reference_compare', 'label' => __( 'Numeric compare on a step result (score ≥ 80…)', 'ai-marketing-expert' ) ),
 					),
 				),
@@ -1009,8 +1010,12 @@ class WorkflowAutomationModule extends Module {
 				array( 'key' => 'cart_total', 'label' => __( 'Cart total', 'ai-marketing-expert' ) ),
 				array( 'key' => 'currency', 'label' => __( 'Currency', 'ai-marketing-expert' ) ),
 				array( 'key' => 'items_count', 'label' => __( 'Items count', 'ai-marketing-expert' ) ),
+				array( 'key' => 'distinct_items_count', 'label' => __( 'Distinct items count', 'ai-marketing-expert' ) ),
+				array( 'key' => 'cart_type', 'label' => __( 'Cart type (single_item / duplicate_qty / multiple_items)', 'ai-marketing-expert' ) ),
 				array( 'key' => 'product_names', 'label' => __( 'Product names', 'ai-marketing-expert' ) ),
-				array( 'key' => 'recovery_url', 'label' => __( 'Cart restore link', 'ai-marketing-expert' ) ),
+				array( 'key' => 'recovery_url', 'label' => __( 'Cart restore link (all items)', 'ai-marketing-expert' ) ),
+				array( 'key' => 'single_qty_url', 'label' => __( 'Single-quantity checkout link', 'ai-marketing-expert' ) ),
+				array( 'key' => 'single_item_links', 'label' => __( 'Individual item checkout links (HTML)', 'ai-marketing-expert' ) ),
 			),
 			'fields'          => array(
 				array(

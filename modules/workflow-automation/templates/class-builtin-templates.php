@@ -132,6 +132,84 @@ class BuiltinTemplates {
 			),
 		);
 
+		$templates['woo_smart_cart_recovery'] = array(
+			'name'             => __( 'WooCommerce Smart Cart Recovery (Branching & Single-Item Checkout)', 'ai-marketing-expert' ),
+			'description'      => sprintf(
+				/* translators: %d: minutes of inactivity */
+				__( 'Adaptive abandoned cart recovery (triggers after %d minutes of inactivity). Detects duplicate quantities or multiple products, offering direct 1-click single-item purchase links to eliminate checkout friction.', 'ai-marketing-expert' ),
+				$cutoff_min
+			),
+			'icon'             => 'shopping-cart',
+			'is_pro'           => true,
+			'requires_plugin'  => 'woocommerce',
+			'requires_modules' => array( 'email-marketing' ),
+			'workflow'         => array(
+				'name'          => __( 'WooCommerce Smart Cart Recovery', 'ai-marketing-expert' ),
+				'description'   => sprintf(
+					/* translators: %d: minutes of inactivity */
+					__( 'Smart abandoned cart recovery (triggers after %d minutes of inactivity) with automatic branching for duplicate quantities and 1-click single-item checkout.', 'ai-marketing-expert' ),
+					$cutoff_min
+				),
+				'trigger_type'  => 'event',
+				'trigger_event' => 'woo_cart_abandoned',
+			),
+			'steps'            => array(
+				array(
+					'key'         => 'check_cart_type',
+					'parent_key'  => '',
+					'branch'      => 'default',
+					'action_type' => 'condition',
+					'config'      => array(
+						'check' => 'event_field_equals',
+						'field' => 'cart_type',
+						'value' => 'duplicate_qty',
+					),
+				),
+				array(
+					'key'         => 'duplicate_qty_recovery_email',
+					'parent_key'  => 'check_cart_type',
+					'branch'      => 'yes',
+					'action_type' => 'send_email',
+					'config'      => array(
+						'to'      => '{event.email}',
+						'subject' => __( 'Did you mean to add just 1 item, {event.customer_name}?', 'ai-marketing-expert' ),
+						'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left {event.product_names} in your cart with multiple quantities (Total: {event.cart_total} {event.currency}).\n\nIf you only wanted a SINGLE item, no need to manually remove extras — simply click below to check out directly with 1 item:\n👉 Buy 1 Item (1-Click): {event.single_qty_url}\n\nOr if you would like to restore your entire cart:\n👉 Restore Full Cart: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+					),
+				),
+				array(
+					'key'         => 'multi_or_single_recovery_email',
+					'parent_key'  => 'check_cart_type',
+					'branch'      => 'no',
+					'action_type' => 'send_email',
+					'config'      => array(
+						'to'      => '{event.email}',
+						'subject' => __( 'Did you leave something behind, {event.customer_name}?', 'ai-marketing-expert' ),
+						'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left some great items in your cart ({event.product_names}) for a total of {event.cart_total} {event.currency}.\n\nDon't worry, we saved everything for you!\n\n👉 Restore Full Cart: {event.recovery_url}\n\nPrefer to purchase just one of the items? Click below to check out with that specific item in 1-click:\n{event.single_item_links}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+					),
+				),
+				array(
+					'key'         => 'notify_admin_dup',
+					'parent_key'  => 'duplicate_qty_recovery_email',
+					'branch'      => 'default',
+					'action_type' => 'send_notification',
+					'config'      => array(
+						'subject' => __( 'Abandoned Cart Alert (Duplicate Qty): {event.customer_name}', 'ai-marketing-expert' ),
+						'body'    => __( "A customer abandoned their cart with duplicate quantities.\n\nCustomer: {event.customer_name}\nEmail: {event.email}\nTotal: {event.cart_total} {event.currency}\nItems: {event.product_names}\n\nA single-quantity 1-click recovery email was automatically sent.", 'ai-marketing-expert' ),
+					),
+				),
+				array(
+					'key'         => 'notify_admin_standard',
+					'parent_key'  => 'multi_or_single_recovery_email',
+					'branch'      => 'default',
+					'action_type' => 'send_notification',
+					'config'      => array(
+						'subject' => __( 'Abandoned Cart Alert: {event.customer_name} ({event.cart_total} {event.currency})', 'ai-marketing-expert' ),
+						'body'    => __( "A customer abandoned their cart.\n\nCustomer: {event.customer_name}\nEmail: {event.email}\nTotal: {event.cart_total} {event.currency}\nItems: {event.product_names}\n\nA smart recovery email with individual item restore links was automatically sent.", 'ai-marketing-expert' ),
+					),
+				),
+			),
+		);
+
 		$templates['inbound_webhook_lead'] = array(
 			'name'             => __( 'Inbound Webhook Lead Processor', 'ai-marketing-expert' ),
 			'description'      => __( 'Receives leads from external forms or webhooks, enrolls them into an email funnel, and notifies your team.', 'ai-marketing-expert' ),

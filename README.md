@@ -147,6 +147,9 @@ Recover lost store sales automatically without paying for separate high-cost Saa
 - **Guest Checkout AJAX Capture** — Automatically captures guest email, name, and phone number in the background the moment they type into checkout fields.
 - **Background Inactivity Detection** — Automated WP-Cron detects inactive sessions (configurable, default 30 mins) and marks them as abandoned.
 - **1-Click Cart Restoration Deep Links** — Generates encrypted restoration links (`{event.recovery_url}`) that reload items, variations, and quantities in 1-click and direct shoppers straight to checkout.
+- **1-Click Single-Quantity Checkout (`{event.single_qty_url}`)** — Automatically detects accidental duplicate quantities (`cart_type: duplicate_qty`) and provides a 1-click deep link to complete checkout with just 1 item, removing buying hesitation without needing manual cart adjustments.
+- **1-Click Single-Item Checkout Links (`{event.single_item_links}`)** — For carts with multiple items (`cart_type: multiple_items`), provides individual 1-click checkout links to allow customers to buy any single product directly.
+- **Smart Cart Branching & AI Autopilot** — Seamlessly branch recovery flows based on cart composition (single item, duplicate quantity, multiple items) using conditional logic and the AI Workflow Autopilot generator.
 - **Order Recovery Detection** — Automatically detects when a customer completes their order, marking carts as `recovered` and attributing recovered revenue.
 - **Universal Workflow Integration** — Fires `WooCommerce Cart Abandoned` and `WooCommerce Order Completed` events into Workflow Automation for personalized email sequences.
 

@@ -528,32 +528,71 @@ class CartTracker {
 			$cart_items = json_decode( (string) $row->cart_contents, true );
 			$cart_items = is_array( $cart_items ) ? $cart_items : array();
 
-			$product_names = array();
+			$product_names          = array();
+			$total_quantity         = 0;
+			$distinct_items_count   = count( $cart_items );
+			$single_item_links_list = array();
+
 			foreach ( $cart_items as $item ) {
-				if ( ! empty( $item['name'] ) ) {
-					$product_names[] = $item['name'];
+				$p_name  = (string) ( $item['name'] ?? '' );
+				$p_qty   = max( 1, absint( $item['quantity'] ?? 1 ) );
+				$p_price = (float) ( $item['price'] ?? 0 );
+				$p_id    = absint( $item['variation_id'] ?? 0 ) ?: absint( $item['product_id'] ?? 0 );
+
+				if ( ! empty( $p_name ) ) {
+					$product_names[] = $p_name;
+				}
+				$total_quantity += $p_qty;
+
+				if ( $p_id > 0 ) {
+					$item_url   = $this->get_recovery_url( (string) $row->recovery_token, array( 'item_id' => $p_id, 'qty' => 1 ) );
+					$price_text = $p_price > 0 && function_exists( 'wc_price' ) ? ' (' . wp_strip_all_tags( wc_price( $p_price ) ) . ')' : '';
+					$single_item_links_list[] = sprintf( '• %s%s: %s', $p_name, $price_text, $item_url );
 				}
 			}
 
-			$recovery_url = $this->get_recovery_url( $row->recovery_token );
+			// Classify cart structure for smart branching & recovery:
+			// 1. duplicate_qty: Exactly 1 distinct product, but quantity > 1 (accidental extra quantity)
+			// 2. multiple_items: 2 or more distinct products added
+			// 3. single_item: Exactly 1 distinct product with quantity 1
+			if ( $distinct_items_count === 1 && $total_quantity > 1 ) {
+				$cart_type = 'duplicate_qty';
+			} elseif ( $distinct_items_count > 1 ) {
+				$cart_type = 'multiple_items';
+			} else {
+				$cart_type = 'single_item';
+			}
+
+			$recovery_url   = $this->get_recovery_url( (string) $row->recovery_token );
+			$single_qty_url = ( $total_quantity > 1 )
+				? $this->get_recovery_url( (string) $row->recovery_token, array( 'qty' => 1 ) )
+				: $recovery_url;
+
+			$single_item_links_text = implode( "\n", $single_item_links_list );
 
 			// Build standardized payload for workflows.
 			$payload = array(
-				'cart_id'        => (int) $row->id,
-				'cart_token'     => (string) $row->cart_token,
-				'recovery_token' => (string) $row->recovery_token,
-				'user_id'        => (int) $row->user_id,
-				'customer_email' => (string) $row->email,
-				'email'          => (string) $row->email,
-				'customer_name'  => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
-				'name'           => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
-				'phone'          => (string) $row->phone,
-				'cart_total'     => (float) $row->cart_total,
-				'currency'       => (string) $row->currency,
-				'items_count'    => (int) $row->items_count,
-				'product_names'  => implode( ', ', $product_names ),
-				'recovery_url'   => $recovery_url,
-				'items'          => $cart_items,
+				'cart_id'                 => (int) $row->id,
+				'cart_token'              => (string) $row->cart_token,
+				'recovery_token'          => (string) $row->recovery_token,
+				'user_id'                 => (int) $row->user_id,
+				'customer_email'          => (string) $row->email,
+				'email'                   => (string) $row->email,
+				'customer_name'           => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
+				'name'                    => (string) ( $row->customer_name ?: __( 'Customer', 'ai-marketing-expert' ) ),
+				'phone'                   => (string) $row->phone,
+				'cart_total'              => (float) $row->cart_total,
+				'currency'                => (string) $row->currency,
+				'items_count'             => (int) $total_quantity,
+				'distinct_items_count'    => (int) $distinct_items_count,
+				'cart_type'               => (string) $cart_type,
+				'has_multiple_quantities' => ( $total_quantity > $distinct_items_count ),
+				'has_multiple_items'      => ( $distinct_items_count > 1 ),
+				'product_names'           => implode( ', ', $product_names ),
+				'recovery_url'            => $recovery_url,
+				'single_qty_url'          => $single_qty_url,
+				'single_item_links'       => $single_item_links_text,
+				'items'                   => $cart_items,
 			);
 
 			/**
@@ -614,20 +653,24 @@ class CartTracker {
 	 * Generate 1-Click Cart Restoration Deep-Link URL.
 	 *
 	 * @param string $recovery_token Unique cart token.
+	 * @param array  $extra_args     Optional extra query args (e.g. qty=1, item_id=123).
 	 * @return string Full restore URL.
 	 */
-	public function get_recovery_url( string $recovery_token ): string {
+	public function get_recovery_url( string $recovery_token, array $extra_args = array() ): string {
 		$cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : site_url( '/cart/' );
-		return add_query_arg(
+		$args     = array_merge(
 			array(
 				'aime_restore_cart' => sanitize_text_field( $recovery_token ),
 			),
-			$cart_url
+			$extra_args
 		);
+		return add_query_arg( $args, $cart_url );
 	}
 
 	/**
 	 * Handle 1-Click Cart Restoration when customer visits the recovery link.
+	 * Supports full cart restore, single-quantity purchase (?qty=1), and
+	 * single-item purchase (?item_id=PRODUCT_ID).
 	 */
 	public function handle_cart_restore_redirect(): void {
 		if ( ! isset( $_GET['aime_restore_cart'] ) || empty( $_GET['aime_restore_cart'] ) ) {
@@ -687,17 +730,47 @@ class CartTracker {
 			return;
 		}
 
+		// Optional item filter: if item_id (product or variation ID) is passed, restore only that specific item.
+		$filter_item_id = isset( $_GET['item_id'] ) ? absint( $_GET['item_id'] ) : ( isset( $_GET['product_id'] ) ? absint( $_GET['product_id'] ) : 0 );
+
+		// Optional quantity override: if qty is specified (e.g. qty=1), override quantity.
+		$override_qty = isset( $_GET['qty'] ) ? max( 1, absint( $_GET['qty'] ) ) : 0;
+
 		// Empty current cart to prevent duplicate items.
 		WC()->cart->empty_cart();
 
+		$added_any = false;
 		foreach ( $items as $item ) {
 			$product_id   = absint( $item['product_id'] ?? 0 );
-			$quantity     = max( 1, absint( $item['quantity'] ?? 1 ) );
 			$variation_id = absint( $item['variation_id'] ?? 0 );
+			$quantity     = max( 1, absint( $item['quantity'] ?? 1 ) );
 			$variation    = is_array( $item['variation'] ?? null ) ? $item['variation'] : array();
+
+			// If single item filter is active, skip items that don't match.
+			if ( $filter_item_id > 0 && $product_id !== $filter_item_id && $variation_id !== $filter_item_id ) {
+				continue;
+			}
+
+			if ( $override_qty > 0 ) {
+				$quantity = $override_qty;
+			}
 
 			if ( $product_id ) {
 				WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation );
+				$added_any = true;
+			}
+		}
+
+		// Fallback: If filtering left cart empty, restore all items as fallback.
+		if ( ! $added_any && WC()->cart->is_empty() ) {
+			foreach ( $items as $item ) {
+				$product_id   = absint( $item['product_id'] ?? 0 );
+				$quantity     = max( 1, absint( $item['quantity'] ?? 1 ) );
+				$variation_id = absint( $item['variation_id'] ?? 0 );
+				$variation    = is_array( $item['variation'] ?? null ) ? $item['variation'] : array();
+				if ( $product_id ) {
+					WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation );
+				}
 			}
 		}
 
