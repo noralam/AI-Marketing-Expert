@@ -548,7 +548,7 @@ class CartTracker {
 					$item_url   = $this->get_recovery_url( (string) $row->recovery_token, array( 'item_id' => $p_id, 'qty' => 1 ) );
 					$price_text = $p_price > 0 && function_exists( 'wc_price' ) ? ' (' . wp_strip_all_tags( wc_price( $p_price ) ) . ')' : '';
 					$single_item_links_list[] = sprintf(
-						'• <strong>%s</strong>%s &mdash; <a href="%s" style="display:inline-block;background-color:#2563eb;color:#ffffff;padding:4px 12px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:600;margin-left:6px;">Buy in 1-Click &raquo;</a>',
+						'<div style="margin: 8px 0; padding: 10px 14px; background: #f8fafc; border-left: 3px solid #2563eb; border-radius: 4px;"><strong>%s</strong>%s &nbsp;&nbsp; <a href="%s" style="display:inline-block;background-color:#2563eb;color:#ffffff;padding:5px 14px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:600;margin-left:6px;">Buy in 1-Click &raquo;</a></div>',
 						esc_html( $p_name ),
 						$price_text,
 						esc_url( $item_url )
@@ -573,7 +573,7 @@ class CartTracker {
 				? $this->get_recovery_url( (string) $row->recovery_token, array( 'qty' => 1 ) )
 				: $recovery_url;
 
-			$single_item_links_text = implode( "<br />\n", $single_item_links_list );
+			$single_item_links_text = implode( "\n", $single_item_links_list );
 
 			// Build standardized payload for workflows.
 			$payload = array(
