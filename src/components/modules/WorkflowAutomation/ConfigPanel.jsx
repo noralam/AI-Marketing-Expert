@@ -4,6 +4,7 @@
  * fields when nothing is selected.
  */
 
+import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import ConfigFields from './ConfigFields';
 import { Button, SelectControl, TextControl, TextareaControl } from '../../common/WpComponents';
@@ -143,6 +144,207 @@ const ScheduleControls = ( { wf, set, hasPro = false } ) => {
 				</div>
 			) }
 		</>
+	);
+};
+
+const CART_TYPE_OPTIONS = [
+	{ value: 'duplicate_qty', label: __( 'Duplicate Quantity (Accidental multiple qty of 1 item)', 'ai-marketing-expert' ) },
+	{ value: 'multiple_items', label: __( 'Multiple Items (2 or more different products in cart)', 'ai-marketing-expert' ) },
+	{ value: 'single_item', label: __( 'Single Item (1 product, 1 quantity)', 'ai-marketing-expert' ) },
+];
+
+const ConditionControls = ( { step, workflow, triggers, onChange } ) => {
+	const config = step.config || {};
+	const check = config.check || 'previous_step_succeeded';
+
+	// Determine active trigger and its available event fields
+	const triggerKey = workflow?.trigger_type === 'schedule' ? 'schedule' : workflow?.trigger_event;
+	const activeTrigger = ( triggers || [] ).find( ( t ) => t.key === triggerKey );
+	const payloadFields = activeTrigger?.payload_fields || [];
+	const isCartTrigger = triggerKey === 'woo_cart_abandoned';
+
+	const checkOptions = [
+		{ value: 'previous_step_succeeded', label: __( 'Previous step succeeded', 'ai-marketing-expert' ) },
+		{ value: 'event_field_equals', label: __( 'Event field equals…', 'ai-marketing-expert' ) },
+		{ value: 'event_field_contains', label: __( 'Event field contains…', 'ai-marketing-expert' ) },
+		{ value: 'previous_output_contains', label: __( 'Previous output contains…', 'ai-marketing-expert' ) },
+		{ value: 'reference_compare', label: __( 'Numeric compare on a step result (score ≥ 80…)', 'ai-marketing-expert' ) },
+	];
+
+	const currentField = config.field || ( isCartTrigger ? 'cart_type' : '' );
+	const isKnownField = payloadFields.some( ( pf ) => pf.key === currentField );
+	const [ isCustomField, setIsCustomField ] = useState( ! isKnownField && !! currentField && currentField !== 'cart_type' );
+
+	const fieldSelectOptions = [
+		{ value: '', label: __( '— Select an event field —', 'ai-marketing-expert' ) },
+		...payloadFields.map( ( pf ) => ( {
+			value: pf.key,
+			label: `${ pf.label } (${ pf.key })`,
+		} ) ),
+		{ value: '__custom__', label: __( '✏️ Enter custom field name…', 'ai-marketing-expert' ) },
+	];
+
+	return (
+		<div className="aime-wf-condition-controls">
+			<SelectControl
+				label={ __( 'Check', 'ai-marketing-expert' ) }
+				value={ check }
+				options={ checkOptions }
+				onChange={ ( v ) => {
+					onChange( 'check', v );
+					if ( ( v === 'event_field_equals' || v === 'event_field_contains' ) && ! config.field && isCartTrigger ) {
+						onChange( 'field', 'cart_type' );
+						if ( ! config.value ) {
+							onChange( 'value', 'duplicate_qty' );
+						}
+					}
+				} }
+			/>
+
+			{ check === 'previous_step_succeeded' && (
+				<Notice
+					type="info"
+					dismissible={ false }
+					message={ __( 'Takes the YES branch if the previous step completed successfully, or the NO branch if it failed. No other fields are needed.', 'ai-marketing-expert' ) }
+				/>
+			) }
+
+			{ check === 'previous_output_contains' && (
+				<TextControl
+					label={ __( 'Value to look for in output', 'ai-marketing-expert' ) }
+					value={ config.value || '' }
+					placeholder={ __( 'e.g. error, success, or any keyword', 'ai-marketing-expert' ) }
+					help={ __( 'Checks if the parent step preview contains this keyword or phrase.', 'ai-marketing-expert' ) }
+					onChange={ ( v ) => onChange( 'value', v ) }
+				/>
+			) }
+
+			{ ( check === 'event_field_equals' || check === 'event_field_contains' ) && (
+				<>
+					{ payloadFields.length > 0 ? (
+						<>
+							<SelectControl
+								label={ __( 'Event field to check', 'ai-marketing-expert' ) }
+								value={ isCustomField ? '__custom__' : currentField }
+								options={ fieldSelectOptions }
+								onChange={ ( v ) => {
+									if ( v === '__custom__' ) {
+										setIsCustomField( true );
+									} else {
+										setIsCustomField( false );
+										onChange( 'field', v );
+										if ( v === 'cart_type' && ! config.value ) {
+											onChange( 'value', 'duplicate_qty' );
+										}
+									}
+								} }
+								help={
+									isCartTrigger
+										? __( 'Choose which cart event property to evaluate.', 'ai-marketing-expert' )
+										: __( 'Select from the properties provided by this event trigger.', 'ai-marketing-expert' )
+								}
+							/>
+							{ isCustomField && (
+								<TextControl
+									label={ __( 'Custom event field path', 'ai-marketing-expert' ) }
+									value={ config.field || '' }
+									placeholder={ __( 'e.g. cart_type or customer.meta', 'ai-marketing-expert' ) }
+									onChange={ ( v ) => onChange( 'field', v ) }
+								/>
+							) }
+						</>
+					) : (
+						<TextControl
+							label={ __( 'Event field (for event checks)', 'ai-marketing-expert' ) }
+							value={ config.field || '' }
+							placeholder="cart_type"
+							help={ __( 'Key name in the event payload (e.g. cart_type, email, total).', 'ai-marketing-expert' ) }
+							onChange={ ( v ) => onChange( 'field', v ) }
+						/>
+					) }
+
+					{ ( ( isCustomField ? config.field : currentField ) === 'cart_type' || ( ! currentField && isCartTrigger ) ) ? (
+						<>
+							<SelectControl
+								label={ __( 'Cart type to match', 'ai-marketing-expert' ) }
+								value={ config.value || 'duplicate_qty' }
+								options={ CART_TYPE_OPTIONS }
+								onChange={ ( v ) => onChange( 'value', v ) }
+								help={ __( 'If this matches the customer cart, the YES branch runs; otherwise, the NO branch runs.', 'ai-marketing-expert' ) }
+							/>
+							<div
+								className="aime-wf-cart-type-guide"
+								style={ {
+									marginTop: '10px',
+									marginBottom: '10px',
+									padding: '12px',
+									background: '#f8fafc',
+									border: '1px solid #cbd5e1',
+									borderRadius: '6px',
+									fontSize: '12px',
+									lineHeight: '1.5',
+								} }
+							>
+								<div style={ { fontWeight: 600, marginBottom: '6px', color: '#1e293b' } }>
+									🛒 { __( 'WooCommerce Cart Types Explained:', 'ai-marketing-expert' ) }
+								</div>
+								<div style={ { marginBottom: '8px' } }>
+									<strong style={ { color: '#0f766e' } }>{ __( '• Duplicate Quantity (duplicate_qty):', 'ai-marketing-expert' ) }</strong>{ ' ' }
+									{ __( 'Customer has 1 product with quantity > 1 (e.g. 2 or 3 items). Take YES branch to send a 1-click single-qty checkout email using {event.single_qty_url}.', 'ai-marketing-expert' ) }
+								</div>
+								<div style={ { marginBottom: '8px' } }>
+									<strong style={ { color: '#2563eb' } }>{ __( '• Multiple Items (multiple_items):', 'ai-marketing-expert' ) }</strong>{ ' ' }
+									{ __( 'Customer added 2 or more different products. Take NO branch to offer 1-click individual item checkout links {event.single_item_links} or full restore {event.recovery_url}.', 'ai-marketing-expert' ) }
+								</div>
+								<div>
+									<strong style={ { color: '#475569' } }>{ __( '• Single Item (single_item):', 'ai-marketing-expert' ) }</strong>{ ' ' }
+									{ __( 'Customer added only 1 product with 1 quantity. Standard cart recovery with {event.recovery_url}.', 'ai-marketing-expert' ) }
+								</div>
+							</div>
+						</>
+					) : (
+						<TextControl
+							label={ __( 'Value to look for', 'ai-marketing-expert' ) }
+							value={ config.value || '' }
+							placeholder={ __( 'e.g. duplicate_qty, 100, or any text', 'ai-marketing-expert' ) }
+							help={ __( 'The value to compare against the selected event field.', 'ai-marketing-expert' ) }
+							onChange={ ( v ) => onChange( 'value', v ) }
+						/>
+					) }
+				</>
+			) }
+
+			{ check === 'reference_compare' && (
+				<>
+					<TextControl
+						label={ __( 'Reference field (for numeric compare)', 'ai-marketing-expert' ) }
+						value={ config.ref_field || 'score' }
+						help={ __( 'Dot-path into an upstream result, e.g. "score" from the SEO audit.', 'ai-marketing-expert' ) }
+						onChange={ ( v ) => onChange( 'ref_field', v ) }
+					/>
+					<SelectControl
+						label={ __( 'Comparison', 'ai-marketing-expert' ) }
+						value={ config.compare || '>=' }
+						options={ [
+							{ value: '>=', label: __( '≥ greater or equal', 'ai-marketing-expert' ) },
+							{ value: '>', label: __( '> greater than', 'ai-marketing-expert' ) },
+							{ value: '<=', label: __( '≤ less or equal', 'ai-marketing-expert' ) },
+							{ value: '<', label: __( '< less than', 'ai-marketing-expert' ) },
+							{ value: '==', label: __( '= equals', 'ai-marketing-expert' ) },
+							{ value: '!=', label: __( '≠ not equals', 'ai-marketing-expert' ) },
+						] }
+						onChange={ ( v ) => onChange( 'compare', v ) }
+					/>
+					<TextControl
+						type="number"
+						label={ __( 'Target numeric value', 'ai-marketing-expert' ) }
+						value={ config.value ?? 80 }
+						help={ __( 'Number to compare against (e.g. 80).', 'ai-marketing-expert' ) }
+						onChange={ ( v ) => onChange( 'value', v ) }
+					/>
+				</>
+			) }
+		</div>
 	);
 };
 
@@ -303,22 +505,33 @@ const ConfigPanel = ( {
 						message={ __( 'Some fields are hidden because AI Brain provides topic and keywords automatically.', 'ai-marketing-expert' ) }
 					/>
 				) }
-				<ConfigFields
-					fields={ def?.fields || [] }
-					config={ step.config || {} }
-					hasPro={ hasPro }
-					keywordSuggestions={ keywordSuggestions }
-					tagSuggestions={ tagSuggestions }
-					onChange={ ( key, value ) => onUpdateStepConfig( selectedNode.id, key, value ) }
-					parentActionType={ parentActionType }
-				/>
-				<ToneSelect
-					label={ __( 'Tone override (optional)', 'ai-marketing-expert' ) }
-					value={ step.tone_override || '' }
-					hasPro={ hasPro }
-					emptyLabel={ __( 'Use workflow tone', 'ai-marketing-expert' ) }
-					onChange={ ( v ) => onUpdateStep( selectedNode.id, { tone_override: v } ) }
-				/>
+				{ step.action_type === 'condition' ? (
+					<ConditionControls
+						step={ step }
+						workflow={ workflow }
+						triggers={ triggers }
+						onChange={ ( key, value ) => onUpdateStepConfig( selectedNode.id, key, value ) }
+					/>
+				) : (
+					<>
+						<ConfigFields
+							fields={ def?.fields || [] }
+							config={ step.config || {} }
+							hasPro={ hasPro }
+							keywordSuggestions={ keywordSuggestions }
+							tagSuggestions={ tagSuggestions }
+							onChange={ ( key, value ) => onUpdateStepConfig( selectedNode.id, key, value ) }
+							parentActionType={ parentActionType }
+						/>
+						<ToneSelect
+							label={ __( 'Tone override (optional)', 'ai-marketing-expert' ) }
+							value={ step.tone_override || '' }
+							hasPro={ hasPro }
+							emptyLabel={ __( 'Use workflow tone', 'ai-marketing-expert' ) }
+							onChange={ ( v ) => onUpdateStep( selectedNode.id, { tone_override: v } ) }
+						/>
+					</>
+				) }
 				<SelectControl
 					label={ __( 'Run condition', 'ai-marketing-expert' ) }
 					value={ step.run_condition || 'always' }

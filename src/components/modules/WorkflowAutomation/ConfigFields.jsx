@@ -449,6 +449,14 @@ const ConfigFields = ( { fields, config, onChange, hasPro = false, keywordSugges
 				return parentActionType !== rule.action;
 			case 'parent_is':
 				return parentActionType === rule.action;
+			case 'config_is': {
+				const current = config?.[ rule.field ] ?? '';
+				return ( rule.values || [] ).includes( current );
+			}
+			case 'config_not': {
+				const current = config?.[ rule.field ] ?? '';
+				return ! ( rule.values || [] ).includes( current );
+			}
 			default:
 				return true;
 		}

@@ -44,6 +44,28 @@ const blankWorkflow = () => ( {
 
 /** One-line human summary of a step's config. */
 const configSummary = ( step, def ) => {
+	if ( step.action_type === 'condition' ) {
+		const check = step.config?.check || 'previous_step_succeeded';
+		if ( check === 'previous_step_succeeded' ) {
+			return __( 'Previous step succeeded', 'ai-marketing-expert' );
+		}
+		if ( check === 'event_field_equals' ) {
+			const field = step.config?.field || 'field';
+			const val = step.config?.value || '';
+			return `${ field } == ${ val }`;
+		}
+		if ( check === 'event_field_contains' ) {
+			const field = step.config?.field || 'field';
+			const val = step.config?.value || '';
+			return `${ field } contains "${ val }"`;
+		}
+		if ( check === 'reference_compare' ) {
+			return `${ step.config?.ref_field || 'score' } ${ step.config?.compare || '>=' } ${ step.config?.value ?? 80 }`;
+		}
+		if ( check === 'previous_output_contains' ) {
+			return `output contains "${ step.config?.value || '' }"`;
+		}
+	}
 	const parts = [];
 	( def?.fields || [] ).forEach( ( f ) => {
 		const v = step.config?.[ f.key ];
