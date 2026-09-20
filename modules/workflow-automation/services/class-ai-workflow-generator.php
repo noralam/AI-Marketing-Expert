@@ -120,7 +120,14 @@ Your job is to translate the user's natural language goal into a strictly valid,
    - {event.message} (for form submissions)
 3. Special Actions & Config Defaults:
    - 'condition': Used to branch workflow into Yes/No paths. Config: { 'check': 'event_field_equals'|'event_field_contains'|'previous_step_succeeded'|'reference_compare', 'field': 'cart_type', 'value': 'duplicate_qty' }. Steps attached to this condition MUST set 'branch': 'yes' or 'branch': 'no'.
-   - 'woo_cart_abandoned' Smart Recovery: When user mentions smart cart recovery or single-item / duplicate quantity handling, use trigger 'woo_cart_abandoned'. You can branch using 'condition' on field 'cart_type' equals 'duplicate_qty' and use '{event.single_qty_url}' for single item checkout and '{event.single_item_links}' for individual item checkout links!
+   - 'woo_cart_abandoned' Smart Recovery: When user mentions smart cart recovery or single-item / duplicate quantity / multiple items handling, use trigger 'woo_cart_abandoned'.
+     * Available cart types: 'duplicate_qty' (accidental multiple quantity of 1 product), 'multiple_items' (multiple distinct products), and 'single_item' (1 product, quantity 1).
+     * For 3-Way Smart Cart Branching:
+       - step_1 (action_type: 'condition'): config { 'check': 'event_field_equals', 'field': 'cart_type', 'value': 'duplicate_qty' }
+       - step_2 (action_type: 'send_email', parent_key: 'step_1', branch: 'yes'): send single-quantity checkout email with '{event.single_qty_url}' and '{event.recovery_url}'
+       - step_3 (action_type: 'condition', parent_key: 'step_1', branch: 'no'): config { 'check': 'event_field_equals', 'field': 'cart_type', 'value': 'multiple_items' }
+       - step_4 (action_type: 'send_email', parent_key: 'step_3', branch: 'yes'): send multiple-items email offering individual product links '{event.single_item_links}' and '{event.recovery_url}'
+       - step_5 (action_type: 'send_email', parent_key: 'step_3', branch: 'no'): send single-item recovery email with '{event.recovery_url}'
    - 'publish_social_post': When the user asks for social media updates, posting to LinkedIn, Facebook, Instagram, Twitter, or social blast, ALWAYS use 'publish_social_post'! Config: { 'account_id': 0, 'topic': '', 'schedule': true }. NOTE: Leave 'topic' as empty string '' (blank) so it automatically inherits from the upstream AI Brain step or workflow! NEVER put '{ai_brain.topic}' into the topic field!
    - 'generate_blog_post': If an AI Brain step is present, leave 'topic' as empty string '' (it inherits automatically from AI Brain). NEVER put '{ai_brain.topic}' into the topic field!
    - 'run_seo_audit': Config: { 'wp_post_id': -1, 'keyword_focus': '' }. NOTE: 'wp_post_id' MUST be -1 (numeric, meaning previous step). NEVER use token strings like '{step_2.post_id}' or '{generate_blog_post.post_id}' for wp_post_id!
@@ -169,11 +176,19 @@ Your job is to translate the user's natural language goal into a strictly valid,
 		$response = AiProvider::generate( $messages_prompt, 'text', 2500, array( 'json_mode' => true ) );
 
 		if ( is_wp_error( $response ) ) {
+			$fallback = self::match_fallback_recipe( $user_prompt, $brand_voice_id );
+			if ( $fallback ) {
+				return $fallback;
+			}
 			return $response;
 		}
 
 		$raw_content = trim( (string) ( $response['content'] ?? '' ) );
 		if ( empty( $raw_content ) ) {
+			$fallback = self::match_fallback_recipe( $user_prompt, $brand_voice_id );
+			if ( $fallback ) {
+				return $fallback;
+			}
 			return new \WP_Error( 'ai_empty_response', __( 'AI did not return any workflow content. Please try again with more details.', 'ai-marketing-expert' ) );
 		}
 
@@ -186,6 +201,10 @@ Your job is to translate the user's natural language goal into a strictly valid,
 
 		$data = json_decode( $raw_content, true );
 		if ( ! is_array( $data ) || empty( $data['steps'] ) ) {
+			$fallback = self::match_fallback_recipe( $user_prompt, $brand_voice_id );
+			if ( $fallback ) {
+				return $fallback;
+			}
 			return new \WP_Error( 'invalid_json', __( 'Failed to parse AI-generated workflow. Please rephrase your request.', 'ai-marketing-expert' ) );
 		}
 
@@ -288,5 +307,211 @@ Your job is to translate the user's natural language goal into a strictly valid,
 			'brand_voice_id' => absint( $brand_voice_id ),
 			'steps'          => $sanitized_steps,
 		);
+	}
+
+	/**
+	 * Matches fallback recipe for popular built-in prompts if AI provider is unavailable.
+	 *
+	 * @param string $user_prompt    User prompt.
+	 * @param int    $brand_voice_id Brand voice ID.
+	 * @return array|null
+	 */
+	public static function match_fallback_recipe( string $user_prompt, int $brand_voice_id = 0 ): ?array {
+		$lower = strtolower( $user_prompt );
+
+		// 1. Advanced 3-Way Smart Cart Recovery
+		if ( ( false !== strpos( $lower, '3-way' ) || false !== strpos( $lower, 'multiple_items' ) || false !== strpos( $lower, 'multiple items' ) || false !== strpos( $lower, 'মাল্টিপল' ) || false !== strpos( $lower, 'তিনটা' ) ) && ( false !== strpos( $lower, 'cart' ) || false !== strpos( $lower, 'কার্ট' ) ) ) {
+			return array(
+				'name'           => __( 'WooCommerce Advanced Smart Cart Recovery (3-Way)', 'ai-marketing-expert' ),
+				'description'    => __( 'Advanced 3-way abandoned cart recovery branching on duplicate quantities, multiple products, and single items.', 'ai-marketing-expert' ),
+				'trigger_type'   => 'event',
+				'trigger_event'  => 'woo_cart_abandoned',
+				'trigger_config' => array(),
+				'schedule_type'  => 'weekly',
+				'schedule_time'  => '09:00',
+				'schedule_days'  => '1',
+				'topic'          => '',
+				'brand_voice_id' => $brand_voice_id,
+				'steps'          => array(
+					array(
+						'step_key'      => 'step_1',
+						'parent_key'    => '',
+						'branch'        => 'default',
+						'action_type'   => 'condition',
+						'config'        => array(
+							'check' => 'event_field_equals',
+							'field' => 'cart_type',
+							'value' => 'duplicate_qty',
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_2',
+						'parent_key'    => 'step_1',
+						'branch'        => 'yes',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Did you mean to add just 1 item, {event.customer_name}?', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left {event.product_names} in your cart with multiple quantities (Total: {event.cart_total} {event.currency}).\n\nIf you only wanted a SINGLE item, no need to manually remove extras — simply click below to check out directly with 1 item:\n👉 Buy 1 Item (1-Click): {event.single_qty_url}\n\nOr if you would like to restore your entire cart:\n👉 Restore Full Cart: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_3',
+						'parent_key'    => 'step_1',
+						'branch'        => 'no',
+						'action_type'   => 'condition',
+						'config'        => array(
+							'check' => 'event_field_equals',
+							'field' => 'cart_type',
+							'value' => 'multiple_items',
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_4',
+						'parent_key'    => 'step_3',
+						'branch'        => 'yes',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Can\'t decide on all items in your cart, {event.customer_name}?', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe saved the items you left in your cart ({event.product_names}) for a total of {event.cart_total} {event.currency}.\n\nIf the total was a bit high or you prefer to purchase just one of your favorite items, you can buy that specific product directly in 1-click:\n{event.single_item_links}\n\nOr if you want to complete your entire order:\n👉 Restore Entire Cart: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_5',
+						'parent_key'    => 'step_3',
+						'branch'        => 'no',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Your cart is waiting for you, {event.customer_name}!', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe noticed you didn't finish ordering your {event.product_names} (Total: {event.cart_total} {event.currency}).\n\nYour item is still reserved, but popular stock can run out quickly! Click below to restore your cart and complete your checkout in 1-click:\n👉 Complete My Order Now: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+				),
+			);
+		}
+
+		// 2. Simple Smart Cart Recovery (Duplicate Qty)
+		if ( ( false !== strpos( $lower, 'smart cart' ) || false !== strpos( $lower, 'duplicate_qty' ) || false !== strpos( $lower, 'duplicate' ) || false !== strpos( $lower, 'ডুপ্লিকেট' ) ) && ( false !== strpos( $lower, 'cart' ) || false !== strpos( $lower, 'কার্ট' ) ) ) {
+			return array(
+				'name'           => __( 'WooCommerce Smart Cart Recovery', 'ai-marketing-expert' ),
+				'description'    => __( 'Smart abandoned cart recovery with automatic branching for duplicate quantities and single items.', 'ai-marketing-expert' ),
+				'trigger_type'   => 'event',
+				'trigger_event'  => 'woo_cart_abandoned',
+				'trigger_config' => array(),
+				'schedule_type'  => 'weekly',
+				'schedule_time'  => '09:00',
+				'schedule_days'  => '1',
+				'topic'          => '',
+				'brand_voice_id' => $brand_voice_id,
+				'steps'          => array(
+					array(
+						'step_key'      => 'step_1',
+						'parent_key'    => '',
+						'branch'        => 'default',
+						'action_type'   => 'condition',
+						'config'        => array(
+							'check' => 'event_field_equals',
+							'field' => 'cart_type',
+							'value' => 'duplicate_qty',
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_2',
+						'parent_key'    => 'step_1',
+						'branch'        => 'yes',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Did you mean to add just 1 item, {event.customer_name}?', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left {event.product_names} in your cart with multiple quantities (Total: {event.cart_total} {event.currency}).\n\nIf you only wanted a SINGLE item, no need to manually remove extras — simply click below to check out directly with 1 item:\n👉 Buy 1 Item (1-Click): {event.single_qty_url}\n\nOr if you would like to restore your entire cart:\n👉 Restore Full Cart: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_3',
+						'parent_key'    => 'step_1',
+						'branch'        => 'no',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Did you leave something behind, {event.customer_name}?', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left some great items in your cart ({event.product_names}) for a total of {event.cart_total} {event.currency}.\n\nDon't worry, we saved everything for you!\n\n👉 Restore Full Cart: {event.recovery_url}\n\nPrefer to purchase just one of the items? Click below to check out with that specific item in 1-click:\n{event.single_item_links}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+				),
+			);
+		}
+
+		// 3. Basic Abandoned Cart Recovery
+		if ( false !== strpos( $lower, 'cart' ) || false !== strpos( $lower, 'কার্ট' ) ) {
+			return array(
+				'name'           => __( 'WooCommerce Cart Recovery', 'ai-marketing-expert' ),
+				'description'    => __( 'Automated abandoned cart recovery email with 1-click restore link.', 'ai-marketing-expert' ),
+				'trigger_type'   => 'event',
+				'trigger_event'  => 'woo_cart_abandoned',
+				'trigger_config' => array(),
+				'schedule_type'  => 'weekly',
+				'schedule_time'  => '09:00',
+				'schedule_days'  => '1',
+				'topic'          => '',
+				'brand_voice_id' => $brand_voice_id,
+				'steps'          => array(
+					array(
+						'step_key'      => 'step_1',
+						'parent_key'    => '',
+						'branch'        => 'default',
+						'action_type'   => 'send_email',
+						'config'        => array(
+							'to'      => '{event.email}',
+							'subject' => __( 'Did you leave something behind, {event.customer_name}?', 'ai-marketing-expert' ),
+							'body'    => __( "Hi {event.customer_name},\n\nWe noticed you left {event.product_names} in your cart (Total: {event.cart_total} {event.currency}).\n\nClick below to complete your checkout with 1-click:\n👉 Restore My Cart: {event.recovery_url}\n\nWarm regards,\n{workflow_name}", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+					array(
+						'step_key'      => 'step_2',
+						'parent_key'    => 'step_1',
+						'branch'        => 'default',
+						'action_type'   => 'send_notification',
+						'config'        => array(
+							'subject' => __( 'Abandoned Cart Alert: {event.customer_name}', 'ai-marketing-expert' ),
+							'body'    => __( "Customer {event.customer_name} abandoned a cart with {event.product_names} ({event.cart_total} {event.currency}). Recovery email was dispatched.", 'ai-marketing-expert' ),
+						),
+						'position_x'    => 0,
+						'position_y'    => 0,
+						'run_condition' => 'always',
+					),
+				),
+			);
+		}
+
+		return null;
 	}
 }

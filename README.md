@@ -348,12 +348,12 @@ npm run lint:css
 
 ### 1.2.6
 * **New: WooCommerce Abandoned Cart Recovery Engine** — Real-time cart session tracking, guest checkout email capture via background AJAX, automated 15-minute cron inactivity detection, and encrypted 1-click cart restoration deep links directly to checkout.
-* **New: WooCommerce Smart Cart Recovery** — 1-click single-quantity checkout deep links (`{event.single_qty_url}`), individual product recovery links (`{event.single_item_links}`), automated cart composition classification (single item, duplicate quantity, multiple items), and dynamic condition branching.
+* **New: WooCommerce Smart Cart Recovery & 3-Way Branching** — 1-click single-quantity checkout deep links (`{event.single_qty_url}`), individual product recovery links (`{event.single_item_links}`), automated cart composition classification (single item, duplicate quantity, multiple items), and 3-way condition branching templates.
 * **New: Admin Dashboard Background Cron Dispatcher** — Automatically executes background tasks, email queues, abandoned cart recovery, and scheduled workflows when administrators visit the WordPress dashboard or keep wp-admin open (WordPress Heartbeat integration) with 60-second throttling and zero page load latency.
 * **New: Workflow Delay / Wait Step** — Pause execution between automation nodes for seconds, minutes, hours, or days (e.g., Cart Abandoned -> Wait 1 Hour -> Send Recovery Email).
 * **New: Direct Email Send Action** — Dispatch instant, personalized emails with SMTP multi-connection rotation and dynamic workflow tokens (`{event.recovery_url}`, `{event.customer_name}`, `{event.product_names}`).
 * **New: E-Commerce & Event Triggers** — Added WooCommerce Cart Abandoned, WooCommerce Order Completed, User Registered, Approved Comment Posted, Contact Form 7 Submission, and Inbound Webhook triggers.
-* **New: Text-to-Workflow AI Generator** — Natural language automation builder allowing users to describe their marketing workflows in plain text (English or Bengali) with 8 built-in high-converting recipes.
+* **New: Text-to-Workflow AI Generator** — Natural language automation builder allowing users to describe their marketing workflows in plain text (English or Bengali) with 10 built-in high-converting recipes (including 3-Way Smart Cart Recovery).
 * **New: E-Commerce & Lead Workflow Templates** — Pre-built templates for Abandoned Cart Recovery, Post-Purchase Review Requests with timed delay, CF7 Lead Auto-Responders, and Inbound Webhook Ingestion.
 * **New: Multi-Plugin SEO Postmeta Synchronization** — Automatic 1-click synchronization of generated SEO Title, Meta Description, and Focus Keyword into Yoast SEO, Rank Math, and All-in-One SEO (AIOSEO), plus lightweight frontend meta fallback.
 * **New: Contextual Internal Link Engine** — Automatically discovers relevant published articles across your WordPress site and contextually injects natural internal links on publish.

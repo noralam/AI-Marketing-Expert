@@ -29,6 +29,13 @@ const POPULAR_USE_CASES = [
 		prompt: __( 'When a customer abandons their WooCommerce cart, branch on whether they added duplicate quantities. If cart_type equals duplicate_qty, send a 1-click single-quantity checkout email with {event.single_qty_url}. Otherwise, send a recovery email offering 1-click single-item links {event.single_item_links} or full restore {event.recovery_url}.', 'ai-marketing-expert' ),
 	},
 	{
+		id: 'advanced_smart_cart_recovery',
+		icon: '⚡',
+		title: __( 'Advanced Smart Cart Recovery (3-Way Branching)', 'ai-marketing-expert' ),
+		badge: __( 'Max ROI', 'ai-marketing-expert' ),
+		prompt: __( 'When a customer abandons their WooCommerce cart, branch on cart contents with 3-way smart recovery: 1) If cart_type equals duplicate_qty, send a 1-click single-quantity checkout email with {event.single_qty_url}; 2) If cart_type equals multiple_items, send an email offering individual item 1-click checkout links with {event.single_item_links}; 3) Otherwise for single items, send a standard recovery email with {event.recovery_url}.', 'ai-marketing-expert' ),
+	},
+	{
 		id: 'weekly_blog',
 		icon: '✍️',
 		title: __( 'Weekly Auto-Blogger & Social Blast', 'ai-marketing-expert' ),
