@@ -382,6 +382,8 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 
 = 1.2.6 =
 * New: WooCommerce Abandoned Cart Recovery Engine — Real-time cart session tracking, guest checkout email capture via background AJAX, automated 15-minute cron inactivity detection, and encrypted 1-click cart restoration deep links directly to checkout.
+* New: WooCommerce Smart Cart Recovery — 1-click single-quantity checkout deep links ({event.single_qty_url}), individual product recovery links ({event.single_item_links}), automated cart composition classification (single item, duplicate quantity, multiple items), and dynamic condition branching.
+* New: Admin Dashboard Background Cron Dispatcher — Automatically executes background tasks, email queues, abandoned cart recovery, and scheduled workflows when administrators visit the WordPress dashboard or keep wp-admin open (WordPress Heartbeat integration) with 60-second throttling and zero page load latency.
 * New: Workflow Delay / Wait Step — Pause execution between automation nodes for seconds, minutes, hours, or days (e.g., Cart Abandoned -> Wait 1 Hour -> Send Recovery Email).
 * New: Direct Email Send Action — Dispatch instant, personalized emails with SMTP multi-connection rotation and dynamic workflow tokens ({event.recovery_url}, {event.customer_name}, {event.product_names}).
 * New: E-Commerce & Event Triggers — Added WooCommerce Cart Abandoned, WooCommerce Order Completed, User Registered, Approved Comment Posted, Contact Form 7 Submission, and Inbound Webhook triggers.
@@ -394,7 +396,6 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 * Improved: Settings Organization — Consolidated Automation toggles (Auto SEO Optimize, Auto Generate Meta, Auto Generate Excerpt, Auto Internal Linking) into the Generation tab under Advanced settings for a smoother single-screen experience.
 * Improved: Workflow Blog Post & Ad Copy Actions — Added Brand Voice selection, Content Presets, word count ceilings, multi-category taxonomy search, author assignment, and WooCommerce product rotation.
 * Improved: Facebook Publishing & Error #200 Hints — Explicit actionable guidance for Facebook permissions (pages_manage_posts, pages_read_engagement), Page Access Token detection, and separated Instagram validation.
-* Improved: Unified Smart Usage & Quota Meter — Real-time progress display for AI tokens, monthly runs, and feature quotas across module dashboards.
 
 = 1.2.5 =
 * New: B2B Lead Finder & Autopilot Pipeline — Discover, filter, and extract high-converting B2B prospects by role, industry, location, and company size with 1-click list collection and recurring autopilot sync.
@@ -490,7 +491,7 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 == Upgrade Notice ==
 
 = 1.2.6 =
-Major Release: WooCommerce Abandoned Cart Recovery Engine with 1-click restore links, Workflow Wait/Delay step, AI Text-to-Workflow Generator, new E-Commerce triggers, multi-plugin SEO postmeta sync (Yoast/Rank Math/AIOSEO), Deep Humanize structure protection, and Facebook Error #200 hints. Recommended for all users.
+Major Release: Smart WooCommerce Cart Recovery with 1-click single-qty checkout, Admin Dashboard Background Cron, Workflow Wait/Delay step, AI Text-to-Workflow Generator, new E-Commerce triggers, and multi-plugin SEO postmeta sync. Recommended for all users.
 
 = 1.2.5 =
 Major Release: Brand new B2B Lead Finder & Autopilot Pipeline to discover and collect verified leads automatically, plus Dashboard widget 1-click chatbot deep links, inline human takeover shortcuts, IMAP bounce handling, and database maintenance improvements. Highly recommended for all users.
