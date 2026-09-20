@@ -211,6 +211,12 @@ final class Plugin {
 		add_action( 'aime_minutely_tasks', array( $this, 'run_minutely_tasks' ) );
 		$this->maybe_migrate_cron();
 
+		// Background task execution on admin visits & Heartbeat ticks.
+		if ( is_admin() ) {
+			add_action( 'shutdown', array( $this, 'maybe_trigger_admin_cron' ) );
+			add_filter( 'heartbeat_received', array( $this, 'on_heartbeat_received' ), 10, 2 );
+		}
+
 		// Claim the seed flag *before* running so concurrent requests on the
 		// first admin load (page + REST + heartbeat) cannot each seed a copy.
 		if ( get_transient( 'aime_seed_email_templates' ) ) {
@@ -297,6 +303,72 @@ final class Plugin {
 		} finally {
 			delete_option( $lock_key );
 		}
+	}
+
+	/**
+	 * Trigger background tasks when an admin visits or works in wp-admin.
+	 *
+	 * Ensures local environments and low-traffic sites process abandoned carts,
+	 * scheduled workflows, and email queues smoothly without needing frontend traffic.
+	 * Runs on shutdown and flushes output immediately via fastcgi_finish_request()
+	 * so it never impacts admin dashboard loading speed.
+	 */
+	public function maybe_trigger_admin_cron(): void {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		if ( wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
+		$last_run = (int) get_transient( 'aime_last_admin_cron' );
+		if ( $last_run && ( time() - $last_run ) < 60 ) {
+			return;
+		}
+
+		set_transient( 'aime_last_admin_cron', time(), 60 );
+
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
+			fastcgi_finish_request();
+		}
+
+		$this->dispatch_background_tasks();
+	}
+
+	/**
+	 * Heartbeat listener to keep background tasks running while an admin tab is open.
+	 *
+	 * @param array $response Heartbeat response data.
+	 * @param array $data     Heartbeat received data.
+	 * @return array
+	 */
+	public function on_heartbeat_received( array $response, array $data ): array {
+		$last_run = (int) get_transient( 'aime_last_admin_cron' );
+		if ( ! $last_run || ( time() - $last_run ) >= 60 ) {
+			set_transient( 'aime_last_admin_cron', time(), 60 );
+			$this->dispatch_background_tasks();
+		}
+		return $response;
+	}
+
+	/**
+	 * Dispatch plugin background tasks (minutely tasks, workflows, cart checks, social posts).
+	 */
+	public function dispatch_background_tasks(): void {
+		// Wake up WordPress core cron.
+		if ( function_exists( 'spawn_cron' ) ) {
+			spawn_cron();
+		}
+
+		// Process plugin minutely tasks (email queue, funnels, cart abandonment).
+		do_action( 'aime_minutely_tasks' );
+
+		// Process scheduled workflows.
+		do_action( 'aime_workflow_dispatch_due' );
+
+		// Process scheduled social media posts.
+		do_action( 'aime_publish_scheduled_social_posts' );
 	}
 
 	/**
