@@ -70,8 +70,10 @@ class SendEmailAction extends BaseAction {
 			$headers[] = "Reply-To: {$reply_to}";
 		}
 
-		// If body is already HTML (has HTML tags), preserve it; otherwise wpautop
-		$formatted_body = ( $body !== wp_strip_all_tags( $body ) ) ? $body : wpautop( $body );
+		// If body contains full block-level HTML tags (<p, <div, <table, etc.), keep as-is.
+		// Otherwise, apply wpautop to preserve paragraphs, line breaks, and inline button styles (<a>, <strong>, etc.).
+		$has_block_html = (bool) preg_match( '/<(p|div|table|section|article|blockquote|header|footer)\b/i', $body );
+		$formatted_body = $has_block_html ? $body : wpautop( $body );
 
 		// Send via SmtpProvider with multi-connection fallback
 		$sent = SmtpProvider::send_with_fallback( $to, $subject, $formatted_body, $headers );
