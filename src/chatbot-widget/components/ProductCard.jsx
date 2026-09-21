@@ -18,7 +18,7 @@ const ProductCard = ( { product } ) => {
 	}
 
 	const pageUrl = isSafeUrl( url ) ? url : '';
-	const checkoutUrl = isSafeUrl( buyUrl ) ? buyUrl : pageUrl;
+	const checkoutUrl = isSafeUrl( buyUrl ) && buyUrl !== pageUrl ? buyUrl : '';
 
 	return (
 		<div className="aime-chat-product-card">
@@ -57,6 +57,21 @@ const ProductCard = ( { product } ) => {
 					<span className="aime-chat-product-card__price">{ priceHtml }</span>
 				) }
 				<div className="aime-chat-product-card__actions">
+					{ pageUrl && (
+						<a
+							className="aime-chat-product-card__view"
+							href={ pageUrl }
+							target="_blank"
+							rel="noopener noreferrer nofollow"
+							aria-label={ sprintf(
+								/* translators: %s: product title */
+								__( 'View product: %s', 'ai-marketing-expert' ),
+								title
+							) }
+						>
+							{ __( 'Product Page', 'ai-marketing-expert' ) }
+						</a>
+					) }
 					{ checkoutUrl && (
 						<a
 							className="aime-chat-product-card__buy"
@@ -70,21 +85,6 @@ const ProductCard = ( { product } ) => {
 							) }
 						>
 							{ __( 'Buy Now', 'ai-marketing-expert' ) }
-						</a>
-					) }
-					{ pageUrl && (
-						<a
-							className="aime-chat-product-card__view"
-							href={ pageUrl }
-							target="_blank"
-							rel="noopener noreferrer nofollow"
-							aria-label={ sprintf(
-								/* translators: %s: product title */
-								__( 'View product: %s', 'ai-marketing-expert' ),
-								title
-							) }
-						>
-							{ __( 'View product', 'ai-marketing-expert' ) }
 						</a>
 					) }
 				</div>

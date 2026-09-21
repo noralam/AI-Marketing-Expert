@@ -145,6 +145,12 @@ const Settings = () => {
 										checked={ !! settings.enable_typing_indicator }
 										onChange={ ( v ) => setField( 'enable_typing_indicator', v ) }
 									/>
+									<ToggleControl
+										label={ __( "Enable 'Buy Now' / Direct Checkout Link", 'ai-marketing-expert' ) }
+										help={ __( "When enabled, the chatbot includes direct 'Buy Now' checkout links for products. When disabled (recommended), it provides 'Product Page' links so customers can review details and options without empty cart errors.", 'ai-marketing-expert' ) }
+										checked={ !! settings.enable_buy_now_link }
+										onChange={ ( v ) => setField( 'enable_buy_now_link', v ) }
+									/>
 									<ProLock locked={ ! hasPro }>
 									<ToggleControl
 										label={ hasPro ? __( 'Read Receipts', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Read Receipts', 'ai-marketing-expert' ) }</ProLabel> }
