@@ -589,6 +589,10 @@ class EmailMarketingModule extends Module {
 			case 'confirm':
 				$this->front_confirm( $hash );
 				break;
+			case 'web_view':
+			case 'view':
+				$this->front_track_web_view( $hash, $token );
+				break;
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
@@ -987,6 +991,48 @@ class EmailMarketingModule extends Module {
 			__( '&#10003; Confirmed', 'ai-marketing-expert' ),
 			__( 'Your subscription has been confirmed! Thank you for subscribing.', 'ai-marketing-expert' )
 		);
+	}
+
+	/**
+	 * Web view: render email HTML in browser for the "View in browser" link.
+	 */
+	private function front_track_web_view( string $email_hash, string $token = '' ): void {
+		global $wpdb;
+		$p = $wpdb->prefix;
+
+		$email = null;
+		if ( $email_hash ) {
+			$email = $wpdb->get_row( $wpdb->prepare(
+				"SELECT id, campaign_id, subscriber_id, email_subject, email_body FROM {$p}aime_campaign_emails WHERE email_hash = %s LIMIT 1",
+				$email_hash
+			) );
+		}
+
+		if ( ! $email && $token ) {
+			$data = self::decode_tracking_hash( $token );
+			if ( $data ) {
+				$email = $wpdb->get_row( $wpdb->prepare(
+					"SELECT id, campaign_id, subscriber_id, email_subject, email_body FROM {$p}aime_campaign_emails WHERE campaign_id = %d AND subscriber_id = %d LIMIT 1",
+					(int) $data['campaign_id'],
+					(int) $data['subscriber_id']
+				) );
+			}
+		}
+
+		if ( ! $email || empty( $email->email_body ) ) {
+			wp_die( esc_html__( 'Email not found or expired.', 'ai-marketing-expert' ), esc_html__( 'View in Browser', 'ai-marketing-expert' ), array( 'response' => 404 ) );
+		}
+
+		// Also record an open event if not opened yet.
+		$wpdb->update( "{$p}aime_campaign_emails", array( 'is_open' => 1 ), array( 'id' => $email->id ) );
+
+		nocache_headers();
+		header( 'Content-Type: text/html; charset=UTF-8' );
+		header( 'X-Robots-Tag: noindex, nofollow' );
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $email->email_body;
+		exit;
 	}
 
 	private function serve_tracking_page( string $title, string $heading, string $message, string $extra_html = '' ): void {
