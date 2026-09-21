@@ -362,6 +362,11 @@ npm run lint:css
 * **Improved: Settings Organization** — Consolidated Automation toggles (Auto SEO Optimize, Auto Generate Meta, Auto Generate Excerpt, Auto Internal Linking) into the Generation tab under Advanced settings for a smoother single-screen experience.
 * **Improved: Workflow Blog Post & Ad Copy Actions** — Added Brand Voice selection, Content Presets, word count ceilings, multi-category taxonomy search, author assignment, and WooCommerce product rotation.
 * **Improved: Facebook Publishing & Error #200 Hints** — Explicit actionable guidance for Facebook permissions (`pages_manage_posts`, `pages_read_engagement`), Page Access Token detection, and separated Instagram validation.
+* **New: AI Chatbot Safe Product Links & Configurable Buy Now** — Product recommendations now default safely to direct product page permalinks to prevent empty cart errors on stores without cart AJAX endpoints, with an optional "Direct Checkout / Buy Now Link" toggle in bot settings for stores preferring direct checkout.
+* **Improved: AI Chatbot Pro Branding** — "Powered by AI Marketing Expert" footer dynamically links to the site's home URL for Pro users while retaining plugin branding on Free installations.
+* **Fixed: Email Campaign Sending & 500 Error** — Resolved a critical fatal error in the campaign queue processor where missing web-view helper caused campaigns to get stuck in "sending" state with HTTP 500.
+* **New: Email Web-View Browser Display** — Added dedicated web-view handler (`?aime_track=web_view`) allowing recipients to view rich email designs directly in their browser.
+* **Improved: Email Sender Resilience** — Added defensive parameter validation and error boundaries in campaign dispatcher so invalid recipient addresses or transient SMTP timeouts fail gracefully without stalling the entire batch.
 
 ### 1.2.5
 * **New: B2B Lead Finder & Autopilot Pipeline** — Discover, filter, and extract high-converting B2B prospects by role, industry, location, and company size with 1-click list collection and recurring autopilot sync.
