@@ -8,7 +8,7 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-All-in-one AI marketing: Email campaigns, B2B lead finder, AI content generator, SEO analyzer, social scheduling, AI chatbot, workflow automation, and WooCommerce abandoned cart recovery.
+All-in-one AI marketing: Email campaigns, B2B lead finder, AI content, SEO analyzer, social scheduler, AI chatbot, and cart recovery automation.
 
 == Description ==
 
