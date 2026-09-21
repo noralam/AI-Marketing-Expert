@@ -41,7 +41,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		enable_read_receipts: tc.enable_read_receipts !== false,
 		leadConfig: raw.leadConfig || {},
 		visitorId: raw.visitorId || '',
-		hasPro: raw.hasPro || false,
+		hasPro: Boolean( raw.hasPro ),
+		siteUrl: raw.siteUrl || '',
+		siteName: raw.siteName || '',
 		// Theme colours (from preset + overrides)
 		headerBg: tc.headerBg || '',
 		headerText: tc.headerText || '',

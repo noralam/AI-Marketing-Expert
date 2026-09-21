@@ -126,7 +126,13 @@ const ChatWindow = ( { config, chat, onClose } ) => {
 			) }
 
 			{ /* Powered by */ }
-			{ ! config.hide_branding && <PoweredBy /> }
+			{ ! config.hide_branding && (
+				<PoweredBy
+					hasPro={ config.hasPro }
+					siteUrl={ config.siteUrl }
+					siteName={ config.siteName }
+				/>
+			) }
 		</div>
 	);
 };
