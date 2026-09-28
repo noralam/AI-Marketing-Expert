@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, SelectControl, TextareaControl, CheckboxControl, Icon, Spinner } from '@aime/wp-components';
+import { Button, SelectControl, TextControl, TextareaControl, CheckboxControl, Icon, Spinner } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
 import useSlowWarning from '../../../hooks/useSlowWarning';
 import Card from '../../common/Card';
@@ -37,9 +37,18 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	const [ publishingLoading, setPublishingLoading ] = useState( false );
 	const [ aiTopic, setAiTopic ] = useState( '' );
 	const [ aiTone, setAiTone ] = useState( 'professional' );
+	const [ aiLength, setAiLength ] = useState( 'medium' );
 	const [ loadingPost, setLoadingPost ] = useState( false );
 	const [ socialSettings, setSocialSettings ] = useState( null );
 	const [ scheduledCount, setScheduledCount ] = useState( 0 );
+	const [ showStockPicker, setShowStockPicker ] = useState( false );
+	const [ stockReady, setStockReady ] = useState( null );
+	const [ stockProvider, setStockProvider ] = useState( 'pexels' );
+	const [ stockQuery, setStockQuery ] = useState( '' );
+	const [ stockResults, setStockResults ] = useState( [] );
+	const [ stockSearching, setStockSearching ] = useState( false );
+	const [ stockSearched, setStockSearched ] = useState( false );
+	const [ stockImportingId, setStockImportingId ] = useState( null );
 	const isEditing = !! id;
 	const hasPro = !! window.aimeData?.hasPro;
 	const scheduledLimit = FREE_LIMITS.social_scheduled_posts || 3;
@@ -47,15 +56,24 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	// Fetch accounts for the dropdown.
 	const fetchAccounts = useCallback( async () => {
 		try {
-			const [ accountRes, settingsRes, scheduledRes, pendingRes ] = await Promise.all( [
+			const [ accountRes, settingsRes, scheduledRes, pendingRes, globalSettingsRes ] = await Promise.all( [
 				get( '/social/accounts' ),
 				get( '/social/settings' ).catch( () => null ),
 				get( '/social/posts', { status: 'scheduled', per_page: 1 } ).catch( () => null ),
 				get( '/social/posts', { status: 'approval_pending', per_page: 1 } ).catch( () => null ),
+				get( '/settings' ).catch( () => null ),
 			] );
 			setAccounts( accountRes.items || accountRes || [] );
 			setSocialSettings( settingsRes );
 			setScheduledCount( ( scheduledRes?.total || 0 ) + ( pendingRes?.total || 0 ) );
+			if ( globalSettingsRes ) {
+				const p = globalSettingsRes.stock_provider === 'pixabay' ? 'pixabay' : 'pexels';
+				const hasKey = p === 'pixabay' ? !! globalSettingsRes.has_pixabay_key : !! globalSettingsRes.has_pexels_key;
+				setStockProvider( p );
+				setStockReady( hasKey );
+			} else {
+				setStockReady( false );
+			}
 		} catch ( e ) {
 			// silent
 		}
@@ -205,6 +223,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 				platform,
 				topic: aiTopic,
 				tone: aiTone,
+				length: aiLength,
 				context: form.content,
 			} );
 			if ( res.content ) {
@@ -268,6 +287,45 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 				updateForm( 'media_urls', [ ...form.media_urls, ...urls ] );
 			} );
 			frame.open();
+		}
+	};
+
+	const handleStockSearch = async ( customQuery ) => {
+		const q = ( typeof customQuery === 'string' ? customQuery : stockQuery ).trim() || aiTopic.trim();
+		if ( ! q ) {
+			toast( __( 'Enter a keyword to search free stock photos.', 'ai-marketing-expert' ), 'error' );
+			return;
+		}
+		setStockSearching( true );
+		try {
+			const res = await get( '/stock-images/search', { query: q, q, per_page: 9 } );
+			setStockResults( Array.isArray( res?.items ) ? res.items : [] );
+			setStockSearched( true );
+		} catch ( e ) {
+			toast( e.message || __( 'Stock photo search failed.', 'ai-marketing-expert' ), 'error' );
+		} finally {
+			setStockSearching( false );
+		}
+	};
+
+	const handleStockImport = async ( item ) => {
+		if ( ! item?.full || stockImportingId ) return;
+		setStockImportingId( item.id );
+		try {
+			const res = await post( '/stock-images/import', {
+				url: item.full,
+				alt: item.alt || aiTopic.trim() || __( 'Social media post image', 'ai-marketing-expert' ),
+				credit: item.credit || '',
+				provider: item.provider || stockProvider,
+			} );
+			if ( res?.url ) {
+				updateForm( 'media_urls', [ ...form.media_urls, res.url ] );
+				toast( __( 'Stock photo imported to Media Library and attached!', 'ai-marketing-expert' ) );
+			}
+		} catch ( e ) {
+			toast( e.message || __( 'Could not import stock photo.', 'ai-marketing-expert' ), 'error' );
+		} finally {
+			setStockImportingId( null );
 		}
 	};
 
@@ -350,7 +408,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 							label={ __( 'Content', 'ai-marketing-expert' ) }
 							value={ form.content }
 							onChange={ ( v ) => updateForm( 'content', v ) }
-							rows={ 6 }
+							rows={ 7 }
 							help={ `${ contentLength }/${ charLimit } ${ __( 'characters', 'ai-marketing-expert' ) }` }
 							__nextHasNoMarginBottom
 						/>
@@ -397,7 +455,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 							<div style={ { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 } }>
 								{ form.media_urls.map( ( url, i ) => (
 									<div key={ i } style={ { position: 'relative', width: 80, height: 80 } }>
-										<img src={ url } alt="" style={ { width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 } } />
+										<img src={ url } alt="" style={ { width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--aime-border, #e2e8f0)' } } />
 										<button
 											onClick={ () => removeMedia( i ) }
 											style={ {
@@ -414,7 +472,20 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 							</div>
 							<div style={ { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } }>
 								<Button variant="secondary" size="compact" onClick={ handleMediaAdd }>
-									{ __( '+ Add Media', 'ai-marketing-expert' ) }
+									{ __( '+ Upload / Media Library', 'ai-marketing-expert' ) }
+								</Button>
+								<Button
+									variant={ showStockPicker ? 'primary' : 'secondary' }
+									size="compact"
+									onClick={ () => {
+										const next = ! showStockPicker;
+										setShowStockPicker( next );
+										if ( next && ! stockQuery.trim() && aiTopic.trim() ) {
+											setStockQuery( aiTopic.trim() );
+										}
+									} }
+								>
+									{ __( '📷 Free Stock Photos', 'ai-marketing-expert' ) }
 								</Button>
 								{ imageGenerating ? (
 									<LoadingBtn>
@@ -426,6 +497,163 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 									</Button>
 								) }
 							</div>
+
+							{ showStockPicker && (
+								<div style={ {
+									marginTop: 12,
+									padding: 16,
+									borderRadius: 10,
+									background: 'var(--aime-bg-alt, #f8fafc)',
+									border: '1px solid var(--aime-border, #e2e8f0)',
+								} }>
+									<div style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 } }>
+										<div style={ { display: 'flex', alignItems: 'center', gap: 8 } }>
+											<span style={ { fontWeight: 600, fontSize: 13 } }>
+												{ __( 'Search Free Stock Photos', 'ai-marketing-expert' ) }
+											</span>
+											<span style={ {
+												display: 'inline-block',
+												padding: '2px 8px',
+												borderRadius: 999,
+												fontSize: 11,
+												fontWeight: 600,
+												background: '#e0f2fe',
+												color: '#0369a1',
+												textTransform: 'capitalize',
+											} }>
+												{ stockProvider === 'pixabay' ? 'Pixabay' : 'Pexels' }
+											</span>
+										</div>
+										<div style={ { display: 'flex', alignItems: 'center', gap: 10 } }>
+											<a
+												href={ `${ window.aimeData?.adminUrl || '/wp-admin/' }admin.php?page=ai-marketing-expert-settings&tab=stock_photos` }
+												style={ { fontSize: 12, color: 'var(--aime-primary, #2563eb)', textDecoration: 'none', fontWeight: 500 } }
+											>
+												{ __( '⚙ Stock API Settings', 'ai-marketing-expert' ) }
+											</a>
+											<button
+												type="button"
+												onClick={ () => setShowStockPicker( false ) }
+												style={ { background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--aime-text-muted)', lineHeight: 1 } }
+												aria-label={ __( 'Close stock photo picker', 'ai-marketing-expert' ) }
+											>
+												&times;
+											</button>
+										</div>
+									</div>
+
+									{ stockReady === false ? (
+										<div style={ { padding: '8px 0 4px' } }>
+											<p style={ { fontSize: 13, color: 'var(--aime-text-secondary, #475569)', margin: '0 0 10px' } }>
+												{ __( 'Free stock photo search requires a Pexels or Pixabay API key. Both are 100% free and take less than a minute to set up in Global Settings.', 'ai-marketing-expert' ) }
+											</p>
+											<Button
+												variant="primary"
+												size="compact"
+												onClick={ () => {
+													window.location.href = `${ window.aimeData?.adminUrl || '/wp-admin/' }admin.php?page=ai-marketing-expert-settings&tab=stock_photos`;
+												} }
+											>
+												{ __( 'Configure Free Stock Photo API →', 'ai-marketing-expert' ) }
+											</Button>
+										</div>
+									) : (
+										<>
+											<div style={ { display: 'flex', gap: 8, alignItems: 'flex-end', marginBottom: 10 } }>
+												<div style={ { flex: 1 } }>
+													<TextControl
+														value={ stockQuery }
+														placeholder={ aiTopic.trim() || __( 'e.g. modern office, coffee laptop, fitness...', 'ai-marketing-expert' ) }
+														onChange={ setStockQuery }
+														onKeyDown={ ( e ) => {
+															if ( e.key === 'Enter' ) {
+																e.preventDefault();
+																handleStockSearch();
+															}
+														} }
+														__nextHasNoMarginBottom
+													/>
+												</div>
+												<Button
+													variant="primary"
+													onClick={ () => handleStockSearch() }
+													disabled={ stockSearching }
+												>
+													{ stockSearching ? <Spinner style={ { margin: 0 } } /> : __( 'Search', 'ai-marketing-expert' ) }
+												</Button>
+											</div>
+
+											{ stockSearched && stockResults.length === 0 && ! stockSearching && (
+												<p style={ { fontSize: 12, color: 'var(--aime-text-muted)', margin: '8px 0 0' } }>
+													{ __( 'No photos matched that search. Try simpler or broader keywords.', 'ai-marketing-expert' ) }
+												</p>
+											) }
+
+											{ stockResults.length > 0 && (
+												<>
+													<div style={ {
+														display: 'grid',
+														gridTemplateColumns: 'repeat(auto-fill, minmax(125px, 1fr))',
+														gap: 10,
+														marginTop: 8,
+													} }>
+														{ stockResults.map( ( item ) => {
+															const isImporting = stockImportingId === item.id;
+															return (
+																<button
+																	key={ `${ item.provider }-${ item.id }` }
+																	type="button"
+																	onClick={ () => handleStockImport( item ) }
+																	disabled={ !! stockImportingId }
+																	title={ item.credit ? sprintf( __( 'Click to import — %s', 'ai-marketing-expert' ), item.credit ) : __( 'Click to import to Media Library', 'ai-marketing-expert' ) }
+																	style={ {
+																		position: 'relative',
+																		padding: 0,
+																		border: '1px solid var(--aime-border, #cbd5e1)',
+																		borderRadius: 8,
+																		overflow: 'hidden',
+																		cursor: stockImportingId ? 'wait' : 'pointer',
+																		background: '#0f172a',
+																		height: 92,
+																		display: 'block',
+																		width: '100%',
+																	} }
+																>
+																	<img
+																		src={ item.thumb }
+																		alt={ item.alt || '' }
+																		loading="lazy"
+																		style={ { width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: isImporting ? 0.45 : 0.95 } }
+																	/>
+																	<span style={ {
+																		position: 'absolute',
+																		left: 0,
+																		right: 0,
+																		bottom: 0,
+																		padding: '3px 6px',
+																		fontSize: 10,
+																		color: '#fff',
+																		background: 'linear-gradient(transparent, rgba(0,0,0,0.78))',
+																		textAlign: 'left',
+																		whiteSpace: 'nowrap',
+																		overflow: 'hidden',
+																		textOverflow: 'ellipsis',
+																	} }>
+																		{ isImporting ? __( 'Importing…', 'ai-marketing-expert' ) : ( item.photographer || __( '+ Add to Post', 'ai-marketing-expert' ) ) }
+																	</span>
+																</button>
+															);
+														} ) }
+													</div>
+													<p style={ { fontSize: 11, color: 'var(--aime-text-muted)', margin: '8px 0 0' } }>
+														{ __( 'Click any photo to download it into your WordPress Media Library and attach it to this post.', 'ai-marketing-expert' ) }
+													</p>
+												</>
+											) }
+										</>
+									) }
+								</div>
+							) }
 						</div>
 
 						{ /* Schedule */ }
@@ -504,7 +732,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 					<Card title={ __( '✨ AI Assistant', 'ai-marketing-expert' ) } className="aime-ai-sidebar">
 						<p style={ { fontSize: 13, color: 'var(--aime-text-muted)', marginBottom: 16 } }>
 							{ selectedAccount
-								? sprintf( __( 'Generate a %s-ready post using AI. Enter a topic and choose a tone.', 'ai-marketing-expert' ), platformLabel )
+								? sprintf( __( 'Generate a %s-ready post using AI. Enter a topic, tone, and length.', 'ai-marketing-expert' ), platformLabel )
 								: __( 'Select an account first so AI can generate content for the correct platform.', 'ai-marketing-expert' ) }
 						</p>
 
@@ -538,6 +766,23 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 								__nextHasNoMarginBottom
 							/>
 						</div>
+
+						{ platform !== 'x' && (
+							<div style={ { marginTop: 12 } }>
+								<SelectControl
+									label={ __( 'Caption Length', 'ai-marketing-expert' ) }
+									value={ aiLength }
+									options={ [
+										{ label: __( 'Short & Punchy (45–80 words)', 'ai-marketing-expert' ), value: 'short' },
+										{ label: __( 'Standard / Engaging (110–190 words)', 'ai-marketing-expert' ), value: 'medium' },
+										{ label: __( 'Detailed / Storytelling (200–350 words)', 'ai-marketing-expert' ), value: 'long' },
+									] }
+									onChange={ setAiLength }
+									help={ platform === 'instagram' ? __( 'Creates scroll-stopping hooks, structured paragraphs/bullets, and a strong call-to-action.', 'ai-marketing-expert' ) : undefined }
+									__nextHasNoMarginBottom
+								/>
+							</div>
+						) }
 
 						{ captionLoading ? (
 							<LoadingBtn light style={ { marginTop: 16, width: '100%' } }>

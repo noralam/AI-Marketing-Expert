@@ -380,6 +380,14 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 
 == Changelog ==
 
+= 1.2.7 =
+* New: Free Stock Photos in Social Media Composer — Search and 1-click import high-resolution stock photos (Pexels and Pixabay) directly into social media posts and download them to your WordPress Media Library, making Instagram publishing and image posts effortless without needing paid AI image credits.
+* New: Universal Stock Photo Global Settings — Centralized Pexels and Pixabay API configurations under main Settings (Settings → Stock Photos) with encrypted API key storage (AES-256), accessible to all modules across the plugin.
+* Improved: 100% Backward Compatibility & Migration Notice — Preserved all existing saved stock keys from Content Generator automatically, and added an informative status card with a 1-click redirect button under Content Generator → Settings → Images for existing users.
+* New: Social Media Caption Length Selector — Added length controls (Short & Punchy 45–80 words, Standard / Engaging 110–190 words, Detailed / Storytelling 200–350 words) to tailor AI-generated copy for Instagram, Facebook, and LinkedIn.
+* Fixed: Instagram & Social Caption Truncation — Resolved an issue where AI-generated social captions were truncated to only the first line; the engine now delivers full, structured multi-paragraph captions with attention-grabbing hooks, clean line breaks, emojis, and strong calls-to-action.
+* Improved: Universal Stock Photo REST API — Enhanced core endpoints (/aime/v1/stock-images/search and /aime/v1/stock-images/import) to support flexible query parameters and safe sideloading with host whitelisting and SSRF protection.
+
 = 1.2.6 =
 * New: WooCommerce Abandoned Cart Recovery Engine — Real-time cart session tracking, guest checkout email capture via background AJAX, automated 15-minute cron inactivity detection, and encrypted 1-click cart restoration deep links directly to checkout.
 * New: WooCommerce Smart Cart Recovery & 3-Way Branching — 1-click single-quantity checkout deep links ({event.single_qty_url}), individual product recovery links ({event.single_item_links}), automated cart composition classification (single item, duplicate quantity, multiple items), and 3-way condition branching templates.
@@ -494,6 +502,9 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 * React-based unified admin dashboard
 
 == Upgrade Notice ==
+
+= 1.2.7 =
+Feature Release: Free Stock Photos (Pexels & Pixabay) in Social Media Composer, Universal Stock Photo Global Settings, Caption Length Selector (short/medium/long), and fixed Instagram caption truncation for rich, engaging social posts. Highly recommended for all users.
 
 = 1.2.6 =
 Major Release: Smart WooCommerce Cart Recovery with 1-click single-qty checkout, Admin Dashboard Background Cron, Workflow Wait/Delay step, AI Text-to-Workflow Generator, Email Campaign processor resilience fix, and AI Chatbot product link safeguards. Recommended for all users.

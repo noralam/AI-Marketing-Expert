@@ -1379,9 +1379,11 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 													</p>
 													<Button
 														variant="primary"
-														onClick={ () => onNavigate( 'settings', { tab: 'images' } ) }
+														onClick={ () => {
+															window.location.href = `${ window.aimeData?.adminUrl || '/wp-admin/' }admin.php?page=ai-marketing-expert-settings&tab=stock_photos`;
+														} }
 													>
-														{ __( 'Go to Settings → Images', 'ai-marketing-expert' ) }
+														{ __( 'Go to Settings → Stock Photos', 'ai-marketing-expert' ) }
 													</Button>
 												</>
 											) : (

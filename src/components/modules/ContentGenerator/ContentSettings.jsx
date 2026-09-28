@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, TextControl, SelectControl, ToggleControl, TabPanel, Spinner } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
@@ -299,39 +299,61 @@ const ContentSettings = ( { initialTab } ) => {
 
 						if ( tab.name === 'images' ) {
 							const activeProvider = settings.stock_provider || 'pexels';
+							const providerName = activeProvider === 'pixabay' ? 'Pixabay' : 'Pexels';
 							const hasKey = activeProvider === 'pixabay' ? !! settings.has_pixabay_key : !! settings.has_pexels_key;
-							const keyField = `${ activeProvider }_api_key`;
-							const keyUrl = activeProvider === 'pixabay'
-								? 'https://pixabay.com/api/docs/'
-								: 'https://www.pexels.com/api/';
+							const anyKey = !! settings.has_pexels_key || !! settings.has_pixabay_key;
 							return (
 								<div className="aime-settings-form">
-									<div className="aime-form-grid aime-form-grid--top aime-form-grid-2">
-										<SelectControl
-											label={ __( 'Stock Photo Provider', 'ai-marketing-expert' ) }
-											help={ __( 'Where stock photos are searched from.', 'ai-marketing-expert' ) }
-											value={ activeProvider }
-											options={ STOCK_PROVIDERS }
-											onChange={ ( v ) => setField( 'stock_provider', v ) }
-											__nextHasNoMarginBottom
-										/>
-										<TextControl
-											label={ activeProvider === 'pixabay' ? __( 'Pixabay API Key', 'ai-marketing-expert' ) : __( 'Pexels API Key', 'ai-marketing-expert' ) }
-											type="password"
-											autoComplete="new-password"
-											value={ settings[ keyField ] || '' }
-											placeholder={ hasKey ? __( 'Key saved — enter a new key to replace it', 'ai-marketing-expert' ) : __( 'Paste your free API key', 'ai-marketing-expert' ) }
-											help={
-												<>
+									<div
+										style={ {
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'space-between',
+											flexWrap: 'wrap',
+											gap: 16,
+											padding: '16px 20px',
+											marginBottom: 20,
+											borderRadius: 10,
+											background: hasKey ? '#f0fdf4' : '#eff6ff',
+											border: `1px solid ${ hasKey ? '#bbf7d0' : '#bfdbfe' }`,
+										} }
+									>
+										<div style={ { flex: '1 1 320px' } }>
+											<div style={ { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 } }>
+												<strong style={ { fontSize: 14, color: '#0f172a' } }>
+													{ __( 'Stock Photo API Keys Moved to Global Settings', 'ai-marketing-expert' ) }
+												</strong>
+												<span
+													style={ {
+														display: 'inline-block',
+														padding: '2px 8px',
+														borderRadius: 999,
+														fontSize: 11,
+														fontWeight: 600,
+														background: hasKey ? '#dcfce7' : ( anyKey ? '#fef3c7' : '#e2e8f0' ),
+														color: hasKey ? '#166534' : ( anyKey ? '#92400e' : '#475569' ),
+													} }
+												>
 													{ hasKey
-														? __( 'A key is saved (stored encrypted, never exported). ', 'ai-marketing-expert' )
-														: __( 'Free instant signup. ', 'ai-marketing-expert' ) }
-													<a href={ keyUrl } target="_blank" rel="noreferrer">{ __( 'Get an API key', 'ai-marketing-expert' ) }</a>
-												</>
-											}
-											onChange={ ( v ) => setField( keyField, v ) }
-											__nextHasNoMarginBottom
-										/>
+														? sprintf( __( '✓ %s Key Active', 'ai-marketing-expert' ), providerName )
+														: __( 'Key Not Set', 'ai-marketing-expert' ) }
+												</span>
+											</div>
+											<p style={ { margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.5 } }>
+												{ __( 'Pexels & Pixabay API keys are now managed in Global Settings so you can use free stock photos universally across Content Generator, Social Media (Instagram, Facebook, LinkedIn, X), and other modules. Your existing saved keys remain intact.', 'ai-marketing-expert' ) }
+											</p>
+										</div>
+										<Button
+											variant="primary"
+											onClick={ () => {
+												window.location.href = 'admin.php?page=ai-marketing-expert-settings&tab=stock_photos';
+											} }
+										>
+											{ __( 'Manage Stock Photo API Keys →', 'ai-marketing-expert' ) }
+										</Button>
+									</div>
+
+									<div className="aime-form-grid aime-form-grid--top aime-form-grid-2">
 										<SelectControl
 											label={ __( 'In-body Stock Images', 'ai-marketing-expert' ) }
 											help={ __( 'AI places relevant stock photos inside generated article text.', 'ai-marketing-expert' ) }

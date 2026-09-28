@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
-	ToggleControl, Button, SelectControl, Spinner, Modal,
+	ToggleControl, Button, SelectControl, TextControl, Spinner, Modal,
 } from '@aime/wp-components';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
@@ -18,6 +18,7 @@ const isDebug = !! window.aimeData?.isDebug;
 
 const TABS = [
 	{ id: 'general', label: __( 'General', 'ai-marketing-expert' ) },
+	{ id: 'stock_photos', label: __( 'Stock Photos', 'ai-marketing-expert' ) },
 	{ id: 'modules', label: __( 'Modules', 'ai-marketing-expert' ) },
 	{ id: 'system', label: __( 'System Status', 'ai-marketing-expert' ) },
 	{ id: 'api', label: __( 'API & Webhooks', 'ai-marketing-expert' ) },
@@ -88,6 +89,11 @@ const SettingsPage = () => {
 	const [ dbStats, setDbStats ] = useState( null );
 	const [ dbStatsLoading, setDbStatsLoading ] = useState( false );
 	const [ pruneMode, setPruneMode ] = useState( 'expired' );
+
+	/* Stock Photos */
+	const [ savingStock, setSavingStock ] = useState( false );
+	const [ pexelsKeyInput, setPexelsKeyInput ] = useState( '' );
+	const [ pixabayKeyInput, setPixabayKeyInput ] = useState( '' );
 
 	useEffect( () => {
 		loadData();
@@ -322,6 +328,51 @@ const SettingsPage = () => {
 			setNotice( { type: 'error', message: err.message } );
 		} finally {
 			setPruningDb( false );
+		}
+	};
+
+	const handleSaveStockPhotos = async () => {
+		setSavingStock( true );
+		try {
+			const payload = {
+				stock_provider: settings.stock_provider || 'pexels',
+			};
+			if ( pexelsKeyInput.trim() !== '' ) {
+				payload.pexels_api_key = pexelsKeyInput.trim();
+			}
+			if ( pixabayKeyInput.trim() !== '' ) {
+				payload.pixabay_api_key = pixabayKeyInput.trim();
+			}
+			const res = await post( '/settings', payload );
+			if ( res?.settings ) {
+				setSettings( res.settings );
+			}
+			setPexelsKeyInput( '' );
+			setPixabayKeyInput( '' );
+			setNotice( { type: 'success', message: __( 'Stock photo settings saved successfully.', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		} finally {
+			setSavingStock( false );
+		}
+	};
+
+	const handleClearStockKey = async ( providerKey ) => {
+		// eslint-disable-next-line no-alert
+		if ( ! window.confirm( __( 'Remove this saved stock photo API key?', 'ai-marketing-expert' ) ) ) {
+			return;
+		}
+		setSavingStock( true );
+		try {
+			const res = await post( '/settings', { [ providerKey ]: '' } );
+			if ( res?.settings ) {
+				setSettings( res.settings );
+			}
+			setNotice( { type: 'success', message: __( 'Stock photo API key removed.', 'ai-marketing-expert' ) } );
+		} catch ( err ) {
+			setNotice( { type: 'error', message: err.message } );
+		} finally {
+			setSavingStock( false );
 		}
 	};
 
@@ -669,6 +720,102 @@ const SettingsPage = () => {
 								</Modal>
 							) }
 						</>
+					) }
+
+					{ /* Stock Photos */ }
+					{ tab === 'stock_photos' && (
+						<Card title={ __( 'Free Stock Photo Providers (Pexels & Pixabay)', 'ai-marketing-expert' ) }>
+							<p className="aime-card-description" style={ { marginBottom: 16 } }>
+								{ __( 'Configure your free Pexels or Pixabay API key once here. It will automatically power free stock photo search and 1-click Media Library imports across Content Generator, Social Media (Instagram, Facebook, LinkedIn, X), Email Marketing, and Workflow Automation.', 'ai-marketing-expert' ) }
+							</p>
+
+							<div style={ { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 } }>
+								<div style={ { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 8, background: settings.has_pexels_key ? '#ecfdf5' : '#f8fafc', border: `1px solid ${ settings.has_pexels_key ? '#a7f3d0' : '#e2e8f0' }` } }>
+									<span style={ { fontSize: 13, fontWeight: 600, color: settings.has_pexels_key ? '#065f46' : '#475569' } }>
+										Pexels: { settings.has_pexels_key ? __( '✓ Key Saved', 'ai-marketing-expert' ) : __( 'Not Configured', 'ai-marketing-expert' ) }
+									</span>
+									{ settings.has_pexels_key && (
+										<Button variant="link" isDestructive size="small" onClick={ () => handleClearStockKey( 'pexels_api_key' ) }>
+											{ __( 'Remove', 'ai-marketing-expert' ) }
+										</Button>
+									) }
+								</div>
+								<div style={ { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 8, background: settings.has_pixabay_key ? '#ecfdf5' : '#f8fafc', border: `1px solid ${ settings.has_pixabay_key ? '#a7f3d0' : '#e2e8f0' }` } }>
+									<span style={ { fontSize: 13, fontWeight: 600, color: settings.has_pixabay_key ? '#065f46' : '#475569' } }>
+										Pixabay: { settings.has_pixabay_key ? __( '✓ Key Saved', 'ai-marketing-expert' ) : __( 'Not Configured', 'ai-marketing-expert' ) }
+									</span>
+									{ settings.has_pixabay_key && (
+										<Button variant="link" isDestructive size="small" onClick={ () => handleClearStockKey( 'pixabay_api_key' ) }>
+											{ __( 'Remove', 'ai-marketing-expert' ) }
+										</Button>
+									) }
+								</div>
+							</div>
+
+							<div style={ { maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 16 } }>
+								<SelectControl
+									label={ __( 'Default Stock Photo Provider', 'ai-marketing-expert' ) }
+									help={ __( 'Choose which free provider to search by default across all modules.', 'ai-marketing-expert' ) }
+									value={ settings.stock_provider || 'pexels' }
+									options={ [
+										{ value: 'pexels', label: __( 'Pexels (Free)', 'ai-marketing-expert' ) },
+										{ value: 'pixabay', label: __( 'Pixabay (Free)', 'ai-marketing-expert' ) },
+									] }
+									onChange={ ( v ) => setSettings( ( prev ) => ( { ...prev, stock_provider: v } ) ) }
+									__nextHasNoMarginBottom
+								/>
+
+								<TextControl
+									label={ __( 'Pexels API Key', 'ai-marketing-expert' ) }
+									type="password"
+									autoComplete="new-password"
+									value={ pexelsKeyInput }
+									placeholder={ settings.has_pexels_key ? __( 'Key saved — enter a new key to replace it', 'ai-marketing-expert' ) : __( 'Paste your free Pexels API key', 'ai-marketing-expert' ) }
+									help={
+										<>
+											{ settings.has_pexels_key
+												? __( 'A key is saved (encrypted at rest, never exported). ', 'ai-marketing-expert' )
+												: __( '100% free instant signup. ', 'ai-marketing-expert' ) }
+											<a href="https://www.pexels.com/api/" target="_blank" rel="noreferrer">{ __( 'Get a free Pexels API key →', 'ai-marketing-expert' ) }</a>
+										</>
+									}
+									onChange={ setPexelsKeyInput }
+									__nextHasNoMarginBottom
+								/>
+
+								<TextControl
+									label={ __( 'Pixabay API Key', 'ai-marketing-expert' ) }
+									type="password"
+									autoComplete="new-password"
+									value={ pixabayKeyInput }
+									placeholder={ settings.has_pixabay_key ? __( 'Key saved — enter a new key to replace it', 'ai-marketing-expert' ) : __( 'Paste your free Pixabay API key', 'ai-marketing-expert' ) }
+									help={
+										<>
+											{ settings.has_pixabay_key
+												? __( 'A key is saved (encrypted at rest, never exported). ', 'ai-marketing-expert' )
+												: __( '100% free instant signup. ', 'ai-marketing-expert' ) }
+											<a href="https://pixabay.com/api/docs/" target="_blank" rel="noreferrer">{ __( 'Get a free Pixabay API key →', 'ai-marketing-expert' ) }</a>
+										</>
+									}
+									onChange={ setPixabayKeyInput }
+									__nextHasNoMarginBottom
+								/>
+
+								<div>
+									<Button
+										variant="primary"
+										onClick={ handleSaveStockPhotos }
+										isBusy={ savingStock }
+										disabled={ savingStock }
+									>
+										{ savingStock
+											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
+											: __( 'Save Stock Photo Settings', 'ai-marketing-expert' )
+										}
+									</Button>
+								</div>
+							</div>
+						</Card>
 					) }
 
 					{ /* Modules */ }

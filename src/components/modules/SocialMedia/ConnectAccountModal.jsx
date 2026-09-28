@@ -57,12 +57,13 @@ const PLATFORM_GUIDE = {
 		apiSecretHelp: __( 'In X docs this is also called the Consumer Secret or Secret Key.', 'ai-marketing-expert' ),
 		bearerTokenHelp: __( 'Bearer Token is not required for this plugin. X posting here uses OAuth 1.0a user context with API Key, API Secret, Access Token, and Access Token Secret.', 'ai-marketing-expert' ),
 		steps: [
-			{ n: 1, text: __( 'Go to', 'ai-marketing-expert' ), link: { href: 'https://developer.twitter.com/en/portal/projects-and-apps', label: 'developer.twitter.com' }, after: __( 'and create a Project + App.', 'ai-marketing-expert' ) },
-			{ n: 2, text: __( 'Under App Settings → "User authentication settings", set permissions to Read and Write.', 'ai-marketing-expert' ) },
-			{ n: 3, text: __( 'Go to the "Keys and Tokens" tab of your App.', 'ai-marketing-expert' ) },
-			{ n: 4, text: __( 'Copy your Consumer Key and Secret Key. In this plugin those map to API Key and API Secret.', 'ai-marketing-expert' ) },
-			{ n: 5, text: __( 'Under Authentication Tokens, generate an Access Token and Access Token Secret.', 'ai-marketing-expert' ) },
-			{ n: 6, text: __( 'You do not need the Bearer Token for this plugin. Paste only those four values in the fields below.', 'ai-marketing-expert' ) },
+			{ n: 1, isWarning: true, text: __( 'Notice: X.com (Twitter) API is NOT free. It is a premium/pay-as-you-go service and requires paid credits to publish posts.', 'ai-marketing-expert' ) },
+			{ n: 2, text: __( 'Go to', 'ai-marketing-expert' ), link: { href: 'https://developer.twitter.com/en/portal/projects-and-apps', label: 'developer.twitter.com' }, after: __( 'and create a Project + App.', 'ai-marketing-expert' ) },
+			{ n: 3, text: __( 'Under App Settings → "User authentication settings", set permissions to Read and Write.', 'ai-marketing-expert' ) },
+			{ n: 4, text: __( 'Go to the "Keys and Tokens" tab of your App.', 'ai-marketing-expert' ) },
+			{ n: 5, text: __( 'Copy your Consumer Key and Secret Key. In this plugin those map to API Key and API Secret.', 'ai-marketing-expert' ) },
+			{ n: 6, text: __( 'Under Authentication Tokens, generate an Access Token and Access Token Secret.', 'ai-marketing-expert' ) },
+			{ n: 7, text: __( 'You do not need the Bearer Token for this plugin. Paste only those four values in the fields below.', 'ai-marketing-expert' ) },
 		],
 	},
 	linkedin: {
@@ -82,12 +83,28 @@ const PLATFORM_GUIDE = {
 };
 
 const GuideStep = ( { step } ) => (
-	<li style={ { display: 'flex', gap: 10, marginBottom: 8, fontSize: 13, lineHeight: '1.5', color: 'var(--aime-text-muted)' } }>
+	<li style={ {
+		display: 'flex',
+		gap: 10,
+		marginBottom: 8,
+		fontSize: 13,
+		lineHeight: '1.5',
+		color: step.isWarning ? '#dc2626' : 'var(--aime-text-muted)',
+		fontWeight: step.isWarning ? 600 : 'normal',
+	} }>
 		<span style={ {
-			flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
-			background: 'var(--aime-border)', color: 'var(--aime-text)',
-			display: 'flex', alignItems: 'center', justifyContent: 'center',
-			fontSize: 11, fontWeight: 700, marginTop: 1,
+			flexShrink: 0,
+			width: 20,
+			height: 20,
+			borderRadius: '50%',
+			background: step.isWarning ? '#fee2e2' : 'var(--aime-border)',
+			color: step.isWarning ? '#dc2626' : 'var(--aime-text)',
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'center',
+			fontSize: 11,
+			fontWeight: 700,
+			marginTop: 1,
 		} }>{ step.n }</span>
 		<span>
 			{ step.text }{ ' ' }
