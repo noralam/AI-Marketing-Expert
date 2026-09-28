@@ -66,14 +66,17 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 			setAccounts( accountRes.items || accountRes || [] );
 			setSocialSettings( settingsRes );
 			setScheduledCount( ( scheduledRes?.total || 0 ) + ( pendingRes?.total || 0 ) );
-			if ( globalSettingsRes ) {
-				const p = globalSettingsRes.stock_provider === 'pixabay' ? 'pixabay' : 'pexels';
-				const hasKey = p === 'pixabay' ? !! globalSettingsRes.has_pixabay_key : !! globalSettingsRes.has_pexels_key;
-				setStockProvider( p );
-				setStockReady( hasKey );
-			} else {
-				setStockReady( false );
+			const s = globalSettingsRes?.settings || globalSettingsRes || {};
+			const hasPexels = !! s.has_pexels_key;
+			const hasPixabay = !! s.has_pixabay_key;
+			let p = s.stock_provider === 'pixabay' ? 'pixabay' : 'pexels';
+			if ( p === 'pixabay' && ! hasPixabay && hasPexels ) {
+				p = 'pexels';
+			} else if ( p === 'pexels' && ! hasPexels && hasPixabay ) {
+				p = 'pixabay';
 			}
+			setStockProvider( p );
+			setStockReady( hasPexels || hasPixabay );
 		} catch ( e ) {
 			// silent
 		}
@@ -299,9 +302,17 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 		setStockSearching( true );
 		try {
 			const res = await get( '/stock-images/search', { query: q, q, per_page: 9 } );
-			setStockResults( Array.isArray( res?.items ) ? res.items : [] );
+			if ( res?.provider ) {
+				setStockProvider( res.provider );
+			}
+			const images = res?.images || res?.items || [];
+			setStockResults( Array.isArray( images ) ? images : [] );
 			setStockSearched( true );
+			setStockReady( true );
 		} catch ( e ) {
+			if ( e?.not_configured || e?.data?.not_configured ) {
+				setStockReady( false );
+			}
 			toast( e.message || __( 'Stock photo search failed.', 'ai-marketing-expert' ), 'error' );
 		} finally {
 			setStockSearching( false );
@@ -315,7 +326,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 			const res = await post( '/stock-images/import', {
 				url: item.full,
 				alt: item.alt || aiTopic.trim() || __( 'Social media post image', 'ai-marketing-expert' ),
-				credit: item.credit || '',
+				credit: item.photographer || item.credit || '',
 				provider: item.provider || stockProvider,
 			} );
 			if ( res?.url ) {
@@ -601,11 +612,11 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 															const isImporting = stockImportingId === item.id;
 															return (
 																<button
-																	key={ `${ item.provider }-${ item.id }` }
+																	key={ `${ item.provider || stockProvider }-${ item.id }` }
 																	type="button"
 																	onClick={ () => handleStockImport( item ) }
 																	disabled={ !! stockImportingId }
-																	title={ item.credit ? sprintf( __( 'Click to import — %s', 'ai-marketing-expert' ), item.credit ) : __( 'Click to import to Media Library', 'ai-marketing-expert' ) }
+																	title={ item.credit || item.photographer ? sprintf( __( 'Click to import — %s', 'ai-marketing-expert' ), item.photographer || item.credit ) : __( 'Click to import to Media Library', 'ai-marketing-expert' ) }
 																	style={ {
 																		position: 'relative',
 																		padding: 0,
@@ -620,7 +631,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 																	} }
 																>
 																	<img
-																		src={ item.thumb }
+																		src={ item.thumb || item.preview || item.full }
 																		alt={ item.alt || '' }
 																		loading="lazy"
 																		style={ { width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: isImporting ? 0.45 : 0.95 } }

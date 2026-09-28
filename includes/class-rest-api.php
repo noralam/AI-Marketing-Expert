@@ -966,6 +966,10 @@ class RestApi {
 			);
 		}
 
+		if ( isset( $result['images'] ) && ! isset( $result['items'] ) ) {
+			$result['items'] = $result['images'];
+		}
+
 		return new \WP_REST_Response( $result );
 	}
 
