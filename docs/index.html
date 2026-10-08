@@ -3,538 +3,2019 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Marketing Expert Documentation</title>
-  <meta name="description" content="Official documentation for AI Marketing Expert WordPress Plugin: installation, quick start, modules, best practices, and troubleshooting." />
+  <title>AI Marketing Expert (v1.2.7) — Official Master Documentation & Technical Guide</title>
+  <meta name="description" content="Official master documentation and step-by-step user guide for AI Marketing Expert WordPress Plugin v1.2.7. Learn how to automate B2B lead generation, multi-SMTP cold outreach, WooCommerce abandoned cart recovery, AI SEO audits, and visual workflow automation." />
+  <meta name="keywords" content="AI Marketing Expert, WordPress AI marketing plugin, WooCommerce abandoned cart recovery, B2B lead finder, self-hosted email marketing, AI content generator, WordPress chatbot, automated marketing workflows, Google Gemini WordPress" />
+  <meta name="author" content="WPThemeSpace" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href="https://wpthemespace.com/ai-marketing-expert-docs/" />
+
+  <!-- Open Graph / Facebook / LinkedIn / Discord / AI Previews -->
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AI Marketing Expert (v1.2.7) — Official Master Documentation" />
+  <meta property="og:description" content="Complete technical manual and step-by-step guide for AI Marketing Expert: autonomous WordPress B2B lead generation, email automation, cart recovery, AI workflows, and SEO." />
+  <meta property="og:url" content="https://wpthemespace.com/ai-marketing-expert-docs/" />
+  <meta property="og:site_name" content="WPThemeSpace" />
+  <meta property="article:publisher" content="https://wpthemespace.com" />
+  <meta property="article:modified_time" content="2026-09-28T15:00:00+00:00" />
+  <meta property="og:image" content="https://wpthemespace.com/wp-content/uploads/2026/06/AI-Marketing-Expert-Banner.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AI Marketing Expert Docs — WordPress AI Marketing Suite" />
+  <meta name="twitter:description" content="Official technical guide & user manual for AI Marketing Expert WordPress plugin." />
+  <meta name="twitter:image" content="https://wpthemespace.com/wp-content/uploads/2026/06/AI-Marketing-Expert-Banner.jpg" />
+
+  <!-- Mobile & Browser Theme -->
+  <meta name="theme-color" content="#4f46e5" />
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Structured Data (JSON-LD) for Generative Engine Optimization (GEO) & Search Engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://wpthemespace.com/#organization",
+        "name": "WPThemeSpace",
+        "url": "https://wpthemespace.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://wpthemespace.com/wp-content/uploads/2021/04/wpthemespace-logo.webp"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://wpthemespace.com/ai-marketing-expert-docs/#software",
+        "name": "AI Marketing Expert",
+        "operatingSystem": "WordPress 6.0+",
+        "applicationCategory": "BusinessApplication",
+        "softwareVersion": "1.2.7",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": {
+          "@id": "https://wpthemespace.com/#organization"
+        },
+        "description": "All-in-one autonomous AI marketing and workflow automation suite for WordPress and WooCommerce."
+      },
+      {
+        "@type": "TechArticle",
+        "@id": "https://wpthemespace.com/ai-marketing-expert-docs/#article",
+        "isPartOf": {
+          "@type": "WebPage",
+          "@id": "https://wpthemespace.com/ai-marketing-expert-docs/"
+        },
+        "headline": "AI Marketing Expert (v1.2.7) — Official Master Documentation & Technical Guide",
+        "description": "Complete user manual, developer documentation, and tutorials for AI Marketing Expert WordPress plugin.",
+        "inLanguage": "en-US",
+        "datePublished": "2026-06-17T09:00:00+00:00",
+        "dateModified": "2026-09-28T15:00:00+00:00",
+        "author": {
+          "@id": "https://wpthemespace.com/#organization"
+        },
+        "publisher": {
+          "@id": "https://wpthemespace.com/#organization"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wpthemespace.com/ai-marketing-expert-docs/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://wpthemespace.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Documentation",
+            "item": "https://wpthemespace.com/ai-marketing-expert-docs/"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://wpthemespace.com/ai-marketing-expert-docs/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Are there any recurring monthly subscription fees?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No! AI Marketing Expert is 100% self-hosted on your own WordPress site. You never pay monthly per-subscriber fees like Mailchimp or Klaviyo. If you connect Google AI Studio's free Gemini API tier, your AI text and copywriting costs are also $0."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I send marketing or cold outreach emails using Gmail, Amazon SES, or Brevo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! The plugin features a built-in Multi-SMTP Relay Manager supporting Gmail, Google Workspace, Amazon SES, Brevo (Sendinblue), SendGrid, Mailgun, and custom SMTP. You can configure daily sending limits and automatic failover rotation across multiple providers to protect your domain reputation."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does the B2B Lead Finder work, and are email addresses verified before sending?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The B2B Lead Finder targets specific niches, roles, and countries. Before any email is enrolled into an outreach sequence, the built-in Email Validator performs real-time syntax checking, disposable/temporary domain filtering, and live DNS MX record verification to ensure near 0% bounce rate."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does WooCommerce Abandoned Cart Recovery recover lost sales?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "When a shopper adds products to their cart and enters their details but abandons checkout, the plugin captures the cart. It automatically sends scheduled, personalized recovery emails with a direct 1-click checkout recovery link, complete with duplicate cart protection and optional dynamic discount incentives."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Will this plugin slow down my website or WooCommerce store?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The front-end tracking asset is ultra-lightweight (under 5KB) and loads asynchronously. All heavy operations such as AI generation, contact verification, and email dispatch run in background worker processes controlled by cron, preventing any impact on page load speed."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I build visual automated workflows and nurture drip sequences?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! The visual Workflow Automation Canvas (React Flow) lets you build intuitive drag-and-drop automations with triggers (new order, abandoned cart, tag added), conditions, timed delays (e.g., wait 3 days), and automated actions (send email, webhook, tag update). You can also use Text-to-Workflow AI to generate flows automatically from plain English prompts."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Deep Humanize in Content Generator bypass AI detectors?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Deep Humanize analyzes sentence rhythm, perplexity, and burstiness to rephrase synthetic AI patterns into authentic human tone. Crucially, unlike generic paraphrasers, it strictly preserves all Markdown tables, bullet lists, bold highlights, and technical terminology."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can the AI Chatbot answer customer questions using my WooCommerce products and site content?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. The AI Chatbot includes a dedicated Knowledge Base crawler that indexes your WooCommerce product catalog, prices, and website pages. It delivers instant, context-aware answers to shopper questions and allows human agents to take over live conversations at any time."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What should I do if WP-Cron fails or scheduled tasks are delayed?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "For high-volume sites, you can disable standard WP-Cron and set up a reliable external server cron (via crontab or services like cron-job.org) pinging the canonical AIME webhook URL every 5 minutes for guaranteed task execution."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I migrate contacts from Mailchimp, FluentCRM, or CSV lists?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Export your contacts as a CSV file from any CRM and use Email Marketing → Import / Export. The visual column mapper lets you match name, email, custom fields, and assign tags in seconds."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="reading-progress" id="readingProgress"></div>
 
+  <!-- ── TOPBAR ── -->
   <header class="topbar">
-    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
-    <div class="brand">
-      <div class="brand-badge">AI</div>
-      <div>
-        <h1>AI Marketing Expert Docs</h1>
-        <p>Complete User Guide + Growth Playbook</p>
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="brand">
+        <div class="brand-badge">AIME</div>
+        <div>
+          <h1>AI Marketing Expert Docs <span class="badge-pill badge-pro">v1.2.7</span></h1>
+          <p>Official User Manual, Technical Guides & Micro-Video Tutorials</p>
+        </div>
       </div>
     </div>
-    <div class="search-wrap">
-      <input id="docSearch" type="search" placeholder="Search docs, features, settings..." aria-label="Search documentation" />
-      <div id="searchResults" class="search-results" aria-live="polite"></div>
+
+    <!-- Right Controls: Language Selector & Smart Search -->
+    <div class="topbar-right">
+      <div class="lang-selector-wrap" id="langSelectorWrap">
+        <button type="button" class="lang-btn" id="langBtn" aria-label="Select Language" aria-expanded="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="currentLangLabel">English</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="lang-dropdown" id="langDropdown" role="menu">
+          <a href="#" class="lang-opt active" data-lang="en" role="menuitem">🇬🇧 English <span class="lang-badge">Master</span></a>
+          <a href="es/index.html" class="lang-opt" data-lang="es" role="menuitem">🇪🇸 Español (Spanish)</a>
+          <a href="de/index.html" class="lang-opt" data-lang="de" role="menuitem">🇩🇪 Deutsch (German)</a>
+          <a href="fr/index.html" class="lang-opt" data-lang="fr" role="menuitem">🇫🇷 Français (French)</a>
+          <a href="ja/index.html" class="lang-opt" data-lang="ja" role="menuitem">🇯🇵 日本語 (Japanese)</a>
+          <a href="pt/index.html" class="lang-opt" data-lang="pt" role="menuitem">🇧🇷 Português (Portuguese)</a>
+          <a href="ar/index.html" class="lang-opt" data-lang="ar" role="menuitem">🇸🇦 العربية (Arabic)</a>
+          <a href="bn/index.html" class="lang-opt" data-lang="bn" role="menuitem">🇧🇩 বাংলা (Bengali)</a>
+          <a href="hi/index.html" class="lang-opt" data-lang="hi" role="menuitem">🇮🇳 हिन्दी (Hindi)</a>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <div class="search-input-box">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="docSearch" type="search" placeholder="Search features, submenus, cron..." aria-label="Search documentation" autocomplete="off" />
+          <kbd class="search-kbd">Ctrl K</kbd>
+        </div>
+        <div id="searchResults" class="search-results" aria-live="polite"></div>
+      </div>
     </div>
   </header>
 
-  <div class="layout">
-    <aside class="sidebar" id="sidebar">
-      <nav>
-        <h2>Documentation</h2>
-        <a href="#introduction" class="nav-link">Getting Started</a>
-        <a href="#installation" class="nav-link">Installation</a>
-        <a href="#quick-start" class="nav-link">Quick Start</a>
-        <a href="#dashboard-overview" class="nav-link">Dashboard Overview</a>
+  <!-- ── MOBILE BACKDROP ── -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-        <button class="feature-toggle" type="button" aria-expanded="true">Features</button>
-        <div class="feature-group expanded">
-          <a href="#feature-email-marketing" class="nav-link">Email Marketing</a>
-          <a href="#feature-content-generator" class="nav-link">AI Content Generator</a>
-          <a href="#feature-seo" class="nav-link">SEO Optimization</a>
-          <a href="#feature-social-media" class="nav-link">Social Media Automation</a>
-          <a href="#feature-campaign-manager" class="nav-link">Campaign Manager</a>
-          <a href="#feature-chatbot" class="nav-link">Lead Generation Chatbot</a>
-          <a href="#feature-ai-recommendations" class="nav-link">AI Recommendations</a>
-          <a href="#feature-woocommerce" class="nav-link">WooCommerce Marketing</a>
-          <a href="#feature-reports" class="nav-link">Analytics & Reports</a>
+  <div class="layout">
+    <!-- ── SIDEBAR NAVIGATION ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-mobile-header">
+        <span class="sidebar-mobile-title">
+          <span class="brand-badge" style="width:24px;height:24px;font-size:0.65rem;">AI</span>
+          Navigation Menu
+        </span>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">&times;</button>
+      </div>
+
+      <nav>
+        <h2>Getting Started</h2>
+        <a href="#introduction" class="nav-link">Introduction</a>
+        <a href="#installation" class="nav-link">Installation & Setup</a>
+        <a href="#quick-start" class="nav-link">Quick Start (5-Min Launch)</a>
+
+        <h2>Feature Spotlight</h2>
+        <a href="#hot-spotlight" class="nav-link">🔥 Hot Items Spotlight</a>
+
+        <h2>Core Modules</h2>
+        
+        <!-- 1. Dashboard -->
+        <a href="#module-dashboard" class="nav-link">1. Dashboard Overview</a>
+
+        <!-- 2. Email Marketing -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-email">
+          <span>2. Email Marketing & CRM</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-email">
+          <a href="#email-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#email-subscribers" class="sidebar-sub-link">Contacts</a>
+          <a href="#email-lists" class="sidebar-sub-link">Lists</a>
+          <a href="#email-tags" class="sidebar-sub-link">Tags</a>
+          <a href="#email-lead-finder" class="sidebar-sub-link">B2B Lead Finder <span class="badge-pill badge-fire" style="font-size:0.6rem;padding:0.1rem 0.4rem;">HOT</span></a>
+          <a href="#email-campaigns" class="sidebar-sub-link">Campaigns</a>
+          <a href="#email-templates" class="sidebar-sub-link">Templates</a>
+          <a href="#email-automations" class="sidebar-sub-link">Automations</a>
+          <a href="#email-import-export" class="sidebar-sub-link">Import / Export</a>
+          <a href="#email-ai-tools" class="sidebar-sub-link">AI Tools</a>
+          <a href="#email-smtp" class="sidebar-sub-link">SMTP Settings</a>
+          <a href="#email-settings" class="sidebar-sub-link">Settings</a>
         </div>
 
-        <a href="#settings" class="nav-link">Settings</a>
-        <a href="#integrations" class="nav-link">Integrations</a>
-        <a href="#analytics" class="nav-link">Analytics</a>
-        <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-        <a href="#changelog" class="nav-link">Changelog</a>
+        <!-- 3. SEO Analyzer -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-seo">
+          <span>3. SEO Analyzer</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-seo">
+          <a href="#seo-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#seo-keyword-research" class="sidebar-sub-link">Keyword Research</a>
+          <a href="#seo-keyword-vault" class="sidebar-sub-link">Keyword Vault</a>
+          <a href="#seo-topic-map" class="sidebar-sub-link">Topic Map</a>
+          <a href="#seo-on-page-audit" class="sidebar-sub-link">On-Page Audit</a>
+          <a href="#seo-content-calendar" class="sidebar-sub-link">Content Calendar</a>
+          <a href="#seo-link-building" class="sidebar-sub-link">Link Building</a>
+          <a href="#seo-rank-tracker" class="sidebar-sub-link">Rank Tracker</a>
+          <a href="#seo-automation" class="sidebar-sub-link">Automation</a>
+          <a href="#seo-settings" class="sidebar-sub-link">Settings</a>
+        </div>
+
+        <!-- 4. Content Generator -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-content">
+          <span>4. AI Content Generator</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-content">
+          <a href="#content-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#content-articles" class="sidebar-sub-link">Articles List</a>
+          <a href="#content-new-article" class="sidebar-sub-link">New Article Studio</a>
+          <a href="#content-brand-voices" class="sidebar-sub-link">Brand Voices</a>
+          <a href="#content-presets" class="sidebar-sub-link">Presets</a>
+          <a href="#content-settings" class="sidebar-sub-link">Settings</a>
+        </div>
+
+        <!-- 5. Social Media -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-social">
+          <span>5. Social Media</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-social">
+          <a href="#social-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#social-accounts" class="sidebar-sub-link">Accounts</a>
+          <a href="#social-posts" class="sidebar-sub-link">Posts Feed</a>
+          <a href="#social-composer" class="sidebar-sub-link">Post Composer</a>
+          <a href="#social-calendar" class="sidebar-sub-link">Calendar</a>
+          <a href="#social-repurpose" class="sidebar-sub-link">Repurpose Studio</a>
+          <a href="#social-settings" class="sidebar-sub-link">Settings</a>
+        </div>
+
+        <!-- 6. AI Chatbot -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-chatbot">
+          <span>6. AI Chatbot</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-chatbot">
+          <a href="#chatbot-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#chatbot-bots" class="sidebar-sub-link">Chatbots Manager</a>
+          <a href="#chatbot-conversations" class="sidebar-sub-link">Conversations & Live Takeover</a>
+          <a href="#chatbot-knowledge" class="sidebar-sub-link">Knowledge Base (URL & WooCommerce)</a>
+          <a href="#chatbot-settings" class="sidebar-sub-link">Settings</a>
+        </div>
+
+        <!-- 7. Workflow Automation -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-workflow">
+          <span>7. Workflow Automation V2</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-workflow">
+          <a href="#workflow-analytics" class="sidebar-sub-link">Analytics</a>
+          <a href="#workflow-list" class="sidebar-sub-link">Workflows List</a>
+          <a href="#workflow-canvas" class="sidebar-sub-link">Visual Canvas Builder</a>
+          <a href="#workflow-ai-modal" class="sidebar-sub-link">Text-to-Workflow AI</a>
+          <a href="#workflow-cart-recovery" class="sidebar-sub-link">WooCommerce Cart Recovery <span class="badge-pill badge-cart" style="font-size:0.6rem;padding:0.1rem 0.4rem;">HOT</span></a>
+          <a href="#workflow-templates" class="sidebar-sub-link">Template Picker</a>
+          <a href="#workflow-upcoming" class="sidebar-sub-link">Upcoming Runs</a>
+          <a href="#workflow-error-log" class="sidebar-sub-link">Error Log</a>
+          <a href="#workflow-settings" class="sidebar-sub-link">Settings</a>
+        </div>
+
+        <!-- 8 & 9. Settings -->
+        <a href="#module-ai-providers" class="nav-link">8. AI Providers Setup</a>
+        <a href="#module-settings" class="nav-link">9. General Settings</a>
+
+        <h2>System & Reliability</h2>
+        <a href="#cron-setup" class="nav-link">External Server Cron Setup</a>
+        <a href="#troubleshooting" class="nav-link">Troubleshooting & Pitfalls</a>
+        <a href="#faq" class="nav-link">Frequently Asked Questions (FAQ)</a>
+        <a href="#video-tutorials" class="nav-link">1-2 Min Micro-Videos 🎬</a>
+        <a href="#changelog" class="nav-link">Changelog (v1.2.7)</a>
       </nav>
     </aside>
 
+    <!-- ── MAIN CONTENT ── -->
     <main class="content" id="content">
-      <div class="breadcrumb" id="breadcrumb">Home / Introduction</div>
+      <div class="breadcrumb" id="breadcrumb">AI Marketing Expert / Documentation</div>
 
-      <section id="introduction" class="doc-section reveal">
+      <!-- ── HERO CTA BANNER (High-Converting Header) ── -->
+      <div class="doc-hero-cta">
+        <div class="cta-badge">⚡ 100% Self-Hosted • Zero Monthly SaaS Fees • On-Premise WordPress Suite</div>
+        <h2>Scale Your Business with Autonomous AI Marketing</h2>
+        <p class="cta-desc">Replace 7 expensive subscriptions (Mailchimp, Apollo, Zapier, Jasper, Intercom, CartBounty & Semrush) with a single powerhouse plugin running directly inside your WordPress site. Free forever tier available with unlimited subscribers.</p>
+        <div class="cta-actions">
+          <a href="#installation" class="cta-btn cta-btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Install Free Version
+          </a>
+          <a href="https://aimarketingexpert.com/pro" target="_blank" rel="noopener" class="cta-btn cta-btn-pro">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Get Pro Unlimited License
+          </a>
+          <button type="button" class="cta-btn cta-btn-ghost" id="openDemoVideoBtn" aria-label="Watch 2-Min Demo Video">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Watch 2-Min Demo
+          </button>
+        </div>
+        <div class="cta-guarantees">
+          <span>✓ Unlimited Contacts & Lists</span>
+          <span>✓ Multi-SMTP Free Relay Stacking</span>
+          <span>✓ Free Google Gemini & OpenAI Keys</span>
+          <span>✓ 100% Data Privacy (GDPR Ready)</span>
+        </div>
+      </div>
+
+      <!-- ── SECTION: INTRODUCTION ── -->
+      <section id="introduction" class="doc-section">
         <div class="hero-card">
-          <span class="eyebrow">All-in-One AI Marketing Toolkit</span>
-          <h2>Introduction</h2>
-          <p>AI Marketing Expert helps you run content, SEO, social, email, and chatbot workflows from one WordPress dashboard. It is built for non-technical users who want measurable growth without complex tool stacks.</p>
+          <span class="eyebrow">All-in-One Autonomous Marketing Suite</span>
+          <h2>Introduction to AI Marketing Expert (AIME)</h2>
+          <p><strong>AI Marketing Expert (v1.2.7)</strong> transforms your WordPress website into a self-driving, AI-powered marketing headquarters. Instead of spending thousands of dollars every year on disparate SaaS subscriptions (such as Mailchimp, Apollo, Zapier, Jasper, CartBounty, Semrush, or Intercom), you get an all-in-one ecosystem that runs directly inside your WordPress dashboard with zero monthly per-contact penalties.</p>
           <div class="hero-grid">
             <article>
-              <h3>What It Does</h3>
-              <p>Combines six core modules: Email Marketing CRM, AI Content Generator, SEO Intelligence, Social Media Automation, AI Chatbot with lead capture, and Workflow Automation.</p>
+              <h3>Autonomous Cold Outreach</h3>
+              <p>Find verified B2B leads by job title and industry, validate DNS MX deliverability, and enroll them into cold email nurture funnels.</p>
             </article>
             <article>
-              <h3>Why Use It</h3>
-              <p>Replace disconnected plugins, reduce manual work, and move faster with AI-assisted decisions, templates, and automations.</p>
+              <h3>Visual Automation Canvas</h3>
+              <p>Build branching multi-step workflows with drag-and-drop nodes, delay timers (hours/days), or generate full graphs with natural language prompts.</p>
             </article>
             <article>
-              <h3>What Makes It Different</h3>
-              <p>Unified dashboard, shared AI provider management, module-level controls, and built-in workflows designed for practical marketing results.</p>
+              <h3>WooCommerce Cart Recovery</h3>
+              <p>Capture guest shopper emails live during checkout before order submission and recover lost revenue with 1-click single-item & single-qty deep links.</p>
             </article>
           </div>
         </div>
 
-        <div class="callout info">
-          <h4>Target Users</h4>
-          <p>Bloggers, content marketers, agencies, WooCommerce store owners, SaaS teams, and small businesses needing a central marketing command center.</p>
-        </div>
+        <figure class="doc-screenshot-frame">
+          <img src="screenshots/dashboard.webp" alt="AI Marketing Expert Unified Dashboard" class="doc-screenshot" loading="lazy" />
+          <figcaption>Figure 1.1: AI Marketing Expert v1.2.7 Unified Dashboard — Real-time KPI metrics, module shortcuts, and trend analysis</figcaption>
+        </figure>
 
         <div class="cards-2">
           <article class="card">
-            <h3>Main Features Summary</h3>
+            <h3>Key Advantages & Architecture</h3>
             <ul>
-              <li>Email campaigns, automations, lists, tags, AI optimization tools, and SMTP controls.</li>
-              <li>Article generation, presets, brand voices, SEO optimization, and scheduled publishing.</li>
-              <li>Keyword research, audits, topic maps, rank tracking, and content planning.</li>
-              <li>Multi-account social posting, scheduling calendar, and AI caption/hashtag generation.</li>
-              <li>Chatbot setup, conversation inbox, knowledge base indexing, and lead capture.</li>
+              <li><strong>Zero Tool Switching:</strong> Email campaigns, SEO audits, blog creation, chatbots, and social posts all live inside your WordPress admin.</li>
+              <li><strong>Your AI, Your Keys:</strong> Connect Google AI Studio (Free Gemini tier), OpenAI, Anthropic Claude, or OpenRouter with AES-256-GCM encryption.</li>
+              <li><strong>No Monthly Per-Subscriber Penalties:</strong> Unlike Mailchimp or Klaviyo, the free plan includes unlimited email contacts.</li>
+              <li><strong>E-Commerce Revenue Multiplier:</strong> Automate WooCommerce post-purchase review funnels, re-engagement offers, and cart recovery.</li>
             </ul>
           </article>
           <article class="card">
-            <h3>Expected Business Benefits</h3>
+            <h3>Free Tier vs Pro License</h3>
             <ul>
-              <li>Faster campaign execution with fewer tools.</li>
-              <li>Better consistency in brand messaging across channels.</li>
-              <li>Higher content velocity with AI-assisted production.</li>
-              <li>Improved lead response with chatbot and automation flows.</li>
-              <li>Data-backed decisions using module analytics and dashboard KPIs.</li>
+              <li><strong>Free Tier (Lifetime Free):</strong> Unlimited contacts, 30 campaigns/month, 2 active automations, 20 generated articles/month, 10 keyword searches, 1 chatbot, real-time cart tracking.</li>
+              <li><strong>Pro License (Power Users):</strong> Unlimited campaigns, unlimited visual workflows, B2B Autopilot pipeline, Rank Tracking, Knowledge Base URL/WooCommerce scraping, Human Chatbot Takeover, dynamic coupons, and A/B split testing.</li>
             </ul>
           </article>
         </div>
       </section>
 
-      <section id="installation" class="doc-section reveal">
-        <h2>Installation Guide</h2>
+      <!-- ── SECTION: INSTALLATION ── -->
+      <section id="installation" class="doc-section">
+        <h2>Installation & Setup Guide</h2>
         <div class="cards-2">
           <article class="card">
             <h3>System Requirements</h3>
             <ul>
-              <li>WordPress 6.0 or higher (plugin tested up to 6.9).</li>
-              <li>PHP 8.0 or higher.</li>
-              <li>Administrator access to your WordPress dashboard.</li>
-              <li>Optional: WooCommerce for commerce-triggered automations.</li>
-              <li>Optional: AI provider API credentials for AI generation features.</li>
+              <li><strong>WordPress:</strong> 6.2 or higher (tested up to WP 7.x).</li>
+              <li><strong>PHP:</strong> 8.0 or higher (PHP 8.2 or 8.3 recommended for optimal performance).</li>
+              <li><strong>MySQL / MariaDB:</strong> MySQL 5.7+ or MariaDB 10.3+.</li>
+              <li><strong>PHP Extensions:</strong> <code>curl</code>, <code>openssl</code>, <code>mbstring</code>, <code>json</code>.</li>
+              <li><strong>Optional (E-commerce):</strong> WooCommerce 7.0+ for abandoned cart recovery and product knowledge sync.</li>
             </ul>
           </article>
           <article class="card">
-            <h3>Install Steps</h3>
+            <h3>Step-by-Step Installation</h3>
             <ol>
-              <li>Go to <strong>Plugins → Add New</strong> in WordPress.</li>
-              <li>Upload the plugin ZIP or install from your plugin source.</li>
-              <li>Activate <strong>AI Marketing Expert</strong>.</li>
-              <li>Open <strong>AI Marketing</strong> from the admin sidebar.</li>
-              <li>Connect AI provider in <strong>AI Providers</strong>.</li>
+              <li>Log in to your WordPress Admin dashboard and navigate to <strong>Plugins → Add New</strong>.</li>
+              <li>Click <strong>Upload Plugin</strong> at the top and select the <code>ai-marketing-expert.zip</code> file.</li>
+              <li>Click <strong>Install Now</strong> and then click <strong>Activate Plugin</strong>.</li>
+              <li>A new top-level menu item named <strong>AI Marketing</strong> will appear in your WordPress sidebar.</li>
+              <li>If you have purchased a Pro license, enter and verify your key under <strong>Settings → License</strong>.</li>
             </ol>
           </article>
         </div>
 
-        <article class="card">
-          <h3>License Activation (Pro)</h3>
-          <p>If you use Pro, activate your license in the Pro addon settings page to unlock limits and advanced tools. Free mode works immediately with module limits.</p>
-        </article>
+        <div class="callout info">
+          <h4>Security Notice: AES-256-GCM Encryption at Rest</h4>
+          <p>All sensitive credentials (AI provider API keys, SMTP passwords, OAuth access tokens) are automatically encrypted at rest in your MySQL database using <strong>AES-256-GCM</strong> with keys derived from your WordPress security salts (<code>wp-config.php</code>). No plain text secrets are ever logged or exposed.</p>
+        </div>
+      </section>
 
-        <article class="card">
-          <h3>Initial Setup Wizard (Recommended First-Run Flow)</h3>
-          <ol>
-            <li>Open <strong>AI Providers</strong> and add your provider/model.</li>
-            <li>Open <strong>Settings → Modules</strong> and enable only modules you plan to use first.</li>
-            <li>Review <strong>Settings → System Status</strong> to confirm background jobs are healthy.</li>
-            <li>Create your first workflow: campaign, article, social post, or chatbot.</li>
-          </ol>
-        </article>
+      <!-- ── SECTION: QUICK START ── -->
+      <section id="quick-start" class="doc-section">
+        <h2>Quick Start (5-Minute Launch Plan)</h2>
+        <div class="timeline">
+          <div>
+            <span>1</span>
+            <h4>Connect Free AI ($0 Cost)</h4>
+            <p>Go to <strong>AI Providers</strong>, paste your free Gemini API key from Google AI Studio, and click <em>Test Connection</em>.</p>
+          </div>
+          <div>
+            <span>2</span>
+            <h4>Configure SMTP</h4>
+            <p>In <strong>Email Marketing → SMTP</strong>, enter your Gmail App Password, Brevo, SendGrid, or host SMTP credentials and send a test email.</p>
+          </div>
+          <div>
+            <span>3</span>
+            <h4>Activate Cart Recovery</h4>
+            <p>Under <strong>Workflow Automation</strong>, activate the pre-built "WooCommerce Abandoned Cart Recovery" template.</p>
+          </div>
+          <div>
+            <span>4</span>
+            <h4>Discover Cold Leads</h4>
+            <p>Under <strong>Email Marketing → Lead Finder</strong>, search for your target niche (e.g. "Marketing Director, United States").</p>
+          </div>
+        </div>
+      </section>
 
-        <article class="card code-card">
-          <h3>Shortcode Example</h3>
-          <pre><code id="code-shortcode">[aime_subscribe]</code></pre>
-          <button class="copy-btn" data-copy-target="code-shortcode">Copy code</button>
-        </article>
+      <!-- ── SECTION: HOT ITEMS SPOTLIGHT ── -->
+      <section id="hot-spotlight" class="hot-spotlight">
+        <h2>🔥 Hot Items & Killer Features Spotlight</h2>
+        <p class="lead">Here are the four highest-demand, game-changing features in AI Marketing Expert that deliver immediate ROI for agency owners, store managers, and marketers:</p>
+        
+        <div class="hot-grid">
+          <!-- Hot Item 1 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-fire">Killer Feature 1</span>
+            <h3>B2B Lead Finder & Autopilot Pipeline</h3>
+            <p>Find thousands of verified B2B prospects by job title, industry, and country without any external Apollo subscription. Real-time DNS MX validation filters out invalid domains and enrolls verified leads directly into cold nurture sequences.</p>
+            <a href="#email-lead-finder" class="hot-btn">Explore Lead Finder →</a>
+          </article>
+
+          <!-- Hot Item 2 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-cart">Killer Feature 2</span>
+            <h3>WooCommerce 1-Click Cart Recovery</h3>
+            <p>Captures guest shopper emails live during checkout as they type. Automatically sends recovery emails with single-item & single-quantity deep links so customers never accidentally purchase duplicate items upon returning.</p>
+            <a href="#workflow-cart-recovery" class="hot-btn">View Cart Recovery Guide →</a>
+          </article>
+
+          <!-- Hot Item 3 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-magic">Killer Feature 3</span>
+            <h3>Text-to-Workflow AI Canvas</h3>
+            <p>Describe your marketing flow in plain natural language (e.g., "Send a 15% discount email 1 hour after cart abandonment, and follow up in 2 days if unopened"). AI automatically generates all nodes, timers, conditions, and email copies onto the canvas.</p>
+            <a href="#workflow-ai-modal" class="hot-btn">See AI Canvas Maker →</a>
+          </article>
+
+          <!-- Hot Item 4 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-writer">Killer Feature 4</span>
+            <h3>Deep Humanize Article Studio</h3>
+            <p>Generates long-form 2,000+ word SEO articles that bypass AI detectors while strictly preserving headers, formatted comparison tables, key takeaways, and FAQ schema.</p>
+            <a href="#content-new-article" class="hot-btn">Open Humanize Studio →</a>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 1: DASHBOARD OVERVIEW ── -->
+      <section id="module-dashboard" class="doc-section">
+        <h2>1. Dashboard Overview (Central Command)</h2>
+        <p>The main plugin dashboard serves as your mission control center, aggregating real-time performance indicators and operational health across all active modules.</p>
+        
+        <figure class="doc-screenshot-frame">
+          <img src="screenshots/dashboard.webp" alt="AI Marketing Expert Main Dashboard" class="doc-screenshot" loading="lazy" />
+          <figcaption>Figure 1.1: Unified Dashboard with real-time KPI metrics, module shortcuts, and trend charts</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>Dashboard Key Elements</h3>
+            <ul>
+              <li><strong>Top KPI Cards:</strong> Total active subscribers, average email open rate (CTR), active automated workflows, and estimated monthly cost savings.</li>
+              <li><strong>Quick Action Shortcuts:</strong> One-click launchers to draft a new campaign, generate an AI blog post, schedule social media, or review cart recovery.</li>
+              <li><strong>System Health Monitor:</strong> Green/Red indicators verifying that background cron workers are firing on schedule without delays.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>How to Use the Dashboard</h3>
+            <ol>
+              <li>Review the daily deliverability score and campaign open rates.</li>
+              <li>Monitor the WooCommerce recovered revenue counter to gauge automation ROI.</li>
+              <li>Check the AI Provider token meter to ensure your API quota remains healthy.</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 2: EMAIL MARKETING & CRM ── -->
+      <section id="module-email" class="doc-section">
+        <h2>2. Email Marketing & CRM (12 Dedicated Submenus)</h2>
+        <p>AIME includes a complete native email marketing platform and CRM inside WordPress. Below is the comprehensive breakdown of all 12 submenus:</p>
+
+        <!-- 2.1 Analytics -->
+        <div id="email-analytics" class="doc-sub-item">
+          <h3>2.1 Email Analytics</h3>
+          <p>Delivers real-time analytics across all broadcast campaigns and automated sequences, including open rate, click-through rate (CTR), bounce rate, and unsubscribe percentage.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-analytics.webp" alt="Email Marketing Analytics Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.1: Email Analytics view — Performance graphs and subscriber engagement tracking</figcaption>
+          </figure>
+          <div class="callout info">
+            <p><strong>Pro Tip:</strong> If your open rate falls below 20%, use the built-in AI Tools to re-score your subject line and test an alternate sending schedule.</p>
+          </div>
+        </div>
+
+        <!-- 2.2 Contacts -->
+        <div id="email-subscribers" class="doc-sub-item">
+          <h3>2.2 Contacts Directory (Central CRM & Lead Profiles)</h3>
+          <p>The Contacts Directory serves as your self-hosted CRM, recording granular behavioral data, lifetime purchases, and communication history for every individual subscriber across your store.</p>
+          
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-subscribers.webp" alt="Contacts and Subscribers List Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.2: Contacts Directory — Paginated table with bulk tag/list actions (Customer emails masked for privacy)</figcaption>
+          </figure>
+
+          <div class="cards-2">
+            <article class="card">
+              <h4>Comprehensive Customer Dossiers</h4>
+              <p>Clicking any contact row reveals an interactive customer dossier containing:</p>
+              <ul>
+                <li><strong>Activity Timeline:</strong> Chronological log of every marketing broadcast sent, email opened, link clicked, cart abandoned, and completed checkout.</li>
+                <li><strong>E-Commerce Metrics:</strong> Lifetime value (LTV), total orders placed, average order value (AOV), and date of last purchase.</li>
+                <li><strong>Dynamic Segmentation Tags:</strong> View and toggle behavioral tags (e.g. <code>b2b-lead</code>, <code>cart-abandoner</code>, <code>vip-buyer</code>).</li>
+                <li><strong>GDPR & Privacy Controls:</strong> 1-click export of customer profile data and instant permanent anonymization to comply with international privacy laws.</li>
+              </ul>
+            </article>
+
+            <article class="card">
+              <h4>Bulk Actions & Segmentation Power</h4>
+              <p>Efficiently manage tens of thousands of contacts without performance lags:</p>
+              <ul>
+                <li><strong>Bulk Operations:</strong> Select multiple contacts to assign tags, enroll into automated drip sequences, or transfer between lists in bulk.</li>
+                <li><strong>Multi-Field Search & Filter:</strong> Instantly filter by status (<em>Subscribed, Bounced, Unsubscribed</em>), list affiliation, tag combinations, or date enrolled.</li>
+                <li><strong>CSV Smart Importer:</strong> Import external lists from Mailchimp or Klaviyo with automatic CSV header detection and custom field mapping.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <!-- 2.3 Lists -->
+        <div id="email-lists" class="doc-sub-item">
+          <h3>2.3 Lists Management</h3>
+          <p>Segment your audience into targeted mailing lists (e.g., "VIP Customers", "Newsletter Subscribers", "Cold B2B Prospects").</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-lists.webp" alt="Email Lists Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.3: List Manager — List segmentation and contact counts</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.4 Tags -->
+        <div id="email-tags" class="doc-sub-item">
+          <h3>2.4 Tags System</h3>
+          <p>Assign behavioral tags automatically or manually to track customer engagement. For instance, tag customers who click a recovery link as <code>interested-buyer</code>.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-tags.webp" alt="Email Tags Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.4: Behavioral Tags Interface — Custom color-coding and automated tagging rules</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.5 B2B Lead Finder -->
+        <div id="email-lead-finder" class="doc-sub-item">
+          <h3>2.5 B2B Lead Finder (Cold Prospecting Engine) <span class="badge-pill badge-fire">Hot Item</span></h3>
+          <p>Discover verified B2B leads by job title, industry, and location directly within WordPress, without requiring third-party SaaS subscriptions.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-lead-finder.webp" alt="B2B Lead Finder Dashboard" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.5: B2B Lead Finder — Job title, industry, and geographical location filters</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>How to Find and Enroll Leads:</h4>
+              <ol>
+                <li>Select a <strong>Job Role / Title</strong> (e.g. <code>CEO</code>, <code>Founder</code>, <code>CMO</code>).</li>
+                <li>Filter by <strong>Industry & Location</strong> (e.g. <code>E-commerce</code>, <code>United States</code>).</li>
+                <li>Click <strong>Find Leads</strong> to run live prospecting.</li>
+                <li>Review the verified leads and click <strong>Enroll into Cold Sequence</strong>.</li>
+              </ol>
+            </article>
+            <article class="card">
+              <h4>Real-Time DNS MX Verification:</h4>
+              <p>The engine performs live DNS MX validation on prospect domain records before importing. Disposable and non-deliverable addresses are automatically rejected, protecting your sender reputation.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 2.6 Campaigns -->
+        <div id="email-campaigns" class="doc-sub-item">
+          <h3>2.6 Campaigns (Email Broadcasts)</h3>
+          <p>Draft, schedule, and send targeted newsletters and promotional campaigns to specific lists or segments.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-campaigns.webp" alt="Email Campaigns Management" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.6: Broadcast Campaigns — Draft, scheduled, and completed sends</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.7 Templates -->
+        <div id="email-templates" class="doc-sub-item">
+          <h3>2.7 Templates Library & Visual Builder</h3>
+          <p>Library of modern, mobile-responsive email templates with visual block controls for headers, buttons, WooCommerce product grids, and social icons.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-templates.webp" alt="Email Template Library" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.7: Pre-built responsive email template gallery</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.8 Automations -->
+        <div id="email-automations" class="doc-sub-item">
+          <h3>2.8 Automations (Linear Email Sequences)</h3>
+          <p>Create linear email drip funnels triggered on user registration, list subscription, or WooCommerce purchases.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-automations.webp" alt="Email Automations Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.8: Linear Drip Automation Sequences Overview</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.9 Import / Export -->
+        <div id="email-import-export" class="doc-sub-item">
+          <h3>2.9 Import / Export</h3>
+          <p>Easily migrate your existing contacts from Mailchimp, Klaviyo, or FluentCRM via CSV upload with intuitive field-mapping tools.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-import-export.webp" alt="Email Import and Export View" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.9: Contact Import Tool with CSV column mapper</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.10 AI Tools -->
+        <div id="email-ai-tools" class="doc-sub-item">
+          <h3>2.10 AI Copywriting Tools</h3>
+          <p>Generate high-converting subject lines, pre-headers, and persuasive email copy from simple prompts using connected AI models.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-ai-tools.webp" alt="Email Marketing AI Copywriting Tools" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.10: AI Subject Line Scorer and Content Optimizer</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.11 SMTP Settings -->
+        <div id="email-smtp" class="doc-sub-item">
+          <h3>2.11 SMTP Multi-Relay Engine & Real-Time Callbacks</h3>
+          <p>AIME features an enterprise-grade SMTP sending engine designed to deliver millions of transactional and cold marketing emails directly into the primary inbox with zero SaaS subscription fees.</p>
+          
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-smtp.webp" alt="SMTP Configuration Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.11: SMTP Configuration, Failover Routing, and Live TLS/SSL Handshake Test Tool</figcaption>
+          </figure>
+
+          <div class="cards-2">
+            <article class="card">
+              <h4>Multi-SMTP Relay Rotator (Stacking Free Tiers)</h4>
+              <p>Instead of locking you into a single expensive email provider, AIME allows you to configure multiple SMTP relays with automated round-robin rotation and failover. By stacking reputable free-tier providers, you can send thousands of cold and marketing emails every single day at near-zero cost:</p>
+              <ul>
+                <li><strong>Brevo (Sendinblue):</strong> 300 free emails/day (9,000 emails/month free).</li>
+                <li><strong>SendGrid:</strong> 100 free emails/day (3,000 emails/month free).</li>
+                <li><strong>Google Workspace / Gmail:</strong> Up to 2,000 emails/day with standard business accounts (requires Google App Password).</li>
+                <li><strong>Amazon SES:</strong> Send 10,000 emails for just $1.00 with dedicated IP capabilities.</li>
+                <li><strong>Custom Private SMTP:</strong> Connect any cPanel, Postfix, or VPS relay server with TLS/SSL encryption.</li>
+              </ul>
+            </article>
+
+            <article class="card">
+              <h4>Real-Time Webhook Callbacks & Bounce Hygiene</h4>
+              <p>Maintaining a 99%+ deliverability score requires instant handling of bad addresses. AIME provides a dedicated Webhook Callback URL for your SMTP providers:</p>
+              <pre><code>https://yourdomain.com/wp-json/aime/v1/smtp/callback?token=YOUR_SECRET_TOKEN</code></pre>
+              <ul>
+                <li><strong>Instant Bounce Tracking:</strong> When SendGrid, Brevo, or Amazon SES detects a hard bounce (invalid mailbox), the callback triggers immediately. AIME marks the subscriber as <code>BOUNCED</code>, permanently halting future sends.</li>
+                <li><strong>Spam Complaint Suppression:</strong> If a recipient clicks "Report Spam", the webhook automatically suppresses the email address from all active funnels.</li>
+                <li><strong>Unsubscribe Sync:</strong> One-click native unsubscribe headers (RFC 8058) are synchronized across all lists.</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout warning">
+            <p><strong>Warm-Up & Sending Throttling:</strong> For new sending domains, always configure the Sending Speed Throttler under <em>Module Settings</em> to no more than 20 emails every 5 minutes. Incrementally increase the batch size by 15% daily to build ironclad domain reputation.</p>
+          </div>
+        </div>
+
+        <!-- 2.12 Email Settings -->
+        <div id="email-settings" class="doc-sub-item">
+          <h3>2.12 Module Settings</h3>
+          <p>Configure default sender name, sender email, physical mailing address for CAN-SPAM compliance, and custom unsubscribe footer text.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/email-settings.webp" alt="Email Marketing Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 2.12: General Email Preferences and Compliance Settings</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 3: SEO ANALYZER ── -->
+      <section id="module-seo" class="doc-section">
+        <h2>3. SEO Analyzer & Rank Suite (10 Dedicated Submenus)</h2>
+        <p>A comprehensive organic search toolkit designed to discover low-competition keywords, audit on-page content, and track search rankings:</p>
+
+        <!-- 3.1 Analytics -->
+        <div id="seo-analytics" class="doc-sub-item">
+          <h3>3.1 SEO Analytics Dashboard</h3>
+          <p>Displays site-wide SEO health scores, indexing status, keyword density trends, and content audit alerts in a consolidated view.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-analytics.webp" alt="SEO Dashboard Overview" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.1: SEO Analytics — Site health score and keyword count metrics</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.2 Keyword Research -->
+        <div id="seo-keyword-research" class="doc-sub-item">
+          <h3>3.2 Keyword Research</h3>
+          <p>Input seed keywords to uncover search volume, keyword difficulty (KD), search intent, and relevant long-tail variations.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-keyword-research.webp" alt="SEO Keyword Research" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.2: Keyword Research and Search Intent Breakdown</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.3 Keyword Vault -->
+        <div id="seo-keyword-vault" class="doc-sub-item">
+          <h3>3.3 Keyword Vault</h3>
+          <p>Save prospective keywords to your private vault with priority tagging and launch articles directly in Content Generator with one click.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-keyword-vault.webp" alt="SEO Keyword Vault" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.3: Keyword Vault — Saved keywords with one-click article generation</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.4 Topic Map -->
+        <div id="seo-topic-map" class="doc-sub-item">
+          <h3>3.4 Topic Map (Clustering & Authority)</h3>
+          <p>Automatically organizes pillar content and cluster topics to establish topical authority on Google.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-topic-map.webp" alt="SEO Topic Map Clustering" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.4: Topic Clusters and Internal Linking Architecture</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.5 On-Page Audit -->
+        <div id="seo-on-page-audit" class="doc-sub-item">
+          <h3>3.5 On-Page SEO Audit</h3>
+          <p>Audit any published post or page for missing meta tags, heading hierarchies, image alt attributes, and readability scores with AI-powered fix suggestions.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-on-page-audit.webp" alt="SEO On-Page Audit Tool" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.5: On-Page Audit Results and Actionable Recommendations</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.6 Content Calendar -->
+        <div id="seo-content-calendar" class="doc-sub-item">
+          <h3>3.6 Content Calendar</h3>
+          <p>Plan, schedule, and visualize your upcoming blog publishing dates on an intuitive drag-and-drop calendar.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-content-calendar.webp" alt="SEO Content Calendar" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.6: Content Publishing Calendar View</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.7 Link Building -->
+        <div id="seo-link-building" class="doc-sub-item">
+          <h3>3.7 Link Building Hub</h3>
+          <p>Identify link-building opportunities, manage guest post outreach, and track backlinks in one place.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-link-building.webp" alt="SEO Link Building Hub" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.7: Link Building Prospecting and Outreach Pipeline</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.8 Rank Tracker -->
+        <div id="seo-rank-tracker" class="doc-sub-item">
+          <h3>3.8 Rank Tracker</h3>
+          <p>Monitor your daily Google SERP positions across target keywords and view historical ranking trends.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-rank-tracker.webp" alt="SEO Rank Tracker Tool" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.8: Keyword Position Tracking and Historical Trend Graph</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.9 Automation -->
+        <div id="seo-automation" class="doc-sub-item">
+          <h3>3.9 Automation Rules</h3>
+          <p>Automate meta description generation, alt tag population, and internal keyword cross-linking.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-automation.webp" alt="SEO Automation Rules" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.9: Automated SEO Optimization Rules</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.10 Settings -->
+        <div id="seo-settings" class="doc-sub-item">
+          <h3>3.10 SEO Settings</h3>
+          <p>Define your primary target country, language, search engine locales, and audit sensitivity thresholds.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/seo-settings.webp" alt="SEO Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 3.10: SEO Regional and Crawl Preferences</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 4: AI CONTENT GENERATOR ── -->
+      <section id="module-content" class="doc-section">
+        <h2>4. AI Content Generator (6 Dedicated Submenus)</h2>
+        <p>A professional article writing studio that crafts human-like, SEO-optimized blog posts designed to rank on search engines:</p>
+
+        <!-- 4.1 Analytics -->
+        <div id="content-analytics" class="doc-sub-item">
+          <h3>4.1 Content Analytics</h3>
+          <p>Track total articles published, average word count, reading levels, and content production velocity.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-analytics.webp" alt="Content Generator Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.1: Content Production Analytics</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.2 Articles -->
+        <div id="content-articles" class="doc-sub-item">
+          <h3>4.2 Articles Library</h3>
+          <p>Access all generated drafts and published articles. Edit, preview, or publish directly to WordPress with one click.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-articles.webp" alt="Articles List View" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.2: Articles Directory and WordPress Post Sync</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.3 New Article Studio -->
+        <div id="content-new-article" class="doc-sub-item">
+          <h3>4.3 New Article Studio (Deep Humanize Mode) <span class="badge-pill badge-writer">Hot Item</span></h3>
+          <p>Produce comprehensive 2,000+ word articles from a single keyword or title while preserving rich HTML structure.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-new-article.webp" alt="New Article Studio with Deep Humanize" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.3: New Article Studio — Structure preservation and Deep Humanize mode</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>Key Studio Controls:</h4>
+              <ul>
+                <li><strong>Tone & Writing Style:</strong> Professional, Conversational, Informative, or Persuasive.</li>
+                <li><strong>Deep Humanize Mode:</strong> Bypasses AI detection by introducing authentic sentence cadence, varied syntax, and idiomatic phrasing.</li>
+                <li><strong>Outline Editor:</strong> Edit, reorder, or add custom H2/H3 headings before full drafting.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>Structure & Formatting Preservation:</h4>
+              <p>Unlike basic AI writers, AIME generates formatted comparison tables, callout blocks, bulleted takeaways, and FAQ schema ready for immediate publication.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 4.4 Brand Voices -->
+        <div id="content-brand-voices" class="doc-sub-item">
+          <h3>4.4 Brand Voices</h3>
+          <p>Train the AI on your brand's unique personality and terminology by submitting existing writing samples.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-brand-voices.webp" alt="Brand Voices Configuration" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.4: Brand Voice Profiles and Tone Customization</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.5 Presets -->
+        <div id="content-presets" class="doc-sub-item">
+          <h3>4.5 Presets</h3>
+          <p>Save reusable prompt structures for specific content types (e.g., "SaaS Product Review", "Step-by-Step How-To Guide").</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-presets.webp" alt="Content Presets Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.5: Content Templates and Prompt Presets</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.6 Settings -->
+        <div id="content-settings" class="doc-sub-item">
+          <h3>4.6 Content Settings</h3>
+          <p>Configure default post status (Draft vs Published), default category, featured image generation, and word count targets.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/content-settings.webp" alt="Content Settings Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 4.6: Content Generator Global Preferences</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 5: SOCIAL MEDIA ── -->
+      <section id="module-social" class="doc-section">
+        <h2>5. Social Media Scheduler (7 Dedicated Submenus)</h2>
+        <p>Automate publishing, schedule multi-network campaigns, and repurpose blog articles for Facebook, Instagram, LinkedIn, and Twitter (X):</p>
+
+        <!-- 5.1 Analytics -->
+        <div id="social-analytics" class="doc-sub-item">
+          <h3>5.1 Social Analytics</h3>
+          <p>Analyze engagement, click-throughs, and follower interactions across all connected social channels.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-analytics.webp" alt="Social Media Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.1: Social Media Performance Analytics</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.2 Accounts -->
+        <div id="social-accounts" class="doc-sub-item">
+          <h3>5.2 Accounts Connection</h3>
+          <p>Connect Facebook Pages, Instagram Business profiles, LinkedIn accounts, and Twitter profiles securely via OAuth 2.0.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-accounts.webp" alt="Connected Social Accounts" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.2: Social Accounts Connection and Authentication Status</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.3 Posts -->
+        <div id="social-posts" class="doc-sub-item">
+          <h3>5.3 Posts Feed</h3>
+          <p>Manage published posts, monitor scheduled queues, and review draft messages across all connected channels.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-posts.webp" alt="Social Posts Feed" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.3: Social Media Posts Feed and Queue Manager</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.4 Post Composer -->
+        <div id="social-composer" class="doc-sub-item">
+          <h3>5.4 Post Composer</h3>
+          <p>Compose once and let AI tailor hashtags, character limits, and media sizing for each specific social network.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-composer.webp" alt="Social Post Composer" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.4: Multi-Network Composer with live network previews</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.5 Calendar -->
+        <div id="social-calendar" class="doc-sub-item">
+          <h3>5.5 Social Calendar</h3>
+          <p>View your monthly social publishing schedule on a drag-and-drop calendar interface.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-calendar.webp" alt="Social Calendar View" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.5: Visual Social Media Publishing Calendar</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.6 Repurpose -->
+        <div id="social-repurpose" class="doc-sub-item">
+          <h3>5.6 Repurpose Studio</h3>
+          <p>Turn any published WordPress article into 5 LinkedIn posts, 10 Twitter threads, and 3 Facebook updates in seconds.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-repurpose.webp" alt="Social Content Repurposing Studio" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.6: Blog-to-Social Content Repurposing Engine</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.7 Settings -->
+        <div id="social-settings" class="doc-sub-item">
+          <h3>5.7 Social Settings</h3>
+          <p>Set posting timezones, automated queue intervals, and UTM tracking parameters.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/social-settings.webp" alt="Social Media Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 5.7: Social Media Global Preferences</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 6: AI CHATBOT ── -->
+      <section id="module-chatbot" class="doc-section">
+        <h2>6. AI Chatbot & Knowledge Base (5 Dedicated Submenus)</h2>
+        <p>An intelligent customer support and lead generation chatbot powered by your site's content and WooCommerce catalog:</p>
+
+        <!-- 6.1 Analytics -->
+        <div id="chatbot-analytics" class="doc-sub-item">
+          <h3>6.1 Chatbot Analytics</h3>
+          <p>Track conversation volume, conversion rate, customer satisfaction, and frequently asked topics.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/chatbot-analytics.webp" alt="AI Chatbot Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 6.1: Chatbot Conversation and Resolution Metrics</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.2 Chatbots -->
+        <div id="chatbot-bots" class="doc-sub-item">
+          <h3>6.2 Chatbots Manager</h3>
+          <p>Create and customize multiple chatbots with tailored welcome messages, custom avatar branding, and color themes.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/chatbot-bots.webp" alt="Chatbots Management" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 6.2: Bot Configuration and Visual Styling</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.3 Conversations -->
+        <div id="chatbot-conversations" class="doc-sub-item">
+          <h3>6.3 Conversations & Live Takeover</h3>
+          <p>Monitor live visitor chats in real time. Take over conversations manually whenever a customer requires human intervention.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/chatbot-conversations.webp" alt="Chatbot Conversations and Live Takeover" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 6.3: Live Conversation Feed and 1-Click Human Takeover</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.4 Knowledge Base -->
+        <div id="chatbot-knowledge" class="doc-sub-item">
+          <h3>6.4 Knowledge Base Training</h3>
+          <p>Train your chatbot on custom FAQs, website URLs, and your complete WooCommerce product catalog with one click.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/chatbot-knowledge.webp" alt="Chatbot Knowledge Base Training" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 6.4: Knowledge Base Sync — URL scraping and WooCommerce product indexing</figcaption>
+          </figure>
+          <div class="callout success">
+            <p><strong>WooCommerce Catalog Sync:</strong> When product prices, stock status, or descriptions change, the chatbot automatically updates its knowledge to provide accurate answers to shoppers.</p>
+          </div>
+        </div>
+
+        <!-- 6.5 Settings -->
+        <div id="chatbot-settings" class="doc-sub-item">
+          <h3>6.5 Chatbot Settings</h3>
+          <p>Adjust widget positioning (bottom-right vs bottom-left), mobile visibility, and assign specific AI models (e.g. Gemini 1.5 Flash).</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/chatbot-settings.webp" alt="Chatbot Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 6.5: Chatbot Display and Behavioral Settings</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 7: WORKFLOW AUTOMATION V2 ── -->
+      <section id="module-workflow" class="doc-section">
+        <h2>7. Workflow Automation V2 (Canvas & Cart Recovery)</h2>
+        <p>A powerful node-based automation engine that connects triggers, conditions, delays, and marketing actions on a visual canvas:</p>
+
+        <!-- 7.1 Analytics -->
+        <div id="workflow-analytics" class="doc-sub-item">
+          <h3>7.1 Workflow Analytics</h3>
+          <p>Monitor execution counts, completion rates, and recovered revenue generated by automated customer journeys.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-analytics.webp" alt="Workflow Analytics Overview" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.1: Automation Execution and Revenue Recovery Metrics</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.2 Workflows List -->
+        <div id="workflow-list" class="doc-sub-item">
+          <h3>7.2 Workflows Directory</h3>
+          <p>Manage all active, paused, and draft workflows with simple toggle controls and quick-edit access.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-list.webp" alt="Workflows List View" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.2: Workflows Directory and Status Switches</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.3 Visual Canvas Builder -->
+        <div id="workflow-canvas" class="doc-sub-item">
+          <h3>7.3 Visual Canvas Builder <span class="badge-pill badge-magic">Core Engine</span></h3>
+          <p>Drag, drop, and connect triggers, conditions, timers, and actions on an interactive React Flow canvas.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-canvas.webp" alt="Visual Canvas Workflow Builder" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.3: Visual Canvas Builder — Triggers, If/Else conditions, Wait timers, and Email actions</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>Available Node Types:</h4>
+              <ul>
+                <li><strong>Triggers:</strong> WooCommerce Cart Abandoned, Order Completed, New Subscriber, Lead Finder Prospect Enrolled.</li>
+                <li><strong>Actions:</strong> Send Email, Add/Remove Tags, Outgoing Webhook, Notify Administrator.</li>
+                <li><strong>Timing:</strong> Wait / Delay Node (pause execution for a specified number of hours or days).</li>
+                <li><strong>Logic:</strong> If/Else Condition (e.g. check if previous email was opened or order total exceeds $100).</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>Connecting Nodes:</h4>
+              <p>Drag from the output handle of one node to the input handle of another. To delete a node or connection, click it and press the <code>Delete</code> key.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 7.4 Text-to-Workflow AI -->
+        <div id="workflow-ai-modal" class="doc-sub-item">
+          <h3>7.4 Text-to-Workflow AI Generator <span class="badge-pill badge-magic">Hot Item</span></h3>
+          <p>Generate complete multi-step automation graphs from natural language prompts without manual node wiring.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-ai-modal.webp" alt="Text-to-Workflow AI Modal" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.4: Text-to-Workflow AI Modal — Generates connected nodes from prompt</figcaption>
+          </figure>
+          <div class="callout info">
+            <h4>Sample Prompt:</h4>
+            <p><em>"When a shopper abandons their WooCommerce cart, wait 1 hour and send a recovery email offering 10% off. If they do not purchase within 24 hours, send a final reminder."</em> — The AI constructs the entire graph automatically.</p>
+          </div>
+        </div>
+
+        <!-- 7.5 WooCommerce Cart Recovery -->
+        <div id="workflow-cart-recovery" class="doc-sub-item">
+          <h3>7.5 WooCommerce Abandoned Cart Recovery <span class="badge-pill badge-cart">Hot Item</span></h3>
+          <p>Monitors WooCommerce checkout fields in real time. When a guest shopper inputs their email but leaves without completing the purchase, the session is tracked as an abandoned cart.</p>
+          <div class="cards-2">
+            <article class="card">
+              <h4>1-Click Deep Recovery Links:</h4>
+              <p>Include the <code>{{recovery_url}}</code> merge tag in your recovery emails. When shoppers click the link, their abandoned cart items and applied coupon codes are restored immediately at checkout.</p>
+            </article>
+            <article class="card">
+              <h4>Single-Quantity Safety Protection:</h4>
+              <p>If a customer clicks the recovery email multiple times, the plugin prevents cart quantities from multiplying (e.g., doubling from 1 to 2), ensuring a frictionless checkout experience.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 7.6 Templates -->
+        <div id="workflow-templates" class="doc-sub-item">
+          <h3>7.6 Template Picker</h3>
+          <p>Choose from pre-built marketing funnels: Abandoned Cart Recovery, Welcome Drip Series, Post-Purchase Review Request, and Win-Back Campaigns.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-templates.webp" alt="Workflow Automation Templates" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.5: Pre-built Workflow Templates Gallery</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.7 Upcoming Runs -->
+        <div id="workflow-upcoming" class="doc-sub-item">
+          <h3>7.7 Upcoming Runs Queue</h3>
+          <p>Monitor subscribers currently paused at a Wait/Delay step and view pending emails scheduled to send over the next 24 to 48 hours.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-upcoming.webp" alt="Upcoming Workflow Executions" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.6: Upcoming Scheduled Execution Queue</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.8 Error Log -->
+        <div id="workflow-error-log" class="doc-sub-item">
+          <h3>7.8 Error Log & Diagnostics</h3>
+          <p>Detailed execution logs and error stack traces to troubleshoot failed steps, expired webhooks, or delivery errors.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-error-log.webp" alt="Workflow Error and Execution Log" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.7: Diagnostics Log and Error Inspector</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.9 Settings -->
+        <div id="workflow-settings" class="doc-sub-item">
+          <h3>7.9 Workflow Settings</h3>
+          <p>Enable automated administrator notifications when any workflow execution encounters a critical error.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="screenshots/workflow-settings.webp" alt="Workflow Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>Figure 7.8: Workflow Failure Alert Preferences</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 8: AI PROVIDERS SETUP ── -->
+      <section id="module-ai-providers" class="doc-section">
+        <h2>8. AI Providers Setup (Model Routing & Smart Fallbacks)</h2>
+        <p>AIME features an intelligent, multi-engine AI routing layer. Instead of vendor lock-in, you bring your own API keys, encrypt them with AES-256-GCM, and configure multi-tiered failover chains so your marketing automation runs uninterrupted 24/7/365.</p>
+        
+        <figure class="doc-screenshot-frame">
+          <img src="screenshots/settings-ai-providers.webp" alt="AI Providers Configuration Screen" class="doc-screenshot" loading="lazy" />
+          <figcaption>Figure 8.1: AI Providers Management — Google Gemini, OpenRouter, OpenAI, and Anthropic Claude Routing Hub</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>Supported AI Engines & Setup Guides</h3>
+            <ul>
+              <li><strong>Google Gemini (100% Free Forever):</strong> Get a free API key from Google AI Studio. The default <code>gemini-1.5-flash</code> provides up to 15 Requests Per Minute (RPM) and a 1-million token context window completely free without entering a credit card.</li>
+              <li><strong>OpenRouter (DeepSeek & Open Source):</strong> Connect a single OpenRouter key to access breakthrough cost-effective models like DeepSeek R1, Llama 3.3 70B, and Qwen 2.5 for pennies per million tokens.</li>
+              <li><strong>OpenAI:</strong> Direct connection for <code>gpt-4o</code> and <code>gpt-4o-mini</code>, plus text embeddings for Vector Knowledge Base scraping.</li>
+              <li><strong>Anthropic Claude:</strong> Connect <code>claude-3-5-sonnet</code> for human-grade editorial voice in the Article Studio.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Smart Multi-Model Fallback & Failover Chaining</h3>
+            <p>What happens if your primary AI provider hits a rate limit or has an outage during a viral campaign? AIME solves this with automated fallback cascades:</p>
+            <ul>
+              <li><strong>Primary Tier:</strong> Google Gemini 1.5 Flash (Free tier for zero-cost operation).</li>
+              <li><strong>Fallback Tier 1:</strong> DeepSeek R1 via OpenRouter ($0.14 / 1M tokens).</li>
+              <li><strong>Fallback Tier 2:</strong> OpenAI GPT-4o-mini.</li>
+              <li><strong>Automatic Handshake:</strong> If Gemini returns a <code>429 Too Many Requests</code> or 503 gateway error, AIME re-routes the prompt to Fallback 1 in under 300 milliseconds. Your live chatbots, article generators, and workflows never crash.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="cards-2" style="margin-top: 1.25rem;">
+          <article class="card">
+            <h3>Task-Based Model Routing</h3>
+            <p>Assign specialized models to specific plugins modules according to speed, cost, and creative depth:</p>
+            <ul>
+              <li><strong>Customer Support Chatbot:</strong> Route to <code>gemini-1.5-flash</code> for instantaneous sub-second response times.</li>
+              <li><strong>Long-Form Article Studio:</strong> Route to <code>claude-3-5-sonnet</code> or <code>deepseek-r1</code> for complex research and humanized prose.</li>
+              <li><strong>SEO Meta & Keyword Clustring:</strong> Route to <code>gpt-4o-mini</code> for structured JSON outputs.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Latency Ping & Token Safeguards</h3>
+            <p>Every provider card includes a real-time <strong>Test Connection</strong> button that sends a handshake ping to measure latency (e.g., <em>Gemini: 182ms [Active]</em>). You can also set a hard monthly token cap to eliminate the risk of unexpected API bills.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 9: GENERAL SETTINGS ── -->
+      <section id="module-settings" class="doc-section">
+        <h2>9. General Settings & Data Hygiene</h2>
+        <p>Configure site-wide parameters, user role access permissions, and automated database cleanup:</p>
+
+        <figure class="doc-screenshot-frame">
+          <img src="screenshots/settings-general.webp" alt="General Settings Screen" class="doc-screenshot" loading="lazy" />
+          <figcaption>Figure 9.1: General Settings — Cart tracking limits, role permissions, and database hygiene</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>Core Configuration Options:</h3>
+            <ul>
+              <li><strong>Cart Retention Window:</strong> Number of days abandoned cart data remains in the database (Default: 30 days).</li>
+              <li><strong>Role-Based Access:</strong> Define which WordPress user roles (e.g. Editor, Shop Manager) can access marketing modules.</li>
+              <li><strong>Uninstall Clean-up:</strong> Toggle whether plugin tables and options are purged upon complete uninstallation.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Database Optimization & Hygiene:</h3>
+            <p>Enable automatic weekly purging of expired guest carts and transient logs. This keeps your WordPress database fast, lightweight, and clutter-free.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: CRON SETUP ── -->
+      <section id="cron-setup" class="doc-section">
+        <h2>External Server Cron Setup (Zero-Delay Email Dispatch)</h2>
+        <p>WordPress default cron (<code>wp-cron.php</code>) only triggers when someone visits your website. On low-traffic sites, this can cause abandoned cart recovery emails or scheduled campaigns to fire hours late. Configuring an external server cron eliminates delays completely.</p>
 
         <div class="callout warning">
-          <h4>Common Installation Issues</h4>
-          <ul>
-            <li><strong>Plugin page blank:</strong> verify PHP version is 8.0+ and disable conflicting plugins temporarily.</li>
-            <li><strong>AI actions fail:</strong> check AI API key, model, and provider test status.</li>
-            <li><strong>Automations delayed:</strong> verify WordPress cron health in System Status.</li>
-            <li><strong>Permission error:</strong> ensure your user has <strong>manage_options</strong> capability.</li>
-          </ul>
+          <h4>Canonical External Cron Webhook URL:</h4>
+          <p>Use your site's dedicated cron webhook with your secret token to trigger execution from any server:</p>
+          <pre><code>https://yourdomain.com/wp-json/aime/v1/cron/execute?secret_token=YOUR_CRON_SECRET</code></pre>
         </div>
-      </section>
 
-      <section id="quick-start" class="doc-section reveal">
-        <h2>Quick Start Guide</h2>
-        <div class="timeline">
-          <div><span>1</span><p>Connect your AI provider and model.</p></div>
-          <div><span>2</span><p>Enable needed modules in Settings.</p></div>
-          <div><span>3</span><p>Create your first content or email campaign.</p></div>
-          <div><span>4</span><p>Review analytics and optimize.</p></div>
-        </div>
-        <div class="callout success">
-          <h4>Recommended First Configuration</h4>
-          <p>Start with Content Generator + Email Marketing + Analytics. This gives the fastest path to publishing and promotion with measurable outcomes.</p>
-        </div>
-      </section>
-
-      <section id="dashboard-overview" class="doc-section reveal">
-        <h2>Dashboard Overview</h2>
-        <div class="visual-placeholder">
-          <p>Dashboard Screenshot Placeholder</p>
-        </div>
-        <div class="workflow">
-          <div>Data Ingestion</div><span>→</span>
-          <div>Module KPIs</div><span>→</span>
-          <div>Quick Actions</div><span>→</span>
-          <div>Optimization Loop</div>
-        </div>
-        <p>The dashboard is your command center. It aggregates high-level stats from active modules and gives direct links to key actions, such as creating content, launching campaigns, or checking conversation load.</p>
-      </section>
-
-      <section id="feature-email-marketing" class="doc-section reveal feature-section">
-        <h2>Email Marketing Module</h2>
-        <p class="feature-intro">Manage contacts, campaigns, templates, automations, and SMTP in one place.</p>
-        <div class="feature-layout">
-          <article class="card">
-            <h3>Feature Overview</h3>
-            <p><strong>What:</strong> Full email CRM with segmentation, campaign builder, automations, and AI tools.</p>
-            <p><strong>Why:</strong> Grow and retain subscribers with personalized communication at scale.</p>
-            <p><strong>Benefits:</strong> Better open rates, less manual sending, and clearer campaign performance visibility.</p>
-            <p><strong>Time Saving:</strong> Reusable templates, triggers, and AI-assisted optimization reduce repetitive setup.</p>
-          </article>
-          <article class="card">
-            <h3>Visual Preview</h3>
-            <div class="visual-placeholder small"><p>Email Dashboard Screenshot</p></div>
-            <div class="visual-placeholder small"><p>Campaign Builder Screenshot</p></div>
-            <div class="workflow compact">
-              <div>Contacts</div><span>→</span><div>Campaign</div><span>→</span><div>Send</div><span>→</span><div>Analytics</div>
-            </div>
-          </article>
-        </div>
-        <article class="card">
-          <h3>How It Works</h3>
-          <p>The module combines subscriber data, campaign rules, and AI-generated suggestions. You create a campaign, select target audience, run send/test, and review opens/clicks/conversions from analytics. Automations run on triggers such as new subscriber, tag/list changes, email opens, link clicks, or WooCommerce order completion.</p>
-        </article>
-        <article class="card">
-          <h3>Step-by-Step Usage</h3>
-          <ol>
-            <li>Go to <strong>AI Marketing → Email Marketing</strong>.</li>
-            <li>Set lists/tags and import contacts.</li>
-            <li>Create campaign or automation.</li>
-            <li>Run test send and launch.</li>
-            <li>Review analytics and apply AI recommendations.</li>
-          </ol>
-        </article>
-        <article class="card">
-          <h3>Practical Examples</h3>
-          <ul>
-            <li><strong>Welcome sequence:</strong> New subscribers receive onboarding email series automatically.</li>
-            <li><strong>Abandoned cart follow-up:</strong> WooCommerce trigger starts reminder flow.</li>
-            <li><strong>Re-engagement:</strong> Segment inactive contacts and send personalized reactivation offer.</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h3>Best Practices</h3>
-          <ul>
-            <li>Warm up new sender domain and monitor SMTP errors regularly.</li>
-            <li>Use A/B variants for subject lines and track winner metrics.</li>
-            <li>Keep list hygiene strong: remove bounces and inactive contacts.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section id="feature-content-generator" class="doc-section reveal feature-section">
-        <h2>AI Content Generator</h2>
-        <div class="feature-layout">
-          <article class="card">
-            <h3>Feature Overview</h3>
-            <p>Generate SEO-ready articles, outlines, sections, meta content, and image prompts. Save presets and brand voices for consistency.</p>
-            <p><strong>Business benefit:</strong> Publish faster while maintaining quality and brand tone.</p>
-          </article>
-          <article class="card">
-            <h3>Visual Preview</h3>
-            <div class="visual-placeholder small"><p>Article Editor Screenshot</p></div>
-            <div class="visual-placeholder small"><p>Analytics Screenshot</p></div>
-          </article>
-        </div>
-        <article class="card">
-          <h3>How It Works</h3>
-          <p>You define topic, tone, keywords, and target length. AI creates draft structure and content, then you refine sections, apply SEO optimization, and publish or schedule to WordPress.</p>
-        </article>
-        <article class="card">
-          <h3>Step-by-Step Usage</h3>
-          <ol>
-            <li>Open <strong>Content Generator → New Article</strong>.</li>
-            <li>Choose preset and brand voice.</li>
-            <li>Generate outline and article content.</li>
-            <li>Review SEO/meta suggestions and edit.</li>
-            <li>Publish immediately or schedule.</li>
-          </ol>
-        </article>
-        <article class="card">
-          <h3>Before vs After</h3>
-          <p><strong>Before:</strong> 4-6 hours for draft + optimization. <strong>After:</strong> 45-90 minutes with AI-assisted creation and built-in iteration tools.</p>
-        </article>
-      </section>
-
-      <section id="feature-seo" class="doc-section reveal feature-section">
-        <h2>SEO Optimization Module</h2>
-        <article class="card">
-          <h3>Feature Overview</h3>
-          <p>Covers keyword research, keyword vault, topic map, on-page audits, content calendar, link building, rank tracking, and automation.</p>
-        </article>
-        <div class="workflow">
-          <div>Research</div><span>→</span><div>Plan</div><span>→</span><div>Publish</div><span>→</span><div>Track</div><span>→</span><div>Improve</div>
-        </div>
-        <article class="card">
-          <h3>Step-by-Step Usage</h3>
-          <ol>
-            <li>Start in <strong>Keyword Research</strong> to find opportunities.</li>
-            <li>Organize winning terms in <strong>Keyword Vault</strong>.</li>
-            <li>Build internal cluster strategy in <strong>Topic Map</strong>.</li>
-            <li>Run <strong>On-Page Audit</strong> for quality checks.</li>
-            <li>Track rankings and automate recurring tasks.</li>
-          </ol>
-        </article>
-        <article class="card">
-          <h3>Best Practices</h3>
-          <ul>
-            <li>Prioritize intent-aligned keywords, not only search volume.</li>
-            <li>Use topic clusters for authority growth over single-post optimization.</li>
-            <li>Audit older pages quarterly and refresh declining content.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section id="feature-social-media" class="doc-section reveal feature-section">
-        <h2>Social Media Automation</h2>
-        <article class="card">
-          <h3>Feature Overview</h3>
-          <p>Connect accounts, compose posts, schedule content, and repurpose long-form content into platform-ready social updates.</p>
-        </article>
         <div class="cards-2">
           <article class="card">
-            <h3>Workflow Diagram</h3>
-            <div class="workflow compact">
-              <div>Connect</div><span>→</span><div>Compose</div><span>→</span><div>Schedule</div><span>→</span><div>Publish</div><span>→</span><div>Analyze</div>
-            </div>
+            <h3>Method 1: cPanel / Server Crontab (Every 5 Minutes)</h3>
+            <p>Under cPanel <strong>Cron Jobs</strong>, create an entry running every 5 minutes:</p>
+            <pre><code>*/5 * * * * curl -s -k "https://yourdomain.com/wp-json/aime/v1/cron/execute?secret_token=YOUR_SECRET" >/dev/null 2>&1</code></pre>
           </article>
           <article class="card">
-            <h3>Usage Steps</h3>
+            <h3>Method 2: Free cron-job.org Service</h3>
             <ol>
-              <li>Add social account connections.</li>
-              <li>Create post or AI repurpose existing content.</li>
-              <li>Set publish time in calendar.</li>
-              <li>Review post status and performance.</li>
-              <li>Repeat top-performing formats.</li>
+              <li>Create a free account at <a href="https://cron-job.org" target="_blank" rel="noopener">cron-job.org</a>.</li>
+              <li>Click <strong>Create Cronjob</strong> and paste your full webhook URL.</li>
+              <li>Set execution schedule to <strong>Every 5 minutes</strong> and save.</li>
             </ol>
           </article>
         </div>
       </section>
 
-      <section id="feature-campaign-manager" class="doc-section reveal feature-section">
-        <h2>Campaign Manager</h2>
-        <article class="card">
-          <h3>What It Does</h3>
-          <p>Campaign management spans Email Campaigns, Automations, and Social Post Scheduling. It enables planning, execution, and performance tracking from one plugin ecosystem.</p>
-        </article>
-        <article class="card">
-          <h3>Use Cases</h3>
-          <ul>
-            <li>Product launch sequence: article + email + social wave.</li>
-            <li>Seasonal sales campaign with audience segmentation.</li>
-            <li>Weekly newsletter + repurposed social snippets.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section id="feature-chatbot" class="doc-section reveal feature-section">
-        <h2>Lead Generation Chatbot</h2>
-        <div class="feature-layout">
-          <article class="card">
-            <h3>Feature Overview</h3>
-            <p>Deploy chatbots, answer visitor questions with AI + knowledge base, capture leads, and escalate to human takeover when needed.</p>
-            <p><strong>Why use it:</strong> Convert high-intent visitors instantly instead of losing them to response delays.</p>
-          </article>
-          <article class="card">
-            <h3>Visual Preview</h3>
-            <div class="visual-placeholder small"><p>Widget Screenshot</p></div>
-            <div class="visual-placeholder small"><p>Conversation Inbox Screenshot</p></div>
-          </article>
-        </div>
-        <article class="card">
-          <h3>How It Works</h3>
-          <p>Visitors start conversations from the site widget. The chatbot uses indexed knowledge and AI responses, logs interactions, and captures lead details based on configured rules.</p>
-        </article>
-        <article class="card">
-          <h3>Step-by-Step Usage</h3>
-          <ol>
-            <li>Open <strong>AI Chatbot → Chatbots</strong> and create a bot.</li>
-            <li>Configure welcome message, theme, and lead capture.</li>
-            <li>Add knowledge sources and run indexing.</li>
-            <li>Publish widget and monitor conversations.</li>
-            <li>Tune prompts based on common questions.</li>
-          </ol>
-        </article>
-      </section>
-
-      <section id="feature-ai-recommendations" class="doc-section reveal feature-section">
-        <h2>AI Recommendations</h2>
-        <article class="card">
-          <h3>Overview</h3>
-          <p>The plugin provides AI-assisted suggestions across modules, including subject line optimization, content improvement, campaign recommendations, SEO guidance, and social caption/hashtag ideas.</p>
-        </article>
-        <article class="card">
-          <h3>Best Settings</h3>
-          <ul>
-            <li>Use one consistent model for repeatable output style.</li>
-            <li>Store high-performing prompts in module presets/templates.</li>
-            <li>Review AI output before publishing in customer-facing workflows.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section id="feature-woocommerce" class="doc-section reveal feature-section">
-        <h2>WooCommerce Marketing</h2>
-        <article class="card">
-          <h3>Overview</h3>
-          <p>If WooCommerce is active, Email Marketing can trigger automations from completed orders and Chatbot Pro can index product knowledge for smarter responses.</p>
-        </article>
-        <article class="card">
-          <h3>Practical Example</h3>
-          <p>Create post-purchase flow: order completed trigger → thank-you email → cross-sell follow-up after 7 days → social retargeting post sequence.</p>
-        </article>
-      </section>
-
-      <section id="feature-reports" class="doc-section reveal feature-section">
-        <h2>Analytics & Reports</h2>
-        <article class="card">
-          <h3>What You Can Measure</h3>
-          <ul>
-            <li>Dashboard-wide module KPIs.</li>
-            <li>Email campaign and subscriber activity metrics.</li>
-            <li>Content output and quality trends.</li>
-            <li>Social posting throughput and publish outcomes.</li>
-            <li>Chatbot conversations, lead capture, and response patterns.</li>
-          </ul>
-        </article>
-        <article class="card">
-          <h3>Result Expectations</h3>
-          <p>Within 30 days, teams typically improve content frequency, campaign consistency, and response speed while reducing manual execution time.</p>
-        </article>
-      </section>
-
-      <section id="settings" class="doc-section reveal">
-        <h2>Settings</h2>
-        <p>Use Settings to manage general preferences, module activation, system status, API/webhook access, and debug logs.</p>
-        <div class="visual-placeholder"><p>Settings Screenshot Placeholder</p></div>
-      </section>
-
-      <section id="integrations" class="doc-section reveal">
-        <h2>Integrations</h2>
+      <!-- ── SECTION: TROUBLESHOOTING ── -->
+      <section id="troubleshooting" class="doc-section">
+        <h2>Troubleshooting & Real-World Pitfalls</h2>
         <div class="cards-2">
           <article class="card">
-            <h3>AI Providers</h3>
-            <p>Add provider connections, test credentials, fetch models, and assign active model by use case.</p>
+            <h3>1. Cart Recovery Emails Not Sending</h3>
+            <p><strong>Cause:</strong> WP-Cron is sleeping, or an aggressive page caching plugin is caching checkout scripts.</p>
+            <p><strong>Fix:</strong> Configure an external server cron (see above) and add <code>/checkout/</code> and <code>/cart/</code> to the "Never Cache" exclusion rules in WP Rocket or LiteSpeed Cache.</p>
           </article>
           <article class="card">
-            <h3>SMTP Providers</h3>
-            <p>Configure and test mail transport to improve deliverability and monitor errors.</p>
+            <h3>2. Emails Landing in the Spam Folder</h3>
+            <p><strong>Cause:</strong> Sending via standard unauthenticated PHP <code>mail()</code> or missing domain SPF/DKIM records.</p>
+            <p><strong>Fix:</strong> Configure a dedicated SMTP provider under <strong>Email Marketing → SMTP</strong> (Gmail App Password, Brevo, or SendGrid) and verify your domain's SPF, DKIM, and DMARC DNS records.</p>
+          </article>
+          <article class="card">
+            <h3>3. AI "Rate Limit Exceeded" Errors</h3>
+            <p><strong>Cause:</strong> Exceeding the 15 requests/minute quota on free Google AI Studio accounts during large batches.</p>
+            <p><strong>Fix:</strong> In <strong>Settings → General</strong>, decrease background batch size to 5, or connect an OpenAI or OpenRouter fallback key.</p>
+          </article>
+          <article class="card">
+            <h3>4. Chatbot Widget Not Appearing</h3>
+            <p><strong>Cause:</strong> Theme script conflicts or JavaScript errors in the front-end console.</p>
+            <p><strong>Fix:</strong> Verify the chatbot toggle is active under <strong>Chatbot → Settings</strong>, clear your browser and site cache, and ensure no other plugins are blocking REST API endpoints.</p>
           </article>
         </div>
       </section>
 
-      <section id="analytics" class="doc-section reveal">
-        <h2>Analytics Best Practices</h2>
-        <ul>
-          <li>Review module KPIs weekly, not only monthly.</li>
-          <li>Annotate major campaign dates for cleaner trend analysis.</li>
-          <li>Iterate one variable at a time for reliable optimization insights.</li>
-        </ul>
-
-        <div class="related">
-          <h3>Related Articles</h3>
-          <a href="#feature-email-marketing">How to Improve Email Open Rates</a>
-          <a href="#feature-seo">SEO Topic Clustering Playbook</a>
-          <a href="#feature-social-media">Social Scheduling Strategy Guide</a>
-        </div>
-      </section>
-
-      <section id="troubleshooting" class="doc-section reveal">
-        <h2>Troubleshooting</h2>
+      <!-- ── SECTION: FAQ (AIO & GEO Optimized) ── -->
+      <section id="faq" class="doc-section">
+        <h2>Frequently Asked Questions (FAQ) & Troubleshooting</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">Authoritative answers to the most common setup, technical, and operational questions for AI Marketing Expert.</p>
+        
         <div class="cards-2">
+          <!-- Q1 -->
           <article class="card">
-            <h3>Background Jobs Not Running</h3>
-            <p>Open <strong>Settings → System Status</strong>, verify cron delay, then trigger due automations manually for recovery.</p>
+            <span class="badge-pill badge-primary" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Pricing & Ownership</span>
+            <h3>Are there any recurring monthly subscription fees?</h3>
+            <p>No! AI Marketing Expert is 100% self-hosted on your own WordPress site. You never pay monthly per-subscriber penalties or database fees like Mailchimp or Klaviyo. If you connect Google AI Studio's free Gemini API tier, your AI copywriting and generation costs are also $0.</p>
           </article>
+
+          <!-- Q2 -->
           <article class="card">
-            <h3>AI Output Not Generated</h3>
-            <p>Check AI provider connection, model selection, token limits, and API errors. Test connection from AI Providers page.</p>
+            <span class="badge-pill badge-fire" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Email & Deliverability</span>
+            <h3>Can I send marketing or cold outreach emails using Gmail, Amazon SES, or Brevo?</h3>
+            <p>Yes! The plugin features a built-in Multi-SMTP Relay Manager supporting Gmail, Google Workspace, Amazon SES, Brevo (Sendinblue), SendGrid, Mailgun, and custom SMTP. You can configure daily sending limits and automatic failover rotation across multiple providers to protect your sender reputation.</p>
           </article>
+
+          <!-- Q3 -->
           <article class="card">
-            <h3>Email Sending Issues</h3>
-            <p>Review SMTP setup and test mail endpoint, then inspect error logs in module settings.</p>
+            <span class="badge-pill badge-fire" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Lead Generation</span>
+            <h3>How does the B2B Lead Finder work, and are email addresses verified before sending?</h3>
+            <p>The B2B Lead Finder identifies targeted prospects across roles, niches, and countries. Before any lead is enrolled into an email sequence, the built-in Email Validator performs real-time syntax checking, disposable email filtering, and live DNS MX record verification to ensure near 0% bounce rate.</p>
           </article>
+
+          <!-- Q4 -->
           <article class="card">
-            <h3>Chatbot Responses Off-Topic</h3>
-            <p>Re-index knowledge sources and tighten system prompt instructions with explicit business context.</p>
+            <span class="badge-pill badge-cart" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">WooCommerce Growth</span>
+            <h3>How does WooCommerce Abandoned Cart Recovery recover lost sales?</h3>
+            <p>When a shopper enters their details but abandons checkout, the plugin captures the cart. It automatically dispatches scheduled recovery emails containing a direct 1-click checkout recovery URL, complete with duplicate cart protection and optional dynamic discount incentives.</p>
+          </article>
+
+          <!-- Q5 -->
+          <article class="card">
+            <span class="badge-pill badge-success" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Performance</span>
+            <h3>Will this plugin slow down my website or WooCommerce store?</h3>
+            <p>No. The front-end tracking asset is ultra-lightweight (under 5KB) and loads asynchronously. All heavy operations such as AI generation, contact verification, and email dispatch run in background worker processes controlled by cron, preventing any impact on page load speed.</p>
+          </article>
+
+          <!-- Q6 -->
+          <article class="card">
+            <span class="badge-pill badge-pro" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Visual Workflows</span>
+            <h3>Can I build visual automated workflows and nurture drip sequences?</h3>
+            <p>Yes! The visual Workflow Automation Canvas (React Flow) lets you build intuitive drag-and-drop automations with triggers (new order, abandoned cart, tag added), conditions, timed delays (e.g., wait 3 days), and automated actions (send email, webhook, tag update). You can also use Text-to-Workflow AI to generate flows automatically from plain English prompts.</p>
+          </article>
+
+          <!-- Q7 -->
+          <article class="card">
+            <span class="badge-pill badge-primary" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">AI SEO & Content</span>
+            <h3>How does Deep Humanize in Content Generator bypass AI detectors?</h3>
+            <p>Deep Humanize analyzes sentence rhythm, perplexity, and burstiness to rephrase synthetic AI patterns into authentic human tone. Crucially, unlike generic paraphrasers, it strictly preserves all Markdown tables, bullet lists, bold highlights, and technical terminology.</p>
+          </article>
+
+          <!-- Q8 -->
+          <article class="card">
+            <span class="badge-pill badge-primary" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Conversational AI</span>
+            <h3>Can the AI Chatbot answer customer questions using my WooCommerce products and site content?</h3>
+            <p>Yes. The AI Chatbot includes a dedicated Knowledge Base crawler that indexes your WooCommerce product catalog, prices, and website pages. It delivers instant, context-aware answers to shopper questions and allows human agents to take over live conversations at any time.</p>
+          </article>
+
+          <!-- Q9 -->
+          <article class="card">
+            <span class="badge-pill badge-success" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Reliability</span>
+            <h3>What should I do if WP-Cron fails or scheduled tasks are delayed?</h3>
+            <p>For high-volume sites, you can disable standard WP-Cron and set up a reliable external server cron (via crontab or services like cron-job.org) pinging the canonical AIME webhook URL every 5 minutes for guaranteed task execution.</p>
+          </article>
+
+          <!-- Q10 -->
+          <article class="card">
+            <span class="badge-pill badge-primary" style="font-size:0.7rem;margin-bottom:0.5rem;display:inline-block;">Migration</span>
+            <h3>Can I migrate contacts from Mailchimp, FluentCRM, or CSV lists?</h3>
+            <p>Yes. Export your contacts as a CSV file from any CRM and use Email Marketing → Import / Export. The visual column mapper lets you match name, email, custom fields, and assign tags in seconds.</p>
           </article>
         </div>
       </section>
 
-      <section id="faq" class="doc-section reveal">
-        <h2>FAQ</h2>
-        <div class="faq-item">
-          <button class="faq-question">Do I need technical skills to use this plugin?</button>
-          <div class="faq-answer"><p>No. The interface is designed for marketers and business users with guided workflows.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question">Can I use only one module?</button>
-          <div class="faq-answer"><p>Yes. You can enable or disable modules in Settings and run only what your team needs.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question">What is the best first feature to start with?</button>
-          <div class="faq-answer"><p>Most teams start with Content Generator and Email Marketing for the fastest measurable impact.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question">How can I improve AI output quality?</button>
-          <div class="faq-answer"><p>Use clear prompts, define audience and tone, and keep model/provider settings consistent across workflows.</p></div>
+      <!-- ── SECTION: MICRO-VIDEOS ── -->
+      <section id="video-tutorials" class="doc-section">
+        <h2>1-2 Minute Micro-Videos (🎬 7 Video Lessons & Scripts)</h2>
+        <p>Bite-sized, practical video walkthroughs designed to get you up and running without wasting time:</p>
+
+        <div class="video-grid">
+          <!-- Lesson 1 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 1: Free AI Setup</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">1:45 min</span>
+              <h3>1. Five-Minute Free Gemini AI Connection</h3>
+              <p>Step-by-step walkthrough generating a free Gemini API key and verifying connection.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:25]</strong> Creating an API key in Google AI Studio</li>
+                <li><strong>[00:25 - 01:10]</strong> Saving credentials in AIME AI Providers</li>
+                <li><strong>[01:10 - 01:45]</strong> Running connection test & model selection</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 2 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 2: B2B Lead Finder</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">2:10 min</span>
+              <h3>2. Prospecting Verified Leads & Cold Outreach</h3>
+              <p>Filtering targeted niches and enrolling verified leads into email nurture sequences.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:35]</strong> Setting role, industry, and location filters</li>
+                <li><strong>[00:35 - 01:25]</strong> Real-time DNS MX verification checks</li>
+                <li><strong>[01:25 - 02:10]</strong> One-click cold email sequence enrollment</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 3 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 3: Cart Recovery</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">1:55 min</span>
+              <h3>3. WooCommerce Abandoned Cart Recovery</h3>
+              <p>Setting up guest email capture and generating 1-click single-quantity recovery links.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:30]</strong> Activating checkout field listener</li>
+                <li><strong>[00:30 - 01:15]</strong> Embedding {{recovery_url}} in email templates</li>
+                <li><strong>[01:15 - 01:55]</strong> Testing duplicate-proof cart restoration</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 4 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 4: AI Canvas</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">1:30 min</span>
+              <h3>4. Text-to-Workflow AI Canvas Generation</h3>
+              <p>Generating complex multi-branch marketing funnels from natural language prompts.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:20]</strong> Opening 'Create with AI' prompt builder</li>
+                <li><strong>[00:20 - 00:55]</strong> Writing automation requirements</li>
+                <li><strong>[00:55 - 01:30]</strong> Reviewing and activating canvas nodes</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 5 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 5: SEO to Article</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">2:15 min</span>
+              <h3>5. Keyword Research to Long-Form Blog Post</h3>
+              <p>Discovering low-KD keywords and producing 2,000+ word structured articles.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:40]</strong> Researching keywords & saving to Vault</li>
+                <li><strong>[00:40 - 01:35]</strong> Generating in Deep Humanize Studio</li>
+                <li><strong>[01:35 - 02:15]</strong> Publishing directly to WordPress</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 6 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 6: Chatbot Sync</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">1:40 min</span>
+              <h3>6. Training Chatbots on WooCommerce Products</h3>
+              <p>Syncing product catalogs to build an automated 24/7 sales representative.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:25]</strong> Navigating to Chatbot Knowledge Base</li>
+                <li><strong>[00:25 - 01:05]</strong> Clicking 'Sync WooCommerce Products'</li>
+                <li><strong>[01:05 - 01:40]</strong> Testing front-end recommendations</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 7 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>Lesson 7: Server Cron</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">1:50 min</span>
+              <h3>7. Free Server Cron Setup (Zero Email Delay)</h3>
+              <p>Eliminating WP-Cron delays with cron-job.org or cPanel scheduler.</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:30]</strong> Copying secret cron webhook token</li>
+                <li><strong>[00:30 - 01:15]</strong> Setting up 5-minute cron on cron-job.org</li>
+                <li><strong>[01:15 - 01:50]</strong> Verifying green status on AIME dashboard</li>
+              </ul>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section id="changelog" class="doc-section reveal">
-        <h2>Changelog</h2>
-        <article class="card">
-          <h3>Latest Stable Updates</h3>
+      <!-- ── SECTION: CHANGELOG ── -->
+      <section id="changelog" class="doc-section">
+        <h2>Changelog & Release Notes (v1.2.7)</h2>
+        <div class="card">
+          <h3>Version 1.2.7 (Latest Stable)</h3>
           <ul>
-            <li>v1.1.1: Duplicate-send fix, End Campaign button, bounce/complaint webhooks (Pro).</li>
-            <li>v1.1.0: Initial WordPress.org release — email, content, SEO, social, and chatbot modules.</li>
-            <li>v1.0.3.5: Core plugin update and compatibility improvements.</li>
-            <li>v1.0.3.3: Installation, migration, and Plugin Check enhancements.</li>
+            <li><strong>New:</strong> B2B Lead Finder engine integrated directly inside Email Marketing submenu.</li>
+            <li><strong>New:</strong> WooCommerce 1-click abandoned cart recovery URLs with single-quantity duplicate protection.</li>
+            <li><strong>Enhanced:</strong> Workflow Automation V2 featuring React Flow visual canvas and Text-to-Workflow AI generator.</li>
+            <li><strong>Enhanced:</strong> Deep Humanize mode in Content Generator that preserves tables, headings, and lists while bypassing AI detectors.</li>
+            <li><strong>Enhanced:</strong> Canonical external server cron webhook support to eliminate WP-Cron scheduling delays.</li>
           </ul>
-        </article>
-      </section>
-
-      <section id="support" class="doc-section reveal">
-        <h2>Video & Support</h2>
-        <div class="cards-2">
-          <article class="card">
-            <h3>Video Tutorial Placeholder</h3>
-            <div class="visual-placeholder small"><p>Embed Training Video Here</p></div>
-          </article>
-          <article class="card">
-            <h3>Contact Support</h3>
-            <p>Need help with setup or optimization? Contact your plugin support channel and include your module name, error message, and steps you already tried.</p>
-          </article>
         </div>
       </section>
     </main>
   </div>
 
-  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
-  <script src="script.js"></script>
+  <!-- ── MOBILE BOTTOM QUICK NAVIGATION BAR ── -->
+  <nav class="mobile-bottom-bar" id="mobileBottomBar" aria-label="Quick Mobile Navigation">
+    <button class="mobile-bottom-btn" id="mobileBottomMenuBtn" aria-label="Toggle Navigation Menu">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>Menu</span>
+    </button>
+    <button class="mobile-bottom-btn" id="mobileBottomSearchBtn" aria-label="Search Documentation">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search</span>
+    </button>
+    <a href="#hot-spotlight" class="mobile-bottom-btn" aria-label="Hot Features Spotlight">
+      <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      <span>Spotlight</span>
+    </a>
+    <a href="#faq" class="mobile-bottom-btn" aria-label="Frequently Asked Questions">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>FAQ</span>
+    </a>
+    <button class="mobile-bottom-btn" id="mobileBottomTopBtn" aria-label="Scroll to Top">
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+      <span>Top</span>
+    </button>
+  </nav>
+
+  <!-- ── SCREENSHOT LIGHTBOX MODAL ── -->
+  <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-label="Screenshot Preview">
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close image preview">&times;</button>
+      <img id="lightboxImg" src="" alt="Full-size Screenshot Preview" />
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <!-- ── WATCH DEMO VIDEO MODAL (YouTube Player) ── -->
+  <div class="video-modal" id="videoDemoModal" role="dialog" aria-modal="true" aria-label="Product Demo Video">
+    <div class="video-modal-container">
+      <div class="video-modal-header">
+        <div class="video-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          AI Marketing Expert (v1.2.7) — Official 2-Minute Demo Walkthrough
+        </div>
+        <button class="video-modal-close" id="videoModalClose" aria-label="Close video">&times;</button>
+      </div>
+      <div class="video-modal-body">
+        <iframe id="videoDemoIframe" src="" title="AI Marketing Expert Demo Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JAVASCRIPT LOGIC ── -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Reading Progress Bar
+      const progress = document.getElementById('readingProgress');
+      window.addEventListener('scroll', () => {
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const currentProgress = (window.pageYOffset / totalHeight) * 100;
+        if (progress) progress.style.width = currentProgress + '%';
+      });
+
+      // 2. Mobile Menu & Drawer Controls with Backdrop
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const closeBtn = document.getElementById('sidebarCloseBtn');
+
+      const openMobileSidebar = () => {
+        sidebar.classList.add('open');
+        backdrop.classList.add('active');
+        menuToggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeMobileSidebar = () => {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      };
+
+      if (menuToggle) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (sidebar.classList.contains('open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
+      if (backdrop) {
+        backdrop.addEventListener('click', closeMobileSidebar);
+        backdrop.addEventListener('touchstart', closeMobileSidebar, { passive: true });
+      }
+
+      // Mobile Bottom Bar Controls
+      const mobileBottomMenuBtn = document.getElementById('mobileBottomMenuBtn');
+      const mobileBottomSearchBtn = document.getElementById('mobileBottomSearchBtn');
+      const mobileBottomTopBtn = document.getElementById('mobileBottomTopBtn');
+
+      if (mobileBottomMenuBtn) {
+        mobileBottomMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (sidebar.classList.contains('open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+      }
+
+      if (mobileBottomSearchBtn) {
+        mobileBottomSearchBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => {
+            const searchInput = document.getElementById('docSearch');
+            searchInput?.focus();
+          }, 250);
+        });
+      }
+
+      if (mobileBottomTopBtn) {
+        mobileBottomTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      // Close mobile drawer when clicking ANY navigation link
+      document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+          closeMobileSidebar();
+        });
+      });
+
+      // Close mobile drawer when clicking outside the sidebar
+      document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('open')) {
+          if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !mobileBottomMenuBtn?.contains(e.target)) {
+            closeMobileSidebar();
+          }
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMobileSidebar();
+          if (modal) modal.classList.remove('open');
+          if (searchResults) searchResults.style.display = 'none';
+        }
+      });
+
+      // 3. Nested Sidebar Accordions (Expand, Fold, and Auto-collapse)
+      const moduleBtns = document.querySelectorAll('.sidebar-module-btn');
+      moduleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetId = btn.getAttribute('data-target');
+          const targetSubMenu = document.getElementById(targetId);
+          if (!targetSubMenu) return;
+
+          const isCurrentlyOpen = targetSubMenu.classList.contains('open');
+
+          // Close all other accordions for clean accordion UX
+          moduleBtns.forEach(otherBtn => {
+            if (otherBtn !== btn) {
+              otherBtn.setAttribute('aria-expanded', 'false');
+              const otherSub = document.getElementById(otherBtn.getAttribute('data-target'));
+              if (otherSub) otherSub.classList.remove('open');
+            }
+          });
+
+          // Toggle current accordion (folds if already open)
+          if (isCurrentlyOpen) {
+            btn.setAttribute('aria-expanded', 'false');
+            targetSubMenu.classList.remove('open');
+          } else {
+            btn.setAttribute('aria-expanded', 'true');
+            targetSubMenu.classList.add('open');
+          }
+        });
+      });
+
+      // Auto-open parent accordion if sub-link is targeted via hash
+      const hash = window.location.hash;
+      if (hash) {
+        const activeLink = document.querySelector(`.sidebar-sub-link[href="${hash}"]`);
+        if (activeLink) {
+          const parentSub = activeLink.closest('.sidebar-sub-menu');
+          if (parentSub) {
+            parentSub.classList.add('open');
+            const correspondingBtn = document.querySelector(`.sidebar-module-btn[data-target="${parentSub.id}"]`);
+            if (correspondingBtn) correspondingBtn.setAttribute('aria-expanded', 'true');
+          }
+        }
+      }
+
+      // 4. Smart Ajax-like Live Search with Keyboard Shortcut
+      const docSearch = document.getElementById('docSearch');
+      const searchResults = document.getElementById('searchResults');
+
+      // Global keyboard shortcut Ctrl+K or / to focus search
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          docSearch?.focus();
+        }
+        if (e.key === '/' && document.activeElement !== docSearch && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          e.preventDefault();
+          docSearch?.focus();
+        }
+      });
+
+      if (docSearch && searchResults) {
+        // Build rich search index
+        const searchIndex = [];
+        document.querySelectorAll('section[id], .doc-sub-item[id]').forEach(el => {
+          const heading = el.querySelector('h2, h3, h4');
+          const title = heading ? heading.innerText.trim() : el.id;
+          
+          let badge = 'General';
+          if (el.id.startsWith('email-')) badge = 'Email Marketing';
+          else if (el.id.startsWith('seo-')) badge = 'SEO Analyzer';
+          else if (el.id.startsWith('content-')) badge = 'Content Generator';
+          else if (el.id.startsWith('social-')) badge = 'Social Media';
+          else if (el.id.startsWith('chatbot-')) badge = 'AI Chatbot';
+          else if (el.id.startsWith('workflow-')) badge = 'Workflow Automation';
+          else if (el.id.includes('cron')) badge = 'Cron Setup';
+          else if (el.id.includes('troubleshoot')) badge = 'Troubleshooting';
+          else if (el.id.includes('video')) badge = 'Micro-Videos';
+          else if (el.id.includes('hot')) badge = 'Hot Features';
+
+          const paragraphs = Array.from(el.querySelectorAll('p, li')).map(p => p.innerText.trim()).join(' ');
+          searchIndex.push({
+            id: el.id,
+            title,
+            badge,
+            snippet: paragraphs.slice(0, 120),
+            fullText: (title + ' ' + badge + ' ' + paragraphs).toLowerCase()
+          });
+        });
+
+        docSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          if (!query || query.length < 2) {
+            searchResults.style.display = 'none';
+            searchResults.innerHTML = '';
+            return;
+          }
+
+          const matches = searchIndex.filter(item => item.fullText.includes(query)).slice(0, 7);
+          if (matches.length > 0) {
+            let html = '<div class="search-results-header">Search Results</div>';
+            matches.forEach(m => {
+              html += `
+                <a href="#${m.id}" class="search-result-item">
+                  <span class="search-res-badge">${m.badge}</span>
+                  <span class="search-res-title">${m.title}</span>
+                  <span class="search-res-snippet">${m.snippet}...</span>
+                </a>
+              `;
+            });
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+          } else {
+            searchResults.innerHTML = '<div style="padding:1rem;color:#888;text-align:center;font-size:0.85rem;">No matching documentation found</div>';
+            searchResults.style.display = 'block';
+          }
+        });
+
+        // Close search when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!docSearch.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+          }
+        });
+
+        // Clicking a search result jumps and closes
+        searchResults.addEventListener('click', (e) => {
+          const item = e.target.closest('.search-result-item');
+          if (item) {
+            searchResults.style.display = 'none';
+            docSearch.value = '';
+          }
+        });
+      }
+
+      // 5. Screenshot Lightbox Zoom
+      const modal = document.getElementById('lightboxModal');
+      const modalImg = document.getElementById('lightboxImg');
+      const modalCaption = document.getElementById('lightboxCaption');
+      const modalClose = document.getElementById('lightboxClose');
+
+      document.querySelectorAll('.doc-screenshot').forEach(img => {
+        img.addEventListener('click', () => {
+          if (modal && modalImg) {
+            modalImg.src = img.src;
+            const caption = img.closest('figure')?.querySelector('figcaption')?.innerText || img.alt;
+            if (modalCaption) modalCaption.innerText = caption;
+            modal.classList.add('open');
+          }
+        });
+      });
+
+      if (modalClose && modal) {
+        modalClose.addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('open');
+        });
+      }
+
+      // 6. Watch Demo Video Modal Controller
+      const openDemoVideoBtn = document.getElementById('openDemoVideoBtn');
+      const videoDemoModal = document.getElementById('videoDemoModal');
+      const videoModalClose = document.getElementById('videoModalClose');
+      const videoDemoIframe = document.getElementById('videoDemoIframe');
+
+      // Configurable YouTube Demo Link: User's Official Walkthrough Video
+      let DEMO_YOUTUBE_URL = "https://www.youtube-nocookie.com/embed/BiYoVVesf1s";
+
+      const openVideo = (url) => {
+        if (!videoDemoIframe || !videoDemoModal) return;
+        const targetUrl = url || DEMO_YOUTUBE_URL;
+        const autoplayUrl = targetUrl.includes('?') ? `${targetUrl}&autoplay=1` : `${targetUrl}?autoplay=1`;
+        videoDemoIframe.src = autoplayUrl;
+        videoDemoModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeVideo = () => {
+        if (!videoDemoIframe || !videoDemoModal) return;
+        videoDemoIframe.src = '';
+        videoDemoModal.classList.remove('open');
+        document.body.style.overflow = '';
+      };
+
+      if (openDemoVideoBtn) {
+        openDemoVideoBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openVideo();
+        });
+      }
+
+      // Connect video tutorial cards to launch the YouTube player
+      document.querySelectorAll('.video-card, .video-thumb-wrap').forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+          openVideo(DEMO_YOUTUBE_URL);
+        });
+      });
+
+      if (videoModalClose) {
+        videoModalClose.addEventListener('click', closeVideo);
+      }
+
+      if (videoDemoModal) {
+        videoDemoModal.addEventListener('click', (e) => {
+          if (e.target === videoDemoModal) closeVideo();
+        });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (videoDemoModal?.classList.contains('open')) closeVideo();
+        }
+      });
+
+      // 7. Language Switcher Dropdown Controller
+      const langBtn = document.getElementById('langBtn');
+      const langDropdown = document.getElementById('langDropdown');
+      const currentLangLabel = document.getElementById('currentLangLabel');
+
+      if (langBtn && langDropdown) {
+        langBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = langDropdown.classList.toggle('open');
+          langBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.querySelectorAll('.lang-opt').forEach(opt => {
+          opt.addEventListener('click', (e) => {
+            const href = opt.getAttribute('href');
+            const langCode = opt.getAttribute('data-lang');
+            if (langCode) localStorage.setItem('aime_doc_lang', langCode);
+
+            // Allow normal navigation if href points to a localized directory
+            if (href && href !== '#') {
+              return;
+            }
+
+            e.preventDefault();
+            const rawText = opt.textContent || '';
+            const cleanName = rawText.split('(')[0].replace(/[^\w\s\u0980-\u09FF\u3040-\u30FF\u4E00-\u9FAF]/gi, '').trim();
+
+            document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            if (currentLangLabel) currentLangLabel.innerText = cleanName;
+            langDropdown.classList.remove('open');
+            langBtn.setAttribute('aria-expanded', 'false');
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!langBtn.contains(e.target) && !langDropdown.contains(e.target)) {
+            langDropdown.classList.remove('open');
+            langBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

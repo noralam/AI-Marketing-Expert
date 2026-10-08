@@ -17,7 +17,7 @@ import Card from '../../common/Card';
 import Notice from '../../common/Notice';
 import ProGate from '../../common/ProGate';
 import ProBadge from '../../Layout/ProBadge';
-import { isProActive } from '../../common/ProLock';
+import { isProActive, openProUpgrade } from '../../common/ProLock';
 
 const INDUSTRY_PRESETS = [
 	{ label: __( 'Select Industry...', 'ai-marketing-expert' ), value: '' },
@@ -51,11 +51,14 @@ const LOCATION_PRESETS = [
 	{ label: 'United Kingdom', value: 'United Kingdom' },
 	{ label: 'Canada', value: 'Canada' },
 	{ label: 'Australia', value: 'Australia' },
+	{ label: 'New Zealand', value: 'New Zealand' },
+	{ label: 'Japan', value: 'Japan' },
 	{ label: 'Germany', value: 'Germany' },
+	{ label: 'Netherlands', value: 'Netherlands' },
 	{ label: 'France', value: 'France' },
 	{ label: 'European Union', value: 'European Union' },
-	{ label: 'India', value: 'India' },
 	{ label: 'Singapore', value: 'Singapore' },
+	{ label: 'India', value: 'India' },
 ];
 
 const COMPANY_SIZE_PRESETS = [
@@ -186,7 +189,8 @@ const LeadFinder = ( { onNavigate } ) => {
 	const slowWarning = useSlowWarning();
 
 	// Active tab: 'autopilot' | 'instant'
-	const [ activeTab, setActiveTab ] = useState( 'autopilot' );
+	const [ activeTab, setActiveTab ] = useState( hasPro ? 'autopilot' : 'instant' );
+	const [ quota, setQuota ] = useState( null );
 
 	// Shared State
 	const [ lists, setLists ] = useState( [] );
@@ -235,10 +239,15 @@ const LeadFinder = ( { onNavigate } ) => {
 	const [ isSavingAp, setIsSavingAp ] = useState( false );
 	const [ isRunningAp, setIsRunningAp ] = useState( false );
 
+	// Free Tier Quota Exhaustion check
+	const isQuotaExhausted = ! hasPro && quota && ( quota.daily_used >= quota.daily_limit || quota.monthly_used >= quota.monthly_limit );
+
 	// Effective Volume calculation
-	const activeInstantLimit = instantVolumePreset === 'custom'
-		? Math.max( 5, parseInt( instantCustomVolume, 10 ) || 25 )
-		: parseInt( instantVolumePreset, 10 ) || 25;
+	const activeInstantLimit = ! hasPro
+		? 5
+		: ( instantVolumePreset === 'custom'
+			? Math.max( 5, parseInt( instantCustomVolume, 10 ) || 25 )
+			: parseInt( instantVolumePreset, 10 ) || 25 );
 
 	const activeApDailyTarget = apVolumePreset === 'custom'
 		? Math.max( 5, parseInt( apCustomVolume, 10 ) || 25 )
@@ -296,32 +305,37 @@ const LeadFinder = ( { onNavigate } ) => {
 		} catch ( e ) { /* */ }
 	}, [ get ] );
 
+	const fetchQuota = useCallback( async () => {
+		try {
+			const res = await get( '/email/leads/quota' );
+			if ( res ) {
+				setQuota( res );
+			}
+		} catch ( e ) { /* */ }
+	}, [ get ] );
+
 	useEffect( () => {
+		fetchLists();
+		fetchQuota();
 		if ( hasPro ) {
-			fetchLists();
 			fetchAutopilotConfig();
 		}
-	}, [ hasPro, fetchLists, fetchAutopilotConfig ] );
-
-	if ( ! hasPro ) {
-		return (
-			<div className="aime-lead-finder-page">
-				<ProGate
-					feature={ __( 'B2B Lead Finder & Autopilot Pipeline', 'ai-marketing-expert' ) }
-					description={ __(
-						'Discover verified B2B prospective clients, run autonomous daily prospecting, verify DNS/MX deliverability in real-time, and trigger cold email automation sequences on autopilot.',
-						'ai-marketing-expert'
-					) }
-				/>
-			</div>
-		);
-	}
+	}, [ hasPro, fetchLists, fetchAutopilotConfig, fetchQuota ] );
 
 	// Tab 1: Instant Search Handler
 	const handleSearch = async ( e, targetPage = 1 ) => {
 		if ( e && e.preventDefault ) e.preventDefault();
 		clearError();
 		setNotice( null );
+
+		if ( isQuotaExhausted ) {
+			setNotice( {
+				type: 'warning',
+				message: __( "You have reached your 5 free leads limit for today. Upgrade to Pro for unlimited daily leads, or return tomorrow!", 'ai-marketing-expert' ),
+				showUpgrade: true,
+			} );
+			return;
+		}
 
 		const activeIndustry = customIndustry.trim() || industry;
 		const activeRole = customRole.trim() || role;
@@ -354,6 +368,10 @@ const LeadFinder = ( { onNavigate } ) => {
 			setLeads( items );
 			setSearchPage( targetPage );
 			setHasMore( res?.pagination?.has_more ?? ( items.length >= activeInstantLimit ) );
+
+			if ( res?.quota ) {
+				setQuota( res.quota );
+			}
 
 			const initialSelect = [];
 			items.forEach( ( item, idx ) => {
@@ -421,14 +439,32 @@ const LeadFinder = ( { onNavigate } ) => {
 				tag_names: tagNames,
 			} );
 
-			setNotice( {
-				type: 'success',
-				message: sprintf(
-					__( 'Import successful! %1$d new contacts added, %2$d updated in CRM.', 'ai-marketing-expert' ),
-					res?.imported || 0,
-					res?.updated || 0
-				),
-			} );
+			const newQuota = res?.quota || quota;
+			if ( res?.quota ) {
+				setQuota( res.quota );
+			}
+
+			if ( ! hasPro && newQuota && ( newQuota.daily_used >= newQuota.daily_limit || newQuota.monthly_used >= newQuota.monthly_limit ) ) {
+				setNotice( {
+					type: 'success',
+					message: sprintf(
+						__( '🎉 Awesome! %1$d verified leads successfully added to your CRM! Today\'s free quota is complete (%2$d/%3$d used). Need unlimited daily leads and 24/7 Autopilot?', 'ai-marketing-expert' ),
+						res?.imported || 0,
+						newQuota.daily_used,
+						newQuota.daily_limit
+					),
+					showUpgrade: true,
+				} );
+			} else {
+				setNotice( {
+					type: 'success',
+					message: sprintf(
+						__( 'Import successful! %1$d new contacts added, %2$d updated in CRM.', 'ai-marketing-expert' ),
+						res?.imported || 0,
+						res?.updated || 0
+					),
+				} );
+			}
 
 			setLeads( ( prev ) =>
 				prev.map( ( lead, idx ) =>
@@ -655,6 +691,76 @@ const LeadFinder = ( { onNavigate } ) => {
 			{ /* TAB 1: INSTANT SEARCH */ }
 			{ activeTab === 'instant' && (
 				<>
+					{ ! hasPro && quota && ( quota.daily_used > 0 || quota.monthly_used > 0 ) && (
+						isQuotaExhausted ? (
+							<div
+								style={ {
+									background: '#eff6ff',
+									border: '1px solid #bfdbfe',
+									borderRadius: '10px',
+									padding: '16px 20px',
+									marginBottom: '20px',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									gap: '16px',
+									flexWrap: 'wrap',
+								} }
+							>
+								<div style={ { display: 'flex', alignItems: 'center', gap: '14px' } }>
+									<div style={ { fontSize: '28px' } }>🎯</div>
+									<div>
+										<div style={ { fontWeight: 600, fontSize: '15px', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '8px' } }>
+											<span>{ __( "Today's Free Quota Completed (5/5 Leads Used)", 'ai-marketing-expert' ) }</span>
+											<span style={ { background: '#fee2e2', color: '#991b1b', fontSize: '11px', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 } }>
+												{ __( 'Daily Limit Reached', 'ai-marketing-expert' ) }
+											</span>
+										</div>
+										<p style={ { fontSize: '13px', color: '#1e40af', margin: '4px 0 0' } }>
+											{ sprintf( __( 'You have collected all 5 verified leads for today (Total used this month: %1$d / %2$d). Your next 5 free leads unlock tomorrow.', 'ai-marketing-expert' ), quota.monthly_used, quota.monthly_limit ) }
+										</p>
+									</div>
+								</div>
+								<button
+									type="button"
+									onClick={ openProUpgrade }
+									className="button button-primary"
+									style={ { background: '#4f46e5', borderColor: '#4338ca', fontWeight: 600, borderRadius: '6px', height: '38px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' } }
+								>
+									<span>{ __( 'Upgrade to Pro (Unlimited Leads + Autopilot)', 'ai-marketing-expert' ) }</span>
+								</button>
+							</div>
+						) : (
+							<div
+								style={ {
+									background: '#f8fafc',
+									border: '1px solid #e2e8f0',
+									borderRadius: '8px',
+									padding: '10px 16px',
+									marginBottom: '16px',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									gap: '12px',
+									flexWrap: 'wrap',
+								} }
+							>
+								<div style={ { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#475569' } }>
+									<span style={ { fontSize: '16px' } }>✨</span>
+									<span>
+										{ sprintf( __( "Today's Free Quota: %1$d / %2$d leads collected (%3$d remaining today)", 'ai-marketing-expert' ), quota.daily_used, quota.daily_limit, quota.remaining_today ) }
+									</span>
+								</div>
+								<button
+									type="button"
+									onClick={ openProUpgrade }
+									style={ { background: 'none', border: 'none', padding: 0, fontSize: '12px', fontWeight: 600, color: '#4f46e5', cursor: 'pointer' } }
+								>
+									{ __( 'Get Unlimited Leads with Pro →', 'ai-marketing-expert' ) }
+								</button>
+							</div>
+						)
+					) }
 					<Card title={ __( 'Search Filters & Criteria', 'ai-marketing-expert' ) }>
 						<form onSubmit={ handleSearch }>
 							<div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' } }>
@@ -742,53 +848,100 @@ const LeadFinder = ( { onNavigate } ) => {
 										{ __( 'Lead Volume', 'ai-marketing-expert' ) }
 									</label>
 									<div style={ { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } }>
-										{ [ '25', '50', '100' ].map( ( p ) => (
-											<button
-												key={ p }
-												type="button"
-												className={ `aime-btn-secondary ${ instantVolumePreset === p ? 'is-active' : '' }` }
-												onClick={ () => setInstantVolumePreset( p ) }
-												style={ {
-													padding: '6px 14px',
-													borderRadius: '6px',
-													border: instantVolumePreset === p ? '2px solid var(--aime-primary, #2563eb)' : '1px solid #cbd5e1',
-													background: instantVolumePreset === p ? '#eff6ff' : '#fff',
-													fontWeight: 600,
-													cursor: 'pointer',
-													height: '36px',
-												} }
-											>
-												{ p }
-											</button>
-										) ) }
-										<button
-											type="button"
-											className={ `aime-btn-secondary ${ instantVolumePreset === 'custom' ? 'is-active' : '' }` }
-											onClick={ () => setInstantVolumePreset( 'custom' ) }
-											style={ {
-												padding: '6px 14px',
-												borderRadius: '6px',
-												border: instantVolumePreset === 'custom' ? '2px solid var(--aime-primary, #2563eb)' : '1px solid #cbd5e1',
-												background: instantVolumePreset === 'custom' ? '#eff6ff' : '#fff',
-												fontWeight: 600,
-												cursor: 'pointer',
-												height: '36px',
-											} }
-										>
-											{ __( 'Custom', 'ai-marketing-expert' ) }
-										</button>
+										{ ! hasPro ? (
+											<>
+												<button
+													type="button"
+													className="aime-btn-secondary is-active"
+													style={ {
+														padding: '6px 14px',
+														borderRadius: '6px',
+														border: '2px solid var(--aime-primary, #2563eb)',
+														background: '#eff6ff',
+														fontWeight: 600,
+														height: '36px',
+														color: 'var(--aime-primary, #2563eb)',
+													} }
+												>
+													{ __( '5 Leads (Free Quota)', 'ai-marketing-expert' ) }
+												</button>
+												{ [ '25', '50', '100' ].map( ( p ) => (
+													<button
+														key={ p }
+														type="button"
+														className="aime-btn-secondary"
+														onClick={ openProUpgrade }
+														title={ __( 'Upgrade to Pro to search 25+ leads at once', 'ai-marketing-expert' ) }
+														style={ {
+															padding: '6px 12px',
+															borderRadius: '6px',
+															border: '1px solid #cbd5e1',
+															background: '#f8fafc',
+															fontWeight: 600,
+															cursor: 'pointer',
+															height: '36px',
+															color: '#64748b',
+															display: 'inline-flex',
+															alignItems: 'center',
+															gap: '6px',
+														} }
+													>
+														<span>{ p }</span>
+														<span style={ { background: '#ede9fe', color: '#6d28d9', fontSize: '10px', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 } }>PRO</span>
+													</button>
+												) ) }
+											</>
+										) : (
+											<>
+												{ [ '25', '50', '100' ].map( ( p ) => (
+													<button
+														key={ p }
+														type="button"
+														className={ `aime-btn-secondary ${ instantVolumePreset === p ? 'is-active' : '' }` }
+														onClick={ () => setInstantVolumePreset( p ) }
+														style={ {
+															padding: '6px 14px',
+															borderRadius: '6px',
+															border: instantVolumePreset === p ? '2px solid var(--aime-primary, #2563eb)' : '1px solid #cbd5e1',
+															background: instantVolumePreset === p ? '#eff6ff' : '#fff',
+															fontWeight: 600,
+															cursor: 'pointer',
+															height: '36px',
+														} }
+													>
+														{ p }
+													</button>
+												) ) }
+												<button
+													type="button"
+													className={ `aime-btn-secondary ${ instantVolumePreset === 'custom' ? 'is-active' : '' }` }
+													onClick={ () => setInstantVolumePreset( 'custom' ) }
+													style={ {
+														padding: '6px 14px',
+														borderRadius: '6px',
+														border: instantVolumePreset === 'custom' ? '2px solid var(--aime-primary, #2563eb)' : '1px solid #cbd5e1',
+														background: instantVolumePreset === 'custom' ? '#eff6ff' : '#fff',
+														fontWeight: 600,
+														cursor: 'pointer',
+														height: '36px',
+													} }
+												>
+													{ __( 'Custom', 'ai-marketing-expert' ) }
+												</button>
 
-										{ instantVolumePreset === 'custom' && (
-											<input
-												type="number"
-												min="5"
-												max="500"
-												value={ instantCustomVolume }
-												onChange={ ( e ) => setInstantCustomVolume( e.target.value ) }
-												className="aime-premium-input"
-												style={ { width: '100px', height: '36px' } }
-												placeholder="e.g. 75"
-											/>
+												{ instantVolumePreset === 'custom' && (
+													<input
+														type="number"
+														min="5"
+														max="500"
+														value={ instantCustomVolume }
+														onChange={ ( e ) => setInstantCustomVolume( e.target.value ) }
+														className="aime-premium-input"
+														style={ { width: '100px', height: '36px' } }
+														placeholder="e.g. 75"
+													/>
+												) }
+											</>
 										) }
 									</div>
 								</div>
@@ -799,26 +952,39 @@ const LeadFinder = ( { onNavigate } ) => {
 
 							{ /* Form Actions: Search Button at the Bottom */ }
 							<div style={ { marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' } }>
-								<Button
-									variant="primary"
-									type="submit"
-									disabled={ isSearching }
-									style={ { height: '42px', minWidth: '180px', fontSize: '14px', fontWeight: 600 } }
-								>
-									<span translate="no" style={ { display: 'inline-flex', alignItems: 'center', gap: '8px' } }>
-										{ isSearching ? (
-											<>
-												<Spinner />
-												<span>{ __( 'Finding Leads...', 'ai-marketing-expert' ) }</span>
-											</>
-										) : (
-											<>
-												<span className="dashicons dashicons-search" style={ { fontSize: '18px', width: '18px', height: '18px', lineHeight: '1' } } />
-												<span>{ sprintf( __( 'Search %d Leads', 'ai-marketing-expert' ), activeInstantLimit ) }</span>
-											</>
-										) }
-									</span>
-								</Button>
+								{ isQuotaExhausted ? (
+									<Button
+										variant="secondary"
+										onClick={ openProUpgrade }
+										style={ { height: '42px', minWidth: '220px', fontSize: '14px', fontWeight: 600, borderColor: '#6366f1', color: '#4f46e5' } }
+									>
+										<span style={ { display: 'inline-flex', alignItems: 'center', gap: '8px' } }>
+											<span className="dashicons dashicons-lock" style={ { fontSize: '18px', width: '18px', height: '18px', lineHeight: '1' } } />
+											<span>{ __( 'Daily Limit Reached — Unlock Pro', 'ai-marketing-expert' ) }</span>
+										</span>
+									</Button>
+								) : (
+									<Button
+										variant="primary"
+										type="submit"
+										disabled={ isSearching }
+										style={ { height: '42px', minWidth: '180px', fontSize: '14px', fontWeight: 600 } }
+									>
+										<span translate="no" style={ { display: 'inline-flex', alignItems: 'center', gap: '8px' } }>
+											{ isSearching ? (
+												<>
+													<Spinner />
+													<span>{ __( 'Finding Leads...', 'ai-marketing-expert' ) }</span>
+												</>
+											) : (
+												<>
+													<span className="dashicons dashicons-search" style={ { fontSize: '18px', width: '18px', height: '18px', lineHeight: '1' } } />
+													<span>{ sprintf( __( 'Search %d Leads', 'ai-marketing-expert' ), activeInstantLimit ) }</span>
+												</>
+											) }
+										</span>
+									</Button>
+								) }
 							</div>
 
 							{ /* Live Search Progress Notice */ }
@@ -1136,6 +1302,15 @@ const LeadFinder = ( { onNavigate } ) => {
 
 			{ /* TAB 2: AUTOPILOT PIPELINE */ }
 			{ activeTab === 'autopilot' && (
+				! hasPro ? (
+					<ProGate
+						feature={ __( 'B2B Lead Autopilot Pipeline', 'ai-marketing-expert' ) }
+						description={ __(
+							'Run autonomous daily background prospecting that discovers, verifies DNS/MX deliverability in real-time, and automatically enrolls fresh prospective clients into cold outreach nurture funnels 24/7 on autopilot.',
+							'ai-marketing-expert'
+						) }
+					/>
+				) : (
 				<div className="aime-autopilot-container">
 					{ /* Status Banner & Metrics */ }
 					<div
@@ -1531,6 +1706,7 @@ const LeadFinder = ( { onNavigate } ) => {
 						</div>
 					</Card>
 				</div>
+				)
 			) }
 		</div>
 	);

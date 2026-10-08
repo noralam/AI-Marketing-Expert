@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, Icon } from '@aime/wp-components';
 import { search, page, chartBar, update, lineSolid, external } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';

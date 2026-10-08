@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
 import usePro from '../../../../hooks/usePro';

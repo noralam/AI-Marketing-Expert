@@ -7178,12 +7178,9 @@ input.aime-premium-input[type=color]
 }
 
 #aime-app .aime-chatbot-settings .aime-settings-form .components-base-control,
-#aime-app #tab-panel-1-integrations-view .aime-settings-form .components-base-control,
 #aime-app .aime-seo-automation .aime-settings-form .components-base-control,
-#aime-app #tab-panel-0-tracking-view .aime-settings-form .components-base-control,
-#aime-app #tab-panel-1-general-view .aime-settings-form .components-base-control,
-#aime-app #tab-panel-1-sending-view .aime-settings-form .components-base-control {
-    margin-bottom: 10px;
+#aime-app .aime-settings-form .components-base-control {
+    margin-bottom: 12px;
 }
 .aime-seo-topic-map .aime-form-grid{
 	align-items: end;
@@ -14919,16 +14916,14 @@ input.aime-premium-input[type=color]
 
 #aime-app .aime-log-toolbar .components-base-control,
 #aime-app .aime-wf-topbar__right .components-base-control,
-#aime-app .aime-seo-topic-map .components-base-control ,
-#aime-app .aime-settings-form .components-base-control {
+#aime-app .aime-seo-topic-map .components-base-control {
 	margin-bottom: 0;
 }
-#aime-app #tab-panel-1-tracking-view .aime-settings-form .components-base-control {
-    margin-bottom: 1rem;
+#aime-app .components-toggle-control {
+	margin-bottom: 14px;
 }
-#aime-app #tab-panel-3-general-view .aime-settings-form .components-base-control,
-#aime-app #tab-panel-3-sending-view .aime-settings-form .components-base-control {
-    margin-bottom: 10px;
+#aime-app .aime-toggle-stack .components-base-control {
+	margin-bottom: 0;
 }
 .aime-wf-name-input {
 	border: 1px solid transparent;

@@ -4,7 +4,7 @@
  * Returns { sidebar, content } to be rendered inside AppLayout.
  */
 
-import { useState, useCallback } from '@wordpress/element';
+import { useState, useCallback, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import {
 	envelope,
@@ -51,6 +51,16 @@ const EmailMarketingPage = () => {
 	const hasPro = isProActive();
 	const [ view, setView ] = useState( initial.key );
 	const [ viewParams, setViewParams ] = useState( initial.params );
+
+	useEffect( () => {
+		const onHashChange = () => {
+			const { key, params } = parseHash();
+			setView( key );
+			setViewParams( params );
+		};
+		window.addEventListener( 'hashchange', onHashChange );
+		return () => window.removeEventListener( 'hashchange', onHashChange );
+	}, [] );
 
 	const navigate = useCallback( ( key, params = {} ) => {
 		setView( key );
@@ -106,7 +116,7 @@ const EmailMarketingPage = () => {
 			case 'smtp':
 				return <SmtpSettings />;
 			case 'settings':
-				return <EmailSettings />;
+				return <EmailSettings onNavigate={ navigate } initialTab={ typeof viewParams.id === 'string' ? viewParams.id : undefined } />;
 			default:
 				return <EmailAnalytics onNavigate={ navigate } />;
 		}

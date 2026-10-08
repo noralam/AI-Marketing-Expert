@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>এআই মার্কেটিং এক্সপার্ট (v1.2.7) — অফিশিয়াল মাস্টার ডকুমেন্টেশন</title>
+  <meta name="description" content="এআই মার্কেটিং এক্সপার্ট ওয়ার্ডপ্রেস প্লাগইন v1.2.7 এর সম্পূর্ণ অফিসিয়াল ইউজার ম্যানুয়াল ও টেকনিক্যাল গাইড: B2B লিড ফাইন্ডার, ইমেইল মার্কেটিং, উকমার্স কার্ট রিকভারি, এআই ক্যানভাস ওয়ার্কফ্লো, এসইও অ্যানালাইজার, কন্টেন্ট জেনারেটর, সোশ্যাল মিডিয়া শিডিউলার এবং চ্যাটবট।" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="reading-progress" id="readingProgress"></div>
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="brand">
+        <div class="brand-badge">AIME</div>
+        <div>
+          <h1>এআই মার্কেটিং এক্সপার্ট ডক্স <span class="badge-pill badge-pro">v1.2.7</span></h1>
+          <p>অফিশিয়াল ইউজার ম্যানুয়াল, টেকনিক্যাল গাইড এবং মাইক্রো-ভিডিও টিউটোরিয়াল</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Controls: Language Selector & Smart Search -->
+    <div class="topbar-right">
+      <div class="lang-selector-wrap" id="langSelectorWrap">
+        <button type="button" class="lang-btn" id="langBtn" aria-label="Select Language" aria-expanded="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="currentLangLabel">বাংলা</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="lang-dropdown" id="langDropdown" role="menu">
+          <a href="../index.html" class="lang-opt" data-lang="en" role="menuitem">🇬🇧 English <span class="lang-badge">Master</span></a>
+          <a href="#" class="lang-opt active" data-lang="bn" role="menuitem">🇧🇩 বাংলা (Bengali)</a>
+          <a href="../es/index.html" class="lang-opt" data-lang="es" role="menuitem">🇪🇸 Español (Spanish)</a>
+          <a href="../de/index.html" class="lang-opt" data-lang="de" role="menuitem">🇩🇪 Deutsch (German)</a>
+          <a href="../fr/index.html" class="lang-opt" data-lang="fr" role="menuitem">🇫🇷 Français (French)</a>
+          <a href="../ja/index.html" class="lang-opt" data-lang="ja" role="menuitem">🇯🇵 日本語 (Japanese)</a>
+          <a href="../pt/index.html" class="lang-opt" data-lang="pt" role="menuitem">🇧🇷 Português (Portuguese)</a>
+          <a href="../ar/index.html" class="lang-opt" data-lang="ar" role="menuitem">🇸🇦 العربية (Arabic)</a>
+          <a href="../hi/index.html" class="lang-opt" data-lang="hi" role="menuitem">🇮🇳 हिन्दी (Hindi)</a>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <div class="search-input-box">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="docSearch" type="search" placeholder="Search features, submenus, cron..." aria-label="Search documentation" autocomplete="off" />
+          <kbd class="search-kbd">Ctrl K</kbd>
+        </div>
+        <div id="searchResults" class="search-results" aria-live="polite"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MOBILE BACKDROP ── -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <div class="layout">
+    <!-- ── SIDEBAR NAVIGATION ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-mobile-header">
+        <span class="sidebar-mobile-title">
+          <span class="brand-badge" style="width:24px;height:24px;font-size:0.65rem;">এআই</span>
+          নেভিগেশন মেনু
+        </span>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">×</button>
+      </div>
+
+      <nav>
+        <h2>শুরু করা যাক</h2>
+        <a href="#introduction" class="nav-link">পরিচিতি</a>
+        <a href="#installation" class="nav-link">ইন্সটলেশন ও সেটআপ</a>
+        <a href="#quick-start" class="nav-link">কুইক স্টার্ট (৫ মিনিটে চালু)</a>
+
+        <h2>প্রধান ফিচারসমূহ</h2>
+        <a href="#hot-spotlight" class="nav-link">🔥 হট আইটেম স্পটলাইট</a>
+
+        <h2>কোর মডিউলসমূহ</h2>
+        
+        <!-- 1. Dashboard -->
+        <a href="#module-dashboard" class="nav-link">১. ড্যাশবোর্ড ওভারভিউ</a>
+
+        <!-- 2. Email Marketing -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-email">
+          <span>২. ইমেইল মার্কেটিং ও সিআরএম</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-email">
+          <a href="#email-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#email-subscribers" class="sidebar-sub-link">কন্টাক্টস</a>
+          <a href="#email-lists" class="sidebar-sub-link">লিস্ট</a>
+          <a href="#email-tags" class="sidebar-sub-link">ট্যাগ</a>
+          <a href="#email-lead-finder" class="sidebar-sub-link">B2B লিড ফাইন্ডার <span class="badge-pill badge-fire" style="font-size:0.6rem;padding:0.1rem 0.4rem;">হট</span></a>
+          <a href="#email-campaigns" class="sidebar-sub-link">ক্যাম্পেইন</a>
+          <a href="#email-templates" class="sidebar-sub-link">টেমপ্লেট</a>
+          <a href="#email-automations" class="sidebar-sub-link">অটোমেশনস</a>
+          <a href="#email-import-export" class="sidebar-sub-link">ইমপোর্ট / এক্সপোর্ট</a>
+          <a href="#email-ai-tools" class="sidebar-sub-link">এআই টুলস</a>
+          <a href="#email-smtp" class="sidebar-sub-link">SMTP সেটিংস</a>
+          <a href="#email-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 3. SEO Analyzer -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-seo">
+          <span>৩. এসইও অ্যানালাইজার</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-seo">
+          <a href="#seo-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#seo-keyword-research" class="sidebar-sub-link">কিওয়ার্ড রিসার্চ</a>
+          <a href="#seo-keyword-vault" class="sidebar-sub-link">কিওয়ার্ড ভল্ট</a>
+          <a href="#seo-topic-map" class="sidebar-sub-link">টপিক ম্যাপ</a>
+          <a href="#seo-on-page-audit" class="sidebar-sub-link">অন-পেজ অডিট</a>
+          <a href="#seo-content-calendar" class="sidebar-sub-link">কন্টেন্ট ক্যালেন্ডার</a>
+          <a href="#seo-link-building" class="sidebar-sub-link">লিংক বিল্ডিং</a>
+          <a href="#seo-rank-tracker" class="sidebar-sub-link">র‍্যাংক ট্র্যাকার</a>
+          <a href="#seo-automation" class="sidebar-sub-link">অটোমেশন</a>
+          <a href="#seo-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 4. Content Generator -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-content">
+          <span>৪. এআই কন্টেন্ট জেনারেটর</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-content">
+          <a href="#content-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#content-articles" class="sidebar-sub-link">আর্টিকেল তালিকা</a>
+          <a href="#content-new-article" class="sidebar-sub-link">নতুন আর্টিকেল স্টুডিও</a>
+          <a href="#content-brand-voices" class="sidebar-sub-link">ব্র্যান্ড ভয়েসেস</a>
+          <a href="#content-presets" class="sidebar-sub-link">প্রিসেটস</a>
+          <a href="#content-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 5. Social Media -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-social">
+          <span>৫. সোশ্যাল মিডিয়া</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-social">
+          <a href="#social-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#social-accounts" class="sidebar-sub-link">অ্যাকাউন্টস</a>
+          <a href="#social-posts" class="sidebar-sub-link">পোস্ট ফিড</a>
+          <a href="#social-composer" class="sidebar-sub-link">পোস্ট কম্পোজার</a>
+          <a href="#social-calendar" class="sidebar-sub-link">ক্যালেন্ডার</a>
+          <a href="#social-repurpose" class="sidebar-sub-link">রিপারপাস স্টুডিও</a>
+          <a href="#social-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 6. AI Chatbot -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-chatbot">
+          <span>৬. এআই চ্যাটবট</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-chatbot">
+          <a href="#chatbot-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#chatbot-bots" class="sidebar-sub-link">চ্যাটবট ম্যানেজার</a>
+          <a href="#chatbot-conversations" class="sidebar-sub-link">কথোপকথন ও লাইভ টেকওভার</a>
+          <a href="#chatbot-knowledge" class="sidebar-sub-link">নলেজ বেস (URL ও উকমার্স)</a>
+          <a href="#chatbot-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 7. Workflow Automation -->
+        <button class="sidebar-module-btn" type="button" aria-expanded="false" data-target="sub-workflow">
+          <span>৭. ওয়ার্কফ্লো অটোমেশন V2</span>
+          <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="sidebar-sub-menu" id="sub-workflow">
+          <a href="#workflow-analytics" class="sidebar-sub-link">অ্যানালিটিক্স</a>
+          <a href="#workflow-list" class="sidebar-sub-link">ওয়ার্কফ্লো তালিকা</a>
+          <a href="#workflow-canvas" class="sidebar-sub-link">ভিজ্যুয়াল ক্যানভাস বিল্ডার</a>
+          <a href="#workflow-ai-modal" class="sidebar-sub-link">টেক্সট-টু-ওয়ার্কফ্লো এআই</a>
+          <a href="#workflow-cart-recovery" class="sidebar-sub-link">উকমার্স কার্ট রিকভারি <span class="badge-pill badge-cart" style="font-size:0.6rem;padding:0.1rem 0.4rem;">হট</span></a>
+          <a href="#workflow-templates" class="sidebar-sub-link">টেমপ্লেট পিকার</a>
+          <a href="#workflow-upcoming" class="sidebar-sub-link">আসন্ন রানসমূহ</a>
+          <a href="#workflow-error-log" class="sidebar-sub-link">এরর লগ</a>
+          <a href="#workflow-settings" class="sidebar-sub-link">সেটিংস</a>
+        </div>
+
+        <!-- 8 & 9. Settings -->
+        <a href="#module-ai-providers" class="nav-link">৮. এআই প্রোভাইডার সেটআপ</a>
+        <a href="#module-settings" class="nav-link">৯. সাধারণ সেটিংস</a>
+
+        <h2>সিস্টেম ও নির্ভরযোগ্যতা</h2>
+        <a href="#cron-setup" class="nav-link">এক্সটার্নাল সার্ভার ক্রন সেটআপ</a>
+        <a href="#troubleshooting" class="nav-link">সমস্যা সমাধান ও সতর্কতা</a>
+        <a href="#faq" class="nav-link">সচরাচর জিজ্ঞাসিত প্রশ্ন (FAQ)</a>
+        <a href="#video-tutorials" class="nav-link">১-২ মিনিটের মাইক্রো-ভিডিও 🎬</a>
+        <a href="#changelog" class="nav-link">চেঞ্জলগ (v1.2.7)</a>
+      </nav>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="content" id="content">
+      <div class="breadcrumb" id="breadcrumb">এআই মার্কেটিং এক্সপার্ট / ডকুমেন্টেশন</div>
+
+      <!-- ── HERO CTA BANNER (High-Converting Header) ── -->
+      <div class="doc-hero-cta">
+        <div class="cta-badge">⚡ ১০০% সেলফ-হোস্টেড • কোনো মাসিক SaaS ফি নেই • অন-প্রিমাইস ওয়ার্ডপ্রেস স্যুট</div>
+        <h2>স্বয়ংক্রিয় এআই মার্কেটিং দিয়ে আপনার ব্যবসা স্কেল করুন</h2>
+        <p class="cta-desc">7টি ব্যয়বহুল সাবস্ক্রিপশন (Mailchimp, Apollo, Zapier, Jasper, Intercom, CartBounty & Semrush) আপনার ওয়ার্ডপ্রেস সাইটের ভিতরে সরাসরি চলমান একটি পাওয়ারহাউস প্লাগইন দিয়ে প্রতিস্থাপন করুন । সীমাহীন গ্রাহকদের সাথে বিনামূল্যে চিরকালের স্তর পাওয়া যায় ।</p>
+        <div class="cta-actions">
+          <a href="#installation" class="cta-btn cta-btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Install Free Version
+          </a>
+          <a href="https://aimarketingexpert.com/pro" target="_blank" rel="noopener" class="cta-btn cta-btn-pro">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Get Pro Unlimited License
+          </a>
+          <button type="button" class="cta-btn cta-btn-ghost" id="openDemoVideoBtn" aria-label="Watch 2-Min Demo Video">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Watch 2-Min Demo
+          </button>
+        </div>
+        <div class="cta-guarantees">
+          <span>✓ সীমাহীন পরিচিতি এবং তালিকা</span>
+          <span>✓ মাল্টি-এসএমটিপি ফ্রি রিলে স্ট্যাকিং</span>
+          <span>✓ বিনামূল্যে Google Gemini এবং OpenAI কী</span>
+          <span>✓ 100% ডেটা প্রাইভেসি (জিডিপিআর রেডি)</span>
+        </div>
+      </div>
+
+      <!-- ── SECTION: INTRODUCTION ── -->
+      <section id="introduction" class="doc-section">
+        <div class="hero-card">
+          <span class="eyebrow">অল-ইন-ওয়ান স্বায়ত্তশাসিত মার্কেটিং স্যুট</span>
+          <h2>এআই মার্কেটিং এক্সপার্ট (AIME) পরিচিতি</h2>
+          <p><strong>এআই মার্কেটিং এক্সপার্ট (v1.2.7)</strong> আপনার ওয়ার্ডপ্রেস ওয়েবসাইটকে একটি স্বয়ংক্রিয়, এআই-চালিত মার্কেটিং হেডকোয়ার্টারে রূপান্তরিত করে। বিভিন্ন পৃথক পৃথক SaaS সাবস্ক্রিপশনে (যেমন Mailchimp, Apollo, Zapier, Jasper, CartBounty, Semrush, বা Intercom) প্রতি বছর হাজার হাজার ডলার ব্যয় না করে সরাসরি আপনার ওয়ার্ডপ্রেস ড্যাশবোর্ডে আনলিমিটেড সাবস্ক্রাইবার সহ একটি সম্পূর্ণ ইকোসিস্টেম উপভোগ করুন।</p>
+          <div class="hero-grid">
+            <article>
+              <h3>স্বায়ত্তশাসিত কোল্ড আউটরিচ</h3>
+              <p>কাজের পদবী ও ইন্ডাস্ট্রি অনুযায়ী যাচাইকৃত B2B লিড খুঁজুন, লাইভ DNS MX ভেরিফিকেশন করুন এবং কোল্ড ইমেইল নার্চারিং ফানেলে যুক্ত করুন।</p>
+            </article>
+            <article>
+              <h3>ভিজ্যুয়াল অটোমেশন ক্যানভাস</h3>
+              <p>ড্র্যাগ-অ্যান্ড-ড্রপ নোড ও ডিলে টাইমার (ঘণ্টা/দিন) দিয়ে ব্রাঞ্চিং মাল্টি-স্টেপ ওয়ার্কফ্লো তৈরি করুন, অথবা সাধারণ টেক্সট প্রম্পট দিয়ে পুরো গ্রাফ তৈরি করুন।</p>
+            </article>
+            <article>
+              <h3>উকমার্স কার্ট রিকভারি</h3>
+              <p>অর্ডার সাবমিট করার আগেই চেকআউট চলাকালীন ক্রেতার ইমেইল লাইভ ক্যাপচার করুন এবং ১-ক্লিক সিঙ্গেল-আইটেম ও সিঙ্গেল-কোয়ান্টিটি ডিপ লিঙ্কের মাধ্যমে হারানো সেল পুনরুদ্ধার করুন।</p>
+            </article>
+          </div>
+        </div>
+
+        <figure class="doc-screenshot-frame">
+          <img src="../screenshots/dashboard.webp" alt="AI Marketing Expert Unified Dashboard" class="doc-screenshot" loading="lazy" />
+          <figcaption>চিত্র ১.১: এআই মার্কেটিং এক্সপার্ট v1.2.7 ইউনিফাইড ড্যাশবোর্ড — রিয়েল-টাইম KPI মেট্রিক্স, মডিউল শর্টকাট এবং ট্রেন্ড অ্যানালাইসিস</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>মূল সুবিধাসমূহ ও আর্কিটেকচার</h3>
+            <ul>
+              <li><strong>জিরো টুল সুইচিং:</strong> ইমেইল ক্যাম্পেইন, এসইও অডিট, ব্লগ আর্টিকেল তৈরি, চ্যাটবট এবং সোশ্যাল পোস্ট—সবকিছুই সরাসরি আপনার ওয়ার্ডপ্রেস অ্যাডমিনের ভিতরে থাকবে।</li>
+              <li><strong>আপনার নিজস্ব এআই ও এপিআই কী:</strong> AES-256-GCM এনক্রিপশনের সাথে Google AI Studio (ফ্রি জেমিনি টিয়ার), OpenAI, Anthropic Claude বা OpenRouter কানেক্ট করুন।</li>
+              <li><strong>সাবস্ক্রাইবার বৃদ্ধিতে কোনো মাসিক জরিমানা নেই:</strong> Mailchimp বা Klaviyo-এর মতো নয়; এর ফ্রি প্ল্যানেও আপনি আনলিমিটেড কন্টাক্ট সংরক্ষণ ও পরিচালনা করতে পারবেন।</li>
+              <li><strong>ই-কমার্স রেভিনিউ মাল্টিপ্লায়ার:</strong> উকমার্সের কেনাকাটা-পরবর্তী রিভিউ ফানেল, রি-এনগেজমেন্ট অফার এবং পরিত্যক্ত কার্ট রিকভারি অটোমেট করুন।</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>ফ্রি টিয়ার বনাম প্রো লাইসেন্স</h3>
+            <ul>
+              <li><strong>ফ্রি টিয়ার (আজীবন বিনামূল্যে):</strong> আনলিমিটেড কন্টাক্ট, ৩০টি ক্যাম্পেইন/মাস, ২টি সক্রিয় অটোমেশন, ২০টি জেনারেটেড আর্টিকেল/মাস, ১০টি কিওয়ার্ড সার্চ, ১টি চ্যাটবট এবং রিয়েল-টাইম কার্ট ট্র্যাকিং।</li>
+              <li><strong>প্রো লাইসেন্স (উন্নত ব্যবহারকারীদের জন্য):</strong> আনলিমিটেড ক্যাম্পেইন, আনলিমিটেড ভিজ্যুয়াল ওয়ার্কফ্লো, B2B অটোপাইলট পাইপলাইন, র‍্যাংক ট্র্যাকিং, নলেজ বেস URL ও উকমার্স স্ক্র্যাপিং, হিউম্যান চ্যাটবট টেকওভার, ডায়নামিক কুপন এবং A/B স্প্লিট টেস্টিং।</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: INSTALLATION ── -->
+      <section id="installation" class="doc-section">
+        <h2>ইন্সটলেশন ও সেটআপ গাইড</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>সিস্টেম রিকোয়ারমেন্টস</h3>
+            <ul>
+              <li><strong>ওয়ার্ডপ্রেস:</strong> ৬.২ বা তদূর্ধ্ব (WP 7.x পর্যন্ত পরীক্ষিত)।</li>
+              <li><strong>পিএইচপি:</strong> ৮.০ বা তদূর্ধ্ব (সর্বোত্তম পারফরম্যান্সের জন্য পিএইচপি ৮.২ বা ৮.৩ প্রস্তাবিত)।</li>
+              <li><strong>মাইএসকিউএল / মারিয়াডিবি:</strong> MySQL 5.7+ অথবা MariaDB 10.3+।</li>
+              <li><strong>পিএইচপি এক্সটেনশনসমূহ:</strong> <code>curl</code>, <code>ওপেন- এস. এস. এল.</code>, <code>mbstring</code>, <code>json</code>.</li>
+              <li><strong>ঐচ্ছিক (ই-কমার্স):</strong> পরিত্যক্ত কার্ট রিকভারি ও প্রোডাক্ট নলেজ সিঙ্ক করার জন্য WooCommerce 7.0+।</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>ধাপে ধাপে ইন্সটলেশন নির্দেশিকা</h3>
+            <ol>
+              <li>আপনার ওয়ার্ডপ্রেস অ্যাডমিন ড্যাশবোর্ডে লগ ইন করুন এবং নেভিগেট করুন <strong>প্লাগইন নতুন → যোগ করুন</strong>.</li>
+              <li>ক্লিক করুন <strong>প্লাগইন আপলোড করুন</strong> শীর্ষে এবং নির্বাচন করুন <code>ai-marketing-expert.zip</code> ফাইল</li>
+              <li>ক্লিক করুন <strong>এখনই ইনস্টল করুন</strong> এবং তারপর ক্লিক করুন <strong>প্লাগইন সক্রিয় করুন</strong>.</li>
+              <li>একটি নতুন টপ-লেভেল মেনু আইটেমের নাম দেওয়া হয়েছে <strong>AI মার্কেটিং</strong> আপনার ওয়ার্ডপ্রেস সাইডবারে দেখা যাবে ।</li>
+              <li>আপনি যদি একটি প্রো লাইসেন্স কিনে থাকেন, তাহলে এর অধীনে আপনার কী লিখুন এবং যাচাই করুন <strong>সেটিংস → লাইসেন্স</strong>.</li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="callout info">
+          <h4>নিরাপত্তা বিজ্ঞপ্তি: ডেটাবেসে AES-256-GCM এনক্রিপশন</h4>
+          <p>সমস্ত সংবেদনশীল শংসাপত্র (AI প্রদানকারী API কী, SMTP পাসওয়ার্ড, OAuth অ্যাক্সেস টোকেন) স্বয়ংক্রিয়ভাবে আপনার মাইএসকিউএল ডাটাবেসে বিশ্রামে এনক্রিপ্ট করা হয় <strong>AES-256-GCM</strong> আপনার ওয়ার্ডপ্রেস সিকিউরিটি সল্ট থেকে প্রাপ্ত কী দিয়ে (<code>wp-config.php</code>) । কোনও সাধারণ পাঠ্য গোপনীয়তা কখনও লগ করা বা প্রকাশ করা হয় না ।</p>
+        </div>
+      </section>
+
+      <!-- ── SECTION: QUICK START ── -->
+      <section id="quick-start" class="doc-section">
+        <h2>কুইক স্টার্ট (৫ মিনিটের লঞ্চ প্ল্যান)</h2>
+        <div class="timeline">
+          <div>
+            <span>1</span>
+            <h4>ফ্রি এআই কানেক্ট করুন ($০ খরচ)</h4>
+            <p>-এ যান <strong>AI প্রদানকারীগণ</strong>, Google AI স্টুডিও থেকে আপনার বিনামূল্যে জেমিনি API কী পেস্ট করুন এবং ক্লিক করুন <em>টেস্ট কানেকশন</em>.</p>
+          </div>
+          <div>
+            <span>2</span>
+            <h4>SMTP কনফিগার করুন</h4>
+            <p>মধ্যে <strong>ইমেইল মার্কেটিং → SMTP</strong>, আপনার Gmail অ্যাপ পাসওয়ার্ড, Brevo, SendGrid, বা হোস্ট SMTP শংসাপত্র লিখুন এবং একটি পরীক্ষার ইমেল পাঠান ।</p>
+          </div>
+          <div>
+            <span>3</span>
+            <h4>কার্ট রিকভারি সক্রিয় করুন</h4>
+            <p>এর অধীনে <strong>ওয়ার্কফ্লো অটোমেশন</strong>, পূর্বনির্ধারিত "WooCommerce পরিত্যক্ত কার্ট রিকভারি" টেমপ্লেটটি সক্রিয় করুন ।</p>
+          </div>
+          <div>
+            <span>4</span>
+            <h4>কোল্ড লিডগুলি আবিষ্কার করুন</h4>
+            <p>এর অধীনে <strong>ইমেল মার্কেটিং → লিড ফাইন্ডার</strong>, আপনার লক্ষ্য কুলুঙ্গি অনুসন্ধান করুন (যেমন "মার্কেটিং ডিরেক্টর, মার্কিন যুক্তরাষ্ট্র") ।</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: HOT ITEMS SPOTLIGHT ── -->
+      <section id="hot-spotlight" class="hot-spotlight">
+        <h2>🔥 হট আইটেম ও শক্তিশালী ফিচারসমূহ</h2>
+        <p class="lead">এখানে এআই মার্কেটিং বিশেষজ্ঞের চারটি সর্বোচ্চ চাহিদা, গেম-চেঞ্জিং বৈশিষ্ট্য রয়েছে যা এজেন্সি মালিক, স্টোর ম্যানেজার এবং বিপণনকারীদের জন্য অবিলম্বে ROI সরবরাহ করে:</p>
+        
+        <div class="hot-grid">
+          <!-- Hot Item 1 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-fire">হত্যাকারীর বৈশিষ্ট্য 1</span>
+            <h3>B2B লিড ফাইন্ডার ও অটোপাইলট পাইপলাইন</h3>
+            <p>চাকরির শিরোনাম, শিল্প এবং কোনও বহিরাগত অ্যাপোলো সাবস্ক্রিপশন ছাড়াই দেশ অনুসারে হাজার হাজার যাচাইকৃত B2B সম্ভাবনা খুঁজুন । রিয়েল-টাইম DNS MX বৈধতা অবৈধ ডোমেনগুলি ফিল্টার করে এবং যাচাইকৃত লিডগুলি সরাসরি ঠান্ডা পরিচর্যা ক্রমগুলিতে তালিকাভুক্ত করে ।</p>
+            <a href="#email-lead-finder" class="hot-btn">লিড ফাইন্ডার এক্সপ্লোর করুন →</a>
+          </article>
+
+          <!-- Hot Item 2 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-cart">হত্যাকারীর বৈশিষ্ট্য 2</span>
+            <h3>উকমার্স ১-ক্লিক কার্ট রিকভারি</h3>
+            <p>টাইপ করার সময় চেকআউটের সময় অতিথি ক্রেতার ইমেলগুলি ক্যাপচার করে । একক আইটেম এবং একক পরিমাণের গভীর লিঙ্ক সহ স্বয়ংক্রিয়ভাবে পুনরুদ্ধার ইমেলগুলি প্রেরণ করে যাতে গ্রাহকরা ফিরে আসার পরে দুর্ঘটনাক্রমে সদৃশ আইটেমগুলি কখনও কিনে না ।</p>
+            <a href="#workflow-cart-recovery" class="hot-btn">কার্ট রিকভারি গাইড দেখুন →</a>
+          </article>
+
+          <!-- Hot Item 3 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-magic">হত্যাকারীর বৈশিষ্ট্য 3</span>
+            <h3>টেক্সট-টু-ওয়ার্কফ্লো এআই ক্যানভাস</h3>
+            <p>আপনার বিপণন প্রবাহকে সাধারণ প্রাকৃতিক ভাষায় বর্ণনা করুন (যেমন, "কার্ট পরিত্যাগের 1 ঘন্টা পরে 15% ছাড়ের ইমেল পাঠান এবং খোলা না থাকলে 2 দিনের মধ্যে অনুসরণ করুন") । AI স্বয়ংক্রিয়ভাবে ক্যানভাসে সমস্ত নোড, টাইমার, শর্ত এবং ইমেল কপি তৈরি করে ।</p>
+            <a href="#workflow-ai-modal" class="hot-btn">AI ক্যানভাস মেকার দেখুন →</a>
+          </article>
+
+          <!-- Hot Item 4 -->
+          <article class="hot-card">
+            <span class="badge-pill badge-writer">হত্যাকারীর বৈশিষ্ট্য 4</span>
+            <h3>ডিপ হিউম্যানাইজ আর্টিকেল স্টুডিও</h3>
+            <p>দীর্ঘ ফর্ম 2,000+ ওয়ার্ড এসইও নিবন্ধ তৈরি করে যা এআই ডিটেক্টরগুলিকে বাইপাস করে যখন কঠোরভাবে হেডার, ফর্ম্যাট করা তুলনা টেবিল, কী টেকওয়ে এবং প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী স্কিমা সংরক্ষণ করে ।</p>
+            <a href="#content-new-article" class="hot-btn">হিউম্যানাইজ স্টুডিও খুলুন →</a>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 1: DASHBOARD OVERVIEW ── -->
+      <section id="module-dashboard" class="doc-section">
+        <h2>১. ড্যাশবোর্ড ওভারভিউ (সেন্ট্রাল কমান্ড)</h2>
+        <p>প্রধান প্লাগইন ড্যাশবোর্ড আপনার মিশন কন্ট্রোল সেন্টার হিসাবে কাজ করে, সমস্ত সক্রিয় মডিউল জুড়ে রিয়েল-টাইম পারফরম্যান্স সূচক এবং অপারেশনাল স্বাস্থ্যকে একত্রিত করে ।</p>
+        
+        <figure class="doc-screenshot-frame">
+          <img src="../screenshots/dashboard.webp" alt="AI Marketing Expert Main Dashboard" class="doc-screenshot" loading="lazy" />
+          <figcaption>চিত্র 1.1: রিয়েল-টাইম KPI মেট্রিক্স, মডিউল শর্টকাট এবং ট্রেন্ড চার্ট সহ ইউনিফাইড ড্যাশবোর্ড</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>ড্যাশবোর্ডের মূল উপাদানসমূহ</h3>
+            <ul>
+              <li><strong>শীর্ষ KPI কার্ড:</strong> মোট সক্রিয় গ্রাহক, গড় ইমেল ওপেন রেট (CTR), সক্রিয় স্বয়ংক্রিয় ওয়ার্কফ্লো এবং আনুমানিক মাসিক খরচ সাশ্রয় ।</li>
+              <li><strong>কুইক অ্যাকশন শর্টকাট:</strong> একটি নতুন প্রচারাভিযানের খসড়া তৈরি করতে, একটি AI ব্লগ পোস্ট তৈরি করতে, সোশ্যাল মিডিয়া শিডিউল করতে বা কার্ট পুনরুদ্ধারের পর্যালোচনা করতে এক-ক্লিক লঞ্চার ।</li>
+              <li><strong>সিস্টেম হেলথ মনিটর:</strong> সবুজ/লাল সূচকগুলি যাচাই করে যে ব্যাকগ্রাউন্ড ক্রোন কর্মীরা বিলম্ব ছাড়াই সময়সূচীতে গুলি চালাচ্ছে ।</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>ড্যাশবোর্ড কীভাবে ব্যবহার করবেন</h3>
+            <ol>
+              <li>প্রতিদিনের ইমেইল ডেলিভারিবিলিটি স্কোর এবং ক্যাম্পেইনের ওপেন রেট নিয়মিত পর্যবেক্ষণ করুন।</li>
+              <li>অটোমেশনের ROI যাচাই করতে উকমার্সের উদ্ধারকৃত রাজস্বের পরিমাণ লক্ষ্য করুন।</li>
+              <li>আপনার এআই এপিআই কোটা পর্যাপ্ত আছে কিনা তা নিশ্চিত করতে টোকেন মিটার চেক করুন।</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 2: EMAIL MARKETING & CRM ── -->
+      <section id="module-email" class="doc-section">
+        <h2>২. ইমেইল মার্কেটিং ও সিআরএম (১২টি ডেডিকেটেড সাব-মেনু)</h2>
+        <p>AIME ওয়ার্ডপ্রেসের মধ্যেই একটি সম্পূর্ণ নেটিভ ইমেইল মার্কেটিং ও সিআরএম প্ল্যাটফর্ম প্রদান করে। নিচে সবকটি ১২টি সাব-মেনুর বিস্তারিত বর্ণনা দেওয়া হলো:</p>
+
+        <!-- 2.1 Analytics -->
+        <div id="email-analytics" class="doc-sub-item">
+          <h3>২.১ ইমেইল অ্যানালিটিক্স</h3>
+          <p>ওপেন রেট, ক্লিক রেট (CTR), বাউন্স রেট এবং আনসাবস্ক্রাইব শতাংশ সহ সমস্ত ব্রডকাস্ট এবং অটোমেটেড সিকোয়েন্সের রিয়েল-টাইম রিপোর্ট প্রদান করে।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-analytics.webp" alt="Email Marketing Analytics Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.১: ইমেইল অ্যানালিটিক্স ভিউ — পারফরম্যান্স গ্রাফ এবং সাবস্ক্রাইবার এনগেজমেন্ট ট্র্যাকিং</figcaption>
+          </figure>
+          <div class="callout info">
+            <p><strong>বিশেষ টিপস:</strong> যদি আপনার ওপেন রেট ২০%-এর নিচে নেমে যায়, তবে সাবজেক্ট লাইন আকর্ষণীয় করতে বিল্ট-ইন এআই টুলস ব্যবহার করুন এবং ভিন্ন সময়ে ইমেইল পাঠিয়ে টেস্ট করুন।</p>
+          </div>
+        </div>
+
+        <!-- 2.2 Contacts -->
+        <div id="email-subscribers" class="doc-sub-item">
+          <h3>২.২ কন্টাক্ট ডিরেক্টরি (সেন্ট্রাল সিআরএম ও লিড প্রোফাইল)</h3>
+          <p>কন্টাক্ট ডিরেক্টরি আপনার নিজস্ব সিআরএম হিসেবে কাজ করে, যা প্রতিটি গ্রাহকের আচরণগত ডেটা, লাইফটাইম পারচেজ হিস্ট্রি এবং যোগাযোগের বিস্তারিত রেকর্ড সংরক্ষণ করে।</p>
+          
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-subscribers.webp" alt="Contacts and Subscribers List Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.২: কন্টাক্ট ডিরেক্টরি — পেজিনেটেড টেবিল ও বাল্ক ট্যাগ/লিস্ট অ্যাকশন (গ্রাহকদের ইমেইল সুরক্ষার্থে ব্লার করা হয়েছে)</figcaption>
+          </figure>
+
+          <div class="cards-2">
+            <article class="card">
+              <h4>বিস্তারিত কাস্টমার প্রোফাইল</h4>
+              <p>যেকোনো কন্টাক্ট সারিতে ক্লিক করলে বিস্তারিত কাস্টমার প্রোফাইল ওপেন হয়, যেখানে থাকে:</p>
+              <ul>
+                <li><strong>অ্যাক্টিভিটি টাইমলাইন:</strong> প্রেরিত প্রতিটি ব্রডকাস্ট, ইমেইল ওপেন, লিঙ্ক ক্লিক, পরিত্যক্ত কার্ট এবং সম্পন্ন হওয়া অর্ডারের কালানুক্রমিক লগ।</li>
+                <li><strong>ই-কমার্স মেট্রিক্স:</strong> কাস্টমার লাইফটাইম ভ্যালু (LTV), মোট অর্ডারের সংখ্যা, গড়ে অর্ডারের মান (AOV) এবং সর্বশেষ কেনাকাটার তারিখ।</li>
+                <li><strong>ডায়নামিক সেগমেন্টেশন ট্যাগ:</strong> আচরণগত ট্যাগগুলো দেখুন ও পরিবর্তন করুন (যেমন: <code>b2b-lead</code>, <code>cart-abandoner</code>, <code>vip-buyer</code>).</li>
+                <li><strong>GDPR ও ডেটা প্রাইভেসি কন্ট্রোল:</strong> আন্তর্জাতিক প্রাইভেসি আইন মানতে ১-ক্লিকে কাস্টমার প্রোফাইল এক্সপোর্ট এবং তাত্ক্ষণিক স্থায়ীভাবে বেনামী (Anonymize) করার সুবিধা।</li>
+              </ul>
+            </article>
+
+            <article class="card">
+              <h4>বাল্ক অ্যাকশন ও সেগমেন্টেশন সুবিধা</h4>
+              <p>কোনো প্রকার ল্যাগ ছাড়াই হাজার হাজার কন্টাক্ট সহজে পরিচালনা করুন:</p>
+              <ul>
+                <li><strong>বাল্ক অপারেশনসমূহ:</strong> একসাথে একাধিক কন্টাক্ট সিলেক্ট করে ট্যাগ অ্যাসাইন করুন, অটোমেটেড ড্রিপ সিকোয়েন্সে যোগ করুন বা অন্য লিস্টে স্থানান্তর করুন।</li>
+                <li><strong>মাল্টি-ফিল্ড সার্চ ও ফিল্টার:</strong> স্ট্যাটাস দিয়ে তাৎক্ষণিক ফিল্টার করুন (<em>সাবস্ক্রাইবড, বাউন্সড, আনসাবস্ক্রাইবড</em>), লিস্টের নাম, ট্যাগের কম্বিনেশন বা রেজিস্ট্রেশনের তারিখ অনুযায়ী।</li>
+                <li><strong>স্মার্ট CSV ইমপোর্টার:</strong> Mailchimp বা Klaviyo থেকে অটোমেটিক CSV হেডার ডিটেকশন এবং কাস্টম ফিল্ড ম্যাপিং সহ কন্টাক্ট লিস্ট ইমপোর্ট করুন।</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <!-- 2.3 Lists -->
+        <div id="email-lists" class="doc-sub-item">
+          <h3>২.৩ লিস্ট ম্যানেজমেন্ট</h3>
+          <p>আপনার অডিয়েন্সকে বিভিন্ন টার্গেটেড মেইলিং লিস্টে ভাগ করুন (যেমন: "ভিআইপি ক্রেতা", "নিউজলেটার সাবস্ক্রাইবার", "কোল্ড B2B প্রস্পেক্ট")।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-lists.webp" alt="Email Lists Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৩: লিস্ট ম্যানেজার — অডিয়েন্স সেগমেন্টেশন এবং কন্টাক্ট সংখ্যা</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.4 Tags -->
+        <div id="email-tags" class="doc-sub-item">
+          <h3>২.৪ ট্যাগ সিস্টেম</h3>
+          <p>গ্রাহকের এনগেজমেন্ট ট্র্যাক করতে অটোমেটিক বা ম্যানুয়ালি ট্যাগ যুক্ত করুন। যেমন কোনো গ্রাহক কার্ট রিকভারি লিঙ্কে ক্লিক করলে তাকে ট্যাগ করুন: <code>interested-buyer</code>.</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-tags.webp" alt="Email Tags Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৪: বিহেভিওরাল ট্যাগ ইন্টারফেস — কাস্টম কালার-কোডিং এবং অটোমেটেড ট্যাগের নিয়মাবলী</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.5 B2B Lead Finder -->
+        <div id="email-lead-finder" class="doc-sub-item">
+          <h3>২.৫ B2B লিড ফাইন্ডার (কোল্ড প্রসপেক্টিং ইঞ্জিন) <span class="badge-pill badge-fire">হট ফিচার</span></h3>
+          <p>কোনো থার্ড-পার্টি SaaS সাবস্ক্রিপশন ছাড়াই সরাসরি ওয়ার্ডপ্রেসের ভিতরে পদবী, ইন্ডাস্ট্রি এবং লোকেশন অনুযায়ী ভেরিফাইড B2B লিড খুঁজুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-lead-finder.webp" alt="B2B Lead Finder Dashboard" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৫: B2B লিড ফাইন্ডার — পদবী, ইন্ডাস্ট্রি এবং ভৌগলিক লোকেশন ফিল্টার</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>যেভাবে লিড খুঁজে সিকোয়েন্সে যুক্ত করবেন:</h4>
+              <ol>
+                <li>একটি সিলেক্ট করুন <strong>কাজের পদবী বা রোল</strong> (e.g. <code>সিইও</code>, <code>প্রতিষ্ঠাতা</code>, <code>সিএমও</code>).</li>
+                <li>ফিল্টার করুন <strong>ইন্ডাস্ট্রি ও লোকেশন</strong> (e.g. <code>ই-কমার্স</code>, <code>যুক্তরাষ্ট্র</code>).</li>
+                <li>ক্লিক করুন <strong>Find Leads বাটনে ক্লিক করুন</strong> লাইভ প্রস্পেক্টিং শুরু করতে।</li>
+                <li>যাচাইকৃত লিডগুলো রিভিউ করে ক্লিক করুন <strong>কোল্ড সিকোয়েন্সে যুক্ত করুন</strong>.</li>
+              </ol>
+            </article>
+            <article class="card">
+              <h4>রিয়েল-টাইম DNS MX ভেরিফিকেশন:</h4>
+              <p>ইমপোর্ট করার আগেই সিস্টেমটি ডোমেইনের DNS MX রেকর্ড লাইভ ভেরিফাই করে। ডিসপোজেবল ও ইনভ্যালিড ইমেইল সরাসরি বাতিল হয়ে যায়, যা আপনার সেন্ডার রেপুটেশন সুরক্ষিত রাখে।</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 2.6 Campaigns -->
+        <div id="email-campaigns" class="doc-sub-item">
+          <h3>২.৬ ক্যাম্পেইনস (ইমেইল ব্রডকাস্ট)</h3>
+          <p>টার্গেটেড নিউজলেটার বা প্রমোশনাল ক্যাম্পেইন তৈরি করুন, নির্দিষ্ট সময় অনুযায়ী শিডিউল করুন এবং অডিয়েন্স লিস্টে পাঠান।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-campaigns.webp" alt="Email Campaigns Management" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৬: ব্রডকাস্ট ক্যাম্পেইনস — ড্রাফট, শিডিউলড এবং সম্পন্ন হওয়া ক্যাম্পেইন তালিকা</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.7 Templates -->
+        <div id="email-templates" class="doc-sub-item">
+          <h3>২.৭ টেমপ্লেট লাইব্রেরি ও ভিজ্যুয়াল বিল্ডার</h3>
+          <p>হেডার, বাটন, উকমার্স প্রোডাক্ট গ্রিড এবং সোশ্যাল আইকন সমৃদ্ধ আধুনিক ও মোবাইল-ফ্রেন্ডলি ইমেইল টেমপ্লেটের সমৃদ্ধ গ্যালারি।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-templates.webp" alt="Email Template Library" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৭: প্রি-বিল্ট রেসপনসিভ ইমেইল টেমপ্লেট গ্যালারি</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.8 Automations -->
+        <div id="email-automations" class="doc-sub-item">
+          <h3>২.৮ অটোমেশনস (লিনিয়ার ইমেইল সিকোয়েন্স)</h3>
+          <p>ব্যবহারকারী রেজিস্ট্রেশন, নিউজলেটার সাবস্ক্রিপশন বা উকমার্স অর্ডারের উপর ভিত্তি করে লিনিয়ার ইমেইল ড্রিপ ফানেল চালু করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-automations.webp" alt="Email Automations Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৮: লিনিয়ার ড্রিপ অটোমেশন সিকোয়েন্স ওভারভিউ</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.9 Import / Export -->
+        <div id="email-import-export" class="doc-sub-item">
+          <h3>২.৯ ইমপোর্ট / এক্সপোর্ট</h3>
+          <p>সহজ ফিল্ড-ম্যাপিং টুলের সাহায্যে CSV আপলোড করে Mailchimp, Klaviyo বা FluentCRM থেকে আপনার কন্টাক্টগুলো মাইগ্রেট করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-import-export.webp" alt="Email Import and Export View" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.৯: কন্টাক্ট ইমপোর্ট টুল ও CSV কলাম ম্যাপিং ইন্টারফেস</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.10 AI Tools -->
+        <div id="email-ai-tools" class="doc-sub-item">
+          <h3>২.১০ এআই কপিরাইটিং টুলস</h3>
+          <p>সংযুক্ত এআই মডেলের সহায়তায় আকর্ষণীয় সাবজেক্ট লাইন, প্রি-হেডার এবং কনভার্ট করার মতো চমৎকার ইমেইল কপি লিখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-ai-tools.webp" alt="Email Marketing AI Copywriting Tools" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.১০: এআই সাবজেক্ট লাইন স্কোরার ও কন্টেন্ট অপটিমাইজার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 2.11 SMTP Settings -->
+        <div id="email-smtp" class="doc-sub-item">
+          <h3>২.১১ এসএমটিপি মাল্টি-রিলে ইঞ্জিন ও রিয়েল-টাইম কলব্যাক</h3>
+          <p>কোনো অতিরিক্ত সাবস্ক্রিপশন ছাড়াই কোটি কোটি ট্রানজ্যাকশনাল ও মার্কেটিং ইমেইল সরাসরি গ্রাহকের প্রাইমারি ইনবক্সে পৌঁছানোর জন্য একটি শক্তিশালী এন্টারপ্রাইজ গ্রেড এসএমটিপি ইঞ্জিন।</p>
+          
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-smtp.webp" alt="SMTP Configuration Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.১১: এসএমটিপি কনফিগারেশন, ফেইলওভার রাউটিং এবং লাইভ TLS/SSL হ্যান্ডশেক টেস্ট টুল</figcaption>
+          </figure>
+
+          <div class="cards-2">
+            <article class="card">
+              <h4>মাল্টি-এসএমটিপি রিলে রোটেটর (ফ্রি টিয়ারগুলো একসাথে ব্যবহার)</h4>
+              <p>একটিমাত্র দামি প্রোভাইডারের উপর নির্ভরশীল না হয়ে আপনি একাধিক ফ্রি এসএমটিপি প্রোভাইডার একসাথে সেট করতে পারেন। রাউন্ড-রবিন রোটেশনের মাধ্যমে বিনামূল্যে প্রতিদিন হাজার হাজার ইমেইল পাঠান:</p>
+              <ul>
+                <li><strong>Brevo (Sendinblue):</strong> প্রতিদিন ৩০০টি ফ্রি ইমেইল (মাসে ৯,০০০টি ইমেইল একদম ফ্রি)।</li>
+                <li><strong>SendGrid:</strong> প্রতিদিন ১০০টি ফ্রি ইমেইল (মাসে ৩,০০০টি ইমেইল ফ্রি)।</li>
+                <li><strong>Google Workspace / Gmail:</strong> স্ট্যান্ডার্ড বিজনেস অ্যাকাউন্টের মাধ্যমে প্রতিদিন ২,০০০টি পর্যন্ত ইমেইল (Google App Password প্রয়োজন)।</li>
+                <li><strong>Amazon SES:</strong> ডেডিকেটেড আইপি সুবিধা সহ মাত্র $১.০০ ডলারে ১০,০০০টি ইমেইল পাঠান।</li>
+                <li><strong>কাস্টম প্রাইভেট এসএমটিপি:</strong> TLS/SSL এনক্রিপশন সহ যেকোনো cPanel, Postfix বা নিজস্ব VPS রিলে সার্ভার যুক্ত করুন।</li>
+              </ul>
+            </article>
+
+            <article class="card">
+              <h4>রিয়েল-টাইম ওয়েবহুক কলব্যাক ও বাউন্স ম্যানেজমেন্ট</h4>
+              <p>৯৯%+ ইনবক্স ডেলিভারিবিলিটি বজায় রাখতে ইনভ্যালিড অ্যাড্রেস দ্রুত বাদ দেওয়া জরুরি। AIME এজন্য প্রোভাইডারদের জন্য ডেডিকেটেড ওয়েব হুক কলব্যাক ইউআরএল প্রদান করে:</p>
+              <pre><code>https://yourdomain.com/wp-json/aime/v1/smtp/callback?token=YOUR_SECRET_TOKEN</code></pre>
+              <ul>
+                <li><strong>তাৎক্ষণিক বাউন্স ট্র্যাকিং:</strong> যখন SendGrid, Brevo বা Amazon SES কোনো হার্ড বাউন্স ডিটেক্ট করে, কলব্যাকটি সাথে সাথে রান হয় এবং সাবস্ক্রাইবারকে মার্ক করে: <code>BOUNCED</code>, যার ফলে ভবিষ্যতে সেই ঠিকানায় আর কোনো মেইল পাঠানো হয় না।</li>
+                <li><strong>স্প্যাম রিপোর্ট দমন:</strong> কোনো গ্রাহক যদি "Report Spam"-এ ক্লিক করেন, তবে ওয়েবহুক স্বয়ংক্রিয়ভাবে সেই ইমেইলটিকে সকল সক্রিয় ফানেল থেকে বাদ দেয়।</li>
+                <li><strong>আনসাবস্ক্রাইব সিঙ্ক:</strong> ১-ক্লিক নেটিভ আনসাবস্ক্রাইব হেডার (RFC 8058) সমস্ত লিস্ট জুড়ে স্বয়ংক্রিয়ভাবে সিঙ্ক হয়ে যায়।</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout warning">
+            <p><strong>আইপি ওয়ার্ম-আপ ও সেন্ডিং থ্রটলিং:</strong> নতুন ডোমেইনের ক্ষেত্রে সবসময় সেন্ডিং স্পিড থ্রটলার কনফিগার করুন <em>Module Settings-এর অধীনে</em> প্রতি ৫ মিনিটে ২০টির বেশি ইমেইল পাঠাবেন না। প্রতিদিন ব্যাচের আকার ১৫% করে বাড়িয়ে মজবুত ডোমেন রেপুটেশন গড়ে তুলুন।</p>
+          </div>
+        </div>
+
+        <!-- 2.12 Email Settings -->
+        <div id="email-settings" class="doc-sub-item">
+          <h3>২.১২ মডিউল সেটিংস</h3>
+          <p>ডিফল্ট সেন্ডার নাম, সেন্ডার ইমেইল, CAN-SPAM আইনের নিয়মানুযায়ী অফিসের ঠিকানা এবং আনসাবস্ক্রাইব ফুটার টেক্সট সেট করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/email-settings.webp" alt="Email Marketing Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ২.১২: জেনারেল ইমেইল সেটিংস ও কমপ্লায়েন্স কনফিগারেশন</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 3: SEO ANALYZER ── -->
+      <section id="module-seo" class="doc-section">
+        <h2>৩. এসইও অ্যানালাইজার ও র‍্যাংক স্যুট (১০টি ডেডিকেটেড সাব-মেনু)</h2>
+        <p>কম-কম্পিটিশন কিওয়ার্ড খোঁজা, অন-পেজ কন্টেন্ট অডিট করা এবং গুগলের সার্চ র‍্যাঙ্কিং ট্র্যাক করার জন্য একটি সম্পূর্ণ এসইও টুলকিট:</p>
+
+        <!-- 3.1 Analytics -->
+        <div id="seo-analytics" class="doc-sub-item">
+          <h3>৩.১ এসইও অ্যানালিটিক্স ড্যাশবোর্ড</h3>
+          <p>সম্পূর্ণ ওয়েবসাইটের এসইও হেলথ স্কোর, ইনডেক্সিং স্ট্যাটাস, কিওয়ার্ড ডেনসিটি ট্রেন্ড এবং কন্টেন্ট অডিট অ্যালার্ট এক নজরে প্রদর্শন করে।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-analytics.webp" alt="SEO Dashboard Overview" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.১: এসইও অ্যানালিটিক্স — সাইট হেলথ স্কোর এবং কিওয়ার্ড কাউন্ট মেট্রিক্স</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.2 Keyword Research -->
+        <div id="seo-keyword-research" class="doc-sub-item">
+          <h3>৩.২ কিওয়ার্ড রিসার্চ</h3>
+          <p>মূল কিওয়ার্ড লিখে সার্চ ভলিউম, কিওয়ার্ড ডিফিকাল্টি (KD), সার্চ ইনটেন্ট এবং কার্যকরী লং-টেইল ভ্যারিয়েশনগুলো বের করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-keyword-research.webp" alt="SEO Keyword Research" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.২: কিওয়ার্ড রিসার্চ এবং সার্চ ইনটেন্ট অ্যানালাইসিস</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.3 Keyword Vault -->
+        <div id="seo-keyword-vault" class="doc-sub-item">
+          <h3>৩.৩ কিওয়ার্ড ভল্ট</h3>
+          <p>গুরুত্বপূর্ণ কিওয়ার্ডগুলো প্রায়োরিটি ট্যাগ সহ ভল্টে সেভ করে রাখুন এবং ১-ক্লিকেই কন্টেন্ট জেনারেটরে পাঠিয়ে আর্টিকেল লিখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-keyword-vault.webp" alt="SEO Keyword Vault" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৩: কিওয়ার্ড ভল্ট — সংরক্ষিত কিওয়ার্ড ও ১-ক্লিক আর্টিকেল জেনারেশন</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.4 Topic Map -->
+        <div id="seo-topic-map" class="doc-sub-item">
+          <h3>৩.৪ টপিক ম্যাপ (ক্লাস্টারিং ও অথরিটি)</h3>
+          <p>গুগলে টপিকাল অথরিটি অর্জন করতে পিলার কন্টেন্ট ও ক্লাস্টার টপিকগুলো স্বয়ংক্রিয়ভাবে সাজিয়ে দেয়।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-topic-map.webp" alt="SEO Topic Map Clustering" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৪: টপিক ক্লাস্টার এবং ইন্টারনাল লিংকিং আর্কিটেকচার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.5 On-Page Audit -->
+        <div id="seo-on-page-audit" class="doc-sub-item">
+          <h3>৩.৫ অন-পেজ এসইও অডিট</h3>
+          <p>যেকোনো পোস্ট বা পেজের মিসিং মেটা ট্যাগ, হেডিং হায়ারার্কি, ইমেজ অল্ট ট্যাগ এবং রিডিবিলিটি স্কোর অডিট করুন ও এআই পরামর্শ পান।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-on-page-audit.webp" alt="SEO On-Page Audit Tool" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৫: অন-পেজ অডিট ফলাফল ও প্রয়োজনীয় সংশোধন প্রস্তাবনা</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.6 Content Calendar -->
+        <div id="seo-content-calendar" class="doc-sub-item">
+          <h3>৩.৬ কন্টেন্ট ক্যালেন্ডার</h3>
+          <p>ড্র্যাগ-অ্যান্ড-ড্রপ ক্যালেন্ডারে আপনার আসন্ন ব্লগ পাবলিশিংয়ের তারিখগুলো সহজেই প্ল্যান ও শিডিউল করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-content-calendar.webp" alt="SEO Content Calendar" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৬: কন্টেন্ট পাবলিশিং ক্যালেন্ডার ভিউ</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.7 Link Building -->
+        <div id="seo-link-building" class="doc-sub-item">
+          <h3>৩.৭ লিংক বিল্ডিং হাব</h3>
+          <p>লিঙ্ক বিল্ডিংয়ের সুযোগ শনাক্ত করুন, গেস্ট পোস্ট আউটরিচ পরিচালনা করুন এবং ব্যাকলিঙ্কগুলো ট্র্যাক করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-link-building.webp" alt="SEO Link Building Hub" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৭: লিঙ্ক বিল্ডিং প্রসপেক্টিং ও আউটরিচ পাইপলাইন</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.8 Rank Tracker -->
+        <div id="seo-rank-tracker" class="doc-sub-item">
+          <h3>৩.৮ র‍্যাংক ট্র্যাকার</h3>
+          <p>টার্গেট কিওয়ার্ডের জন্য গুগলে আপনার পোস্টের অবস্থান প্রতিদিন ট্র্যাক করুন এবং অতীতের র‍্যাঙ্কিং গ্রাফ দেখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-rank-tracker.webp" alt="SEO Rank Tracker Tool" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৮: কিওয়ার্ড পজিশন ট্র্যাকিং ও ঐতিহাসিক র‍্যাঙ্কিং ট্রেন্ড গ্রাফ</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.9 Automation -->
+        <div id="seo-automation" class="doc-sub-item">
+          <h3>৩.৯ অটোমেশন রুলস</h3>
+          <p>মেটা ডেসক্রিপশন জেনারেশন, ছবির অল্ট ট্যাগ পূরণ এবং অভ্যন্তরীণ কিওয়ার্ড ক্রস-লিংকিং সম্পূর্ণ অটোমেট করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-automation.webp" alt="SEO Automation Rules" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.৯: অটোমেটেড এসইও অপটিমাইজেশন রুলস</figcaption>
+          </figure>
+        </div>
+
+        <!-- 3.10 Settings -->
+        <div id="seo-settings" class="doc-sub-item">
+          <h3>৩.১০ এসইও সেটিংস</h3>
+          <p>আপনার প্রধান টার্গেট দেশ, ভাষা, সার্চ ইঞ্জিন অঞ্চল এবং অডিটের মানদণ্ড নির্ধারণ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/seo-settings.webp" alt="SEO Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৩.১০: এসইও রিজিওনাল ও ক্রল প্রেফারেন্সেস</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 4: AI CONTENT GENERATOR ── -->
+      <section id="module-content" class="doc-section">
+        <h2>৪. এআই কন্টেন্ট জেনারেটর (৬টি ডেডিকেটেড সাব-মেনু)</h2>
+        <p>সার্চ ইঞ্জিনে র‍্যাংক করার উপযোগী হিউম্যান-লাইক ও এসইও-অপ্টিমাইজড ব্লগ পোস্ট লেখার পেশাদার স্টুডিও:</p>
+
+        <!-- 4.1 Analytics -->
+        <div id="content-analytics" class="doc-sub-item">
+          <h3>৪.১ কন্টেন্ট অ্যানালিটিক্স</h3>
+          <p>মোট প্রকাশিত আর্টিকেল সংখ্যা, গড় শব্দ সংখ্যা, রিডিং লেভেল এবং কন্টেন্ট তৈরির গতি পর্যবেক্ষণ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-analytics.webp" alt="Content Generator Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.১: কন্টেন্ট প্রোডাকশন অ্যানালিটিক্স</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.2 Articles -->
+        <div id="content-articles" class="doc-sub-item">
+          <h3>৪.২ আর্টিকেলস লাইব্রেরি</h3>
+          <p>সকল ড্রাফট এবং প্রকাশিত আর্টিকেল ব্রাউজ করুন। ১-ক্লিকেই এডিট, প্রিভিউ বা ওয়ার্ডপ্রেসে সরাসরি পাবলিশ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-articles.webp" alt="Articles List View" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.২: আর্টিকেল ডিরেক্টরি এবং ওয়ার্ডপ্রেস পোস্ট সিঙ্ক</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.3 New Article Studio -->
+        <div id="content-new-article" class="doc-sub-item">
+          <h3>৪.৩ নিউ আর্টিকেল স্টুডিও (ডিপ হিউম্যানাইজ মোড) <span class="badge-pill badge-writer">হট ফিচার</span></h3>
+          <p>একটিমাত্র কিওয়ার্ড বা শিরোনাম থেকে এইচটিএমএল স্ট্রাকচার বজায় রেখে পূর্ণাঙ্গ ২,০০০+ শব্দের তথ্যবহুল আর্টিকেল লিখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-new-article.webp" alt="New Article Studio with Deep Humanize" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.৩: নিউ আর্টিকেল স্টুডিও — স্ট্রাকচার প্রিজার্ভেশন ও ডিপ হিউম্যানাইজ মোড</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>স্টুডিওর প্রধান কন্ট্রোলসমূহ:</h4>
+              <ul>
+                <li><strong>টোন ও লেখার স্টাইল:</strong> পেশাদার (Professional), কথোপকথনমূলক (Conversational), তথ্যবহুল (Informative), অথবা প্ররোচনামূলক (Persuasive)।</li>
+                <li><strong>ডিপ হিউম্যানাইজ মোড:</strong> প্রাকৃতিক বাক্যের গঠন ও বৈচিত্র্যময় শৈলী প্রয়োগ করে বিভিন্ন এআই ডিটেকশন টুল সহজে বাইপাস করে।</li>
+                <li><strong>আউটলাইন এডিটর:</strong> সম্পূর্ণ আর্টিকেল ড্রাফট করার আগেই H2/H3 হেডিংগুলো এডিট, রিমুভ বা নিজের মতো সাজিয়ে নিন।</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>ফরমেটিং ও স্ট্রাকচার প্রিজার্ভেশন:</h4>
+              <p>সাধারণ এআই রাইটারদের তুলনায় AIME সরাসরি পাবলিশ উপযোগী কম্প্যারিজন টেবিল, কলআউট বক্স, বুলেট পয়েন্ট এবং FAQ স্কিমা তৈরি করে।</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 4.4 Brand Voices -->
+        <div id="content-brand-voices" class="doc-sub-item">
+          <h3>৪.৪ ব্র্যান্ড ভয়েসেস</h3>
+          <p>আপনার পূর্বের লেখার নমুনা দিয়ে আপনার ব্র্যান্ডের নিজস্ব কথা বলার ধরন ও শব্দচয়ন এআই-কে শিখিয়ে নিন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-brand-voices.webp" alt="Brand Voices Configuration" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.৪: ব্র্যান্ড ভয়েস প্রোফাইল ও টোন কাস্টমাইজেশন</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.5 Presets -->
+        <div id="content-presets" class="doc-sub-item">
+          <h3>৪.৫ প্রিসেটস</h3>
+          <p>নির্দিষ্ট ধরণের কন্টেন্টের জন্য প্রম্পট স্ট্রাকচার সেভ করে রাখুন (যেমন: "SaaS প্রোডাক্ট রিভিউ", "স্টেপ-বাই-স্টেপ গাইড")।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-presets.webp" alt="Content Presets Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.৫: কন্টেন্ট টেমপ্লেট ও প্রম্পট প্রিসেটস</figcaption>
+          </figure>
+        </div>
+
+        <!-- 4.6 Settings -->
+        <div id="content-settings" class="doc-sub-item">
+          <h3>৪.৬ কন্টেন্ট সেটিংস</h3>
+          <p>ডিফল্ট পোস্ট স্ট্যাটাস (ড্রাফট বনাম পাবলিশড), ডিফল্ট ক্যাটাগরি, ফিচার্ড ইমেজ জেনারেশন এবং শব্দ সংখ্যার টার্গেট সেট করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/content-settings.webp" alt="Content Settings Screen" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৪.৬: কন্টেন্ট জেনারেটর গ্লোবাল প্রেফারেন্সেস</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 5: SOCIAL MEDIA ── -->
+      <section id="module-social" class="doc-section">
+        <h2>৫. সোশ্যাল মিডিয়া শিডিউলার (৭টি ডেডিকেটেড সাব-মেনু)</h2>
+        <p>পোস্ট পাবলিশিং অটোমেট করুন, মাল্টিপল সোশ্যাল নেটওয়ার্কে শিডিউল করুন এবং ব্লগের আর্টিকেলে রূপান্তর করুন Facebook, Instagram, LinkedIn ও Twitter (X)-এর জন্য:</p>
+
+        <!-- 5.1 Analytics -->
+        <div id="social-analytics" class="doc-sub-item">
+          <h3>৫.১ সোশ্যাল অ্যানালিটিক্স</h3>
+          <p>সংযুক্ত সকল সোশ্যাল চ্যানেলে পোস্টের এনগেজমেন্ট, ক্লিক-থ্রু এবং ফলোয়ারদের ইন্টারঅ্যাকশন বিশ্লেষণ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-analytics.webp" alt="Social Media Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.১: সোশ্যাল মিডিয়া পারফরম্যান্স অ্যানালিটিক্স</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.2 Accounts -->
+        <div id="social-accounts" class="doc-sub-item">
+          <h3>৫.২ অ্যাকাউন্টস কানেকশন</h3>
+          <p>OAuth 2.0 সিকিউরিটির মাধ্যমে ফেসবুক পেজ, ইনস্টাগ্রাম বিজনেস প্রোফাইল, লিঙ্কডইন এবং টুইটার নিরাপদে যুক্ত করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-accounts.webp" alt="Connected Social Accounts" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.২: সোশ্যাল অ্যাকাউন্ট কানেকশন ও অথেনটিকেশন স্ট্যাটাস</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.3 Posts -->
+        <div id="social-posts" class="doc-sub-item">
+          <h3>৫.৩ পোস্টস ফিড</h3>
+          <p>প্রকাশিত পোস্ট পরিচালনা করুন, শিডিউল করা কিউ দেখুন এবং সকল চ্যানেলের ড্রাফট মেসেজ রিভিউ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-posts.webp" alt="Social Posts Feed" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.৩: সোশ্যাল মিডিয়া পোস্ট ফিড ও কিউ ম্যানেজার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.4 Post Composer -->
+        <div id="social-composer" class="doc-sub-item">
+          <h3>৫.৪ পোস্ট কম্পোজার</h3>
+          <p>একবার পোস্ট লিখুন এবং এআই স্বয়ংক্রিয়ভাবে প্রতিটি সোশ্যাল নেটওয়ার্কের জন্য হ্যাশট্যাগ ও ক্যারেক্টার লিমিট কাস্টমাইজ করবে।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-composer.webp" alt="Social Post Composer" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.৪: লাইভ নেটওয়ার্ক প্রিভিউ সহ মাল্টি-নেটওয়ার্ক কম্পোজার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.5 Calendar -->
+        <div id="social-calendar" class="doc-sub-item">
+          <h3>৫.৫ সোশ্যাল ক্যালেন্ডার</h3>
+          <p>ড্র্যাগ-অ্যান্ড-ড্রপ ক্যালেন্ডারে আপনার পুরো মাসের সোশ্যাল মিডিয়া পাবলিশিং শিডিউল এক নজরে দেখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-calendar.webp" alt="Social Calendar View" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.৫: ভিজ্যুয়াল সোশ্যাল মিডিয়া পাবলিশিং ক্যালেন্ডার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.6 Repurpose -->
+        <div id="social-repurpose" class="doc-sub-item">
+          <h3>৫.৬ রিপারপাস স্টুডিও</h3>
+          <p>যেকোনো প্রকাশিত ওয়ার্ডপ্রেস ব্লগকে মাত্র কয়েক সেকেন্ডে ৫টি লিঙ্কডইন পোস্ট, ১০টি টুইটার থ্রেড ও ৩টি ফেসবুক আপডেটে রূপান্তর করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-repurpose.webp" alt="Social Content Repurposing Studio" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.৬: ব্লগ-টু-সোশ্যাল কন্টেন্ট রিপারপাসিং ইঞ্জিন</figcaption>
+          </figure>
+        </div>
+
+        <!-- 5.7 Settings -->
+        <div id="social-settings" class="doc-sub-item">
+          <h3>৫.৭ সোশ্যাল সেটিংস</h3>
+          <p>পোস্টিং টাইমজোন, অটোমেটেড কিউ ইন্টারভাল এবং UTM ট্র্যাকিং প্যারামিটার কনফিগার করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/social-settings.webp" alt="Social Media Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৫.৭: সোশ্যাল মিডিয়া গ্লোবাল প্রেফারেন্সেস</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 6: AI CHATBOT ── -->
+      <section id="module-chatbot" class="doc-section">
+        <h2>৬. এআই চ্যাটবট ও নলেজ বেস (৫টি ডেডিকেটেড সাব-মেনু)</h2>
+        <p>আপনার ওয়েবসাইটের কন্টেন্ট এবং উকমার্স প্রোডাক্ট ক্যাটালগের তথ্যে প্রশিক্ষিত একটি স্মার্ট কাস্টমার সাপোর্ট ও লিড জেনারেশন চ্যাটবট:</p>
+
+        <!-- 6.1 Analytics -->
+        <div id="chatbot-analytics" class="doc-sub-item">
+          <h3>৬.১ চ্যাটবট অ্যানালিটিক্স</h3>
+          <p>কথোপকথনের মোট সংখ্যা, কনভার্সন রেট, গ্রাহক সন্তুষ্টি এবং সর্বাধিক জিজ্ঞাসিত বিষয়সমূহ ট্র্যাক করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/chatbot-analytics.webp" alt="AI Chatbot Analytics" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৬.১: চ্যাটবট কনভারসেশন ও রেজোলিউশন মেট্রিক্স</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.2 Chatbots -->
+        <div id="chatbot-bots" class="doc-sub-item">
+          <h3>৬.২ চ্যাটবটস ম্যানেজার</h3>
+          <p>কাস্টম ওয়েলকাম মেসেজ, ব্র্যান্ডেড অবতার এবং নিজস্ব কালার থিম দিয়ে একাধিক চ্যাটবট তৈরি ও কাস্টমাইজ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/chatbot-bots.webp" alt="Chatbots Management" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৬.২: বট কনফিগারেশন এবং ভিজ্যুয়াল স্টাইলিং</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.3 Conversations -->
+        <div id="chatbot-conversations" class="doc-sub-item">
+          <h3>৬.৩ কথোপকথন ও লাইভ টেকওভার</h3>
+          <p>দর্শনার্থীদের লাইভ চ্যাট রিয়েল-টাইমে পর্যবেক্ষণ করুন। যেকোনো সময় গ্রাহককে সরাসরি সাপোর্ট দিতে ম্যানুয়াল টেকওভার করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/chatbot-conversations.webp" alt="Chatbot Conversations and Live Takeover" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৬.৩: লাইভ কনভারসেশন ফিড ও ১-ক্লিক হিউম্যান টেকওভার</figcaption>
+          </figure>
+        </div>
+
+        <!-- 6.4 Knowledge Base -->
+        <div id="chatbot-knowledge" class="doc-sub-item">
+          <h3>৬.৪ নলেজ বেস ট্রেইনিং</h3>
+          <p>১-ক্লিকেই কাস্টম এফএকিউ, ওয়েবসাইটের বিভিন্ন পেজের ইউআরএল এবং সম্পূর্ণ উকমার্স প্রোডাক্ট ক্যাটালগ দিয়ে চ্যাটবটকে ট্রেইন করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/chatbot-knowledge.webp" alt="Chatbot Knowledge Base Training" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৬.৪: নলেজ বেস সিঙ্ক — URL স্ক্র্যাপিং ও উকমার্স প্রোডাক্ট ইনডেক্সিং</figcaption>
+          </figure>
+          <div class="callout success">
+            <p><strong>উকমার্স ক্যাটালগ সিঙ্ক:</strong> পণ্যের দাম, স্টক স্ট্যাটাস বা বিবরণ পরিবর্তিত হলে চ্যাটবট স্বয়ংক্রিয়ভাবে তার তথ্য আপডেট করে নেয় যাতে ক্রেতাদের সঠিক উত্তর দেওয়া যায়।</p>
+          </div>
+        </div>
+
+        <!-- 6.5 Settings -->
+        <div id="chatbot-settings" class="doc-sub-item">
+          <h3>৬.৫ চ্যাটবট সেটিংস</h3>
+          <p>উইজেটের পজিশন (ডান বা বাম কোণে), মোবাইলে দৃশ্যমানতা এবং নির্দিষ্ট এআই মডেল (যেমন Gemini 1.5 Flash) অ্যাসাইন করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/chatbot-settings.webp" alt="Chatbot Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৬.৫: চ্যাটবট ডিসপ্লে ও আচরণগত সেটিংস</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 7: WORKFLOW AUTOMATION V2 ── -->
+      <section id="module-workflow" class="doc-section">
+        <h2>৭. ওয়ার্কফ্লো অটোমেশন V2 (ক্যানভাস ও কার্ট রিকভারি)</h2>
+        <p>একটি শক্তিশালী নোড-ভিত্তিক অটোমেশন ইঞ্জিন যা একটি ভিজ্যুয়াল ক্যানভাসে ট্রিগার, কন্ডিশন, ডিলে এবং মার্কেটিং অ্যাকশন সংযুক্ত করে:</p>
+
+        <!-- 7.1 Analytics -->
+        <div id="workflow-analytics" class="doc-sub-item">
+          <h3>৭.১ ওয়ার্কফ্লো অ্যানালিটিক্স</h3>
+          <p>অটোমেটেড কাস্টমার জার্নিগুলোর মোট এক্সিকিউশন সংখ্যা, কমপ্লিশন রেট এবং উদ্ধারকৃত আয়ের পরিমাণ পর্যবেক্ষণ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-analytics.webp" alt="Workflow Analytics Overview" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.১: অটোমেশন এক্সিকিউশন ও রেভিনিউ রিকভারি মেট্রিক্স</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.2 Workflows List -->
+        <div id="workflow-list" class="doc-sub-item">
+          <h3>৭.২ ওয়ার্কফ্লো ডিরেক্টরি</h3>
+          <p>সহজ অন/অফ টগল সুইচ এবং কুইক-এডিট সুবিধার মাধ্যমে সমস্ত সক্রিয়, পজ করা এবং ড্রাফট ওয়ার্কফ্লো নিয়ন্ত্রণ করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-list.webp" alt="Workflows List View" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.২: ওয়ার্কফ্লো ডিরেক্টরি ও স্ট্যাটাস সুইচসমূহ</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.3 Visual Canvas Builder -->
+        <div id="workflow-canvas" class="doc-sub-item">
+          <h3>৭.৩ ভিজ্যুয়াল ক্যানভাস বিল্ডার <span class="badge-pill badge-magic">কোর ইঞ্জিন</span></h3>
+          <p>একটি ইন্টারঅ্যাক্টিভ React Flow ক্যানভাসে ট্রিগার, কন্ডিশন, টাইমার এবং অ্যাকশনগুলো সহজে ড্র্যাগ, ড্রপ ও কানেক্ট করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-canvas.webp" alt="Visual Canvas Workflow Builder" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৩: ভিজ্যুয়াল ক্যানভাস বিল্ডার — ট্রিগার, If/Else কন্ডিশন, ওয়েট টাইমার এবং ইমেইল অ্যাকশনসমূহ</figcaption>
+          </figure>
+          <div class="cards-2">
+            <article class="card">
+              <h4>উপলব্ধ নোডসমূহের ধরণ:</h4>
+              <ul>
+                <li><strong>ট্রিগারসমূহ:</strong> WooCommerce Cart Abandoned, Order Completed, New Subscriber, Lead Finder Prospect Enrolled।</li>
+                <li><strong>অ্যাকশনসমূহ:</strong> Send Email, Add/Remove Tags, Outgoing Webhook, Notify Administrator।</li>
+                <li><strong>টাইমিং নোড:</strong> Wait / Delay নোড (নির্দিষ্ট সংখ্যক ঘণ্টা বা দিনের জন্য পরবর্তী স্টেপ স্থগিত রাখা)।</li>
+                <li><strong>লজিক নোড:</strong> If/Else কন্ডিশন (যেমন পূর্ববর্তী ইমেইল ওপেন হয়েছে কিনা অথবা অর্ডারের পরিমাণ $১০০ ছাড়িয়েছে কিনা যাচাই করা)।</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>নোড সংযোগ করা:</h4>
+              <p>একটি নোডের আউটপুট হ্যান্ডেল থেকে টেনে অন্য নোডের ইনপুট হ্যান্ডেলে ড্রপ করুন। কোনো নোড বা সংযোগ মুছতে সেটিতে ক্লিক করে কিবোর্ডের <code>Delete (মুছুন)</code> বাটন চাপুন।</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 7.4 Text-to-Workflow AI -->
+        <div id="workflow-ai-modal" class="doc-sub-item">
+          <h3>৭.৪ টেক্সট-টু-ওয়ার্কফ্লো এআই জেনারেটর <span class="badge-pill badge-magic">হট ফিচার</span></h3>
+          <p>ম্যানুয়াল সংযোগ তৈরি ছাড়াই সাধারণ ভাষায় লিখে সম্পূর্ণ মাল্টি-স্টেপ অটোমেশন গ্রাফ তৈরি করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-ai-modal.webp" alt="Text-to-Workflow AI Modal" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৪: টেক্সট-টু-ওয়ার্কফ্লো এআই মোডাল — প্রম্পট থেকে সরাসরি কানেক্টেড নোড তৈরি করে</figcaption>
+          </figure>
+          <div class="callout info">
+            <h4>উদাহরণ প্রম্পট:</h4>
+            <p><em>"কোনো ক্রেতা উকমার্স কার্ট ত্যাগ করলে ১ ঘণ্টা অপেক্ষা করে ১০% ডিসকাউন্ট সহ রিকভারি ইমেইল পাঠাও। যদি ২৪ ঘণ্টার মধ্যে না কেনে, তবে একটি শেষ রিমাইন্ডার পাঠাও।"</em> — এআই সম্পূর্ণ গ্রাফটি স্বয়ংক্রিয়ভাবে সাজিয়ে দেবে।</p>
+          </div>
+        </div>
+
+        <!-- 7.5 WooCommerce Cart Recovery -->
+        <div id="workflow-cart-recovery" class="doc-sub-item">
+          <h3>৭.৫ উকমার্স পরিত্যক্ত কার্ট রিকভারি <span class="badge-pill badge-cart">হট ফিচার</span></h3>
+          <p>রিয়েল-টাইমে উকমার্সের চেকআউট ফিল্ড পর্যবেক্ষণ করে। কোনো ভিজিটর ইমেইল দিয়ে অর্ডার সম্পন্ন না করেই চলে গেলে সেশনটি পরিত্যক্ত কার্ট হিসেবে সেভ হয়।</p>
+          <div class="cards-2">
+            <article class="card">
+              <h4>১-ক্লিক ডিপ রিকভারি লিঙ্ক:</h4>
+              <p>রিকভারি ইমেইলে <code>{{recovery_url}}</code> মার্জ ট্যাগ যুক্ত করুন। ক্রেতারা এই লিঙ্কে ক্লিক করলেই চেকআউটে তাদের পণ্যাদি এবং কুপন কোড পুনরায় স্বয়ংক্রিয়ভাবে লোড হয়ে যাবে।</p>
+            </article>
+            <article class="card">
+              <h4>সিঙ্গেল-কোয়ান্টিটি সেফটি প্রটেকশন:</h4>
+              <p>ক্রেতা রিকভারি ইমেইলে বারবার ক্লিক করলেও পণ্যের পরিমাণ ডাবল (যেমন ১ থেকে ২) হয়ে যাবে না, যা গ্রাহকদের ঝামেলামুক্ত কেনাকাটার নিশ্চয়তা দেয়।</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 7.6 Templates -->
+        <div id="workflow-templates" class="doc-sub-item">
+          <h3>৭.৬ টেমপ্লেট পিকার</h3>
+          <p>তৈরি ফানেলগুলো থেকে পছন্দ করুন: Abandoned Cart Recovery, Welcome Drip Series, Post-Purchase Review Request, এবং Win-Back Campaigns।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-templates.webp" alt="Workflow Automation Templates" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৫: প্রি-বিল্ট ওয়ার্কফ্লো টেমপ্লেট গ্যালারি</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.7 Upcoming Runs -->
+        <div id="workflow-upcoming" class="doc-sub-item">
+          <h3>৭.৭ আসন্ন রানসমূহের কিউ (Queue)</h3>
+          <p>যেসব গ্রাহক বর্তমানে কোনো ওয়েট/ডিলে স্টেপে আছেন তাদের মনিটর করুন এবং পরবর্তী ২৪ থেকে ৪৮ ঘণ্টায় পাঠানো হবে এমন শিডিউলড মেইলগুলো দেখুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-upcoming.webp" alt="Upcoming Workflow Executions" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৬: আসন্ন শিডিউলড এক্সিকিউশন কিউ ভিউ</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.8 Error Log -->
+        <div id="workflow-error-log" class="doc-sub-item">
+          <h3>৭.৮ এরর লগ ও ডায়াগনস্টিকস</h3>
+          <p>ব্যর্থ স্টেপ, মেয়াদোত্তীর্ণ ওয়েব হুক বা ডেলিভারি ত্রুটি খুঁজে বের করতে বিস্তারিত এক্সিকিউশন লগ ও স্ট্যাক ট্রেস।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-error-log.webp" alt="Workflow Error and Execution Log" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৭: ডায়াগনস্টিকস লগ ও এরর ইন্সপেক্টর</figcaption>
+          </figure>
+        </div>
+
+        <!-- 7.9 Settings -->
+        <div id="workflow-settings" class="doc-sub-item">
+          <h3>৭.৯ ওয়ার্কফ্লো সেটিংস</h3>
+          <p>কোনো ওয়ার্কফ্লোতে বড় ধরণের ত্রুটি দেখা দিলে অ্যাডমিনিস্ট্রেটরের কাছে স্বয়ংক্রিয় নোটিফিকেশন পাঠানোর ব্যবস্থা চালু করুন।</p>
+          <figure class="doc-screenshot-frame">
+            <img src="../screenshots/workflow-settings.webp" alt="Workflow Settings" class="doc-screenshot" loading="lazy" />
+            <figcaption>চিত্র ৭.৮: ওয়ার্কফ্লো ফেইলিউর অ্যালার্ট প্রেফারেন্সেস</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── SECTION 8: AI PROVIDERS SETUP ── -->
+      <section id="module-ai-providers" class="doc-section">
+        <h2>৮. এআই প্রোভাইডার সেটআপ (মডেল রাউটিং ও স্মার্ট ফলব্যাক)</h2>
+        <p>AIME-তে রয়েছে একটি মাল্টি-ইঞ্জিন এআই রাউটিং লেয়ার। একটিমাত্র কোম্পানির উপর নির্ভর না করে আপনার নিজস্ব এপিআই কী AES-256-GCM দিয়ে এনক্রিপ্ট করে যুক্ত করুন, যাতে আপনার অটোমেশন ৩৬৫ দিন অবিরাম সচল থাকে।</p>
+        
+        <figure class="doc-screenshot-frame">
+          <img src="../screenshots/settings-ai-providers.webp" alt="AI Providers Configuration Screen" class="doc-screenshot" loading="lazy" />
+          <figcaption>চিত্র ৮.১: এআই প্রোভাইডার্স ম্যানেজমেন্ট — Google Gemini, OpenRouter, OpenAI এবং Anthropic Claude রাউটিং হাব</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>সমর্থিত এআই ইঞ্জিনসমূহ ও সেটআপ নির্দেশিকা</h3>
+            <ul>
+              <li><strong>Google Gemini (আজীবন ১০০% বিনামূল্যে):</strong> Google AI Studio থেকে একটি ফ্রি API কী সংগ্রহ করুন। ডিফল্ট <code>gemini-1.5-flash</code> মডেলটি কোনো ক্রেডিট কার্ড ছাড়াই সম্পূর্ণ বিনামূল্যে প্রতি মিনিটে ১৫টি রিকোয়েস্ট (RPM) এবং ১ মিলিয়ন টোকেন কনটেক্সট উইন্ডো অফার করে।</li>
+              <li><strong>OpenRouter (DeepSeek ও ওপেন সোর্স মডেলসমূহ):</strong> একটিমাত্র OpenRouter কী যুক্ত করে DeepSeek R1, Llama 3.3 70B এবং Qwen 2.5-এর মতো দারুণ সাশ্রয়ী মডেলগুলো নামমাত্র খরচে ব্যবহার করুন।</li>
+              <li><strong>OpenAI:</strong> সরাসরি কানেকশন পান <code>gpt-4o</code> এবং <code>gpt-4o-mini</code>মডেলগুলোর জন্য, সাথে ভেক্টর নলেজ বেসের জন্য টেক্সট এমবেডিংসের সুবিধা।</li>
+              <li><strong>Anthropic Claude:</strong> কানেক্ট করুন <code>claude-3-5-sonnet</code> আর্টিকেল স্টুডিওতে উচ্চমানের হিউম্যানাইজড লেখা পাওয়ার জন্য।</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>স্মার্ট মাল্টি-মডেল ফলব্যাক চেইন</h3>
+            <p>যদি কোনো বড় ক্যাম্পেইনের সময় মূল এআই প্রোভাইডারের লিমিট শেষ হয়ে যায়? AIME স্বয়ংক্রিয় ফলব্যাক ক্যাসকেডের মাধ্যমে এটি সমাধান করে:</p>
+            <ul>
+              <li><strong>প্রাইমারি টিয়ার:</strong> Google Gemini 1.5 Flash (সম্পূর্ণ বিনামূল্যে চালানোর জন্য)।</li>
+              <li><strong>ফলব্যাক টিয়ার ১:</strong> OpenRouter-এর মাধ্যমে DeepSeek R1 (প্রতি ১০ লাখ টোকেনে মাত্র $০.১৪)।</li>
+              <li><strong>ফলব্যাক টিয়ার ২:</strong> OpenAI GPT-4o-mini।</li>
+              <li><strong>অটোমেটিক হ্যান্ডশেক:</strong> যদি জেমিনি কোনো <code>429 Too Many Requests</code> বা ৫০৩ গেটওয়ে এরর দেয়, AIME মাত্র ৩০০ মিলিসেকেন্ডের মধ্যে প্রম্পটটি ফলব্যাক ১-এ পাঠিয়ে দেয়। আপনার চ্যাটবট বা অটোমেশন কখনোই বন্ধ হবে না।</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="cards-2" style="margin-top: 1.25rem;">
+          <article class="card">
+            <h3>টাস্ক-ভিত্তিক মডেল রাউটিং</h3>
+            <p>গতি, খরচ এবং সৃজনশীলতার উপর ভিত্তি করে বিভিন্ন মডিউলে সেরা মডেলগুলো বরাদ্দ করুন:</p>
+            <ul>
+              <li><strong>কাস্টমার সাপোর্ট চ্যাটবট:</strong> রাউট করুন <code>gemini-1.5-flash</code> যাতে ১ সেকেন্ডেরও কম সময়ে দ্রুত রিপ্লাই দেওয়া যায়।</li>
+              <li><strong>লং-ফর্ম আর্টিকেল স্টুডিও:</strong> রাউট করুন <code>claude-3-5-sonnet</code> বা <code>deepseek-r1</code> গবেষণামূলক ও সাবলীল লেখার জন্য।</li>
+              <li><strong>এসইও মেটা ও কিওয়ার্ড ক্লাস্টারিং:</strong> রাউট করুন <code>gpt-4o-mini</code> নির্ভুল স্ট্রাকচার্ড JSON আউটপুটের জন্য।</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>লেটেন্সি পিং ও টোকেন সেফগার্ড</h3>
+            <p>প্রতিটি প্রোভাইডার কার্ডে একটি লাইভ <strong>টেস্ট কানেকশন</strong> বাটন থাকে যা লেটেন্সি বা গতি পরীক্ষা করে (যেমন: <em>Gemini: ১৮২ms [সক্রিয়]</em>)। অপ্রত্যাশিত বিল এড়াতে আপনি মাসিক সর্বোচ্চ টোকেন সীমাও বেঁধে দিতে পারেন।</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION 9: GENERAL SETTINGS ── -->
+      <section id="module-settings" class="doc-section">
+        <h2>৯. সাধারণ সেটিংস ও ডেটা হাইজিন</h2>
+        <p>সাইটের গ্লোবাল প্যারামিটার, ইউজার রোল অ্যাক্সেস পারমিশন এবং অটোমেটিক ডেটাবেস ক্লিনআপ কনফিগার করুন:</p>
+
+        <figure class="doc-screenshot-frame">
+          <img src="../screenshots/settings-general.webp" alt="General Settings Screen" class="doc-screenshot" loading="lazy" />
+          <figcaption>চিত্র ৯.১: জেনারেল সেটিংস — কার্ট ট্র্যাকিং লিমিট, রোল পারমিশন এবং ডেটাবেস হাইজিন</figcaption>
+        </figure>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>মূল কনফিগারেশন অপশনসমূহ:</h3>
+            <ul>
+              <li><strong>কার্ট রিটেনশন সময়সীমা:</strong> পরিত্যক্ত কার্টের তথ্য ডেটাবেসে কতদিন সংরক্ষিত থাকবে (ডিফল্ট: ৩০ দিন)।</li>
+              <li><strong>রোল-ভিত্তিক অ্যাক্সেস পারমিশন:</strong> কোন কোন ওয়ার্ডপ্রেস ইউজার রোল (যেমন Editor, Shop Manager) এই প্লাগইনে ঢুকতে পারবে তা নির্ধারণ করুন।</li>
+              <li><strong>আনইন্সটল ক্লিনআপ:</strong> প্লাগইন ডিলিট করার সময় সব টেবিল ও সেটিংস পুরোপুরি মুছে ফেলা হবে কিনা তা নির্ধারণ করুন।</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>ডেটাবেস অপটিমাইজেশন ও পরিচ্ছন্নতা:</h3>
+            <p>মেয়াদোত্তীর্ণ গেস্ট কার্ট এবং ট্রানজিয়েন্ট লগ প্রতি সপ্তাহে স্বয়ংক্রিয়ভাবে ক্লিন করুন। এটি আপনার ওয়ার্ডপ্রেস ডেটাবেসকে ফাস্ট, হালকা ও ঝামেলামুক্ত রাখে।</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: CRON SETUP ── -->
+      <section id="cron-setup" class="doc-section">
+        <h2>এক্সটার্নাল সার্ভার ক্রন সেটআপ (জিরো-ডিলে ইমেইল পাঠানো)</h2>
+        <p>ওয়ার্ডপ্রেসের ডিফল্ট ক্রন (<code>wp-cron.php</code>) কেবল তখনই চলে যখন কেউ আপনার ওয়েবসাইট ভিজিট করে। কম ভিজিটর থাকা সাইটগুলোতে এর ফলে কার্ট রিকভারি ইমেইল বা শিডিউলড পোস্ট ঘণ্টার পর ঘণ্টা দেরিতে যেতে পারে। এক্সটার্নাল সার্ভার ক্রন সেট করলে এই বিলম্ব পুরোপুরি দূর হয়।</p>
+
+        <div class="callout warning">
+          <h4>ক্যানোনিকাল এক্সটার্নাল ক্রন ওয়েবহুক URL:</h4>
+          <p>যেকোনো সার্ভার থেকে এক্সিকিউট করতে আপনার সাইটের ডেডিকেটেড ক্রন ওয়েবহুক ও সিক্রেট টোকেন ব্যবহার করুন:</p>
+          <pre><code>https://yourdomain.com/wp-json/aime/v1/cron/execute?secret_token=YOUR_CRON_SECRET</code></pre>
+        </div>
+
+        <div class="cards-2">
+          <article class="card">
+            <h3>পদ্ধতি ১: cPanel বা সার্ভার Crontab (প্রতি ৫ মিনিটে)</h3>
+            <p>cPanel-এর ভিতরে <strong>Cron Jobs অপশনে গিয়ে</strong>, প্রতি ৫ মিনিটে চালানোর জন্য নিচের কমান্ডটি দিন:</p>
+            <pre><code>*/5 * * * * curl -s -k "https://yourdomain.com/wp-json/aime/v1/cron/execute?secret_token=YOUR_SECRET" >/dev/null 2>&1</code></pre>
+          </article>
+          <article class="card">
+            <h3>পদ্ধতি ২: ফ্রি cron-job.org সার্ভিস ব্যবহার করে</h3>
+            <ol>
+              <li>একটি ফ্রি অ্যাকাউন্ট খুলুন <a href="https://cron-job.org" target="_blank" rel="noopener">cron-job.org ওয়েবসাইটে</a>.</li>
+              <li>ক্লিক করুন <strong>Create Cronjob বাটনে ক্লিক করুন</strong> এবং আপনার সম্পূর্ণ ওয়েবহুক লিঙ্কটি পেস্ট করুন।</li>
+              <li>এক্সিকিউশন শিডিউল সেট করুন <strong>Every 5 minutes (প্রতি ৫ মিনিট)</strong> এবং সেভ করে দিন।</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: TROUBLESHOOTING ── -->
+      <section id="troubleshooting" class="doc-section">
+        <h2>সমস্যা সমাধান ও বাস্তবমুখী সতর্কতা</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>১. কার্ট রিকভারি ইমেইল সেন্ড হচ্ছে না</h3>
+            <p><strong>কারণ:</strong> WP-Cron সচল নেই, অথবা কোনো ক্যাশিং প্লাগইন চেকআউট স্ক্রিপ্ট ক্যাশ করে রেখেছে।</p>
+            <p><strong>সমাধান:</strong> উপরে বর্ণিত নিয়মে এক্সটার্নাল ক্রন সেট করুন এবং WP Rocket বা LiteSpeed ক্যাশে <code>/checkout/</code> এবং <code>/cart/</code> ইউআরএলগুলোকে "Never Cache" নিয়মে যুক্ত করুন।</p>
+          </article>
+          <article class="card">
+            <h3>২. ইমেইল স্প্যাম ফোল্ডারে চলে যাচ্ছে</h3>
+            <p><strong>কারণ:</strong> সার্ভারের আন-অথেনটিকেটেড সাধারণ PHP <code>mail() ফাংশন ব্যবহার বা ডোমেইনে SPF/DKIM রেকর্ড না থাকা।</code> বা ডোমেইনে ভ্যালিড SPF/DKIM/DMARC রেকর্ড অনুপস্থিত থাকা।</p>
+            <p><strong>সমাধান:</strong> একটি নির্ভরযোগ্য ডেডিকেটেড SMTP কনফিগার করুন <strong>ইমেইল মার্কেটিং → SMTP</strong> (যেমন Gmail App Password, Brevo বা SendGrid) এবং আপনার ডোমেইনের DNS-এ SPF, DKIM ও DMARC রেকর্ড ভেরিফাই করুন।</p>
+          </article>
+          <article class="card">
+            <h3>৩. এআই "Rate Limit Exceeded" এরর</h3>
+            <p><strong>কারণ:</strong> বড় ব্যাচ প্রসেসিংয়ের সময় ফ্রি গুগল জেমিনি অ্যাকাউন্টের প্রতি মিনিটের ১৫টি রিকোয়েস্টের সীমা অতিক্রম করা।</p>
+            <p><strong>সমাধান:</strong> মধ্যে <strong>Settings → General-এ গিয়ে</strong>ব্যাকগ্রাউন্ড ব্যাচ সাইজ কমিয়ে ৫ করুন, অথবা একটি OpenAI বা OpenRouter ফলব্যাক কী যুক্ত করুন।</p>
+          </article>
+          <article class="card">
+            <h3>৪. চ্যাটবট উইজেট ওয়েবসাইটে দেখা যাচ্ছে না</h3>
+            <p><strong>কারণ:</strong> থিমের স্ক্রিপ্টের সাথে কনফ্লিক্ট বা ব্রাউজার কনসোলে কোনো জাভাস্ক্রিপ্ট এরর থাকা।</p>
+            <p><strong>সমাধান:</strong> চ্যাটবট সক্রিয় আছে কিনা নিশ্চিত করুন <strong>Chatbot → Settings পেজে</strong>, আপনার ব্রাউজার ও সাইটের ক্যাশ ক্লিয়ার করুন এবং নিশ্চিত করুন যে অন্য কোনো প্লাগইন ওয়ার্ডপ্রেস REST API ব্লক করছে না।</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: FAQ ── -->
+      <section id="faq" class="doc-section">
+        <h2>সচরাচর জিজ্ঞাসিত প্রশ্ন (FAQ)</h2>
+        <div class="cards-2">
+          <article class="card">
+            <h3>কোনো ধরণের মাসিক সাবস্ক্রিপশন ফি আছে কি?</h3>
+            <p>একেবারেই না! প্লাগইনটি সরাসরি আপনার নিজস্ব ওয়ার্ডপ্রেস হোস্টিংয়ে চলে। Google AI Studio-এর ফ্রি টায়ার কানেক্ট করলে এআই ব্যবহারের জন্যও $০ খরচ হয়। প্রতি সাবস্ক্রাইবারে কোনো অতিরিক্ত চার্জ ছাড়াই আপনার ডেটার ১০০% মালিকানা আপনার হাতেই থাকবে।</p>
+          </article>
+          <article class="card">
+            <h3>আমি কি Mailchimp বা FluentCRM থেকে কন্টাক্ট মাইগ্রেট করতে পারব?</h3>
+            <p>হ্যাঁ, পারবেন। আপনার আগের প্ল্যাটফর্ম থেকে সাবস্ক্রাইবার লিস্ট CSV আকারে এক্সপোর্ট করুন এবং <strong>ইমেইল মার্কেটিং → ইমপোর্ট / এক্সপোর্ট</strong> -এ গিয়ে ফিল্ডগুলো সিলেক্ট করে মাত্র কয়েক মিনিটে ট্যাগ সহ সব কন্টাক্ট ইমপোর্ট করে নিন।</p>
+          </article>
+          <article class="card">
+            <h3>এই প্লাগইন কি আমার ওয়েবসাইটের স্পিড ধীর করে দেবে?</h3>
+            <p>একেবারেই না । ফ্রন্ট-এন্ড ট্র্যাকিং স্ক্রিপ্টটি 5kb এর নিচে এবং অ্যাসিঙ্ক্রোনাসভাবে লোড হয় । সমস্ত ভারী এআই জেনারেশন এবং ইমেল ব্যাচিং ক্রোন দ্বারা পরিচালিত বিচ্ছিন্ন পটভূমি প্রক্রিয়াগুলিতে চলে ।</p>
+          </article>
+          <article class="card">
+            <h3>গ্রাহকদের ব্যক্তিগত ডেটা কি কোনো থার্ড-পার্টি এআই প্রোভাইডারের কাছে পাঠানো হয়?</h3>
+            <p>না। গ্রাহকদের ইমেইল অ্যাড্রেস বা যোগাযোগের তথ্য কখনোই কোনো এআই প্রোভাইডারের কাছে পাঠানো হয় না। এআই মডেলগুলো কেবল কপিরাইটিং, আর্টিকেল লেখা এবং চ্যাটবটের উত্তর তৈরির জন্যই ব্যবহৃত হয়।</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: MICRO-VIDEOS ── -->
+      <section id="video-tutorials" class="doc-section">
+        <h2>১-২ মিনিটের মাইক্রো-ভিডিও (🎬 ৭টি ভিডিও লেসন ও গাইড)</h2>
+        <p>সময় নষ্ট না করে দ্রুত কাজ শুরু করার উপযোগী সংক্ষিপ্ত ও বাস্তবধর্মী ভিডিও টিউটোরিয়াল:</p>
+
+        <div class="video-grid">
+          <!-- Lesson 1 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ১: ফ্রি এআই সেটআপ</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">১:৪৫ মিনিট</span>
+              <h3>১. পাঁচ মিনিটে ফ্রি জেমিনি এআই কানেকশন</h3>
+              <p>ফ্রি জেমিনি API কী সংগ্রহ ও কানেকশন ভেরিফাই করার ধাপে ধাপে ভিডিও গাইড।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:25]</strong> Google AI Studio-তে API কী তৈরি</li>
+                <li><strong>[00:25 - 01:10]</strong> AIME AI Providers-এ ক্রেডেনশিয়াল সেভ করা</li>
+                <li><strong>[01:10 - 01:45]</strong> কানেকশন টেস্ট ও মডেল সিলেকশন</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 2 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ২: B2B লিড ফাইন্ডার</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">২:১০ মিনিট</span>
+              <h3>২. ভেরিফাইড লিড অনুসন্ধান ও কোল্ড আউটরিচ</h3>
+              <p>টার্গেট ইন্ডাস্ট্রি ফিল্টার করা এবং ভেরিফাইড লিডগুলো সরাসরি ইমেইল নার্চার সিকোয়েন্সে যুক্ত করা।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:35]</strong> পদবী, ইন্ডাস্ট্রি ও লোকেশন ফিল্টার সেট করা</li>
+                <li><strong>[00:35 - 01:25]</strong> রিয়েল-টাইম DNS MX ভেরিফিকেশন চেক</li>
+                <li><strong>[01:25 - 02:10]</strong> ১-ক্লিকে কোল্ড ইমেইল সিকোয়েন্সে অন্তর্ভুক্তি</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 3 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ৩: কার্ট রিকভারি</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">১:৫৫ মিনিট</span>
+              <h3>৩. উকমার্স পরিত্যক্ত কার্ট রিকভারি</h3>
+              <p>গেস্ট ইমেইল ক্যাপচার সক্রিয় করা এবং ১-ক্লিক সিঙ্গেল-কোয়ান্টিটি রিকভারি লিঙ্ক তৈরি।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:30]</strong> চেকআউট ফিল্ড লিসেনার চালু করা</li>
+                <li><strong>[00:30 - 01:15]</strong> ইমেইল টেমপ্লেটে {{recovery_url}} বসানো</li>
+                <li><strong>[01:15 - 01:55]</strong> কার্ট ডুপ্লিকেট-প্রুফ রিস্টোরেশন টেস্ট করা</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 4 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ৪: এআই ক্যানভাস</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">১:৩০ মিনিট</span>
+              <h3>৪. টেক্সট-টু-ওয়ার্কফ্লো এআই ক্যানভাস তৈরি</h3>
+              <p>সাধারণ টেক্সট প্রম্পট লিখে জটিল মাল্টি-ব্রাঞ্চ মার্কেটিং ফানেল তৈরি করা।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:20]</strong> 'Create with AI' প্রম্পট বিল্ডার ওপেন করা</li>
+                <li><strong>[00:20 - 00:55]</strong> অটোমেশন রিকোয়ারমেন্টস লেখা</li>
+                <li><strong>[00:55 - 01:30]</strong> ক্যানভাস নোডগুলো রিভিউ ও একটিভ করা</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 5 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ৫: এসইও টু আর্টিকেল</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">২:১৫ মিনিট</span>
+              <h3>৫. কিওয়ার্ড রিসার্চ থেকে লং-ফর্ম ব্লগ পোস্ট</h3>
+              <p>লো-কম্পিটিশন কিওয়ার্ড খুঁজে ২,০০০+ শব্দের স্ট্রাকচার্ড আর্টিকেল তৈরি।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:40]</strong> কিওয়ার্ড রিসার্চ করে ভল্টে সেভ করা</li>
+                <li><strong>[00:40 - 01:35]</strong> ডিপ হিউম্যানাইজ স্টুডিওতে আর্টিকেল জেনারেট করা</li>
+                <li><strong>[01:35 - 02:15]</strong> সরাসরি ওয়ার্ডপ্রেসে পাবলিশ করা</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 6 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ৬: চ্যাটবট সিঙ্ক</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">১:৪০ মিনিট</span>
+              <h3>৬. উকমার্স প্রোডাক্ট দিয়ে চ্যাটবটকে ট্রেইন করা</h3>
+              <p>২৪/৭ স্বয়ংক্রিয় সেলস রিপ্রেজেন্টেটিভ তৈরি করতে প্রোডাক্ট ক্যাটালগ সিঙ্ক করা।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:25]</strong> Chatbot Knowledge Base-এ যাওয়া</li>
+                <li><strong>[00:25 - 01:05]</strong> 'Sync WooCommerce Products'-এ ক্লিক করা</li>
+                <li><strong>[01:05 - 01:40]</strong> ফ্রন্ট-এন্ড প্রোডাক্ট রেকমেন্ডেশন টেস্ট করা</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Lesson 7 -->
+          <article class="video-card">
+            <div class="video-thumb-wrap">
+              <div class="video-placeholder-banner">
+                <div class="play-btn-mock">▶</div>
+                <strong>লেসন ৭: সার্ভার ক্রন</strong>
+              </div>
+            </div>
+            <div class="video-body">
+              <span class="video-duration">১:৫০ মিনিট</span>
+              <h3>৭. ফ্রি সার্ভার ক্রন সেটআপ (জিরো ইমেইল ডিলে)</h3>
+              <p>cron-job.org বা cPanel শিডিউলার ব্যবহার করে WP-Cron এর বিলম্ব পুরোপুরি বন্ধ করা।</p>
+              <ul class="video-timestamps">
+                <li><strong>[00:00 - 00:30]</strong> সিক্রেট ক্রন ওয়েবহুক টোকেন কপি করা</li>
+                <li><strong>[00:30 - 01:15]</strong> cron-job.org-এ ৫ মিনিটের ক্রন সেট করা</li>
+                <li><strong>[01:15 - 01:50]</strong> AIME ড্যাশবোর্ডে সবুজ স্ট্যাটাস যাচাই করা</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── SECTION: CHANGELOG ── -->
+      <section id="changelog" class="doc-section">
+        <h2>চেঞ্জলগ ও রিলিজ নোটস (v1.2.7)</h2>
+        <div class="card">
+          <h3>ভার্সন ১.২.৭ (সর্বশেষ স্থিতিশীল সংস্করণ)</h3>
+          <ul>
+            <li><strong>নতুন সংযোজন:</strong> ইমেইল মার্কেটিং সাব-মেনুর ভিতরে সরাসরি B2B লিড ফাইন্ডার ইঞ্জিন যুক্ত করা হয়েছে।</li>
+            <li><strong>নতুন সংযোজন:</strong> সিঙ্গেল-কোয়ান্টিটি ডুপ্লিকেট প্রটেকশন সহ উকমার্স ১-ক্লিক পরিত্যক্ত কার্ট রিকভারি ইউআরএল।</li>
+            <li><strong>উন্নত করা হয়েছে:</strong> React Flow ভিজ্যুয়াল ক্যানভাস ও টেক্সট-টু-ওয়ার্কফ্লো এআই জেনারেটর সমৃদ্ধ ওয়ার্কফ্লো অটোমেশন V2।</li>
+            <li><strong>উন্নত করা হয়েছে:</strong> কন্টেন্ট জেনারেটরে ডিপ হিউম্যানাইজ মোড, যা টেবিল, হেডিং ও লিস্টের কাঠামো অক্ষত রেখে এআই ডিটেক্টর বাইপাস করে।</li>
+            <li><strong>উন্নত করা হয়েছে:</strong> WP-Cron শিডিউলিং বিলম্ব দূর করতে ক্যানোনিকাল এক্সটার্নাল সার্ভার ক্রন ওয়েবহুক সাপোর্ট।</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ── MOBILE BOTTOM QUICK NAVIGATION BAR ── -->
+  <nav class="mobile-bottom-bar" id="mobileBottomBar" aria-label="Quick Mobile Navigation">
+    <button class="mobile-bottom-btn" id="mobileBottomMenuBtn" aria-label="Toggle Navigation Menu">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>মেনু</span>
+    </button>
+    <button class="mobile-bottom-btn" id="mobileBottomSearchBtn" aria-label="Search Documentation">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>খুঁজুন</span>
+    </button>
+    <a href="#hot-spotlight" class="mobile-bottom-btn" aria-label="Hot Features Spotlight">
+      <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      <span>স্পটলাইট</span>
+    </a>
+    <a href="#faq" class="mobile-bottom-btn" aria-label="Frequently Asked Questions">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>জিজ্ঞাসা</span>
+    </a>
+    <button class="mobile-bottom-btn" id="mobileBottomTopBtn" aria-label="Scroll to Top">
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+      <span>উপরে</span>
+    </button>
+  </nav>
+
+  <!-- ── SCREENSHOT LIGHTBOX MODAL ── -->
+  <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-label="Screenshot Preview">
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close image preview">×</button>
+      <img id="lightboxImg" src="" alt="Full-size Screenshot Preview" />
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <!-- ── WATCH DEMO VIDEO MODAL (YouTube Player) ── -->
+  <div class="video-modal" id="videoDemoModal" role="dialog" aria-modal="true" aria-label="Product Demo Video">
+    <div class="video-modal-container">
+      <div class="video-modal-header">
+        <div class="video-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          AI Marketing Expert (v1.2.7) — Official 2-Minute Demo Walkthrough
+        </div>
+        <button class="video-modal-close" id="videoModalClose" aria-label="Close video">×</button>
+      </div>
+      <div class="video-modal-body">
+        <iframe id="videoDemoIframe" src="" title="AI Marketing Expert Demo Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JAVASCRIPT LOGIC ── -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Reading Progress Bar
+      const progress = document.getElementById('readingProgress');
+      window.addEventListener('scroll', () => {
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const currentProgress = (window.pageYOffset / totalHeight) * 100;
+        if (progress) progress.style.width = currentProgress + '%';
+      });
+
+      // 2. Mobile Menu & Drawer Controls with Backdrop
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const closeBtn = document.getElementById('sidebarCloseBtn');
+
+      const openMobileSidebar = () => {
+        sidebar.classList.add('open');
+        backdrop.classList.add('active');
+        menuToggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeMobileSidebar = () => {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      };
+
+      if (menuToggle) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (sidebar.classList.contains('open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
+      if (backdrop) {
+        backdrop.addEventListener('click', closeMobileSidebar);
+        backdrop.addEventListener('touchstart', closeMobileSidebar, { passive: true });
+      }
+
+      // Mobile Bottom Bar Controls
+      const mobileBottomMenuBtn = document.getElementById('mobileBottomMenuBtn');
+      const mobileBottomSearchBtn = document.getElementById('mobileBottomSearchBtn');
+      const mobileBottomTopBtn = document.getElementById('mobileBottomTopBtn');
+
+      if (mobileBottomMenuBtn) {
+        mobileBottomMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (sidebar.classList.contains('open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+      }
+
+      if (mobileBottomSearchBtn) {
+        mobileBottomSearchBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => {
+            const searchInput = document.getElementById('docSearch');
+            searchInput?.focus();
+          }, 250);
+        });
+      }
+
+      if (mobileBottomTopBtn) {
+        mobileBottomTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      // Close mobile drawer when clicking ANY navigation link
+      document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+          closeMobileSidebar();
+        });
+      });
+
+      // Close mobile drawer when clicking outside the sidebar
+      document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('open')) {
+          if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !mobileBottomMenuBtn?.contains(e.target)) {
+            closeMobileSidebar();
+          }
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMobileSidebar();
+          if (modal) modal.classList.remove('open');
+          if (searchResults) searchResults.style.display = 'none';
+        }
+      });
+
+      // 3. Nested Sidebar Accordions (Expand, Fold, and Auto-collapse)
+      const moduleBtns = document.querySelectorAll('.sidebar-module-btn');
+      moduleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetId = btn.getAttribute('data-target');
+          const targetSubMenu = document.getElementById(targetId);
+          if (!targetSubMenu) return;
+
+          const isCurrentlyOpen = targetSubMenu.classList.contains('open');
+
+          // Close all other accordions for clean accordion UX
+          moduleBtns.forEach(otherBtn => {
+            if (otherBtn !== btn) {
+              otherBtn.setAttribute('aria-expanded', 'false');
+              const otherSub = document.getElementById(otherBtn.getAttribute('data-target'));
+              if (otherSub) otherSub.classList.remove('open');
+            }
+          });
+
+          // Toggle current accordion (folds if already open)
+          if (isCurrentlyOpen) {
+            btn.setAttribute('aria-expanded', 'false');
+            targetSubMenu.classList.remove('open');
+          } else {
+            btn.setAttribute('aria-expanded', 'true');
+            targetSubMenu.classList.add('open');
+          }
+        });
+      });
+
+      // Auto-open parent accordion if sub-link is targeted via hash
+      const hash = window.location.hash;
+      if (hash) {
+        const activeLink = document.querySelector(`.sidebar-sub-link[href="${hash}"]`);
+        if (activeLink) {
+          const parentSub = activeLink.closest('.sidebar-sub-menu');
+          if (parentSub) {
+            parentSub.classList.add('open');
+            const correspondingBtn = document.querySelector(`.sidebar-module-btn[data-target="${parentSub.id}"]`);
+            if (correspondingBtn) correspondingBtn.setAttribute('aria-expanded', 'true');
+          }
+        }
+      }
+
+      // 4. Smart Ajax-like Live Search with Keyboard Shortcut
+      const docSearch = document.getElementById('docSearch');
+      const searchResults = document.getElementById('searchResults');
+
+      // Global keyboard shortcut Ctrl+K or / to focus search
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          docSearch?.focus();
+        }
+        if (e.key === '/' && document.activeElement !== docSearch && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          e.preventDefault();
+          docSearch?.focus();
+        }
+      });
+
+      if (docSearch && searchResults) {
+        // Build rich search index
+        const searchIndex = [];
+        document.querySelectorAll('section[id], .doc-sub-item[id]').forEach(el => {
+          const heading = el.querySelector('h2, h3, h4');
+          const title = heading ? heading.innerText.trim() : el.id;
+          
+          let badge = 'General';
+          if (el.id.startsWith('email-')) badge = 'Email Marketing';
+          else if (el.id.startsWith('seo-')) badge = 'SEO Analyzer';
+          else if (el.id.startsWith('content-')) badge = 'Content Generator';
+          else if (el.id.startsWith('social-')) badge = 'Social Media';
+          else if (el.id.startsWith('chatbot-')) badge = 'AI Chatbot';
+          else if (el.id.startsWith('workflow-')) badge = 'Workflow Automation';
+          else if (el.id.includes('cron')) badge = 'Cron Setup';
+          else if (el.id.includes('troubleshoot')) badge = 'Troubleshooting';
+          else if (el.id.includes('video')) badge = 'Micro-Videos';
+          else if (el.id.includes('hot')) badge = 'Hot Features';
+
+          const paragraphs = Array.from(el.querySelectorAll('p, li')).map(p => p.innerText.trim()).join(' ');
+          searchIndex.push({
+            id: el.id,
+            title,
+            badge,
+            snippet: paragraphs.slice(0, 120),
+            fullText: (title + ' ' + badge + ' ' + paragraphs).toLowerCase()
+          });
+        });
+
+        docSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          if (!query || query.length < 2) {
+            searchResults.style.display = 'none';
+            searchResults.innerHTML = '';
+            return;
+          }
+
+          const matches = searchIndex.filter(item => item.fullText.includes(query)).slice(0, 7);
+          if (matches.length > 0) {
+            let html = '<div class="search-results-header">Search Results</div>';
+            matches.forEach(m => {
+              html += `
+                <a href="#${m.id}" class="search-result-item">
+                  <span class="search-res-badge">${m.badge}</span>
+                  <span class="search-res-title">${m.title}</span>
+                  <span class="search-res-snippet">${m.snippet}...</span>
+                </a>
+              `;
+            });
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+          } else {
+            searchResults.innerHTML = '<div style="padding:1rem;color:#888;text-align:center;font-size:0.85rem;">No matching documentation found</div>';
+            searchResults.style.display = 'block';
+          }
+        });
+
+        // Close search when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!docSearch.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+          }
+        });
+
+        // Clicking a search result jumps and closes
+        searchResults.addEventListener('click', (e) => {
+          const item = e.target.closest('.search-result-item');
+          if (item) {
+            searchResults.style.display = 'none';
+            docSearch.value = '';
+          }
+        });
+      }
+
+      // 5. Screenshot Lightbox Zoom
+      const modal = document.getElementById('lightboxModal');
+      const modalImg = document.getElementById('lightboxImg');
+      const modalCaption = document.getElementById('lightboxCaption');
+      const modalClose = document.getElementById('lightboxClose');
+
+      document.querySelectorAll('.doc-screenshot').forEach(img => {
+        img.addEventListener('click', () => {
+          if (modal && modalImg) {
+            modalImg.src = img.src;
+            const caption = img.closest('figure')?.querySelector('figcaption')?.innerText || img.alt;
+            if (modalCaption) modalCaption.innerText = caption;
+            modal.classList.add('open');
+          }
+        });
+      });
+
+      if (modalClose && modal) {
+        modalClose.addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('open');
+        });
+      }
+
+      // 6. Watch Demo Video Modal Controller
+      const openDemoVideoBtn = document.getElementById('openDemoVideoBtn');
+      const videoDemoModal = document.getElementById('videoDemoModal');
+      const videoModalClose = document.getElementById('videoModalClose');
+      const videoDemoIframe = document.getElementById('videoDemoIframe');
+
+      // Configurable YouTube Demo Link: User's Official Walkthrough Video
+      let DEMO_YOUTUBE_URL = "https://www.youtube-nocookie.com/embed/BiYoVVesf1s";
+
+      const openVideo = (url) => {
+        if (!videoDemoIframe || !videoDemoModal) return;
+        const targetUrl = url || DEMO_YOUTUBE_URL;
+        const autoplayUrl = targetUrl.includes('?') ? `${targetUrl}&autoplay=1` : `${targetUrl}?autoplay=1`;
+        videoDemoIframe.src = autoplayUrl;
+        videoDemoModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeVideo = () => {
+        if (!videoDemoIframe || !videoDemoModal) return;
+        videoDemoIframe.src = '';
+        videoDemoModal.classList.remove('open');
+        document.body.style.overflow = '';
+      };
+
+      if (openDemoVideoBtn) {
+        openDemoVideoBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openVideo();
+        });
+      }
+
+      // Connect video tutorial cards to launch the YouTube player
+      document.querySelectorAll('.video-card, .video-thumb-wrap').forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+          openVideo(DEMO_YOUTUBE_URL);
+        });
+      });
+
+      if (videoModalClose) {
+        videoModalClose.addEventListener('click', closeVideo);
+      }
+
+      if (videoDemoModal) {
+        videoDemoModal.addEventListener('click', (e) => {
+          if (e.target === videoDemoModal) closeVideo();
+        });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (videoDemoModal?.classList.contains('open')) closeVideo();
+        }
+      });
+
+      // 7. Language Switcher Dropdown Controller
+      const langBtn = document.getElementById('langBtn');
+      const langDropdown = document.getElementById('langDropdown');
+      const currentLangLabel = document.getElementById('currentLangLabel');
+
+      if (langBtn && langDropdown) {
+        langBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = langDropdown.classList.toggle('open');
+          langBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.querySelectorAll('.lang-opt').forEach(opt => {
+          opt.addEventListener('click', (e) => {
+            const href = opt.getAttribute('href');
+            const langCode = opt.getAttribute('data-lang');
+            if (langCode) localStorage.setItem('aime_doc_lang', langCode);
+
+            // Allow normal navigation if href points to a localized directory
+            if (href && href !== '#') {
+              return;
+            }
+
+            e.preventDefault();
+            const rawText = opt.textContent || '';
+            const cleanName = rawText.split('(')[0].replace(/[^\w\s\u0980-\u09FF\u3040-\u30FF\u4E00-\u9FAF]/gi, '').trim();
+
+            document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            if (currentLangLabel) currentLangLabel.innerText = cleanName;
+            langDropdown.classList.remove('open');
+            langBtn.setAttribute('aria-expanded', 'false');
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!langBtn.contains(e.target) && !langDropdown.contains(e.target)) {
+            langDropdown.classList.remove('open');
+            langBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

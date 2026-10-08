@@ -18,7 +18,7 @@ Powered by your choice of leading AI models (ChatGPT, Claude, Gemini, or OpenRou
 
 The built-in **SEO Analyzer** module gives you AI-powered keyword research, on-page audits, rank tracking, and topical authority mapping — all without leaving WordPress.
 
-🔗 **[View Plugin Website](https://wpthemespace.com/ai-marketing-expert/)** | 🚀 **[Upgrade to Pro](https://wpthemespace.com/product/ai-marketing-expert/)**
+🔗 **[View Plugin Website](https://wpthemespace.com/ai-marketing-expert/)** | 🚀 **[Upgrade to Pro](https://wpthemespace.com/product/ai-marketing-expert/)** | 🚀 **[View documentation](https://wpthemespace.com/ai-marketing-expert-docs)**
 
 Whether you are a blogger, an e-commerce store owner, a small business, or a freelancer managing client sites, AI Marketing Expert gives you enterprise-grade marketing automation at zero extra tool cost.
 
@@ -86,6 +86,14 @@ A complete email CRM, cold outreach, and campaign system built inside WordPress 
 * Multi-connection SMTP with automatic fallback (Gmail, Outlook, Amazon SES, SendGrid, Mailgun, SparkPost, custom SMTP)
 * Test connection before saving
 * List-Unsubscribe headers + one-click unsubscribe footer for compliance
+
+**Email Deliverability & Bounce Management (NEW in 1.2.8)**
+
+* **Zero-Config IMAP Bounce Detection** — Pure PHP IMAP4 SSL socket engine that automatically connects to your mailbox using existing SMTP credentials with zero manual IMAP setup. Independent of the deprecated ext-imap extension (PHP 8.1–8.4+ ready).
+* **Cloud ESP Suppression Sync (Pro)** — Autonomous background synchronization for Brevo, SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs.
+* **Pre-flight DNS MX Deliverability Guard** — Pre-checks recipient domain DNS MX records before dispatch to prevent bounces from invalid domains.
+* **Custom Tracking Domain (Branded CNAME)** — Use your own branded domain (e.g., https://track.yourdomain.com) for open and click tracking.
+* **Deliverability Health Dashboard** — Real-time monitoring of clean vs quarantined bounce ratios with on-demand bounce scanning.
 
 **Free vs Pro**
 
@@ -318,7 +326,7 @@ No. All AI calls and email sending happen in the WordPress admin or via backgrou
 
 = Does the social media scheduler support LinkedIn? =
 
-Currently the plugin supports Facebook Pages, Instagram Business, and X/Twitter. LinkedIn support is planned for a future release.
+Yes. The social scheduler supports LinkedIn personal profiles and company pages alongside Facebook Pages, Instagram Business, and X (Twitter).
 
 = Is my data secure? =
 
@@ -330,42 +338,18 @@ Yes. You can import subscribers from a CSV file, sync from WordPress registered 
 
 = Where can I get support? =
 
-Visit [wpthemespace.com/ai-marketing-expert](https://wpthemespace.com/ai-marketing-expert/) for documentation and support.
+Visit [wordpress.org/support/plugin/ai-marketing-expert/](https://wordpress.org/support/plugin/ai-marketing-expert/) for documentation and support.
 
 == Privacy Policy ==
 
-AI Marketing Expert connects to third-party external services to deliver its AI-powered features. By using those features you agree to the respective terms and privacy policies listed below.
+AI Marketing Expert connects to third-party services to deliver AI generation, social posting, and email deliverability. Data is transmitted only when you actively configure and use these features.
 
-**AI Providers (used for content generation, chatbot responses, SEO analysis, social captions, and email copy)**
+* **AI Providers** (OpenAI, Anthropic Claude, Google Gemini, OpenRouter): Only your submitted prompt text is transmitted to generate content, SEO suggestions, or chat replies. No subscriber records or personal data are ever sent. [OpenAI Privacy](https://openai.com/policies/privacy-policy) | [Anthropic Privacy](https://www.anthropic.com/privacy) | [Google Privacy](https://policies.google.com/privacy) | [OpenRouter Privacy](https://openrouter.ai/privacy)
+* **Social Networks** (Meta Facebook/Instagram, LinkedIn, X/Twitter): Transmits post copy, media, and OAuth tokens when scheduling or publishing posts. [Meta Privacy](https://www.facebook.com/privacy/policy/) | [LinkedIn Privacy](https://www.linkedin.com/legal/privacy-policy) | [X Privacy](https://twitter.com/en/privacy)
+* **Stock Images** (Pexels, Pixabay): Queries keywords to fetch media previews when searching photos. [Pexels Terms](https://www.pexels.com/terms/) | [Pixabay Terms](https://pixabay.com/service/terms/)
+* **Email & ESPs**: Sends outbound emails via your own SMTP server. Suppression sync queries bounce lists from your ESP account (Brevo, SendGrid, Mailgun) to safeguard sender reputation.
 
-When you use any AI-powered feature, the text you submit (article topic, keyword, chat message, email copy, etc.) is transmitted to the AI provider you configured in Settings → AI Providers. No data is transmitted unless you have added and selected a provider.
-
-* OpenAI — https://openai.com/policies/privacy-policy
-* Anthropic (Claude) — https://www.anthropic.com/privacy
-* Google AI Studio (Gemini) — https://policies.google.com/privacy
-* OpenRouter — https://openrouter.ai/privacy
-
-**Social Media Platforms (used for the Social Media Scheduler module)**
-
-When you connect a social account and publish or schedule a post, the post content and your stored OAuth access token are transmitted to the respective platform API.
-
-* Meta (Facebook & Instagram) — https://www.facebook.com/privacy/policy/
-* X / Twitter — https://twitter.com/en/privacy
-
-**What data is sent?**
-
-* AI features: the text prompt or content you submit. No personal user data, subscriber emails, or visitor information is ever sent to AI providers.
-* Social posting: the post text, images, and your OAuth credentials for the connected account.
-* Email sending: email content is sent via the SMTP provider you configure. The plugin does not use or share any external email relay beyond the SMTP server you supply.
-
-**What data is stored locally?**
-
-* Subscriber records, email addresses, campaign history, conversation transcripts, and SEO reports are stored only in your WordPress database on your own server.
-* API keys and SMTP passwords are encrypted at rest (AES-256-GCM) in your WordPress database. They are never transmitted anywhere other than the respective provider API.
-
-**Data Retention**
-
-All data (subscribers, conversations, campaign history, audit reports) is stored on your server and is fully under your control. Deactivating or deleting the plugin will not automatically delete database tables — you can remove them from Settings before deletion.
+All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in your WordPress database. All subscriber lists, analytics, and customer data remain strictly on your own server.
 
 == Screenshots ==
 
@@ -379,6 +363,18 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 8. Subscriber management with segmentation
 
 == Changelog ==
+
+= 1.2.8 =
+* New: B2B Lead Finder Free Tier — Free users can now discover and collect up to 5 verified B2B leads daily (up to 100 leads/month) with real-time quota meters, 1-click CRM list importing, and live DNS MX deliverability checks with zero WordPress.org guideline violations.
+* New: Zero-Config IMAP Bounce Detection — Pure PHP IMAP4 SSL socket client that auto-derives and connects to bounce mailboxes directly using your existing SMTP credentials (Gmail, Outlook, Hostinger, cPanel, Custom) with zero manual IMAP setup. Completely independent of the deprecated ext-imap extension, ensuring 100% compatibility across PHP 8.1, 8.2, 8.3, and PHP 8.4+.
+* New: Cloud ESP Suppression Synchronization (Pro) — Autonomous background synchronization for Brevo (Sendinblue), SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs and quarantine dead addresses before sender reputation is harmed.
+* New: Deliverability & Bounce Health Overview — Dedicated dashboard displaying real-time list health metrics (Active Subscribers, Quarantined Bounces, Unsubscribes), manual "Scan & Quarantine Now" action with instant toast notifications, and recent bounce audit logs.
+* New: Pre-flight DNS MX Deliverability Guard — Pre-checks recipient domain DNS MX records right before SMTP dispatch to prevent sending to dead or non-existent domains.
+* New: Custom Tracking Domain (Branded CNAME) — Configure a branded tracking domain (e.g., https://track.yourdomain.com) for click and open tracking links to elevate domain authority, sender trust, and inbox placement.
+* Improved: Tracking Protocol Whitelist — Open/click tracking URL rewriter now safely preserves non-HTTP protocols (mailto:, tel:, sms:, javascript:, and in-page anchor links) without mangling attributes.
+* Improved: Sequence & Campaign-Level Tracking Toggles — Fine-grained control to enable or disable open and click tracking on specific funnels and campaigns.
+* Improved: Settings Navigation & Persistence — Tab states are now persisted across page reloads via URL hash and local storage, ensuring smooth transitions without losing tab context.
+* Fixed: ToggleControl Layout Alignment — Resolved vertical margin collapse on settings toggle switches across WordPress admin screens.
 
 = 1.2.7 =
 * New: Free Stock Photos in Social Media Composer — Search and 1-click import high-resolution stock photos (Pexels and Pixabay) directly into social media posts and download them to your WordPress Media Library, making Instagram publishing and image posts effortless without needing paid AI image credits.
@@ -502,6 +498,9 @@ All data (subscribers, conversations, campaign history, audit reports) is stored
 * React-based unified admin dashboard
 
 == Upgrade Notice ==
+
+= 1.2.8 =
+Major Deliverability & Lead Finder Release: B2B Lead Finder Free Tier (5 leads/day, 100/month), Zero-Config Pure PHP IMAP Bounce Detection (PHP 8.4 ready), Cloud ESP Suppression Sync (Brevo, SendGrid, Mailgun), Custom Tracking Domain support, Pre-flight DNS MX Deliverability Guard, and Deliverability Health Dashboard. Highly recommended for all users.
 
 = 1.2.7 =
 Feature Release: Free Stock Photos (Pexels & Pixabay) in Social Media Composer, Universal Stock Photo Global Settings, Caption Length Selector (short/medium/long), and fixed Instagram caption truncation for rich, engaging social posts. Highly recommended for all users.

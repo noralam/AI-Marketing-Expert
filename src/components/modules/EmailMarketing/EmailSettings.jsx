@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button, TextControl, TextareaControl, CheckboxControl, ToggleControl, SelectControl, TabPanel, Spinner,
 } from '@aime/wp-components';
@@ -11,31 +11,65 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
+import { toast } from '../../common/Toast';
+import ProBadge, { ProUpgradeButton } from '../../common/ProLock';
 
-const EmailSettings = () => {
+const VALID_TABS = [ 'general', 'sending', 'bounce', 'custom-fields' ];
+
+const EmailSettings = ( { onNavigate, initialTab } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
 	const [ settings, setSettings ] = useState( {} );
 	const [ customFields, setCustomFields ] = useState( [] );
 	const [ saving, setSaving ] = useState( false );
 	const [ success, setSuccess ] = useState( '' );
 
+	const getInitialTab = () => {
+		if ( initialTab && VALID_TABS.includes( initialTab ) ) {
+			return initialTab;
+		}
+		const hashParts = ( window.location.hash || '' ).replace( '#', '' ).split( '/' );
+		if ( hashParts[ 0 ] === 'settings' && VALID_TABS.includes( hashParts[ 1 ] ) ) {
+			return hashParts[ 1 ];
+		}
+		try {
+			const stored = localStorage.getItem( 'aime_email_settings_tab' );
+			if ( stored && VALID_TABS.includes( stored ) ) {
+				return stored;
+			}
+		} catch ( e ) { /* */ }
+		return 'general';
+	};
+
+	const [ activeTab, setActiveTab ] = useState( getInitialTab );
+
 	/* Sending & Tracking (from global plugin settings) */
 	const [ pluginSettings, setPluginSettings ] = useState( {} );
 	const [ savingPlugin, setSavingPlugin ] = useState( false );
 
-	/* Bounce & IMAP settings */
-	const [ imapSettings, setImapSettings ] = useState( {
-		enabled: false,
-		host: '',
-		port: 993,
-		encryption: 'ssl',
-		username: '',
-		password: '',
-		delete_after_process: true,
+	/* Deliverability & Bounce Health state */
+	const [ deliverability, setDeliverability ] = useState( {
+		is_pro: false,
+		imap_mailbox_count: 0,
+		cloud_esp_count: 0,
+		total_bounced: 0,
+		active_esp_names: [],
+		has_legacy_imap: false,
+		last_esp_sync: '',
+		preflight_mx_check: true,
+		auto_sync_esp: true,
+		imap_enabled: false,
+		imap_host: '',
+		imap_port: 993,
+		imap_encryption: 'ssl',
+		imap_username: '',
 	} );
-	const [ testingImap, setTestingImap ] = useState( false );
-	const [ imapTestNotice, setImapTestNotice ] = useState( null );
-	const [ savingImap, setSavingImap ] = useState( false );
+	const [ testingLegacyImap, setTestingLegacyImap ] = useState( false );
+	const [ legacyImapNotice, setLegacyImapNotice ] = useState( null );
+
+	/* Cloud ESP Sync state */
+	const [ syncingEsp, setSyncingEsp ] = useState( false );
+	const [ espSyncNotice, setEspSyncNotice ] = useState( null );
+	const [ lastEspSync, setLastEspSync ] = useState( '' );
 
 	/* Custom field modal */
 	const [ showCfModal, setShowCfModal ] = useState( false );
@@ -44,20 +78,24 @@ const EmailSettings = () => {
 
 	const fetchAll = useCallback( async () => {
 		try {
-			const [ s, cf, ps ] = await Promise.all( [
+			const [ s, cf, ps, deliv ] = await Promise.all( [
 				get( '/email/settings' ),
 				get( '/email/custom-fields' ),
 				get( '/settings' ),
+				get( '/email/deliverability/settings' ).catch( () => null ),
 			] );
 			setSettings( s || {} );
 			setCustomFields( cf.data || cf || [] );
-			setPluginSettings( ps.settings || {} );
-			if ( ps?.settings?.bounce_imap ) {
-				setImapSettings( ( prev ) => ( {
-					...prev,
-					...ps.settings.bounce_imap,
-					password: '',
-				} ) );
+			const pSettings = ps.settings || {};
+			if ( s?.custom_tracking_domain && ! pSettings.custom_tracking_domain ) {
+				pSettings.custom_tracking_domain = s.custom_tracking_domain;
+			}
+			setPluginSettings( pSettings );
+			if ( deliv ) {
+				setDeliverability( deliv );
+				if ( deliv.last_esp_sync ) {
+					setLastEspSync( deliv.last_esp_sync );
+				}
 			}
 		} catch ( e ) { /* */ }
 	}, [ get ] );
@@ -70,7 +108,7 @@ const EmailSettings = () => {
 		setSuccess( '' );
 		try {
 			await post( '/email/settings', settings );
-			setPluginSettings( ( prev ) => ( { ...prev, double_optin: !! settings.double_optin } ) );
+			setPluginSettings( ( prev ) => ( { ...prev, double_optin: !! settings.double_optin, custom_tracking_domain: settings.custom_tracking_domain } ) );
 			setSuccess( __( 'Settings saved.', 'ai-marketing-expert' ) );
 		} catch ( e ) { /* */ }
 		setSaving( false );
@@ -87,33 +125,69 @@ const EmailSettings = () => {
 		setSuccess( '' );
 		try {
 			await post( '/settings', pluginSettings );
-			setSettings( ( prev ) => ( { ...prev, double_optin: !! pluginSettings.double_optin } ) );
+			if ( pluginSettings.custom_tracking_domain !== undefined ) {
+				await post( '/email/settings', { custom_tracking_domain: pluginSettings.custom_tracking_domain } );
+			}
+			setSettings( ( prev ) => ( {
+				...prev,
+				double_optin: !! pluginSettings.double_optin,
+				custom_tracking_domain: pluginSettings.custom_tracking_domain,
+			} ) );
 			setSuccess( __( 'Sending & tracking settings saved.', 'ai-marketing-expert' ) );
 		} catch ( e ) { /* */ }
 		setSavingPlugin( false );
 	};
 
-	/* Bounce & IMAP handlers */
-	const handleTestImap = async () => {
-		setTestingImap( true );
-		setImapTestNotice( null );
+	/* Deliverability & Legacy IMAP test handler */
+	const handleTestLegacyImap = async () => {
+		setTestingLegacyImap( true );
+		setLegacyImapNotice( null );
 		try {
-			const res = await post( '/system/test-imap', imapSettings );
-			setImapTestNotice( { type: 'success', message: res.message || __( 'Connected to IMAP bounce mailbox successfully!', 'ai-marketing-expert' ) } );
+			const res = await post( '/email/deliverability/test-imap', {
+				host: deliverability.imap_host,
+				port: deliverability.imap_port,
+				encryption: deliverability.imap_encryption,
+				username: deliverability.imap_username,
+			} );
+			const msg = res?.message || ( res?.success ? __( 'Connected to legacy IMAP bounce mailbox successfully!', 'ai-marketing-expert' ) : __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' ) );
+			setLegacyImapNotice( {
+				type: res?.success ? 'success' : 'error',
+				message: msg,
+			} );
+			toast( msg, res?.success ? 'success' : 'error', 5000 );
 		} catch ( err ) {
-			setImapTestNotice( { type: 'error', message: err.message || __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' ) } );
+			const errMsg = err.message || __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' );
+			setLegacyImapNotice( {
+				type: 'error',
+				message: errMsg,
+			} );
+			toast( errMsg, 'error', 5000 );
 		}
-		setTestingImap( false );
+		setTestingLegacyImap( false );
 	};
 
-	const handleSaveImap = async () => {
-		setSavingImap( true );
-		setSuccess( '' );
+	/* Cloud ESP & Mailbox Multi-channel Sync handler */
+	const handleSyncEsp = async () => {
+		setSyncingEsp( true );
+		setEspSyncNotice( null );
 		try {
-			await post( '/settings', { bounce_imap: imapSettings } );
-			setSuccess( __( 'Bounce mailbox settings saved.', 'ai-marketing-expert' ) );
-		} catch ( err ) { /* */ }
-		setSavingImap( false );
+			const res = await post( '/email/deliverability/sync-esp' );
+			const msg = res?.message || __( 'Multi-channel deliverability sync completed successfully.', 'ai-marketing-expert' );
+			setEspSyncNotice( {
+				type: 'success',
+				message: msg,
+			} );
+			toast( msg, 'success', 6000 );
+			await fetchAll();
+		} catch ( err ) {
+			const errMsg = err?.message || __( 'Failed to synchronize with Cloud ESP APIs and mailboxes.', 'ai-marketing-expert' );
+			setEspSyncNotice( {
+				type: 'error',
+				message: errMsg,
+			} );
+			toast( errMsg, 'error', 6000 );
+		}
+		setSyncingEsp( false );
 	};
 
 	/* Custom fields */
@@ -165,7 +239,18 @@ const EmailSettings = () => {
 			<h2>{ __( 'Email Settings', 'ai-marketing-expert' ) }</h2>
 
 			<Card>
-				{ loading ? <Loader variant="form" /> : <TabPanel tabs={ TABS }>
+				{ loading ? <Loader variant="form" /> : (
+					<TabPanel
+						tabs={ TABS }
+						initialTabName={ activeTab }
+						onSelect={ ( tabName ) => {
+							setActiveTab( tabName );
+							try {
+								localStorage.setItem( 'aime_email_settings_tab', tabName );
+								window.location.hash = `settings/${ tabName }`;
+							} catch ( e ) { /* */ }
+						} }
+					>
 					{ ( tab ) => {
 						/* General */
 						if ( tab.name === 'general' ) {
@@ -238,26 +323,41 @@ const EmailSettings = () => {
 									</Card>
 
 									<Card title={ __( 'Tracking & Compliance', 'ai-marketing-expert' ) }>
-										<ToggleControl
-											label={ __( 'Track Opens', 'ai-marketing-expert' ) }
-											checked={ isEnabledByDefault( 'track_opens' ) }
-											onChange={ ( v ) => handlePluginChange( 'track_opens', v ) }
-										/>
-										<ToggleControl
-											label={ __( 'Track Clicks', 'ai-marketing-expert' ) }
-											checked={ isEnabledByDefault( 'track_clicks' ) }
-											onChange={ ( v ) => handlePluginChange( 'track_clicks', v ) }
-										/>
-										<ToggleControl
-											label={ __( 'Double Opt-In', 'ai-marketing-expert' ) }
-											checked={ !! pluginSettings.double_optin }
-											onChange={ ( v ) => handlePluginChange( 'double_optin', v ) }
-										/>
-										<ToggleControl
-											label={ __( 'GDPR Mode', 'ai-marketing-expert' ) }
-											checked={ !! pluginSettings.gdpr_enabled }
-											onChange={ ( v ) => handlePluginChange( 'gdpr_enabled', v ) }
-										/>
+										<div className="aime-toggle-stack" style={ { display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 } }>
+											<ToggleControl
+												label={ __( 'Track Opens', 'ai-marketing-expert' ) }
+												checked={ isEnabledByDefault( 'track_opens' ) }
+												onChange={ ( v ) => handlePluginChange( 'track_opens', v ) }
+											/>
+											<ToggleControl
+												label={ __( 'Track Clicks', 'ai-marketing-expert' ) }
+												checked={ isEnabledByDefault( 'track_clicks' ) }
+												onChange={ ( v ) => handlePluginChange( 'track_clicks', v ) }
+											/>
+											<ToggleControl
+												label={ __( 'Double Opt-In', 'ai-marketing-expert' ) }
+												checked={ !! pluginSettings.double_optin }
+												onChange={ ( v ) => handlePluginChange( 'double_optin', v ) }
+											/>
+											<ToggleControl
+												label={ __( 'GDPR Mode', 'ai-marketing-expert' ) }
+												checked={ !! pluginSettings.gdpr_enabled }
+												onChange={ ( v ) => handlePluginChange( 'gdpr_enabled', v ) }
+											/>
+										</div>
+										<div style={ { marginTop: 16 } }>
+											<TextControl
+												label={ __( 'Custom Tracking Domain (Branded CNAME)', 'ai-marketing-expert' ) }
+												value={ pluginSettings.custom_tracking_domain || settings.custom_tracking_domain || '' }
+												onChange={ ( v ) => {
+													handlePluginChange( 'custom_tracking_domain', v );
+													setSettings( ( prev ) => ( { ...prev, custom_tracking_domain: v } ) );
+												} }
+												placeholder="https://track.yourdomain.com"
+												help={ __( 'Optional branded tracking domain (e.g. https://track.yourdomain.com). Point a CNAME DNS record to this site to mask tracking URLs and maximize domain reputation.', 'ai-marketing-expert' ) }
+												__nextHasNoMarginBottom
+											/>
+										</div>
 									</Card>
 
 									<Button variant="primary" onClick={ handleSavePluginSettings } isBusy={ savingPlugin } disabled={ savingPlugin } style={ { marginTop: 16 } }>
@@ -272,146 +372,271 @@ const EmailSettings = () => {
 
 						/* Bounce & Deliverability */
 						if ( tab.name === 'bounce' ) {
+							const hasPro = Boolean( window.aimeData?.hasPro || deliverability?.is_pro );
+
 							return (
 								<div className="aime-settings-form">
-									<Card title={ __( 'Deliverability & Domain Protection', 'ai-marketing-expert' ) }>
+									{ /* Deliverability Health Overview */ }
+									<Card title={ __( 'Deliverability & Bounce Health Overview', 'ai-marketing-expert' ) }>
 										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
-											{ __( 'Automated mechanisms protect your sender score, domain reputation, and inbox delivery rates.', 'ai-marketing-expert' ) }
+											{ __( 'Multi-channel monitoring safeguards your sender reputation and domain health by proactively identifying hard bounces, invalid addresses, and spam complaints across all sending engines.', 'ai-marketing-expert' ) }
 										</p>
-										<div className="aime-cf-how-it-works">
-											<strong>{ __( 'Active Deliverability Guardrails:', 'ai-marketing-expert' ) }</strong>
-											<ul>
-												<li>
-													<strong>{ __( 'DNS MX Domain Validation:', 'ai-marketing-expert' ) }</strong>{ ' ' }
-													{ __( 'Recipient domains are checked for real DNS Mail Exchange (MX) records before dispatch to avoid sending to dead domains.', 'ai-marketing-expert' ) }
-												</li>
-												<li>
-													<strong>{ __( 'Instant 5xx Hard Bounce Detection:', 'ai-marketing-expert' ) }</strong>{ ' ' }
-													{ __( 'Permanent SMTP rejections (such as mailbox not found or invalid user) are flagged as bounced immediately, aborting retries to protect sender reputation.', 'ai-marketing-expert' ) }
-												</li>
-												<li>
-													<strong>{ __( 'ESP Webhook Listeners:', 'ai-marketing-expert' ) }</strong>{ ' ' }
-													{ __( 'Transactional providers (Amazon SES SNS, SendGrid, Mailgun, Postmark, Brevo) can post bounce and spam complaint notifications to your webhook endpoints in Settings → API & Webhooks.', 'ai-marketing-expert' ) }
-												</li>
-											</ul>
+
+										<div className="aime-usage-stats" style={ { marginBottom: 16, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--aime-border, #e2e8f0)' } }>
+											<div className="aime-usage-stat">
+												<span className="aime-usage-stat__value">{ deliverability.imap_mailbox_count || 0 }</span>
+												<span className="aime-usage-stat__label">
+													<strong>{ __( 'Active Mailbox Readers', 'ai-marketing-expert' ) }</strong>
+													<span className="aime-usage-stat__note">
+														{ hasPro
+															? __( 'Multi-Account Protected', 'ai-marketing-expert' )
+															: __( 'Primary Connection (Free Tier)', 'ai-marketing-expert' )
+														}
+													</span>
+												</span>
+											</div>
+
+											<div className="aime-usage-stat">
+												<span className="aime-usage-stat__value">{ deliverability.total_bounced ?? 0 }</span>
+												<span className="aime-usage-stat__label">
+													<strong>{ __( 'Quarantined Contacts', 'ai-marketing-expert' ) }</strong>
+													<span className="aime-usage-stat__note">{ __( 'Invalid addresses isolated', 'ai-marketing-expert' ) }</span>
+												</span>
+											</div>
+
+											<div className="aime-usage-stat">
+												<span className="aime-usage-stat__value" style={ { fontSize: hasPro ? 18 : 20, lineHeight: 1.6, color: '#16a34a' } }>
+													{ hasPro
+														? ( lastEspSync || deliverability.last_esp_sync || __( 'Pending First Scan', 'ai-marketing-expert' ) )
+														: ( ( deliverability.imap_mailbox_count > 0 ) ? __( 'Primary Shield Active', 'ai-marketing-expert' ) : __( '100% DNS Guard Active', 'ai-marketing-expert' ) )
+													}
+												</span>
+												<span className="aime-usage-stat__label">
+													<strong>{ hasPro ? __( 'Last Automated Scan', 'ai-marketing-expert' ) : __( 'Domain Shield Status', 'ai-marketing-expert' ) }</strong>
+													<span className="aime-usage-stat__note">
+														{ hasPro ? __( 'Daily WP-Cron / On-demand', 'ai-marketing-expert' ) : __( 'DNS MX + 5xx Protection', 'ai-marketing-expert' ) }
+													</span>
+												</span>
+											</div>
 										</div>
+
+										{ /* Clear Guidance & Status Banner based on Primary SMTP Mailbox state */ }
+										{ ! hasPro ? (
+											<div style={ { marginTop: 12 } }>
+												{ ( deliverability.imap_mailbox_count || 0 ) === 0 ? (
+													/* Warning: Mailbox reader not active yet */
+													<div style={ { padding: '14px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 } }>
+														<div style={ { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' } }>
+															<div style={ { flex: 1, minWidth: 260 } }>
+																<div style={ { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 } }>
+																	<span style={ { fontSize: 16 } }>⚠️</span>
+																	<strong style={ { fontSize: 13, color: '#92400e' } }>
+																		{ __( 'Action Required: Primary Bounce Mailbox Not Configured', 'ai-marketing-expert' ) }
+																	</strong>
+																</div>
+																<p style={ { fontSize: 12, color: '#78350f', margin: '0 0 8px', lineHeight: 1.5 } }>
+																	{ deliverability.primary_smtp_name
+																		? sprintf( __( 'Your primary SMTP connection ("%s") does not have Automatic Bounce Detection (IMAP) turned on. Returned delivery failure notices (NDRs) in your inbox cannot be auto-quarantined until enabled.', 'ai-marketing-expert' ), deliverability.primary_smtp_name )
+																		: __( 'You do not have an active SMTP connection configured for bounce detection. Returned delivery failure notices (NDRs) cannot be auto-quarantined until configured.', 'ai-marketing-expert' )
+																	}
+																</p>
+																<div style={ { fontSize: 12, color: '#92400e', background: 'rgba(254, 243, 199, 0.6)', padding: '6px 10px', borderRadius: 6 } }>
+																	<strong>{ __( 'Free vs Pro Coverage:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+																	{ __( 'Free tier monitors 1 Primary sending mailbox for free. Pro tier monitors ALL your secondary SMTP connections simultaneously plus Cloud ESP APIs.', 'ai-marketing-expert' ) }
+																</div>
+															</div>
+															<Button
+																variant="secondary"
+																onClick={ () => onNavigate ? onNavigate( 'smtp' ) : ( window.location.hash = '#smtp' ) }
+																style={ { background: '#ffffff', borderColor: '#f59e0b', color: '#92400e', fontWeight: 600, alignSelf: 'center' } }
+															>
+																{ __( 'Configure in SMTP Settings →', 'ai-marketing-expert' ) }
+															</Button>
+														</div>
+													</div>
+												) : (
+													/* Success: Primary mailbox reader active */
+													<div style={ { padding: '14px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 } }>
+														<div style={ { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' } }>
+															<div style={ { flex: 1, minWidth: 260 } }>
+																<div style={ { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 } }>
+																	<span style={ { color: '#16a34a', fontWeight: 'bold' } }>✓</span>
+																	<strong style={ { fontSize: 13, color: '#15803d' } }>
+																		{ __( 'Primary Sending Mailbox Protected (Free Tier)', 'ai-marketing-expert' ) }
+																	</strong>
+																</div>
+																<p style={ { fontSize: 12, color: '#166534', margin: '0 0 8px', lineHeight: 1.5 } }>
+																	{ deliverability.primary_smtp_name
+																		? sprintf( __( 'AI Marketing Expert is monitoring your primary inbox ("%s"). Delivery failure notices (NDRs) are scanned and bounced emails are quarantined automatically.', 'ai-marketing-expert' ), deliverability.primary_smtp_name )
+																		: __( 'AI Marketing Expert is actively monitoring your primary sending inbox for delivery failure notices (NDRs).', 'ai-marketing-expert' )
+																	}
+																</p>
+																<div style={ { fontSize: 12, color: '#166534', background: 'rgba(220, 252, 231, 0.6)', padding: '6px 10px', borderRadius: 6 } }>
+																	<strong>{ __( 'Pro Benefit:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+																	{ __( 'You are currently receiving bounce data from your 1 Primary SMTP connection. Upgrading to Pro unlocks automatic monitoring for ALL SMTP connections simultaneously + Cloud ESP suppression sync (Brevo, SendGrid, Mailgun).', 'ai-marketing-expert' ) }
+																</div>
+															</div>
+															<Button
+																variant="secondary"
+																onClick={ () => onNavigate ? onNavigate( 'smtp' ) : ( window.location.hash = '#smtp' ) }
+																style={ { alignSelf: 'center' } }
+															>
+																{ __( 'Manage in SMTP Settings →', 'ai-marketing-expert' ) }
+															</Button>
+														</div>
+													</div>
+												) }
+											</div>
+										) : (
+											/* Pro Tier Status */
+											<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '14px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #cbd5e1', marginTop: 12 } }>
+												<div>
+													<strong style={ { display: 'block', fontSize: 14, color: '#1e293b' } }>
+														🛡️ { __( 'Enterprise Multi-Connection Shield is active on your site.', 'ai-marketing-expert' ) }
+													</strong>
+													<span style={ { fontSize: 12, color: '#64748b' } }>
+														{ __( 'All your active SMTP connections and connected Cloud ESP suppression APIs are monitored concurrently for bounces and complaints.', 'ai-marketing-expert' ) }
+													</span>
+												</div>
+												<Button
+													variant="secondary"
+													onClick={ () => onNavigate ? onNavigate( 'smtp' ) : ( window.location.hash = '#smtp' ) }
+												>
+													{ __( 'Manage Connections in SMTP Settings →', 'ai-marketing-expert' ) }
+												</Button>
+											</div>
+										) }
 									</Card>
 
-									<Card title={ __( 'IMAP Bounce Mailbox Reader (For Standard SMTP / cPanel / Hostinger)', 'ai-marketing-expert' ) }>
-										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
-											{ __( 'When using custom SMTP (cPanel, Hostinger, Gmail, etc.), bounce notifications arrive as Non-Delivery Reports (NDRs) in your inbox. Configure your dedicated bounce email account below. AI Marketing Expert will periodically check this mailbox via IMAP, extract the failed email addresses, and automatically mark them as bounced.', 'ai-marketing-expert' ) }
-										</p>
-
-										<div style={ { marginBottom: 16 } }>
-											<ToggleControl
-												label={ __( 'Enable IMAP Bounce Checking', 'ai-marketing-expert' ) }
-												checked={ !! imapSettings.enabled }
-												onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, enabled: v } ) ) }
-												help={ __( 'Periodically inspect mailbox for bounce delivery status notifications.', 'ai-marketing-expert' ) }
-											/>
+									{ /* Multi-Account Shield & Cloud ESP Suppression Sync Card */ }
+									<Card>
+										<div style={ { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 } }>
+											<h3 style={ { margin: 0, fontSize: 16 } }>
+												{ __( 'Multi-Account Shield & Cloud ESP Suppression Sync', 'ai-marketing-expert' ) }
+											</h3>
+											{ ! hasPro && <ProBadge /> }
 										</div>
 
-										{ imapSettings.enabled && (
+										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
+											{ __( 'Synchronizes suppression feeds across Cloud ESP REST APIs (Brevo, SendGrid, Mailgun) and inspects multiple sending mailboxes simultaneously. Quarantines invalid addresses before your sender score drops.', 'ai-marketing-expert' ) }
+										</p>
+
+										{ hasPro ? (
 											<>
-												<div className="aime-form-grid aime-form-grid-2">
-													<TextControl
-														label={ __( 'IMAP Host', 'ai-marketing-expert' ) }
-														value={ imapSettings.host || '' }
-														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, host: v } ) ) }
-														placeholder="mail.yourdomain.com"
-														__nextHasNoMarginBottom
-													/>
-													<div className="aime-form-row">
-														<TextControl
-															label={ __( 'Port', 'ai-marketing-expert' ) }
-															type="number"
-															value={ imapSettings.port || 993 }
-															onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, port: parseInt( v ) || 993 } ) ) }
-															__nextHasNoMarginBottom
-														/>
-														<SelectControl
-															label={ __( 'Encryption', 'ai-marketing-expert' ) }
-															value={ imapSettings.encryption || 'ssl' }
-															options={ [
-																{ label: 'SSL / TLS (Port 993)', value: 'ssl' },
-																{ label: 'STARTTLS (Port 143)', value: 'tls' },
-																{ label: 'None (Insecure)', value: 'none' },
-															] }
-															onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, encryption: v } ) ) }
-														/>
+												<div style={ { padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, marginBottom: 16 } }>
+													<div style={ { display: 'flex', alignItems: 'center', gap: 8 } }>
+														<span style={ { color: '#16a34a', fontWeight: 'bold' } }>✓</span>
+														<span style={ { fontSize: 13, color: '#15803d', fontWeight: 500 } }>
+															{ __( 'Automated daily background scanning is active.', 'ai-marketing-expert' ) }
+														</span>
 													</div>
-													<TextControl
-														label={ __( 'Username / Email', 'ai-marketing-expert' ) }
-														value={ imapSettings.username || '' }
-														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, username: v } ) ) }
-														placeholder="bounce@yourdomain.com"
-														__nextHasNoMarginBottom
-													/>
-													<TextControl
-														label={ __( 'Password', 'ai-marketing-expert' ) }
-														type="password"
-														value={ imapSettings.password || '' }
-														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, password: v } ) ) }
-														help={ imapSettings.has_password ? __( 'Password is saved. Leave blank to keep existing password.', 'ai-marketing-expert' ) : '' }
-														placeholder={ imapSettings.has_password ? '••••••••••••' : '' }
-														__nextHasNoMarginBottom
-													/>
 												</div>
 
-												<div style={ { marginTop: 12, marginBottom: 16 } }>
-													<CheckboxControl
-														label={ __( 'Delete emails after processing', 'ai-marketing-expert' ) }
-														checked={ !! imapSettings.delete_after_process }
-														onChange={ ( v ) => setImapSettings( ( prev ) => ( { ...prev, delete_after_process: v } ) ) }
-														help={ __( 'Removes processed bounce messages from the mailbox to prevent inbox overflow.', 'ai-marketing-expert' ) }
-														__nextHasNoMarginBottom
-													/>
-												</div>
-
-												{ imapTestNotice && (
+												{ espSyncNotice && (
 													<div style={ { marginBottom: 16 } }>
-														<Notice type={ imapTestNotice.type } message={ imapTestNotice.message } dismissible onDismiss={ () => setImapTestNotice( null ) } />
+														<Notice type={ espSyncNotice.type } message={ espSyncNotice.message } dismissible onDismiss={ () => setEspSyncNotice( null ) } />
 													</div>
 												) }
 
-												<div className="aime-settings-btn-row" style={ { marginTop: 8 } }>
-													<Button
-														variant="secondary"
-														onClick={ handleTestImap }
-														isBusy={ testingImap }
-														disabled={ testingImap || ! imapSettings.host || ! imapSettings.username }
-													>
-														{ testingImap ? __( 'Testing Connection...', 'ai-marketing-expert' ) : __( 'Test IMAP Connection', 'ai-marketing-expert' ) }
-													</Button>
+												<div className="aime-settings-btn-row">
 													<Button
 														variant="primary"
-														onClick={ handleSaveImap }
-														isBusy={ savingImap }
-														disabled={ savingImap }
+														onClick={ handleSyncEsp }
+														isBusy={ syncingEsp }
+														disabled={ syncingEsp }
 													>
-														{ savingImap
-															? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
-															: __( 'Save Bounce Settings', 'ai-marketing-expert' )
-														}
+														{ syncingEsp ? __( 'Scanning & Quarantining Bounces...', 'ai-marketing-expert' ) : __( 'Scan & Quarantine Bounces Now', 'ai-marketing-expert' ) }
 													</Button>
 												</div>
 											</>
+										) : (
+											<div style={ { padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 } }>
+												<div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, marginBottom: 16 } }>
+													<div style={ { background: '#ffffff', padding: '12px 14px', borderRadius: 6, border: '1px solid #e2e8f0' } }>
+														<span style={ { fontWeight: 700, fontSize: 12, color: '#166534', display: 'block', marginBottom: 6 } }>
+															{ __( 'FREE TIER (CURRENT PLAN)', 'ai-marketing-expert' ) }
+														</span>
+														<ul style={ { margin: 0, paddingLeft: 18, fontSize: 12, color: '#475569', lineHeight: 1.6 } }>
+															<li>{ __( '1 Primary SMTP Mailbox Protected', 'ai-marketing-expert' ) }</li>
+															<li>{ __( 'DNS MX Pre-flight Guard on campaigns', 'ai-marketing-expert' ) }</li>
+															<li>{ __( 'Instant 5xx hard bounce isolation', 'ai-marketing-expert' ) }</li>
+														</ul>
+													</div>
+													<div style={ { background: '#faf5ff', padding: '12px 14px', borderRadius: 6, border: '1px solid #e9d5ff' } }>
+														<span style={ { fontWeight: 700, fontSize: 12, color: '#6b21a8', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 } }>
+															<span>⚡ { __( 'PRO TIER (ADVANCED SHIELD)', 'ai-marketing-expert' ) }</span>
+															<ProBadge />
+														</span>
+														<ul style={ { margin: 0, paddingLeft: 18, fontSize: 12, color: '#581c87', lineHeight: 1.6 } }>
+															<li>{ __( 'Monitor ALL SMTP connections simultaneously', 'ai-marketing-expert' ) }</li>
+															<li>{ __( 'Cloud ESP API Sync (Brevo, SendGrid, Mailgun)', 'ai-marketing-expert' ) }</li>
+															<li>{ __( 'On-demand "Scan & Quarantine Now" button', 'ai-marketing-expert' ) }</li>
+														</ul>
+													</div>
+												</div>
+												<ProUpgradeButton>
+													{ __( 'Upgrade to Pro for Multi-Account & Cloud Sync →', 'ai-marketing-expert' ) }
+												</ProUpgradeButton>
+											</div>
 										) }
+									</Card>
 
-										{ ! imapSettings.enabled && (
-											<Button
-												variant="primary"
-												onClick={ handleSaveImap }
-												isBusy={ savingImap }
-												disabled={ savingImap }
-												style={ { marginTop: 8 } }
-											>
-												{ savingImap
-													? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
-													: __( 'Save Settings', 'ai-marketing-expert' )
-												}
-											</Button>
-										) }
+									{ /* Backward Compatibility Card (if legacy global IMAP settings detected) */ }
+									{ deliverability.has_legacy_imap && (
+										<Card title={ __( 'Legacy Global Bounce Mailbox (Active)', 'ai-marketing-expert' ) }>
+											<div style={ { padding: '12px 16px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 8, marginBottom: 16 } }>
+												<p style={ { margin: 0, fontSize: 13, color: '#92400e' } }>
+													<strong>{ __( 'Backward Compatibility Active:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'A legacy global bounce mailbox was detected on this site (', 'ai-marketing-expert' ) }
+													<code>{ deliverability.imap_username || deliverability.imap_host }</code>
+													{ __( '). AI Marketing Expert will continue monitoring this mailbox automatically so you never lose data. You can also configure dedicated bounce mailboxes per connection in SMTP Settings.', 'ai-marketing-expert' ) }
+												</p>
+											</div>
+
+											{ legacyImapNotice && (
+												<div style={ { marginBottom: 16 } }>
+													<Notice type={ legacyImapNotice.type } message={ legacyImapNotice.message } dismissible onDismiss={ () => setLegacyImapNotice( null ) } />
+												</div>
+											) }
+
+											{ hasPro && (
+												<Button
+													variant="secondary"
+													onClick={ handleTestLegacyImap }
+													isBusy={ testingLegacyImap }
+													disabled={ testingLegacyImap }
+												>
+													{ testingLegacyImap ? __( 'Testing Legacy Mailbox...', 'ai-marketing-expert' ) : __( 'Test Legacy Mailbox Connection', 'ai-marketing-expert' ) }
+												</Button>
+											) }
+										</Card>
+									) }
+
+									{ /* Active Deliverability Guardrails */ }
+									<Card title={ __( 'Active Deliverability Guardrails', 'ai-marketing-expert' ) }>
+										<p className="aime-card-description" style={ { margin: '0 0 16px' } }>
+											{ __( 'The following automated defenses run on every campaign to preserve sender domain reputation and prevent spam folder landing.', 'ai-marketing-expert' ) }
+										</p>
+										<div className="aime-cf-how-it-works">
+											<ul>
+												<li>
+													<strong>{ __( 'DNS MX Pre-flight Guard:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Validates DNS Mail Exchange records for recipient domains before sending. Dead domains and typos are filtered before dispatch to protect your IP.', 'ai-marketing-expert' ) }
+												</li>
+												<li>
+													<strong>{ __( 'Instant 5xx Hard Bounce Isolation:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Permanent SMTP failure codes (such as 550 User Unknown or 554 Rejected) immediately mark contacts as bounced to prevent repeated delivery strikes.', 'ai-marketing-expert' ) }
+												</li>
+												<li>
+													<strong>{ __( 'Branded CNAME Tracking Domain:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Tracking links can be signed with your custom branded domain under "Sending & Tracking" tab to align SPF/DKIM with click tracking URLs.', 'ai-marketing-expert' ) }
+												</li>
+												<li>
+													<strong>{ __( 'ESP Webhook & Event Listeners:', 'ai-marketing-expert' ) }</strong>{ ' ' }
+													{ __( 'Real-time webhook endpoints receive immediate bounce and spam complaint notifications from Amazon SES, SendGrid, Mailgun, Postmark, and Brevo.', 'ai-marketing-expert' ) }
+												</li>
+											</ul>
+										</div>
 									</Card>
 								</div>
 							);
@@ -519,7 +744,7 @@ const EmailSettings = () => {
 						/* Default fallback */
 						return null;
 					} }
-				</TabPanel> }
+				</TabPanel> ) }
 			</Card>
 		</div>
 	);

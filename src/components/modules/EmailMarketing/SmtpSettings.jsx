@@ -10,17 +10,19 @@ import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
+	CheckboxControl,
 	TextControl,
 	SelectControl,
 	ToggleControl,
 	Modal,
 	Spinner,
 } from '@aime/wp-components';
+import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import useApi from '../../../hooks/useApi';
-import { isProActive, ProLabel } from '../../common/ProLock';
+import { isProActive, ProLabel, openProUpgrade } from '../../common/ProLock';
+import ProBadge from '../../Layout/ProBadge';
 import { formatDateTime } from '../../../utils/datetime';
 
 const providerIconTypes = {
@@ -132,6 +134,15 @@ const emptyForm = {
 	sending_limit:   90,
 	is_primary:      false,
 	enabled:         true,
+	bounce_imap: {
+		enabled: false,
+		host: '',
+		port: 993,
+		encryption: 'ssl',
+		username: '',
+		password: '',
+		delete_after_process: true,
+	},
 };
 
 const SmtpSettings = () => {
@@ -142,6 +153,7 @@ const SmtpSettings = () => {
 	const [ connections, setConnections ]   = useState( [] );
 	const [ siteMailEnabled, setSiteMailEnabled ] = useState( true );
 	const [ showSiteMailOption, setShowSiteMailOption ] = useState( false );
+	const [ detectedSmtpPlugins, setDetectedSmtpPlugins ] = useState( [] );
 	const [ fetching, setFetching ]         = useState( true );
 	const [ notice, setNotice ]             = useState( null );
 	const [ modalErrors, setModalErrors ]   = useState( {} );
@@ -162,8 +174,19 @@ const SmtpSettings = () => {
 	const [ clearingErrorLogs, setClearingErrorLogs ] = useState( false );
 	const [ globalFromName, setGlobalFromName ] = useState( '' );
 	const [ globalFromEmail, setGlobalFromEmail ] = useState( '' );
+	const [ testingImapModal, setTestingImapModal ] = useState( false );
+	const [ imapModalNotice, setImapModalNotice ] = useState( null );
+	const [ useCustomImapCredentials, setUseCustomImapCredentials ] = useState( false );
 
 	const providers = window.aimeData?.smtpProviders || {};
+	const providerEntries = useMemo( () => {
+		const entries = Object.entries( providers );
+		return entries.sort( ( [ aId ], [ bId ] ) => {
+			if ( aId === 'wp_mail' ) return 1;
+			if ( bId === 'wp_mail' ) return -1;
+			return 0;
+		} );
+	}, [ providers ] );
 	const countedSmtpConnections = connections.filter( ( conn ) => conn.provider !== 'wp_mail' ).length;
 	const smtpLimitReached = ! hasPro && countedSmtpConnections >= freeSmtpLimit;
 	const outlookSmtpHosts = {
@@ -190,8 +213,9 @@ const SmtpSettings = () => {
 				get( '/email/settings' ),
 			] );
 			setConnections( connectionRes || [] );
-			setSiteMailEnabled( siteMailRes?.enabled !== false );
+			setSiteMailEnabled( siteMailRes?.enabled === true );
 			setShowSiteMailOption( !! siteMailRes?.show_option );
+			setDetectedSmtpPlugins( Array.isArray( siteMailRes?.detected_smtp_plugins ) ? siteMailRes.detected_smtp_plugins : [] );
 			setSmtpErrorLogs( Array.isArray( errorLogRes?.logs ) ? errorLogRes.logs : [] );
 			setSmtpErrorLogLimit( errorLogRes?.limit || 50 );
 			setGlobalFromName( emailSettingsRes?.from_name || '' );
@@ -220,6 +244,8 @@ const SmtpSettings = () => {
 		} );
 		setNameManuallyEdited( false );
 		setModalErrors( {} );
+		setImapModalNotice( null );
+		setUseCustomImapCredentials( false );
 		setShowModal( true );
 	};
 
@@ -239,10 +265,66 @@ const SmtpSettings = () => {
 			sending_limit:   conn.sending_limit || 90,
 			is_primary:      !! conn.is_primary,
 			enabled:         conn.enabled !== false,
+			bounce_imap:     conn.bounce_imap ? {
+				enabled:              !! conn.bounce_imap.enabled,
+				host:                 conn.bounce_imap.host || '',
+				port:                 conn.bounce_imap.port || 993,
+				encryption:           conn.bounce_imap.encryption || 'ssl',
+				username:             conn.bounce_imap.username || '',
+				password:             conn.bounce_imap.has_password ? PASSWORD_MASK : '',
+				delete_after_process: conn.bounce_imap.delete_after_process !== false,
+			} : {
+				enabled:              false,
+				host:                 '',
+				port:                 993,
+				encryption:           'ssl',
+				username:             '',
+				password:             '',
+				delete_after_process: true,
+			},
 		} );
 		setNameManuallyEdited( true );
 		setModalErrors( {} );
+		setImapModalNotice( null );
+		const hasCustomImap = !! (
+			conn.provider === 'custom' &&
+			conn.bounce_imap?.enabled &&
+			(
+				( conn.bounce_imap.host && conn.bounce_imap.host !== conn.smtp_host ) ||
+				( conn.bounce_imap.username && conn.bounce_imap.username !== conn.smtp_username )
+			)
+		);
+		setUseCustomImapCredentials( hasCustomImap );
 		setShowModal( true );
+	};
+
+	const getImapDefaults = ( provider, currentForm ) => {
+		if ( provider === 'gmail' ) {
+			return {
+				host: 'imap.gmail.com',
+				port: 993,
+				encryption: 'ssl',
+				username: currentForm.smtp_username || currentForm.from_email || '',
+			};
+		}
+		if ( provider === 'outlook' ) {
+			return {
+				host: currentForm.smtp_account_type === 'business' ? 'outlook.office365.com' : 'imap-mail.outlook.com',
+				port: 993,
+				encryption: 'ssl',
+				username: currentForm.smtp_username || currentForm.from_email || '',
+			};
+		}
+		if ( provider === 'custom' ) {
+			const domain = ( currentForm.from_email || '' ).split( '@' )[ 1 ] || '';
+			return {
+				host: currentForm.smtp_host || ( domain ? `mail.${ domain }` : '' ),
+				port: 993,
+				encryption: 'ssl',
+				username: currentForm.smtp_username || currentForm.from_email || '',
+			};
+		}
+		return { host: '', port: 993, encryption: 'ssl', username: '' };
 	};
 
 	const closeModal = () => {
@@ -250,6 +332,40 @@ const SmtpSettings = () => {
 		setEditId( null );
 		setNameManuallyEdited( false );
 		setModalErrors( {} );
+		setImapModalNotice( null );
+		setUseCustomImapCredentials( false );
+	};
+
+	const handleTestModalImap = async () => {
+		setTestingImapModal( true );
+		setImapModalNotice( null );
+		try {
+			const defaults = getImapDefaults( form.provider, form );
+			const imap = form.bounce_imap || {};
+			const host = ( form.provider === 'custom' && useCustomImapCredentials ? imap.host : null ) || defaults.host || form.smtp_host;
+			const username = ( form.provider === 'custom' && useCustomImapCredentials ? imap.username : null ) || defaults.username || form.smtp_username;
+			const password = ( form.provider === 'custom' && useCustomImapCredentials ? imap.password : null ) || imap.password || form.smtp_password;
+
+			const payload = {
+				connection_id: editId || null,
+				host: host,
+				port: ( form.provider === 'custom' && useCustomImapCredentials ? imap.port : null ) || defaults.port || 993,
+				encryption: ( form.provider === 'custom' && useCustomImapCredentials ? imap.encryption : null ) || defaults.encryption || 'ssl',
+				username: username,
+				password: password,
+			};
+			const res = await post( '/email/deliverability/test-imap', payload );
+			setImapModalNotice( {
+				type: res?.success ? 'success' : 'error',
+				message: res?.message || ( res?.success ? __( 'Connected to IMAP bounce mailbox successfully!', 'ai-marketing-expert' ) : __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' ) ),
+			} );
+		} catch ( err ) {
+			setImapModalNotice( {
+				type: 'error',
+				message: err.message || __( 'Failed to connect to IMAP server.', 'ai-marketing-expert' ),
+			} );
+		}
+		setTestingImapModal( false );
 	};
 
 	const getDefaultConnectionName = ( providerId ) => {
@@ -316,6 +432,32 @@ const SmtpSettings = () => {
 			const payload = { ...form };
 			if ( editId ) {
 				payload.id = editId;
+			}
+			if ( payload.bounce_imap?.enabled ) {
+				const defaults = getImapDefaults( payload.provider, payload );
+				if ( payload.provider === 'gmail' || payload.provider === 'outlook' ) {
+					payload.bounce_imap = {
+						...payload.bounce_imap,
+						host: defaults.host,
+						port: defaults.port || 993,
+						encryption: defaults.encryption || 'ssl',
+						username: defaults.username || payload.smtp_username || payload.from_email || '',
+						password: payload.bounce_imap?.password || payload.smtp_password || '',
+						delete_after_process: payload.bounce_imap?.delete_after_process !== false,
+					};
+				} else if ( payload.provider === 'custom' ) {
+					if ( ! useCustomImapCredentials ) {
+						payload.bounce_imap = {
+							...payload.bounce_imap,
+							host: payload.smtp_host || defaults.host,
+							port: 993,
+							encryption: 'ssl',
+							username: payload.smtp_username || defaults.username || payload.from_email || '',
+							password: payload.bounce_imap?.password || payload.smtp_password || '',
+							delete_after_process: payload.bounce_imap?.delete_after_process !== false,
+						};
+					}
+				}
 			}
 			const res = await post( '/email/smtp', payload );
 			const returnedConnections = Array.isArray( res.connections ) ? res.connections : null;
@@ -430,8 +572,9 @@ const SmtpSettings = () => {
 		setSavingSiteMail( true );
 		try {
 			const res = await post( '/email/smtp/site-mail', { enabled: nextValue } );
-			setSiteMailEnabled( res.enabled !== false );
-			setShowSiteMailOption( !! res.show_option );
+			setSiteMailEnabled( res?.enabled === true );
+			setShowSiteMailOption( !! res?.show_option );
+			setDetectedSmtpPlugins( Array.isArray( res?.detected_smtp_plugins ) ? res.detected_smtp_plugins : [] );
 			setNotice( {
 				type: 'success',
 				message: res.message || __( 'SMTP site email setting updated.', 'ai-marketing-expert' ),
@@ -548,9 +691,22 @@ const SmtpSettings = () => {
 				<Card>
 					<div className="aime-smtp-site-mail-setting" style={ { display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' } }>
 						<div>
-							<h3 style={ { margin: '0 0 6px' } }>{ __( 'Use AI Marketing Expert SMTP for all site emails', 'ai-marketing-expert' ) }</h3>
+							<div style={ { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' } }>
+								<h3 style={ { margin: 0 } }>{ __( 'Use AI Marketing Expert SMTP for all site emails', 'ai-marketing-expert' ) }</h3>
+								{ detectedSmtpPlugins.length > 0 && (
+									<span className="aime-badge" style={ { background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', fontSize: 11, fontWeight: 600 } }>
+										{ sprintf( __( 'Detected: %s', 'ai-marketing-expert' ), detectedSmtpPlugins.map( ( p ) => p.name ).join( ', ' ) ) }
+									</span>
+								) }
+							</div>
 							<p className="aime-card-description" style={ { margin: 0 } }>
-								{ __( 'Another SMTP plugin is active. Turn this off if that plugin should handle WooCommerce, contact forms, and other site emails. Campaigns and automations from this plugin will still use the SMTP connections below.', 'ai-marketing-expert' ) }
+								{ detectedSmtpPlugins.length > 0
+									? sprintf(
+										__( 'Another SMTP plugin (%s) is active. This option is disabled by default so that plugin manages your WooCommerce, contact forms, and WordPress site emails. AI Marketing Expert will only send its own marketing campaigns and automations.', 'ai-marketing-expert' ),
+										detectedSmtpPlugins.map( ( p ) => p.name ).join( ', ' )
+									)
+									: __( 'When enabled, outgoing emails across your WordPress site (WooCommerce notifications, contact forms, password resets) are routed through your primary SMTP connection below.', 'ai-marketing-expert' )
+								}
 							</p>
 						</div>
 						<ToggleControl
@@ -628,13 +784,22 @@ const SmtpSettings = () => {
 									{ ! conn.enabled && (
 										<span className="aime-badge aime-badge-disabled">{ __( 'Disabled', 'ai-marketing-expert' ) }</span>
 									) }
+									{ conn.bounce_imap?.enabled && (
+										<span className="aime-badge" style={ { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: 11, fontWeight: 600 } }>
+											{ __( 'IMAP Bounce ON', 'ai-marketing-expert' ) }
+										</span>
+									) }
 								</div>
 							</div>
 
 							<div className="aime-smtp-card-meta">
 								{ conn.provider !== 'wp_mail' && <span>{ conn.smtp_host || p.host || '-' }:{ conn.smtp_port || p.port || 587 }</span> }
 								{ conn.provider !== 'wp_mail' && <span>{ ( conn.smtp_encryption || 'tls' ).toUpperCase() }</span> }
-								<span>{ sprintf( __( '%1$d / %2$d sent', 'ai-marketing-expert' ), conn.sent_last_24h || 0, conn.sending_limit || 90 ) }</span>
+								{ conn.provider === 'wp_mail' ? (
+									<span>{ __( 'Server Managed (Unlimited)', 'ai-marketing-expert' ) }</span>
+								) : (
+									<span>{ sprintf( __( '%1$d / %2$d sent', 'ai-marketing-expert' ), conn.sent_last_24h || 0, conn.sending_limit || 90 ) }</span>
+								) }
 								{ conn.from_email && <span>{ conn.from_email }</span> }
 							</div>
 
@@ -875,7 +1040,7 @@ const SmtpSettings = () => {
 								{ __( 'Select Provider', 'ai-marketing-expert' ) }
 							</label>
 							<div className="aime-smtp-providers-grid">
-								{ Object.entries( providers ).map( ( [ id, prov ] ) => (
+								{ providerEntries.map( ( [ id, prov ] ) => (
 									<button
 										key={ id }
 										type="button"
@@ -1024,15 +1189,17 @@ const SmtpSettings = () => {
 							<p className="aime-card-description" style={ { margin: '0 0 12px' } }>
 								{ __( 'Each SMTP connection can have its own sender identity. Set these to match your SMTP account to ensure successful delivery.', 'ai-marketing-expert' ) }
 							</p>
-							<TextControl
-								label={ __( 'Sending Limit', 'ai-marketing-expert' ) }
-								type="number"
-								min="1"
-								value={ form.sending_limit }
-								onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, sending_limit: parseInt( v ) || 90 } ) ) }
-								help={ __( 'Maximum emails this connection can send in 24 hours. When reached, sending uses the next fallback connection.', 'ai-marketing-expert' ) }
-								__nextHasNoMarginBottom
-							/>
+							{ form.provider !== 'wp_mail' && (
+								<TextControl
+									label={ __( 'Sending Limit', 'ai-marketing-expert' ) }
+									type="number"
+									min="1"
+									value={ form.sending_limit }
+									onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, sending_limit: parseInt( v ) || 90 } ) ) }
+									help={ __( 'Maximum emails this connection can send in 24 hours. When reached, sending uses the next fallback connection.', 'ai-marketing-expert' ) }
+									__nextHasNoMarginBottom
+								/>
+							) }
 							<div className="aime-form-row" style={ { marginTop: 12 } }>
 								<TextControl
 									label={ __( 'From Name', 'ai-marketing-expert' ) }
@@ -1062,6 +1229,270 @@ const SmtpSettings = () => {
 								help={ __( 'The primary connection is used first. Other enabled connections act as fallbacks.', 'ai-marketing-expert' ) }
 							/>
 						</div>
+
+						{ /* Bounce & Deliverability Section for this Connection */ }
+						{ [ 'gmail', 'outlook', 'custom' ].includes( form.provider ) && ( () => {
+							const isPrimaryConn = form.is_primary || connections.length <= 1 || ( editId && connections.some( ( c ) => c.id === editId && c.is_primary ) );
+							const canConfigureImap = hasPro || isPrimaryConn;
+
+							if ( ! canConfigureImap ) {
+								return (
+									<div style={ { marginTop: 16, padding: '14px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 } }>
+										<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } }>
+											<div style={ { fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 } }>
+												<span>📥 { __( 'Automatic Bounce Detection (IMAP)', 'ai-marketing-expert' ) }</span>
+												<ProBadge />
+											</div>
+											<button
+												type="button"
+												onClick={ openProUpgrade }
+												style={ { background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 600, color: '#4f46e5', cursor: 'pointer' } }
+											>
+												{ __( 'Unlock in Pro →', 'ai-marketing-expert' ) }
+											</button>
+										</div>
+										<p style={ { fontSize: 12, color: '#64748b', margin: 0 } }>
+											{ __( 'Multi-Mailbox Shield (Pro): Your primary sending mailbox is protected for free. Upgrade to Pro to monitor multiple sending mailboxes simultaneously.', 'ai-marketing-expert' ) }
+										</p>
+									</div>
+								);
+							}
+
+							return (
+								<div style={ { marginTop: 16, padding: '14px 16px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8 } }>
+									<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.bounce_imap?.enabled ? 12 : 0 } }>
+										<div style={ { fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 } }>
+											<span>📥 { __( 'Automatic Bounce Detection (IMAP)', 'ai-marketing-expert' ) }</span>
+											{ hasPro ? (
+												<span style={ { background: '#ecfdf5', color: '#065f46', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 } }>
+													PRO ACTIVE
+												</span>
+											) : (
+												<span style={ { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 } }>
+													FREE PRIMARY SHIELD
+												</span>
+											) }
+										</div>
+										<ToggleControl
+											label=""
+											checked={ !! form.bounce_imap?.enabled }
+											onChange={ ( v ) => {
+												const defaults = getImapDefaults( form.provider, form );
+												setForm( ( prev ) => ( {
+													...prev,
+													bounce_imap: {
+														...( prev.bounce_imap || {} ),
+														enabled: v,
+														host: prev.bounce_imap?.host || defaults.host || '',
+														port: prev.bounce_imap?.port || defaults.port || 993,
+														encryption: prev.bounce_imap?.encryption || defaults.encryption || 'ssl',
+														username: prev.bounce_imap?.username || defaults.username || prev.smtp_username || '',
+														password: prev.bounce_imap?.password || ( ( [ 'gmail', 'outlook' ].includes( prev.provider ) && prev.smtp_password ) ? prev.smtp_password : '' ),
+														delete_after_process: prev.bounce_imap?.delete_after_process !== false,
+													},
+												} ) );
+											} }
+											__nextHasNoMarginBottom
+										/>
+									</div>
+									{ form.bounce_imap?.enabled && (
+										<div style={ { borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 10 } }>
+											{ ( form.provider === 'gmail' || form.provider === 'outlook' ) ? (
+												/* ZERO-CONFIGURATION STATUS CARD FOR GMAIL & OUTLOOK */
+												<div style={ { background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: 8, padding: '14px 16px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' } }>
+													<div style={ { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 } }>
+														<span style={ { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: '#dcfce7', color: '#15803d', fontSize: 13, fontWeight: 700 } }>
+															✓
+														</span>
+														<span style={ { fontWeight: 600, fontSize: 13, color: '#166534' } }>
+															{ form.provider === 'gmail'
+																? __( 'Zero-Configuration Active for Gmail', 'ai-marketing-expert' )
+																: __( 'Zero-Configuration Active for Outlook', 'ai-marketing-expert' ) }
+														</span>
+													</div>
+													<p style={ { fontSize: 12, color: '#475569', margin: '0 0 12px', lineHeight: 1.5 } }>
+														{ form.provider === 'gmail'
+															? __( 'No extra setup required. AI Marketing Expert will automatically monitor this Gmail inbox using your App Password to detect bounce notices (NDRs) and quarantine invalid emails.', 'ai-marketing-expert' )
+															: __( 'No extra setup required. AI Marketing Expert will automatically monitor this Outlook inbox using your credentials to detect bounce notices (NDRs) and quarantine invalid emails.', 'ai-marketing-expert' ) }
+													</p>
+
+													<div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 8, background: '#f8fafc', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 } }>
+														<div>
+															<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'Mailbox / User', 'ai-marketing-expert' ) }</span>
+															<strong style={ { color: '#1e293b', wordBreak: 'break-all' } }>{ form.smtp_username || form.from_email || __( '(Set in SMTP above)', 'ai-marketing-expert' ) }</strong>
+														</div>
+														<div>
+															<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'IMAP Server & Port', 'ai-marketing-expert' ) }</span>
+															<strong style={ { color: '#1e293b' } }>
+																{ form.provider === 'gmail' ? 'imap.gmail.com:993 (SSL)' : ( form.smtp_account_type === 'business' ? 'outlook.office365.com:993 (SSL)' : 'imap-mail.outlook.com:993 (SSL)' ) }
+															</strong>
+														</div>
+														<div>
+															<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'Credentials', 'ai-marketing-expert' ) }</span>
+															<strong style={ { color: '#15803d' } }>{ __( 'Auto-Inherited from SMTP', 'ai-marketing-expert' ) }</strong>
+														</div>
+													</div>
+
+													{ imapModalNotice && (
+														<div style={ { marginTop: 12 } }>
+															<Notice type={ imapModalNotice.type } message={ imapModalNotice.message } dismissible onDismiss={ () => setImapModalNotice( null ) } />
+														</div>
+													) }
+
+													<div style={ { marginTop: 12, display: 'flex', justifyContent: 'flex-end' } }>
+														<Button
+															variant="secondary"
+															isSmall
+															onClick={ handleTestModalImap }
+															isBusy={ testingImapModal }
+															disabled={ testingImapModal || ! ( form.smtp_username || form.from_email ) }
+														>
+															{ testingImapModal ? __( 'Testing IMAP...', 'ai-marketing-expert' ) : __( 'Test IMAP Mailbox Connection', 'ai-marketing-expert' ) }
+														</Button>
+													</div>
+												</div>
+											) : (
+												/* CUSTOM SMTP PROVIDER */
+												<div>
+													<div style={ { marginBottom: 12 } }>
+														<CheckboxControl
+															label={ __( 'Use dedicated bounce mailbox credentials (optional)', 'ai-marketing-expert' ) }
+															help={ __( 'By default, your SMTP server and credentials above are used. Check this only if you want to use a separate mailbox (e.g. bounce@yourdomain.com).', 'ai-marketing-expert' ) }
+															checked={ useCustomImapCredentials }
+															onChange={ ( v ) => setUseCustomImapCredentials( v ) }
+														/>
+													</div>
+
+													{ ! useCustomImapCredentials ? (
+														<div style={ { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '12px 14px' } }>
+															<p style={ { fontSize: 12, color: '#475569', margin: '0 0 10px', lineHeight: 1.5 } }>
+																{ __( 'AI Marketing Expert will connect to your domain’s mail server using your existing SMTP login to monitor bounces.', 'ai-marketing-expert' ) }
+															</p>
+															<div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 8, background: '#f8fafc', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 } }>
+																<div>
+																	<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'Mailbox / User', 'ai-marketing-expert' ) }</span>
+																	<strong style={ { color: '#1e293b', wordBreak: 'break-all' } }>{ form.smtp_username || form.from_email || __( '(Set in SMTP above)', 'ai-marketing-expert' ) }</strong>
+																</div>
+																<div>
+																	<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'IMAP Server & Port', 'ai-marketing-expert' ) }</span>
+																	<strong style={ { color: '#1e293b' } }>
+																		{ ( form.smtp_host || 'mail.' + ( ( form.from_email || '' ).split( '@' )[ 1 ] || 'domain.com' ) ) + ':993 (SSL)' }
+																	</strong>
+																</div>
+																<div>
+																	<span style={ { color: '#64748b', fontSize: 11, display: 'block' } }>{ __( 'Credentials', 'ai-marketing-expert' ) }</span>
+																	<strong style={ { color: '#15803d' } }>{ __( 'Auto-Inherited from SMTP', 'ai-marketing-expert' ) }</strong>
+																</div>
+															</div>
+
+															{ imapModalNotice && (
+																<div style={ { marginTop: 12 } }>
+																	<Notice type={ imapModalNotice.type } message={ imapModalNotice.message } dismissible onDismiss={ () => setImapModalNotice( null ) } />
+																</div>
+															) }
+
+															<div style={ { marginTop: 12, display: 'flex', justifyContent: 'flex-end' } }>
+																<Button
+																	variant="secondary"
+																	isSmall
+																	onClick={ handleTestModalImap }
+																	isBusy={ testingImapModal }
+																	disabled={ testingImapModal || ! ( form.smtp_host || form.smtp_username ) }
+																>
+																	{ testingImapModal ? __( 'Testing IMAP...', 'ai-marketing-expert' ) : __( 'Test IMAP Mailbox Connection', 'ai-marketing-expert' ) }
+																</Button>
+															</div>
+														</div>
+													) : (
+														<div>
+															<div className="aime-form-row">
+																<TextControl
+																	label={ __( 'IMAP Host', 'ai-marketing-expert' ) }
+																	value={ form.bounce_imap?.host || '' }
+																	onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, bounce_imap: { ...prev.bounce_imap, host: v } } ) ) }
+																	placeholder="imap.yourdomain.com"
+																	__nextHasNoMarginBottom
+																/>
+																<div style={ { display: 'flex', gap: 8 } }>
+																	<TextControl
+																		label={ __( 'Port', 'ai-marketing-expert' ) }
+																		type="number"
+																		value={ form.bounce_imap?.port || 993 }
+																		onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, bounce_imap: { ...prev.bounce_imap, port: parseInt( v ) || 993 } } ) ) }
+																		style={ { width: 90 } }
+																		__nextHasNoMarginBottom
+																	/>
+																	<SelectControl
+																		label={ __( 'Security', 'ai-marketing-expert' ) }
+																		value={ form.bounce_imap?.encryption || 'ssl' }
+																		options={ [
+																			{ label: 'SSL/TLS (993)', value: 'ssl' },
+																			{ label: 'STARTTLS (143)', value: 'tls' },
+																		] }
+																		onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, bounce_imap: { ...prev.bounce_imap, encryption: v } } ) ) }
+																		__nextHasNoMarginBottom
+																	/>
+																</div>
+															</div>
+															<div className="aime-form-row" style={ { marginTop: 10 } }>
+																<TextControl
+																	label={ __( 'IMAP Username', 'ai-marketing-expert' ) }
+																	value={ form.bounce_imap?.username || '' }
+																	onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, bounce_imap: { ...prev.bounce_imap, username: v } } ) ) }
+																	placeholder="bounce@yourdomain.com"
+																	__nextHasNoMarginBottom
+																/>
+																<TextControl
+																	label={ __( 'IMAP Password', 'ai-marketing-expert' ) }
+																	type="password"
+																	value={ form.bounce_imap?.password || '' }
+																	onChange={ ( v ) => setForm( ( prev ) => ( { ...prev, bounce_imap: { ...prev.bounce_imap, password: v } } ) ) }
+																	placeholder={ form.bounce_imap?.has_password ? PASSWORD_MASK : __( 'Enter password', 'ai-marketing-expert' ) }
+																	__nextHasNoMarginBottom
+																/>
+															</div>
+
+															{ imapModalNotice && (
+																<div style={ { marginTop: 10 } }>
+																	<Notice type={ imapModalNotice.type } message={ imapModalNotice.message } dismissible onDismiss={ () => setImapModalNotice( null ) } />
+																</div>
+															) }
+
+															<div style={ { marginTop: 12, display: 'flex', justifyContent: 'flex-end' } }>
+																<Button
+																	variant="secondary"
+																	isSmall
+																	onClick={ handleTestModalImap }
+																	isBusy={ testingImapModal }
+																	disabled={ testingImapModal || ! ( form.bounce_imap?.host || form.smtp_host ) }
+																>
+																	{ testingImapModal ? __( 'Testing IMAP...', 'ai-marketing-expert' ) : __( 'Test IMAP Mailbox Connection', 'ai-marketing-expert' ) }
+																</Button>
+															</div>
+														</div>
+													) }
+												</div>
+											) }
+										</div>
+									) }
+								</div>
+							);
+						} )() }
+
+						{ [ 'brevo', 'sendgrid', 'mailgun', 'amazon_ses', 'postmark', 'sparkpost', 'resend' ].includes( form.provider ) && (
+							<div style={ { marginTop: 16, padding: '12px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 } }>
+								<span style={ { fontSize: 18 } }>⚡</span>
+								<div>
+									<div style={ { fontSize: 12, fontWeight: 600, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 } }>
+										<span>{ __( 'Cloud Suppression Sync Supported', 'ai-marketing-expert' ) }</span>
+										<ProBadge />
+									</div>
+									<p style={ { fontSize: 11, color: '#2563eb', margin: '2px 0 0' } }>
+										{ __( 'Bounces, blocks, and spam complaints are automatically fetched via official Cloud API. No IMAP mailbox required.', 'ai-marketing-expert' ) }
+									</p>
+								</div>
+							</div>
+						) }
 					</div>
 
 						{ modalErrors.submit && (
