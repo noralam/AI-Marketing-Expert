@@ -57,7 +57,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	const fetchAccounts = useCallback( async () => {
 		try {
 			const [ accountRes, settingsRes, scheduledRes, pendingRes, globalSettingsRes ] = await Promise.all( [
-				get( '/social/accounts' ),
+				get( `/social/accounts?_t=${ Date.now() }` ),
 				get( '/social/settings' ).catch( () => null ),
 				get( '/social/posts', { status: 'scheduled', per_page: 1 } ).catch( () => null ),
 				get( '/social/posts', { status: 'approval_pending', per_page: 1 } ).catch( () => null ),

@@ -36,7 +36,7 @@ const Calendar = ( { onNavigate } ) => {
 			const start = `${ year }-${ String( month + 1 ).padStart( 2, '0' ) }-01 00:00:00`;
 			const endDay = new Date( year, month + 1, 0 ).getDate();
 			const end = `${ year }-${ String( month + 1 ).padStart( 2, '0' ) }-${ String( endDay ).padStart( 2, '0' ) } 23:59:59`;
-			const res = await get( `/social/schedule?start=${ encodeURIComponent( start ) }&end=${ encodeURIComponent( end ) }` );
+			const res = await get( `/social/schedule?start=${ encodeURIComponent( start ) }&end=${ encodeURIComponent( end ) }&_t=${ Date.now() }` );
 			setEvents( res.items || res || [] );
 		} catch ( e ) {
 			toast( e.message, 'error' );

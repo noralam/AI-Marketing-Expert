@@ -41,7 +41,7 @@ const Accounts = ( { onNavigate } ) => {
 
 	const fetchAccounts = useCallback( async () => {
 		try {
-			const res = await get( '/social/accounts' );
+			const res = await get( `/social/accounts?_t=${ Date.now() }` );
 			setAccounts( res.items || res || [] );
 		} catch ( e ) {
 			// silent
@@ -184,8 +184,15 @@ const Accounts = ( { onNavigate } ) => {
 							</div>
 
 							{ account.token_expires_at && (
-								<div style={ { fontSize: 12, color: 'var(--aime-text-muted)', marginTop: 10 } }>
-									{ __( 'Token expires:', 'ai-marketing-expert' ) } { account.token_expires_at }
+								<div style={ { fontSize: 12, color: 'var(--aime-text-muted)', marginTop: 10, lineHeight: 1.4 } }>
+									<div>
+										{ __( 'Token expires:', 'ai-marketing-expert' ) } { account.token_expires_at }
+									</div>
+									{ account.can_refresh && (
+										<div style={ { fontSize: 11, color: '#0284c7', marginTop: 2 } }>
+											{ __( '(Click "Refresh" below to renew for another 60 days before expiration)', 'ai-marketing-expert' ) }
+										</div>
+									) }
 								</div>
 							) }
 							{ account.last_tested_at && (

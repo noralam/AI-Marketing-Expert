@@ -33,6 +33,7 @@ const Posts = ( { onNavigate } ) => {
 			const params = new URLSearchParams( {
 				page,
 				per_page: PER_PAGE,
+				_t: Date.now(),
 				...( search && { search } ),
 				...( statusFilter && { status: statusFilter } ),
 			} );
