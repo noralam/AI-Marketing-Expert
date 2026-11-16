@@ -223,7 +223,7 @@ class RestApi {
 			array(
 				'methods'             => array( 'GET', 'POST' ),
 				'callback'            => array( $this, 'run_external_cron' ),
-				'permission_callback' => '__return_true',
+				'permission_callback' => array( $this, 'cron_runner_permission_check' ),
 			)
 		);
 
@@ -602,26 +602,37 @@ class RestApi {
 	}
 
 	/**
+	 * Permission callback for external server cron runner.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return bool|\WP_Error
+	 */
+	public function cron_runner_permission_check( \WP_REST_Request $request ): bool|\WP_Error {
+		if ( current_user_can( 'manage_options' ) || self::validate_api_key( $request ) ) {
+			return true;
+		}
+
+		$token    = sanitize_text_field( $request->get_param( 'token' ) ?: ( $request->get_header( 'x-cron-token' ) ?: '' ) );
+		$expected = (string) get_option( 'aime_cron_secret_token', '' );
+
+		if ( '' !== $token && '' !== $expected && hash_equals( $expected, $token ) ) {
+			return true;
+		}
+
+		return new \WP_Error(
+			'rest_forbidden',
+			__( 'Invalid or missing cron token.', 'ai-marketing-expert' ),
+			array( 'status' => 403 )
+		);
+	}
+
+	/**
 	 * Run external server-level cron worker.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
 	public function run_external_cron( \WP_REST_Request $request ): \WP_REST_Response {
-		$token    = sanitize_text_field( $request->get_param( 'token' ) ?: ( $request->get_header( 'x-cron-token' ) ?: '' ) );
-		$expected = get_option( 'aime_cron_secret_token' );
-		if ( empty( $expected ) ) {
-			$expected = wp_generate_password( 32, false );
-			update_option( 'aime_cron_secret_token', $expected, false );
-		}
-
-		if ( empty( $token ) || ! hash_equals( (string) $expected, (string) $token ) ) {
-			return new \WP_REST_Response(
-				array( 'status' => 'error', 'message' => __( 'Invalid or missing cron token.', 'ai-marketing-expert' ) ),
-				403
-			);
-		}
-
 		do_action( 'aime_minutely_tasks' );
 		do_action( 'aime_workflow_dispatch' );
 		do_action( 'aime_process_bounce_mailbox' );

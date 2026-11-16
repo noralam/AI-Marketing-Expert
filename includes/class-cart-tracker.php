@@ -281,7 +281,7 @@ class CartTracker {
 		$cart_total  = (float) $cart->get_total( 'edit' );
 		$items_count = (int) $cart->get_cart_contents_count();
 		$currency    = get_woocommerce_currency();
-		$ip_address  = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		$ip_address  = ''; // Privacy compliance (Guideline 7): do not store visitor IP addresses.
 
 		global $wpdb;
 		$table = self::get_table_name();
@@ -356,9 +356,16 @@ class CartTracker {
 			return;
 		}
 
+		// Only load guest checkout recovery script if explicitly enabled in settings.
+		$settings = get_option( 'aime_settings', array() );
+		if ( empty( $settings['enable_guest_cart_capture'] ) ) {
+			return;
+		}
+
 		$data = array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( self::NONCE_ACTION ),
+			'consentLabel' => __( 'Save my cart and send me a recovery link if I do not complete checkout.', 'ai-marketing-expert' ),
 		);
 
 		$script = "
@@ -369,12 +376,26 @@ class CartTracker {
 					|| document.querySelector('input[type=\"email\"]')
 					|| document.querySelector('input[autocomplete=\"email\"]');
 				if (!emailInput) return;
-				
+
+				var consentId = 'aime-cart-recovery-consent';
+				var consentBox = document.getElementById(consentId);
+				if (!consentBox && emailInput.parentNode) {
+					var wrapper = document.createElement('label');
+					wrapper.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:normal;cursor:pointer;';
+					consentBox = document.createElement('input');
+					consentBox.type = 'checkbox';
+					consentBox.id = consentId;
+					wrapper.appendChild(consentBox);
+					wrapper.appendChild(document.createTextNode('" . esc_js( $data['consentLabel'] ) . "'));
+					emailInput.parentNode.appendChild(wrapper);
+				}
+
 				var lastSent = '';
 				function sendData() {
+					if (!consentBox || !consentBox.checked) return;
 					var email = (emailInput.value || '').trim();
 					if (!email || email === lastSent || !email.includes('@')) return;
-					
+
 					var firstNameInput = document.getElementById('billing_first_name')
 						|| document.querySelector('input[name=\"billing_first_name\"]')
 						|| document.querySelector('input[autocomplete=\"given-name\"]')
@@ -386,35 +407,34 @@ class CartTracker {
 					var phoneInput = document.getElementById('billing_phone')
 						|| document.querySelector('input[name=\"billing_phone\"]')
 						|| document.querySelector('input[autocomplete=\"tel\"]');
-					
+
 					var name = ((firstNameInput ? firstNameInput.value : '') + ' ' + (lastNameInput ? lastNameInput.value : '')).trim();
 					var phone = phoneInput ? phoneInput.value : '';
-					
+
 					lastSent = email;
-					
+
 					var formData = new URLSearchParams();
 					formData.append('action', 'aime_capture_guest_cart');
 					formData.append('nonce', '" . esc_js( $data['nonce'] ) . "');
+					formData.append('consent', '1');
 					formData.append('email', email);
 					formData.append('name', name);
 					formData.append('phone', phone);
-					
+
 					fetch('" . esc_url( $data['ajaxUrl'] ) . "', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 						body: formData
 					}).catch(function(err) { /* silent */ });
 				}
-				
+
+				if (consentBox) {
+					consentBox.addEventListener('change', sendData);
+				}
 				emailInput.addEventListener('blur', sendData);
 				emailInput.addEventListener('change', sendData);
-				var debounceTimer = null;
-				emailInput.addEventListener('input', function() {
-					clearTimeout(debounceTimer);
-					debounceTimer = setTimeout(sendData, 2000);
-				});
 			}
-			
+
 			if (document.readyState === 'loading') {
 				document.addEventListener('DOMContentLoaded', captureGuestEmail);
 			} else {
@@ -435,13 +455,17 @@ class CartTracker {
 	public function ajax_capture_guest_cart(): void {
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
 
+		if ( empty( $_POST['consent'] ) || '1' !== sanitize_text_field( wp_unslash( $_POST['consent'] ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Visitor opt-in consent is required.', 'ai-marketing-expert' ) ), 403 );
+		}
+
 		if ( function_exists( 'wc_load_cart' ) && function_exists( 'WC' ) && ! WC()->cart ) {
 			wc_load_cart();
 		}
 
 		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
 		if ( ! is_email( $email ) ) {
-			wp_send_json_error( array( 'message' => 'Invalid email' ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Invalid email', 'ai-marketing-expert' ) ), 400 );
 		}
 
 		$name  = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';

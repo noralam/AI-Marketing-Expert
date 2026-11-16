@@ -220,7 +220,7 @@ class BacklinkController {
 	}
 
 	/**
-	 * AI-generate outreach email. Free plan is metered.
+	 * AI-generate outreach email.
 	 */
 	public function generate_outreach( \WP_REST_Request $request ): \WP_REST_Response {
 		$backlink_id = absint( $request->get_param( 'backlink_id' ) );

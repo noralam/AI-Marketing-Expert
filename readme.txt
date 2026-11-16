@@ -169,7 +169,7 @@ Add an intelligent AI chatbot to your WordPress site for 24/7 customer support, 
 Recover lost store revenue automatically without paying for separate expensive SaaS tools like CartBounty, Klaviyo, or Abandoned Cart Pro.
 
 * **Real-Time Session Tracking** — Tracks both logged-in customers and guest visitors across browsing sessions using secure tokens (`aime_cart_token`).
-* **Guest Checkout AJAX Capture** — Automatically captures guest email, name, and phone in the background the moment they type into checkout fields—before an order is placed.
+* **GDPR-Compliant Checkout Cart Recovery** — Captures guest cart recovery details only when enabled by the store administrator and explicitly opted into by the shopper on checkout.
 * **Automated Inactivity Detection** — Scheduled 15-minute WP-Cron evaluates inactive sessions (configurable, default 30 mins) and marks them as abandoned.
 * **1-Click Cart Restoration Deep Links** — Generates encrypted restoration links (`{event.recovery_url}`) that reload items, variations, and quantities in 1-click and direct shoppers straight to checkout.
 * **1-Click Single-Quantity Checkout** — Automatically detects accidental duplicate quantities (`cart_type: duplicate_qty`) and provides a 1-click deep link (`{event.single_qty_url}`) to complete checkout with just 1 item without manual cart editing.
@@ -360,13 +360,13 @@ This plugin connects to external third-party services to deliver AI generation, 
   - Pexels: [Terms of Service](https://www.pexels.com/terms-of-service/) | [Privacy Policy](https://www.pexels.com/privacy-policy/)
   - Pixabay: [Terms of Service](https://pixabay.com/service/terms/) | [Privacy Policy](https://pixabay.com/service/privacy/)
 
-9. **Social Media Networks (Meta, LinkedIn, X/Twitter)**
-* **What it is and what it is used for:** Publishing approved marketing posts and captions to your connected social channels.
-* **What data is sent and when:** Post copy, media, and authorization tokens when scheduling or publishing posts.
-* **Privacy Policies:**
-  - Meta: [Privacy Policy](https://www.facebook.com/privacy/policy/)
-  - LinkedIn: [Privacy Policy](https://www.linkedin.com/legal/privacy-policy)
-  - X (Twitter): [Privacy Policy](https://twitter.com/en/privacy)
+9. **Social Media Networks (Meta / Facebook & Instagram, LinkedIn, X / Twitter)**
+* **What it is and what it is used for:** Publishing approved marketing posts, images, and captions to your connected social media channels.
+* **What data is sent and when:** Post copy, media URLs, and OAuth authorization tokens are sent when scheduling or publishing social posts.
+* **Terms & Privacy Policies:**
+  - Meta (Facebook & Instagram): [Terms of Service](https://www.facebook.com/terms.php) | [Privacy Policy](https://www.facebook.com/privacy/policy/)
+  - LinkedIn: [Terms of Service](https://www.linkedin.com/legal/user-agreement) | [Privacy Policy](https://www.linkedin.com/legal/privacy-policy)
+  - X (Twitter): [Terms of Service](https://x.com/en/tos) | [Privacy Policy](https://x.com/en/privacy)
 
 10. **Postmark (ActiveCampaign)**
 * **What it is and what it is used for:** Optional SMTP email delivery relay.
@@ -387,6 +387,13 @@ This plugin connects to external third-party services to deliver AI generation, 
 * **What it is and what it is used for:** Optional high-volume SMTP email delivery relay.
 * **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with SMTP.com.
 * **Terms & Privacy:** [Terms of Service](https://www.smtp.com/legal/terms-of-service/) | [Privacy Policy](https://www.smtp.com/legal/privacy-policy/)
+
+14. **Google Gmail / Google Workspace SMTP & Microsoft Outlook / 365 SMTP**
+* **What it is and what it is used for:** Optional SMTP email relay presets (`smtp.gmail.com` and `smtp.office365.com`) and optional IMAP bounce detection.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns via your configured Gmail or Microsoft 365 SMTP account.
+* **Terms & Privacy:**
+  - Google: [Terms of Service](https://policies.google.com/terms) | [Privacy Policy](https://policies.google.com/privacy)
+  - Microsoft: [Terms of Use](https://www.microsoft.com/en-us/servicesagreement) | [Privacy Policy](https://privacy.microsoft.com/en-us/privacystatement)
 
 == Source Code & Build Instructions ==
 

@@ -42,7 +42,7 @@ class AutomationController {
 	}
 
 	/**
-	 * Save automation settings. Free plan is limited to one non-cron task.
+	 * Save automation settings.
 	 */
 	public function save_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$params = $request->get_params();
@@ -136,7 +136,7 @@ class AutomationController {
 	}
 
 	/**
-	 * Manually trigger an automation task. Free plan is metered.
+	 * Manually trigger an automation task.
 	 */
 	public function run_task( \WP_REST_Request $request ): \WP_REST_Response {
 		$task = sanitize_key( $request->get_param( 'task' ) ?? '' );

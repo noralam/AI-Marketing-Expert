@@ -22,7 +22,7 @@ class ContentCalendarService {
 	/**
 	 * AI-generate content calendar.
 	 *
-	 * @param int|null $max_items Cap on saved items (free plan), or null for unlimited.
+	 * @param int|null $max_items Optional cap on saved items, or null for unlimited.
 	 */
 	public function generate_calendar( string $niche, int $weeks, string $frequency, ?int $max_items = null ): array {
 		$freq_map = array(

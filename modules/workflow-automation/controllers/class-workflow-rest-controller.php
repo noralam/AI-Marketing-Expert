@@ -74,7 +74,7 @@ class WorkflowRestController {
 		register_rest_route( $this->ns, $base . '/webhook/(?P<token>[a-zA-Z0-9_-]+)', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'receive_webhook' ),
-			'permission_callback' => '__return_true',
+			'permission_callback' => array( $this, 'webhook_token_permission' ),
 		) );
 
 		register_rest_route( $this->ns, $base . '/workflows', array(
@@ -269,6 +269,30 @@ class WorkflowRestController {
 		}
 
 		return new \WP_REST_Response( array( 'workflow' => $result ), 200 );
+	}
+
+	/**
+	 * Permission callback for inbound webhook token verification.
+	 *
+	 * @param \WP_REST_Request $req REST Request.
+	 * @return bool|\WP_Error
+	 */
+	public function webhook_token_permission( \WP_REST_Request $req ): bool|\WP_Error {
+		$token = sanitize_text_field( (string) $req->get_param( 'token' ) );
+		if ( '' === $token || strlen( $token ) < 8 ) {
+			return new \WP_Error( 'rest_forbidden', __( 'Invalid webhook token.', 'ai-marketing-expert' ), array( 'status' => 401 ) );
+		}
+
+		$active = $this->repo->active_for_event( 'inbound_webhook' );
+		foreach ( $active as $wf ) {
+			$cfg      = json_decode( (string) ( $wf->trigger_config ?? '{}' ), true ) ?: array();
+			$expected = isset( $cfg['webhook_token'] ) ? (string) $cfg['webhook_token'] : '';
+			if ( '' !== $expected && hash_equals( $expected, $token ) ) {
+				return true;
+			}
+		}
+
+		return new \WP_Error( 'rest_forbidden', __( 'Invalid or inactive webhook token.', 'ai-marketing-expert' ), array( 'status' => 403 ) );
 	}
 
 	/**

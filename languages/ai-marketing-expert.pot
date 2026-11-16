@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-16T13:30:58+00:00\n"
+"POT-Creation-Date: 2026-11-16T14:17:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: ai-marketing-expert\n"
@@ -632,13 +632,25 @@ msgstr ""
 msgid "Every 15 Minutes"
 msgstr ""
 
-#: includes/class-cart-tracker.php:594
-#: includes/class-cart-tracker.php:595
+#: includes/class-cart-tracker.php:368
+msgid "Save my cart and send me a recovery link if I do not complete checkout."
+msgstr ""
+
+#: includes/class-cart-tracker.php:459
+msgid "Visitor opt-in consent is required."
+msgstr ""
+
+#: includes/class-cart-tracker.php:468
+msgid "Invalid email"
+msgstr ""
+
+#: includes/class-cart-tracker.php:618
+#: includes/class-cart-tracker.php:619
 #: modules/workflow-automation/class-workflow-automation-module.php:1078
 msgid "Customer"
 msgstr ""
 
-#: includes/class-cart-tracker.php:732
+#: includes/class-cart-tracker.php:756
 msgid "Your saved cart link has expired, but you can continue shopping our latest collections below."
 msgstr ""
 
@@ -793,96 +805,96 @@ msgstr ""
 msgid "Due automations processed."
 msgstr ""
 
-#: includes/class-rest-api.php:620
+#: includes/class-rest-api.php:624
 msgid "Invalid or missing cron token."
 msgstr ""
 
-#: includes/class-rest-api.php:632
+#: includes/class-rest-api.php:643
 msgid "Background cron queues dispatched successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:650
+#: includes/class-rest-api.php:661
 #: src/components/modules/Settings/SettingsPage.jsx:224
 msgid "New cron token generated."
 msgstr ""
 
 #. translators: %d: count of deleted records
-#: includes/class-rest-api.php:703
+#: includes/class-rest-api.php:714
 #, php-format
 msgid "Database pruning completed: %d old records removed."
 msgstr ""
 
-#: includes/class-rest-api.php:706
+#: includes/class-rest-api.php:717
 msgid "Database is already clean and optimal. No records older than retention period were found."
 msgstr ""
 
-#: includes/class-rest-api.php:920
+#: includes/class-rest-api.php:931
 msgid "Settings saved successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:939
+#: includes/class-rest-api.php:950
 msgid "Search query is required."
 msgstr ""
 
-#: includes/class-rest-api.php:955
+#: includes/class-rest-api.php:966
 #: modules/content-generator/controllers/class-generate-controller.php:535
 #: src/components/modules/ContentGenerator/ArticleEditor.jsx:513
 msgid "Stock image search failed."
 msgstr ""
 
-#: includes/class-rest-api.php:987
+#: includes/class-rest-api.php:998
 #: modules/content-generator/controllers/class-generate-controller.php:554
 #: src/components/modules/ContentGenerator/ArticleEditor.jsx:535
 msgid "Image import failed."
 msgstr ""
 
-#: includes/class-rest-api.php:1220
+#: includes/class-rest-api.php:1231
 #: src/components/modules/Settings/SettingsPage.jsx:245
 msgid "Logs cleared."
 msgstr ""
 
-#: includes/class-rest-api.php:1307
+#: includes/class-rest-api.php:1318
 msgid "AI connection saved successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:1324
+#: includes/class-rest-api.php:1335
 msgid "AI connection deleted."
 msgstr ""
 
-#: includes/class-rest-api.php:1359
+#: includes/class-rest-api.php:1370
 msgid "AI provider order could not be changed."
 msgstr ""
 
-#: includes/class-rest-api.php:1365
+#: includes/class-rest-api.php:1376
 #: src/components/modules/Settings/AiProvidersPage.jsx:430
 msgid "AI provider fallback order updated."
 msgstr ""
 
-#: includes/class-rest-api.php:1408
+#: includes/class-rest-api.php:1419
 msgid "Provider and API key are required."
 msgstr ""
 
-#: includes/class-rest-api.php:1513
+#: includes/class-rest-api.php:1524
 msgid "Job not found."
 msgstr ""
 
-#: includes/class-rest-api.php:1608
+#: includes/class-rest-api.php:1619
 msgid "Invalid import file. Expected an AI Marketing Expert settings export."
 msgstr ""
 
-#: includes/class-rest-api.php:1667
+#: includes/class-rest-api.php:1678
 msgid "Import complete."
 msgstr ""
 
-#: includes/class-rest-api.php:1692
+#: includes/class-rest-api.php:1703
 msgid "API key generated."
 msgstr ""
 
-#: includes/class-rest-api.php:1697
+#: includes/class-rest-api.php:1708
 msgid "Recommended: sign requests instead of sending the key. Send X-Aime-Timestamp (unix seconds) and X-Aime-Signature: sha256=HEX where HEX = HMAC-SHA256(\"{timestamp}.{raw_body}\", api_key). Plain X-API-Key header also accepted."
 msgstr ""
 
-#: includes/class-rest-api.php:1719
+#: includes/class-rest-api.php:1730
 #: src/components/modules/Settings/SettingsPage.jsx:204
 msgid "API key revoked."
 msgstr ""
@@ -1462,12 +1474,12 @@ msgstr ""
 
 #: modules/chatbot/controllers/class-public-controller.php:591
 #: modules/email-marketing/class-email-rest-controller.php:70
-#: modules/email-marketing/class-email-rest-controller.php:91
+#: modules/email-marketing/class-email-rest-controller.php:86
 #: modules/email-marketing/controllers/class-subscriber-controller.php:1266
 #: modules/email-marketing/controllers/class-subscriber-controller.php:1274
 #: modules/email-marketing/controllers/class-subscriber-controller.php:1476
 #: modules/email-marketing/controllers/class-subscriber-controller.php:1669
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:286
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:310
 msgid "Too many requests. Please try again later."
 msgstr ""
 
@@ -2000,38 +2012,43 @@ msgstr ""
 msgid "Network error. Please try again."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:123
+#: modules/email-marketing/class-email-rest-controller.php:97
+#: modules/email-marketing/controllers/class-subscriber-controller.php:1463
+msgid "Invalid or missing API key."
+msgstr ""
+
+#: modules/email-marketing/class-email-rest-controller.php:127
 msgid "Invalid or missing API key or webhook authentication token."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1095
+#: modules/email-marketing/class-email-rest-controller.php:1099
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:645
 msgid "SMTP error logs cleared."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1116
+#: modules/email-marketing/class-email-rest-controller.php:1120
 msgid "AI Marketing Expert SMTP will handle all site emails."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1117
+#: modules/email-marketing/class-email-rest-controller.php:1121
 msgid "AI Marketing Expert SMTP will only send this plugin's own emails."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1143
+#: modules/email-marketing/class-email-rest-controller.php:1147
 msgid "Connection saved successfully."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1155
+#: modules/email-marketing/class-email-rest-controller.php:1159
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:485
 #: src/components/modules/Settings/AiProvidersPage.jsx:227
 msgid "Connection deleted."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1187
+#: modules/email-marketing/class-email-rest-controller.php:1191
 msgid "SMTP connection order could not be changed."
 msgstr ""
 
-#: modules/email-marketing/class-email-rest-controller.php:1192
+#: modules/email-marketing/class-email-rest-controller.php:1196
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:628
 msgid "SMTP sending order updated."
 msgstr ""
@@ -2407,10 +2424,6 @@ msgstr ""
 msgid "If you did not request this subscription, you can safely ignore this email."
 msgstr ""
 
-#: modules/email-marketing/controllers/class-subscriber-controller.php:1463
-msgid "Invalid or missing API key."
-msgstr ""
-
 #: modules/email-marketing/controllers/class-subscriber-controller.php:1551
 msgid "Subscriber re-subscribed."
 msgstr ""
@@ -2493,7 +2506,7 @@ msgstr ""
 #: modules/email-marketing/controllers/class-template-controller.php:77
 #: modules/email-marketing/controllers/class-template-controller.php:105
 #: modules/email-marketing/controllers/class-template-controller.php:125
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:315
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:339
 msgid "Template not found."
 msgstr ""
 
@@ -4961,66 +4974,74 @@ msgstr ""
 msgid "Prompt is required."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:320
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:283
+msgid "Invalid webhook token."
+msgstr ""
+
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:295
+msgid "Invalid or inactive webhook token."
+msgstr ""
+
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:344
 msgid "This template requires plugins or modules that are not currently active on this site."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:330
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:407
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:354
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:431
 msgid "Could not create workflow."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:374
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:428
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:487
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:550
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:398
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:452
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:511
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:574
 msgid "Not found."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:492
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:516
 msgid "Workflow has no steps."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:531
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:555
 msgid "Could not queue execution."
 msgstr ""
 
 #. translators: %d: position of the invalid step.
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:791
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:815
 #, php-format
 msgid "Step #%1$d has no action type."
 msgstr ""
 
 #. translators: 1: action type label.
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:797
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:821
 #, php-format
 msgid "The \"%1$s\" step is missing its identifier. Reload the builder and try again."
 msgstr ""
 
 #. translators: %s: duplicated step key.
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:803
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:827
 #, php-format
 msgid "Duplicate step identifier \"%s\" — reload the builder and try again."
 msgstr ""
 
 #. translators: %s: step identifier whose parent is missing.
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:813
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:837
 #, php-format
 msgid "The step \"%s\" points to a parent step that no longer exists. Remove and re-add the connection."
 msgstr ""
 
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:826
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:850
 msgid "The workflow contains a circular connection. Every step must ultimately hang off the trigger."
 msgstr ""
 
 #. translators: %s: required plugin name
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:865
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:889
 #, php-format
 msgid "Cannot activate workflow: Trigger requires \"%s\" which is not installed or active on this site."
 msgstr ""
 
 #. translators: 1: step label, 2: field label.
-#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:897
+#: modules/workflow-automation/controllers/class-workflow-rest-controller.php:921
 #, php-format
 msgid "The \"%1$s\" step is missing its required \"%2$s\" setting."
 msgstr ""
@@ -5111,24 +5132,24 @@ msgstr ""
 msgid "Stopped after the first failure (failure policy: stop)."
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:744
+#: modules/workflow-automation/includes/class-workflow-engine.php:743
 msgid "Step failed without reporting a reason."
 msgstr ""
 
 #. translators: %d: number of additional errors not shown.
-#: modules/workflow-automation/includes/class-workflow-engine.php:773
+#: modules/workflow-automation/includes/class-workflow-engine.php:772
 #, php-format
 msgid "…and %d more."
 msgstr ""
 
 #. translators: 1: site name, 2: workflow name, 3: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:778
+#: modules/workflow-automation/includes/class-workflow-engine.php:777
 #, php-format
 msgid "[%1$s] Workflow issue: %2$s (%3$s)"
 msgstr ""
 
 #. translators: 1: workflow name, 2: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:786
+#: modules/workflow-automation/includes/class-workflow-engine.php:785
 #, php-format
 msgid ""
 "The workflow \"%1$s\" finished with status: %2$s.\n"
@@ -5137,7 +5158,7 @@ msgid ""
 "%3$s"
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:792
+#: modules/workflow-automation/includes/class-workflow-engine.php:791
 msgid "Open the workflow history for details:"
 msgstr ""
 

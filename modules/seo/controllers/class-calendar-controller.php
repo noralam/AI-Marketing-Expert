@@ -208,7 +208,7 @@ class CalendarController {
 	}
 
 	/**
-	 * AI-generate content calendar. Free plan is metered.
+	 * AI-generate content calendar.
 	 */
 	public function generate_calendar( \WP_REST_Request $request ): \WP_REST_Response {
 		$max_items = null;

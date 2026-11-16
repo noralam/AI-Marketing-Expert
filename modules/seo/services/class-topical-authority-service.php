@@ -25,7 +25,7 @@ class TopicalAuthorityService {
 	 * Creates pillar topics, cluster topics, and internal linking suggestions,
 	 * then saves them to the database.
 	 *
-	 * @param int|null $max_topics Cap on saved topics (free plan), or null for unlimited.
+	 * @param int|null $max_topics Optional cap on saved topics, or null for unlimited.
 	 */
 	public function generate_topical_map( string $niche, string $pillar_topic, ?int $max_topics = null ): array {
 		$focus = $pillar_topic ?: $niche;

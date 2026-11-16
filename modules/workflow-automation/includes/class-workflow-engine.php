@@ -676,9 +676,8 @@ class WorkflowEngine {
 
 	/**
 	 * Advance a schedule-triggered workflow to its next occurrence without
-	 * recording a run (used when the free plan blocks a due run: run_count
-	 * and last_run_at must stay untouched, but the workflow must not stay
-	 * "due" or the five-minute cron would retry it forever).
+	 * recording a run (run_count and last_run_at must stay untouched, but the
+	 * workflow must not stay "due" or the five-minute cron would retry it forever).
 	 */
 	private function advance_schedule_only( object $workflow ): void {
 		if ( 'schedule' !== $workflow->trigger_type ) {
