@@ -69,8 +69,9 @@ class AdCopyAction extends BaseAction {
 		}
 
 		/* translators: %d: count */
+		$ok_msg = sprintf( __( 'Generated %d ad-copy variations (saved as draft).', 'ai-marketing-expert' ), $variations );
 		return self::ok(
-			sprintf( __( 'Generated %d ad-copy variations (saved as draft).', 'ai-marketing-expert' ), $variations ),
+			$ok_msg,
 			array( 'article_id' => $article_id, 'link' => self::module_link( 'content', 'articles' ) )
 		);
 	}

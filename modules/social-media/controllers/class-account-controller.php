@@ -369,8 +369,9 @@ class AccountController {
 
 			if ( ! empty( $meta_api_error ) ) {
 				/* translators: %s: Meta API error message */
+				$api_err_msg = sprintf( __( 'Meta API Error: %s', 'ai-marketing-expert' ), $meta_api_error );
 				return new \WP_REST_Response( array(
-					'message' => sprintf( __( 'Meta API Error: %s', 'ai-marketing-expert' ), $meta_api_error ),
+					'message' => $api_err_msg,
 				), 400 );
 			}
 
@@ -381,12 +382,10 @@ class AccountController {
 			}
 
 			$found_names = implode( ', ', $pages_found );
+			/* translators: %s: comma-separated list of Facebook Page names */
+			$ig_err_msg  = sprintf( __( 'No Instagram Business account was found linked to your Facebook Page(s) ("%s"). Make sure your Instagram account is switched to Business/Creator and connected to your Page. When connecting via Facebook, click "Edit settings" in the popup to ensure both your Page and Instagram account are checked.', 'ai-marketing-expert' ), $found_names );
 			return new \WP_REST_Response( array(
-				/* translators: %s: comma-separated list of Facebook Page names */
-				'message' => sprintf(
-					__( 'No Instagram Business account was found linked to your Facebook Page(s) ("%s"). Make sure your Instagram account is switched to Business/Creator and connected to your Page. When connecting via Facebook, click "Edit settings" in the popup to ensure both your Page and Instagram account are checked.', 'ai-marketing-expert' ),
-					$found_names
-				),
+				'message' => $ig_err_msg,
 			), 400 );
 		}
 
@@ -528,8 +527,9 @@ class AccountController {
 			if ( false === $res ) {
 				aime_log( sprintf( 'Database error saving %s account %s: %s', $platform, $acc['name'], $wpdb->last_error ), 'error', 'social-media' );
 				/* translators: 1: account name, 2: database error details */
+				$db_err_msg = sprintf( __( 'Database error saving %1$s: %2$s', 'ai-marketing-expert' ), $acc['name'], $wpdb->last_error );
 				return new \WP_REST_Response( array(
-					'message' => sprintf( __( 'Database error saving %1$s: %2$s', 'ai-marketing-expert' ), $acc['name'], $wpdb->last_error ),
+					'message' => $db_err_msg,
 				), 500 );
 			}
 
@@ -550,11 +550,13 @@ class AccountController {
 		delete_transient( 'aime_oauth_pending_' . $session_id );
 
 		$count = count( $saved_names );
-		/* translators: %s: account name */
-		$msg   = 1 === $count
-			? sprintf( __( '"%s" connected successfully!', 'ai-marketing-expert' ), $saved_names[0] )
+		if ( 1 === $count ) {
+			/* translators: %s: account name */
+			$msg = sprintf( __( '"%s" connected successfully!', 'ai-marketing-expert' ), $saved_names[0] );
+		} else {
 			/* translators: 1: number of accounts, 2: comma-separated list of account names */
-			: sprintf( __( '%1$d accounts connected: %2$s', 'ai-marketing-expert' ), $count, implode( ', ', $saved_names ) );
+			$msg = sprintf( __( '%1$d accounts connected: %2$s', 'ai-marketing-expert' ), $count, implode( ', ', $saved_names ) );
+		}
 
 		$response = new \WP_REST_Response( array(
 			'message'   => $msg,

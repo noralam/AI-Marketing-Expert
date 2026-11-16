@@ -528,12 +528,7 @@ class WorkflowEngine {
 			$halted        = true;
 			$engine_error  = true;
 			/* translators: 1: error message, 2: file name, 3: line number */
-			$step_errors[] = sprintf(
-				__( 'Workflow engine error: %1$s (%2$s:%3$d)', 'ai-marketing-expert' ),
-				$e->getMessage(),
-				basename( $e->getFile() ),
-				$e->getLine()
-			);
+			$step_errors[] = sprintf( __( 'Workflow engine error: %1$s (%2$s:%3$d)', 'ai-marketing-expert' ), $e->getMessage(), basename( $e->getFile() ), $e->getLine() );
 			aime_log( sprintf( 'Workflow #%d engine error on resume: %s', $workflow_id, $e->getMessage() ), 'error', 'workflow-automation' );
 		}
 

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-16T11:28:49+00:00\n"
+"POT-Creation-Date: 2026-11-16T13:30:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: ai-marketing-expert\n"
@@ -3202,114 +3202,118 @@ msgstr ""
 msgid "Missing user access token from Meta."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:373
+#. translators: %s: Meta API error message
+#: modules/social-media/controllers/class-account-controller.php:372
 #, php-format
 msgid "Meta API Error: %s"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:379
+#: modules/social-media/controllers/class-account-controller.php:380
 msgid "No Facebook Pages found. Make sure you are an Admin of a Facebook Page and that you selected it during Facebook authorization."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:387
+#. translators: %s: comma-separated list of Facebook Page names
+#: modules/social-media/controllers/class-account-controller.php:386
 #, php-format
 msgid "No Instagram Business account was found linked to your Facebook Page(s) (\"%s\"). Make sure your Instagram account is switched to Business/Creator and connected to your Page. When connecting via Facebook, click \"Edit settings\" in the popup to ensure both your Page and Instagram account are checked."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:423
-#: modules/social-media/controllers/class-account-controller.php:654
+#: modules/social-media/controllers/class-account-controller.php:422
+#: modules/social-media/controllers/class-account-controller.php:656
 msgid "Failed to save account."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:430
-#: modules/social-media/controllers/class-account-controller.php:669
+#: modules/social-media/controllers/class-account-controller.php:429
+#: modules/social-media/controllers/class-account-controller.php:671
 msgid "Account connected successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:443
+#: modules/social-media/controllers/class-account-controller.php:442
 msgid "No accounts selected."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:450
+#: modules/social-media/controllers/class-account-controller.php:449
 msgid "Session expired or invalid. Please try connecting again."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:477
+#: modules/social-media/controllers/class-account-controller.php:476
 msgid "None of the selected accounts could be found."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:532
+#. translators: 1: account name, 2: database error details
+#: modules/social-media/controllers/class-account-controller.php:530
 #, php-format
 msgid "Database error saving %1$s: %2$s"
 msgstr ""
 
+#. translators: %s: account name
 #: modules/social-media/controllers/class-account-controller.php:555
 #, php-format
 msgid "\"%s\" connected successfully!"
 msgstr ""
 
 #. translators: 1: number of accounts, 2: comma-separated list of account names
-#: modules/social-media/controllers/class-account-controller.php:557
+#: modules/social-media/controllers/class-account-controller.php:558
 #, php-format
 msgid "%1$d accounts connected: %2$s"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:585
+#: modules/social-media/controllers/class-account-controller.php:587
 #: src/components/modules/SocialMedia/ConnectAccountModal.jsx:352
 msgid "X API key, API secret, access token, and access token secret are required."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:604
-#: modules/social-media/controllers/class-account-controller.php:964
+#: modules/social-media/controllers/class-account-controller.php:606
+#: modules/social-media/controllers/class-account-controller.php:966
 msgid "Invalid X credentials."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:623
+#: modules/social-media/controllers/class-account-controller.php:625
 msgid "Invalid access token."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:689
-#: modules/social-media/controllers/class-account-controller.php:762
-#: modules/social-media/controllers/class-account-controller.php:808
-#: modules/social-media/controllers/class-account-controller.php:867
+#: modules/social-media/controllers/class-account-controller.php:691
+#: modules/social-media/controllers/class-account-controller.php:764
+#: modules/social-media/controllers/class-account-controller.php:810
+#: modules/social-media/controllers/class-account-controller.php:869
 #: modules/social-media/controllers/class-post-controller.php:315
 #: modules/social-media/controllers/class-post-controller.php:455
 msgid "Account not found."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:713
-#: modules/social-media/controllers/class-account-controller.php:727
+#: modules/social-media/controllers/class-account-controller.php:715
+#: modules/social-media/controllers/class-account-controller.php:729
 msgid "Failed to update account."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:741
+#: modules/social-media/controllers/class-account-controller.php:743
 msgid "Account updated successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:788
+#: modules/social-media/controllers/class-account-controller.php:790
 #: src/components/modules/SocialMedia/Accounts.jsx:56
 msgid "Account disconnected."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:818
+#: modules/social-media/controllers/class-account-controller.php:820
 msgid "This account was connected manually. Refresh is not available; reconnect the account with a new token when needed."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:830
+#: modules/social-media/controllers/class-account-controller.php:832
 msgid "Token refresh failed."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:847
+#: modules/social-media/controllers/class-account-controller.php:849
 #: src/components/modules/SocialMedia/Accounts.jsx:68
 msgid "Token refreshed successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:873
+#: modules/social-media/controllers/class-account-controller.php:875
 #: src/components/modules/SocialMedia/Accounts.jsx:81
 msgid "Account connection verified."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:873
+#: modules/social-media/controllers/class-account-controller.php:875
 #: src/components/modules/SocialMedia/Accounts.jsx:84
 msgid "Account connection test failed."
 msgstr ""
@@ -3667,13 +3671,14 @@ msgstr ""
 msgid "Ad copy generated but could not be saved."
 msgstr ""
 
-#: modules/workflow-automation/actions/class-ad-copy-action.php:73
+#. translators: %d: count
+#: modules/workflow-automation/actions/class-ad-copy-action.php:72
 #, php-format
 msgid "Generated %d ad-copy variations (saved as draft)."
 msgstr ""
 
 #. translators: %s: product price
-#: modules/workflow-automation/actions/class-ad-copy-action.php:156
+#: modules/workflow-automation/actions/class-ad-copy-action.php:157
 #, php-format
 msgid "Price: %s"
 msgstr ""
@@ -5083,46 +5088,47 @@ msgid "Skipped: parent step did not succeed."
 msgstr ""
 
 #. translators: 1: error message, 2: file, 3: line.
+#. translators: 1: error message, 2: file name, 3: line number
 #: modules/workflow-automation/includes/class-workflow-engine.php:258
-#: modules/workflow-automation/includes/class-workflow-engine.php:532
+#: modules/workflow-automation/includes/class-workflow-engine.php:531
 #, php-format
 msgid "Workflow engine error: %1$s (%2$s:%3$d)"
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:273
-#: modules/workflow-automation/includes/class-workflow-engine.php:542
+#: modules/workflow-automation/includes/class-workflow-engine.php:537
 msgid "Skipped: workflow halted."
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:273
-#: modules/workflow-automation/includes/class-workflow-engine.php:542
-#: modules/workflow-automation/includes/class-workflow-engine.php:628
+#: modules/workflow-automation/includes/class-workflow-engine.php:537
+#: modules/workflow-automation/includes/class-workflow-engine.php:623
 msgid "Skipped: branch not taken."
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:295
-#: modules/workflow-automation/includes/class-workflow-engine.php:560
+#: modules/workflow-automation/includes/class-workflow-engine.php:555
 msgid "Stopped after the first failure (failure policy: stop)."
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:749
+#: modules/workflow-automation/includes/class-workflow-engine.php:744
 msgid "Step failed without reporting a reason."
 msgstr ""
 
 #. translators: %d: number of additional errors not shown.
-#: modules/workflow-automation/includes/class-workflow-engine.php:778
+#: modules/workflow-automation/includes/class-workflow-engine.php:773
 #, php-format
 msgid "…and %d more."
 msgstr ""
 
 #. translators: 1: site name, 2: workflow name, 3: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:783
+#: modules/workflow-automation/includes/class-workflow-engine.php:778
 #, php-format
 msgid "[%1$s] Workflow issue: %2$s (%3$s)"
 msgstr ""
 
 #. translators: 1: workflow name, 2: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:791
+#: modules/workflow-automation/includes/class-workflow-engine.php:786
 #, php-format
 msgid ""
 "The workflow \"%1$s\" finished with status: %2$s.\n"
@@ -5131,7 +5137,7 @@ msgid ""
 "%3$s"
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:797
+#: modules/workflow-automation/includes/class-workflow-engine.php:792
 msgid "Open the workflow history for details:"
 msgstr ""
 
