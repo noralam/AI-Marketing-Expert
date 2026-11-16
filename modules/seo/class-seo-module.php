@@ -40,24 +40,6 @@ class SeoModule extends Module {
 		return '1.0.0';
 	}
 
-	/* ── Pro features ───────────────────────────────────── */
-
-	public function get_pro_features(): array {
-		return array(
-			'unlimited_keywords'   => __( 'Unlimited keyword research queries (free: 10/month)', 'ai-marketing-expert' ),
-			'unlimited_vault'      => __( 'Unlimited keywords in vault (free: 50)', 'ai-marketing-expert' ),
-			'topical_authority'    => __( 'AI topical authority map generation & editing', 'ai-marketing-expert' ),
-			'content_calendar'     => __( 'AI-driven content calendar planning', 'ai-marketing-expert' ),
-			'link_building'        => __( 'Link building pipeline with AI outreach emails', 'ai-marketing-expert' ),
-			'entity_seo'           => __( 'Entity SEO analysis & schema markup suggestions', 'ai-marketing-expert' ),
-			'competitor_analysis'  => __( 'Competitor gap analysis', 'ai-marketing-expert' ),
-			'unlimited_audits'     => __( 'Unlimited on-page SEO audits + site-wide audit (free: 5/month)', 'ai-marketing-expert' ),
-			'unlimited_rank_track' => __( 'Unlimited rank tracking keywords + daily auto-check (free: 5, manual only)', 'ai-marketing-expert' ),
-			'niche_analysis'       => __( 'AI niche analysis & opportunity scoring', 'ai-marketing-expert' ),
-			'csv_export'           => __( 'Export keywords, audits, and reports to CSV/PDF', 'ai-marketing-expert' ),
-		);
-	}
-
 	/* ── Initialisation ─────────────────────────────────── */
 
 	public function init(): void {
@@ -89,13 +71,9 @@ class SeoModule extends Module {
 	}
 
 	/**
-	 * Process daily rank checks (Pro only).
+	 * Process daily rank checks.
 	 */
 	public function process_rank_checks(): void {
-		if ( ! aime_has_pro() ) {
-			return;
-		}
-
 		$settings = get_option( 'aime_seo_settings', array() );
 		if ( empty( $settings['auto_rank_check'] ) ) {
 			return;
@@ -106,12 +84,9 @@ class SeoModule extends Module {
 	}
 
 	/**
-	 * Process scheduled automation tasks (Pro only).
+	 * Process scheduled automation tasks.
 	 */
 	public function process_automations(): void {
-		if ( ! aime_has_pro() ) {
-			return;
-		}
 		$service = new Services\AutomationService();
 		$service->process_scheduled_tasks();
 	}
@@ -180,7 +155,6 @@ class SeoModule extends Module {
 			target_url VARCHAR(1000) DEFAULT NULL,
 			wp_post_id BIGINT UNSIGNED DEFAULT NULL,
 			notes TEXT,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -205,7 +179,6 @@ class SeoModule extends Module {
 			word_count_target INT UNSIGNED DEFAULT 1500,
 			priority TINYINT UNSIGNED DEFAULT 3,
 			notes TEXT,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -263,7 +236,6 @@ class SeoModule extends Module {
 			wp_post_id BIGINT UNSIGNED DEFAULT NULL,
 			article_id BIGINT UNSIGNED DEFAULT NULL,
 			notes TEXT,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -290,7 +262,6 @@ class SeoModule extends Module {
 			link_type VARCHAR(30) NOT NULL DEFAULT 'guest_post',
 			discovered_at DATETIME DEFAULT NULL,
 			acquired_at DATETIME DEFAULT NULL,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -469,10 +440,7 @@ class SeoModule extends Module {
 	}
 
 	/**
-	 * Count enabled automation toggles that count against the free-plan task
-	 * limit. Cron-driven toggles are Pro-only and metered separately, so they
-	 * must not be counted here or the meter locks a free user out of the
-	 * publish-hook rules they are entitled to.
+	 * Count enabled automation toggles.
 	 */
 	public static function get_active_automation_count(): int {
 		$settings = get_option( 'aime_seo_automation_settings', array() );

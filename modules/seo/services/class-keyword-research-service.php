@@ -87,7 +87,7 @@ class KeywordResearchService {
 	}
 
 	/**
-	 * AI niche analysis (Pro).
+	 * AI niche analysis.
 	 */
 	public function niche_analysis( string $niche ): array {
 		$prompt = implode( "\n", array(
@@ -140,7 +140,7 @@ class KeywordResearchService {
 	}
 
 	/**
-	 * AI competitor gap analysis (Pro).
+	 * AI competitor gap analysis.
 	 */
 	public function competitor_gap( string $my_domain, array $competitors ): array {
 		$competitors_list = implode( ', ', $competitors );
@@ -192,7 +192,7 @@ class KeywordResearchService {
 	}
 
 	/**
-	 * AI content brief generation (Pro).
+	 * AI content brief generation.
 	 */
 	public function generate_content_brief( string $keyword, string $niche ): array {
 		$niche_hint = $niche ? "Website niche: {$niche}." : '';

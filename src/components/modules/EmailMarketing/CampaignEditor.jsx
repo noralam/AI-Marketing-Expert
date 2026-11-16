@@ -19,7 +19,6 @@ import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import WPEditor from '../../common/WPEditor';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import sanitizeHtml from '../../../utils/sanitizeHtml';
 import { siteDateTimeToUtc } from '../../../utils/datetime';
 
@@ -68,7 +67,7 @@ const stripTemplateFooterMarkup = ( body = '' ) => body
 	.replace( /<div\b[^>]*>\s*(?:[^<]*&bull;\s*)?<a\b[^>]*href=["'][^"']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"']*["'][^>]*>.*?<\/a>(?:\s*from these emails?)?\s*<\/div>/gis, '' )
 	.replace( /<a\b[^>]*href=["'][^"']*(?:\{\{unsubscribe(?:_url)?\}\}|aime_track=unsubscribe)[^"']*["'][^>]*>.*?<\/a>/gis, '' );
 
-const buildPreviewEmailHtml = ( body = '', settings = {}, hasPro = true ) => {
+const buildPreviewEmailHtml = ( body = '', settings = {} ) => {
 	const strippedBody = stripTemplateFooterMarkup( body );
 	const footer = settings.email_footer || '';
 	const companyName = settings.company_name || '';
@@ -76,10 +75,6 @@ const buildPreviewEmailHtml = ( body = '', settings = {}, hasPro = true ) => {
 	const unsubscribeText = settings.unsubscribe_text || 'Unsubscribe';
 
 	const footerParts = [];
-	// Free tier: branding always leads the footer, matching CampaignProcessor.
-	if ( ! hasPro ) {
-		footerParts.push( '<p style="margin:0 0 8px;color:#64748b;font-size:12px">Sent with <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert</a></p>' );
-	}
 	if ( footer ) {
 		footerParts.push( footer );
 	}
@@ -321,11 +316,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	const id = campaignId;
 	const { get, post, put, loading } = useApi( { toastErrors: true } );
 	const slowWarning = useSlowWarning();
-	const hasPro = isProActive();
-	const freeLimits = window.aimeData?.freeLimits || {};
-	const freeTemplateLimit = Number( freeLimits.email_template_imports_free || 4 );
-
-	/* ---- state ---- */
 	const [ step, setStep ] = useState( initialStep || 0 );
 	const [ campaign, setCampaign ] = useState( null );
 	const [ form, setForm ] = useState( {
@@ -592,27 +582,23 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 			if ( excludedLists.length > 0 ) settings.exclude_lists = excludedLists;
 			if ( excludedTags.length > 0 ) settings.exclude_tags = excludedTags;
 		}
-		if ( hasPro && sendThrottle ) settings.send_throttle = parseInt( sendThrottle );
+		if ( sendThrottle ) settings.send_throttle = parseInt( sendThrottle );
 		// Audience range - only save if user narrowed from total
-		if ( hasPro && contactCount && ( audienceRange[ 0 ] > 0 || audienceRange[ 1 ] < contactCount ) ) {
+		if ( contactCount && ( audienceRange[ 0 ] > 0 || audienceRange[ 1 ] < contactCount ) ) {
 			settings.audience_offset = audienceRange[ 0 ];
 			settings.audience_limit  = audienceRange[ 1 ] - audienceRange[ 0 ];
 		}
 		// UTM values go as top-level params so the backend saves them to dedicated
 		// utm_* DB columns (not inside the settings JSON blob).
 		const payload = { ...form, settings };
-		if ( hasPro ) {
-			payload.utm_status   = utmEnabled ? 1 : 0;
-			payload.utm_source   = utmSource;
-			payload.utm_medium   = utmMedium;
-			payload.utm_campaign = utmCampaign;
-		}
+		payload.utm_status   = utmEnabled ? 1 : 0;
+		payload.utm_source   = utmSource;
+		payload.utm_medium   = utmMedium;
+		payload.utm_campaign = utmCampaign;
 		return payload;
 	};
 
-	const chooseProFeature = ( message ) => {
-		setNotice( { type: 'warning', message } );
-	};
+	const chooseProFeature = () => {};
 
 	const handleSave = async () => {
 		if ( savingRef.current ) {
@@ -703,9 +689,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	};
 
 	const handleSchedule = () => {
-		if ( ! hasPro ) {
-			setNotice( { type: 'warning', message: __( 'Free sites can schedule up to 3 campaigns. Upgrade to Pro for unlimited scheduled campaigns.', 'ai-marketing-expert' ) } );
-		}
 		if ( ! scheduleDate ) return;
 		// The picker collects a site-time wall clock; the column is UTC.
 		const dt = siteDateTimeToUtc( scheduleDate, scheduleTime );
@@ -795,11 +778,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 		const prompt      = customPrompt || aiPrompt || form.title || form.email_subject || 'professional marketing email';
 		const style       = customTone || aiTone || 'professional';
 		const layout_mode = customLayoutMode || aiLayoutMode || 'simple-html';
-		if ( ! hasPro && ( PRO_AI_TONES.includes( style ) || layout_mode === 'table-safe' ) ) {
-			setAiBodyLoading( false );
-			chooseProFeature( __( 'Advanced AI tones and table-safe email layout are available in Pro.', 'ai-marketing-expert' ) );
-			return;
-		}
 		slowWarning.start();
 		try {
 			const res = await post( '/email/ai/generate-template', { prompt, style, layout_mode } );
@@ -914,21 +892,21 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 						<div className="aime-premium-form-row">
 							<div className="aime-premium-form-group" style={ { flex: 1 } }>
 								<label className="aime-premium-form-label">{ __( 'Tone / Style', 'ai-marketing-expert' ) }</label>
-								<select className="aime-premium-select" value={ aiTone } onChange={ ( e ) => ! hasPro && PRO_AI_TONES.includes( e.target.value ) ? chooseProFeature( __( 'Advanced AI tones are available in Pro.', 'ai-marketing-expert' ) ) : setAiTone( e.target.value ) }>
+								<select className="aime-premium-select" value={ aiTone } onChange={ ( e ) => setAiTone( e.target.value ) }>
 									<option value="professional">{ __( 'Professional', 'ai-marketing-expert' ) }</option>
 									<option value="friendly">{ __( 'Friendly & Casual', 'ai-marketing-expert' ) }</option>
 									<option value="urgent">{ __( 'Urgent / FOMO', 'ai-marketing-expert' ) }</option>
 									<option value="storytelling">{ __( 'Storytelling', 'ai-marketing-expert' ) }</option>
-									<option value="formal" disabled={ ! hasPro }>{ __( 'Formal / Corporate', 'ai-marketing-expert' ) }{ ! hasPro ? ' PRO' : '' }</option>
-									<option value="humorous" disabled={ ! hasPro }>{ __( 'Humorous / Fun', 'ai-marketing-expert' ) }{ ! hasPro ? ' PRO' : '' }</option>
-									<option value="minimalist" disabled={ ! hasPro }>{ __( 'Minimalist / Clean', 'ai-marketing-expert' ) }{ ! hasPro ? ' PRO' : '' }</option>
+									<option value="formal">{ __( 'Formal / Corporate', 'ai-marketing-expert' ) }</option>
+									<option value="humorous">{ __( 'Humorous / Fun', 'ai-marketing-expert' ) }</option>
+									<option value="minimalist">{ __( 'Minimalist / Clean', 'ai-marketing-expert' ) }</option>
 								</select>
 							</div>
 							<div className="aime-premium-form-group" style={ { flex: 1 } }>
 								<label className="aime-premium-form-label">{ __( 'Layout Mode', 'ai-marketing-expert' ) }</label>
-								<select className="aime-premium-select" value={ aiLayoutMode } onChange={ ( e ) => e.target.value === 'table-safe' && ! hasPro ? chooseProFeature( __( 'Table-safe email layout is available in Pro.', 'ai-marketing-expert' ) ) : setAiLayoutMode( e.target.value ) }>
+								<select className="aime-premium-select" value={ aiLayoutMode } onChange={ ( e ) => setAiLayoutMode( e.target.value ) }>
 									<option value="simple-html">{ __( 'Simple HTML', 'ai-marketing-expert' ) }</option>
-									<option value="table-safe" disabled={ ! hasPro }>{ __( 'Table-safe email', 'ai-marketing-expert' ) }{ ! hasPro ? ' PRO' : '' }</option>
+									<option value="table-safe">{ __( 'Table-safe email', 'ai-marketing-expert' ) }</option>
 								</select>
 							</div>
 							<div className="aime-premium-form-group" style={ { display: 'flex', alignItems: 'flex-end' } }>
@@ -975,19 +953,14 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 						<div className="aime-template-accordion-body">
 							{ templates.length > 0 ? (
 								<div className="aime-template-picker-grid">
-									{ templates.map( ( t, index ) => {
+									{ templates.map( ( t ) => {
 										const isActive = form.template_id === t.id;
-										const isLocked = ! hasPro && index >= freeTemplateLimit;
 										return (
 											<button
 												key={ t.id }
 												type="button"
-												className={ `aime-template-picker-card${ isActive ? ' is-active' : '' }${ isLocked ? ' is-pro-locked' : '' }` }
+												className={ `aime-template-picker-card${ isActive ? ' is-active' : '' }` }
 												onClick={ async () => {
-													if ( isLocked ) {
-														chooseProFeature( __( 'More email templates are available in Pro.', 'ai-marketing-expert' ) );
-														return;
-													}
 													setForm( ( prev ) => ( { ...prev, template_id: t.id } ) );
 													try {
 														const tpl = await get( `/email/templates/${ t.id }` );
@@ -1004,7 +977,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 													{ t.name || t.title }
 												</div>
 												{ isActive && <span className="aime-template-picker-check">{ '\u2713' }</span> }
-												{ isLocked && <span className="aime-template-picker-check"><ProLabel /></span> }
 											</button>
 										);
 									} ) }
@@ -1113,8 +1085,8 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 				{ /* -------- A/B Testing Toggle -------- */ }
 				<div className="aime-premium-form-group" style={ { marginTop: 8 } }>
 					<label className="aime-checkbox-row">
-						<input type="checkbox" checked={ hasPro && abEnabled } disabled={ ! hasPro } onChange={ ( e ) => { if ( ! hasPro ) { chooseProFeature( __( 'A/B testing is available in Pro.', 'ai-marketing-expert' ) ); return; } setAbEnabled( e.target.checked ); if ( ! e.target.checked ) { setAbSubject( '' ); } } } />
-							<span className="aime-checkbox-label"><ProLabel>{ __( 'Enable A/B Testing', 'ai-marketing-expert' ) }</ProLabel></span>
+						<input type="checkbox" checked={ abEnabled } onChange={ ( e ) => { setAbEnabled( e.target.checked ); if ( ! e.target.checked ) { setAbSubject( '' ); } } } />
+						<span className="aime-checkbox-label">{ __( 'Enable A/B Testing', 'ai-marketing-expert' ) }</span>
 					</label>
 					<p className="aime-muted" style={ { fontSize: 12, marginTop: 2 } }>{ __( 'Test two subject lines - recipients are split 50/50 automatically.', 'ai-marketing-expert' ) }</p>
 				</div>
@@ -1202,12 +1174,12 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 				</div>
 			</Card>
 
-			<Card title={ <span className="aime-pro-card-header">{ __( 'UTM Tracking', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+			<Card title={ __( 'UTM Tracking', 'ai-marketing-expert' ) }>
 				<label className="aime-checkbox-row">
-					<input type="checkbox" checked={ hasPro && utmEnabled } disabled={ ! hasPro } onChange={ ( e ) => { if ( ! hasPro ) { chooseProFeature( __( 'UTM tracking is available in Pro.', 'ai-marketing-expert' ) ); return; } setUtmEnabled( e.target.checked ); } } />
+					<input type="checkbox" checked={ utmEnabled } onChange={ ( e ) => setUtmEnabled( e.target.checked ) } />
 					<span className="aime-checkbox-label">{ __( 'Enable UTM Tracking', 'ai-marketing-expert' ) }</span>
 				</label>
-				{ hasPro && utmEnabled && (
+				{ utmEnabled && (
 					<div className="aime-utm-fields">
 						<div className="aime-premium-form-row">
 							<div className="aime-premium-form-group">
@@ -1227,12 +1199,11 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 				) }
 			</Card>
 
-			<Card title={ <span className="aime-pro-card-header">{ __( 'Send Throttle', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+			<Card title={ __( 'Send Throttle', 'ai-marketing-expert' ) }>
 				<div className="aime-premium-form-group">
 					<label className="aime-premium-form-label">{ __( 'Emails per minute (0 = no limit)', 'ai-marketing-expert' ) }</label>
-					<input className="aime-premium-input" type="number" min="0" value={ hasPro ? sendThrottle : '0' } disabled={ ! hasPro } onChange={ ( e ) => setSendThrottle( e.target.value ) } />
+					<input className="aime-premium-input" type="number" min="0" value={ sendThrottle } onChange={ ( e ) => setSendThrottle( e.target.value ) } />
 				</div>
-				{ ! hasPro && <ProUpgradeButton /> }
 				<p className="aime-muted" style={ { fontSize: 13, marginTop: 4 } }>
 					{ __( 'Throttle sending to avoid provider rate limits. Set 0 for maximum speed.', 'ai-marketing-expert' ) }
 				</p>
@@ -1271,14 +1242,10 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 							type="button"
 							className={ `aime-toggle-btn${ recipientMode === 'specific' && recipientType === 'segments' ? ' is-selected' : '' }` }
 							onClick={ () => {
-								if ( ! hasPro ) {
-									chooseProFeature( __( 'Smart Segments are available in Pro.', 'ai-marketing-expert' ) );
-									return;
-								}
 								setRecipientMode( 'specific' ); setRecipientType( 'segments' ); setSelectedRecipients( [ smartSegment.type ] );
 							} }
 						>
-							<span className="aime-pro-inline-action">{ __( 'Smart Segments', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+							<span>{ __( 'Smart Segments', 'ai-marketing-expert' ) }</span>
 						</button>
 					</div>
 				</div>
@@ -1331,7 +1298,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 
 				{ recipientMode === 'specific' && recipientType === 'segments' && (
 					<div className="aime-premium-form-group">
-						<label className="aime-premium-form-label"><ProLabel>{ __( 'Select Smart Segment', 'ai-marketing-expert' ) }</ProLabel></label>
+						<label className="aime-premium-form-label">{ __( 'Select Smart Segment', 'ai-marketing-expert' ) }</label>
 						<div className="aime-toggle-buttons">
 							{ SMART_SEGMENT_OPTIONS.map( ( segment ) => {
 								const isSelected = smartSegment.type === segment.value;
@@ -1478,7 +1445,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 
 					{ contactCount > 0 && (
 						<div className="aime-audience-slider" style={ { marginTop: 20 } }>
-							<label className="aime-premium-form-label"><ProLabel>{ __( 'Audience Range', 'ai-marketing-expert' ) }</ProLabel></label>
+							<label className="aime-premium-form-label">{ __( 'Audience Range', 'ai-marketing-expert' ) }</label>
 							<p className="aime-muted" style={ { margin: '0 0 12px', fontSize: 13 } }>
 								{ __( 'Drag the handles to select a portion of your audience. Useful for splitting sends or A/B testing.', 'ai-marketing-expert' ) }
 							</p>
@@ -1490,10 +1457,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 									step={ 1 }
 									value={ audienceRange[ 0 ] }
 									onChange={ ( e ) => {
-										if ( ! hasPro ) {
-											chooseProFeature( __( 'Audience Range is available in Pro.', 'ai-marketing-expert' ) );
-											return;
-										}
 										const v = Math.min( parseInt( e.target.value ), audienceRange[ 1 ] );
 										setAudienceRange( [ v, audienceRange[ 1 ] ] );
 									} }
@@ -1506,10 +1469,6 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 									step={ 1 }
 									value={ audienceRange[ 1 ] }
 									onChange={ ( e ) => {
-										if ( ! hasPro ) {
-											chooseProFeature( __( 'Audience Range is available in Pro.', 'ai-marketing-expert' ) );
-											return;
-										}
 										const v = Math.max( parseInt( e.target.value ), audienceRange[ 0 ] );
 										setAudienceRange( [ audienceRange[ 0 ], v ] );
 									} }
@@ -1536,8 +1495,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 								<span>{ __( 'To:', 'ai-marketing-expert' ) } <strong>{ audienceRange[ 1 ].toLocaleString() }</strong></span>
 								<span>{ __( 'Sending to:', 'ai-marketing-expert' ) } <strong>{ ( audienceRange[ 1 ] - audienceRange[ 0 ] ).toLocaleString() }</strong> { __( 'contacts', 'ai-marketing-expert' ) }</span>
 							</div>
-							{ ! hasPro && <ProUpgradeButton /> }
-							{ hasPro && ( audienceRange[ 0 ] > 0 || audienceRange[ 1 ] < contactCount ) && (
+							{ ( audienceRange[ 0 ] > 0 || audienceRange[ 1 ] < contactCount ) && (
 								<Button variant="link" onClick={ () => setAudienceRange( [ 0, contactCount ] ) } style={ { marginTop: 4 } }>
 									{ __( 'Reset to all contacts', 'ai-marketing-expert' ) }
 								</Button>
@@ -1550,7 +1508,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 	);
 
 	const renderReview = () => {
-		const previewEmailBody = form.email_body ? buildPreviewEmailHtml( form.email_body, emailSettings, hasPro ) : '';
+		const previewEmailBody = form.email_body ? buildPreviewEmailHtml( form.email_body, emailSettings ) : '';
 		const recipientNames = selectedRecipients
 			.map( ( rid ) => recipientOptions.find( ( o ) => o.id === rid ) )
 			.filter( Boolean )
@@ -1725,7 +1683,7 @@ const CampaignEditor = ( { id: propId, templateId, initialStep, onBack, onNaviga
 									<span>{ '\uD83D\uDCE7' }</span> { __( 'Send Test', 'ai-marketing-expert' ) }
 								</button>
 								<button type="button" className="aime-btn-secondary" onClick={ () => setScheduleModalOpen( true ) } disabled={ sendingCampaign }>
-									<span>{ '\uD83D\uDCC5' }</span> { __( 'Schedule', 'ai-marketing-expert' ) }{ ! hasPro && <span className="aime-muted" style={ { marginLeft: 6, fontSize: 11 } }>{ __( '3 free', 'ai-marketing-expert' ) }</span> }
+									<span>{ '\uD83D\uDCC5' }</span> { __( 'Schedule', 'ai-marketing-expert' ) }
 								</button>
 								<button type="button" className="aime-btn-primary" onClick={ () => handleSend() } disabled={ sendingCampaign }>
 									{ sendingCampaign

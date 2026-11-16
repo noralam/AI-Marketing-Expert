@@ -11,10 +11,8 @@ import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import ConfirmModal from '../../common/ConfirmModal';
 import Notice from '../../common/Notice';
-import { ProUpgradeButton } from '../../common/ProLock';
 import ConnectAccountModal from './ConnectAccountModal';
 import { toast } from '../../common/Toast';
-import { FREE_LIMITS } from '../../../utils/constants';
 
 const platformColors = {
 	facebook: '#1877F2',
@@ -100,34 +98,19 @@ const Accounts = ( { onNavigate } ) => {
 		return <Loader text={ __( 'Loading accounts...', 'ai-marketing-expert' ) } />;
 	}
 
-	const hasPro = window.aimeData?.hasPro;
-	const limit = FREE_LIMITS.social_accounts || 2;
-	const canAdd = hasPro || accounts.length < limit;
-	const accountLimitReached = ! hasPro && accounts.length >= limit;
-
 	return (
 		<div className="aime-accounts-page">
 			<div className="aime-section-header" style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 } }>
 				<div>
 					<h2 style={ { margin: 0 } }>{ __( 'Connected Accounts', 'ai-marketing-expert' ) }</h2>
-					{ ! hasPro && (
-						<p style={ { margin: '4px 0 0', fontSize: 13, color: 'var(--aime-text-muted)' } }>
-							{ `${ accounts.length }/${ limit } ${ __( 'accounts (Free plan)', 'ai-marketing-expert' ) }` }
-						</p>
-					) }
 				</div>
 				<Button
 					variant="primary"
 					onClick={ () => setShowConnect( true ) }
-					disabled={ ! canAdd }
 				>
 					{ __( '+ Connect Account', 'ai-marketing-expert' ) }
 				</Button>
 			</div>
-
-			{ accountLimitReached && (
-				<Notice type="info" message={ __( 'Free plan includes 2 social accounts. Upgrade to Pro for unlimited accounts.', 'ai-marketing-expert' ) } />
-			) }
 
 			{ accounts.length === 0 ? (
 				<Card>
@@ -137,7 +120,7 @@ const Accounts = ( { onNavigate } ) => {
 						<p style={ { color: 'var(--aime-text-muted)' } }>
 							{ __( 'Connect your Facebook, Instagram, or X account to start posting.', 'ai-marketing-expert' ) }
 						</p>
-						<Button variant="primary" onClick={ () => setShowConnect( true ) } disabled={ ! canAdd }>
+						<Button variant="primary" onClick={ () => setShowConnect( true ) }>
 							{ __( 'Connect Your First Account', 'ai-marketing-expert' ) }
 						</Button>
 					</div>

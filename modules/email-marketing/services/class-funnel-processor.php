@@ -760,10 +760,11 @@ class FunnelProcessor {
 			'last_name'     => $row->last_name,
 			'funnel_id'     => $row->funnel_id,
 		);
-		$resp = wp_remote_post( $url, array(
-			'body'    => wp_json_encode( $payload ),
-			'headers' => array( 'Content-Type' => 'application/json' ),
-			'timeout' => 10,
+		$resp = wp_safe_remote_post( $url, array(
+			'body'               => wp_json_encode( $payload ),
+			'headers'            => array( 'Content-Type' => 'application/json' ),
+			'timeout'            => 10,
+			'reject_unsafe_urls' => true,
 		) );
 		return ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) < 400;
 	}

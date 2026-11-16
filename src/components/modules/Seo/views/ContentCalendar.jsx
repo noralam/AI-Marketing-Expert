@@ -1,5 +1,5 @@
 /**
- * Content Calendar - AI-generated content calendar with CRUD (Pro).
+ * Content Calendar - AI-generated content calendar with CRUD.
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
@@ -8,14 +8,12 @@ import { Button, TextControl, SelectControl } from '@aime/wp-components';
 import { trash, edit, pencil } from '@wordpress/icons';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, StackedBar, SortArrow } from './SeoCharts';
@@ -36,7 +34,6 @@ const STATUS_LABELS = {
 
 const ContentCalendar = ( { onNavigate } ) => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
-	const { proUrl } = usePro();
 	const slowWarning = useSlowWarning();
 	const [ usage, setUsage ] = useState( null );
 	const [ items, setItems ] = useState( [] );
@@ -173,20 +170,8 @@ const ContentCalendar = ( { onNavigate } ) => {
 					<h2>{ __( 'Content Calendar', 'ai-marketing-expert' ) } ({ total })</h2>
 				</div>
 
-				<UsageNotice
-					usage={ usage?.items }
-					featureLabel={ __( 'calendar items', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-					kind="storage"
-				/>
-
 				{ /* Generate */ }
 				<Card title={ __( 'Generate Calendar with AI', 'ai-marketing-expert' ) }>
-					<UsageNotice
-						usage={ usage?.generate }
-						featureLabel={ __( 'calendar generation', 'ai-marketing-expert' ) }
-						proUrl={ proUrl }
-					/>
 					<div className="aime-table-toolbar">
 						<TextControl
 							label={ __( 'Niche', 'ai-marketing-expert' ) }

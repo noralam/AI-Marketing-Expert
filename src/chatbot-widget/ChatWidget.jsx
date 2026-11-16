@@ -34,18 +34,18 @@ const ChatWidget = ( { config } ) => {
 	// Resume an existing conversation on first mount so old messages show.
 	const resumedRef = useRef( false );
 	useEffect( () => {
-		if ( ! resumedRef.current && chat.conversationId && chat.messages.length === 0 ) {
+		if ( ! resumedRef.current && chat.consentGiven && chat.conversationId && chat.messages.length === 0 ) {
 			resumedRef.current = true;
 			chat.startConversation();
 		}
-	}, [] ); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [ chat.consentGiven ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const bubbleRef = useRef( null );
 
 	const toggle = useCallback( () => {
 		setIsOpen( ( prev ) => {
 			const next = ! prev;
-			if ( next && ! chat.conversationId ) {
+			if ( next && chat.consentGiven && ! chat.conversationId ) {
 				chat.startConversation();
 			}
 			// Opening clears the unread badge; closing re-arms it.

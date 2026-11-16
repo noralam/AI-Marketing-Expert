@@ -83,17 +83,6 @@ class AccountController {
 	 * Initiate OAuth connection — returns OAuth URL.
 	 */
 	public function connect( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$count = SocialMediaModule::get_account_count();
-			if ( aime_limit_reached( 'social_accounts', $count ) ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Account limit reached. Upgrade to Pro for unlimited accounts.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$platform = sanitize_text_field( $request->get_param( 'platform' ) );
 
 		$oauth  = new OAuthService();
@@ -191,9 +180,8 @@ class AccountController {
 					'candidates' => $candidates,
 				), 15 * MINUTE_IN_SECONDS );
 
-				$has_pro         = aime_has_pro();
 				$current_count   = SocialMediaModule::get_account_count();
-				$available_slots = $has_pro ? null : max( 0, 2 - $current_count );
+				$available_slots = null;
 
 				$ui_accounts = array_map( function( $c ) {
 					return array(
@@ -212,7 +200,6 @@ class AccountController {
 					'accounts'           => $ui_accounts,
 					'current_count'      => $current_count,
 					'available_slots'    => $available_slots,
-					'has_pro'            => $has_pro,
 				), 200 );
 			}
 
@@ -357,9 +344,8 @@ class AccountController {
 					'candidates' => $candidates,
 				), 15 * MINUTE_IN_SECONDS );
 
-				$has_pro         = aime_has_pro();
 				$current_count   = SocialMediaModule::get_account_count();
-				$available_slots = $has_pro ? null : max( 0, 2 - $current_count );
+				$available_slots = null;
 
 				$ui_accounts = array_map( function( $c ) {
 					return array(
@@ -378,7 +364,6 @@ class AccountController {
 					'accounts'           => $ui_accounts,
 					'current_count'      => $current_count,
 					'available_slots'    => $available_slots,
-					'has_pro'            => $has_pro,
 				), 200 );
 			}
 
@@ -466,7 +451,6 @@ class AccountController {
 
 		$platform   = $data['platform'];
 		$candidates = $data['candidates'];
-		$has_pro    = aime_has_pro();
 
 		$candidates_by_id = array();
 		foreach ( $candidates as $c ) {
@@ -490,17 +474,6 @@ class AccountController {
 			return new \WP_REST_Response( array(
 				'message' => __( 'None of the selected accounts could be found.', 'ai-marketing-expert' ),
 			), 400 );
-		}
-
-		// Enforce Free Limit for new accounts
-		if ( ! $has_pro ) {
-			$current_count = SocialMediaModule::get_account_count();
-			if ( ( $current_count + $new_accounts_count ) > 2 ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Account limit reached. Free plan includes 2 social accounts. Upgrade to Pro for unlimited accounts.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
 		}
 
 		global $wpdb;
@@ -595,17 +568,6 @@ class AccountController {
 	 * Connect account manually with access token.
 	 */
 	public function connect_manual( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$count = SocialMediaModule::get_account_count();
-			if ( aime_limit_reached( 'social_accounts', $count ) ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Account limit reached. Upgrade to Pro for unlimited accounts.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$platform         = sanitize_text_field( $request->get_param( 'platform' ) );
 		$api_key          = sanitize_text_field( $request->get_param( 'api_key' ) ?: '' );
 		$api_secret       = sanitize_text_field( $request->get_param( 'api_secret' ) ?: '' );

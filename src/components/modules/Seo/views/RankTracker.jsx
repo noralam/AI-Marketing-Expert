@@ -6,17 +6,14 @@ import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextControl, SelectControl, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
 import { toast } from '../../../common/Toast';
 import { DonutChart, HBarChart, SortArrow } from './SeoCharts';
 
 const RankTracker = ( { onNavigate } ) => {
 	const { get, post, loading, error, clearError } = useApi();
-	const { hasPro, freeLimits } = usePro();
 	const [ history, setHistory ] = useState( [] );
 	const [ keywords, setKeywords ] = useState( [] );
 	const [ selectedKeyword, setSelectedKeyword ] = useState( '' );
@@ -155,31 +152,23 @@ const RankTracker = ( { onNavigate } ) => {
 			<div className="aime-page-header">
 				<h2>{ __( 'Rank Tracker', 'ai-marketing-expert' ) }</h2>
 				<div className="aime-page-header-actions">
-					{ hasPro && (
-						<Button
-							variant="secondary"
-							onClick={ handleBulkCheck }
-							disabled={ bulkChecking }
-							isBusy={ bulkChecking }
-						>
-							{ bulkChecking
-								? <><Spinner style={ { marginRight: 4 } } />{ __( 'Checking\u2026', 'ai-marketing-expert' ) }</>
-								: __( 'Bulk Check All', 'ai-marketing-expert' )
-							}
-						</Button>
-					) }
+					<Button
+						variant="secondary"
+						onClick={ handleBulkCheck }
+						disabled={ bulkChecking }
+						isBusy={ bulkChecking }
+					>
+						{ bulkChecking
+							? <><Spinner style={ { marginRight: 4 } } />{ __( 'Checking\u2026', 'ai-marketing-expert' ) }</>
+							: __( 'Bulk Check All', 'ai-marketing-expert' )
+						}
+					</Button>
 				</div>
 			</div>
 
-			{ ! hasPro && (
-				<Notice
-					type="info"
-					message={ `${ __( 'Free plan: track up to', 'ai-marketing-expert' ) } ${ freeLimits?.seo_rank_keywords || 5 } ${ __( 'keywords.', 'ai-marketing-expert' ) }` }
-				/>
-			) }
 			<Notice
 				type="info"
-				message={ `${ __( 'Rank checks currently use AI-estimated positions for', 'ai-marketing-expert' ) } ${ ( settings?.rank_check_engine || 'google' ).toUpperCase() }. ${ __( 'Connect a SERP provider in a future Pro integration for verified live rankings.', 'ai-marketing-expert' ) }` }
+				message={ `${ __( 'Rank checks currently use AI-estimated positions for', 'ai-marketing-expert' ) } ${ ( settings?.rank_check_engine || 'google' ).toUpperCase() }.` }
 			/>
 
 			{ /* Summary Stats */ }

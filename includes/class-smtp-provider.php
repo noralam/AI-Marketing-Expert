@@ -330,6 +330,7 @@ class SmtpProvider {
 				? ( $data['smtp_encryption'] ?? 'tls' ) : 'tls',
 			'smtp_username'   => sanitize_text_field( $data['smtp_username'] ?? '' ),
 			'from_name'       => sanitize_text_field( $data['from_name'] ?? '' ),
+			'from_email'      => sanitize_email( $data['from_email'] ?? ( $existing['from_email'] ?? '' ) ),
 			'sending_limit'   => 'wp_mail' === ( $data['provider'] ?? 'wp_mail' )
 				? 0
 				: max( 1, absint( $data['sending_limit'] ?? self::DEFAULT_DAILY_LIMIT ) ),
@@ -912,7 +913,18 @@ class SmtpProvider {
 		$header_list = is_array( $headers ) ? $headers : explode( "\n", (string) $headers );
 		foreach ( $header_list as $h ) {
 			$h = trim( $h );
-			if ( stripos( $h, 'Reply-To:' ) === 0 ) {
+			if ( stripos( $h, 'From:' ) === 0 ) {
+				$from_val = trim( substr( $h, 5 ) );
+				if ( preg_match( '/^(.*)<([^>]+)>$/', $from_val, $m ) ) {
+					$custom_name  = trim( $m[1], " \t\n\r\0\x0B\"'" );
+					$custom_email = sanitize_email( trim( $m[2] ) );
+					if ( is_email( $custom_email ) ) {
+						$mail->setFrom( $custom_email, $custom_name ?: $from_name );
+					}
+				} elseif ( is_email( $from_val ) ) {
+					$mail->setFrom( $from_val, $from_name );
+				}
+			} elseif ( stripos( $h, 'Reply-To:' ) === 0 ) {
 				$mail->addReplyTo( trim( str_ireplace( 'Reply-To:', '', $h ) ) );
 			} elseif ( stripos( $h, 'Cc:' ) === 0 ) {
 				$mail->addCC( trim( str_ireplace( 'Cc:', '', $h ) ) );
@@ -1077,12 +1089,17 @@ class SmtpProvider {
 	 * @return string
 	 */
 	private static function get_from_email_for_connection( array $conn, array $resolved ): string {
-		if ( ! empty( $conn['from_email'] ) ) {
+		if ( ! empty( $conn['from_email'] ) && is_email( $conn['from_email'] ) ) {
 			return $conn['from_email'];
 		}
 
 		if ( ! empty( $resolved['username'] ) && is_email( $resolved['username'] ) ) {
 			return $resolved['username'];
+		}
+
+		$settings = get_option( 'aime_settings', array() );
+		if ( ! empty( $settings['from_email'] ) && is_email( $settings['from_email'] ) ) {
+			return $settings['from_email'];
 		}
 
 		return get_option( 'aime_from_email' ) ?: get_option( 'admin_email' );

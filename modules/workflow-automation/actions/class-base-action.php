@@ -115,9 +115,9 @@ abstract class BaseAction {
 	}
 
 	/**
-	 * Resolve the effective topic with Pro rotation support.
+	 * Resolve the effective topic with rotation support.
 	 *
-	 * A non-empty rotation list ($list_key, Pro only) overrides the single
+	 * A non-empty rotation list ($list_key) overrides the single
 	 * topic: each run picks a different entry via rotate_topic(). Otherwise
 	 * falls back to the single-topic resolution (step config, else workflow
 	 * topic) exactly as before.
@@ -133,7 +133,7 @@ abstract class BaseAction {
 			? $list
 			: array_filter( array_map( 'trim', explode( ',', (string) $list ) ) );
 
-		if ( $list && aime_has_pro() ) {
+		if ( $list ) {
 			$state_key = (int) ( $context['workflow_id'] ?? 0 ) . ':' . (int) ( $context['step_id'] ?? 0 );
 			$rotated   = self::rotate_topic( $list, $state_key );
 			if ( '' !== $rotated ) {
@@ -145,7 +145,7 @@ abstract class BaseAction {
 	}
 
 	/**
-	 * Pick the next topic from a rotation list (Pro).
+	 * Pick the next topic from a rotation list.
 	 *
 	 * Random-without-repeat: tracks which entries have already been used
 	 * (per state key + list fingerprint, so editing the list restarts the
@@ -197,7 +197,7 @@ abstract class BaseAction {
 	}
 
 	/**
-	 * Brand-voice system instructions for the workflow (Pro).
+	 * Brand-voice system instructions for the workflow.
 	 *
 	 * Shared by every AI-generating step so a selected brand voice applies
 	 * consistently — not only to blog posts.
@@ -206,9 +206,6 @@ abstract class BaseAction {
 	 * @return string Prompt text ('' when no voice applies).
 	 */
 	protected static function brand_voice_system_prompt( array $context ): string {
-		if ( ! aime_has_pro() ) {
-			return '';
-		}
 		$brand_voice_id = (int) ( $context['brand_voice_id'] ?? 0 );
 		if ( $brand_voice_id <= 0 ) {
 			return '';

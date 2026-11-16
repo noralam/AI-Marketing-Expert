@@ -62,29 +62,6 @@ class ChatbotModule extends Module {
 		return '1.0.0';
 	}
 
-	/* ── Pro features ───────────────────────────────────── */
-
-	public function get_pro_features(): array {
-		return array(
-			'unlimited_conversations' => __( 'Unlimited conversations (free: 100/month)', 'ai-marketing-expert' ),
-			'unlimited_bots'          => __( 'Unlimited chatbot instances (free: 1)', 'ai-marketing-expert' ),
-			'human_takeover'          => __( 'Live human agent takeover', 'ai-marketing-expert' ),
-			'woocommerce_indexing'    => __( 'WooCommerce product knowledge indexing', 'ai-marketing-expert' ),
-			'document_indexing'       => __( 'Custom document & URL indexing', 'ai-marketing-expert' ),
-			'custom_css'              => __( 'Custom CSS for widget theming', 'ai-marketing-expert' ),
-			'animated_intro'          => __( 'Animated widget intro effects', 'ai-marketing-expert' ),
-			'advanced_analytics'      => __( 'Advanced analytics with topics & satisfaction', 'ai-marketing-expert' ),
-			'chat_export'             => __( 'Export conversations to CSV', 'ai-marketing-expert' ),
-			'file_sharing'            => __( 'File & image sharing in chat', 'ai-marketing-expert' ),
-			'business_hours'          => __( 'Business hours & offline messages', 'ai-marketing-expert' ),
-			'conversation_rating'     => __( 'Visitor satisfaction rating', 'ai-marketing-expert' ),
-			'remove_branding'         => __( 'Remove "Powered by" branding', 'ai-marketing-expert' ),
-			'ai_fallback'             => __( 'Multiple AI provider fallback', 'ai-marketing-expert' ),
-			'advanced_system_prompt'  => __( 'Advanced system prompt with variables', 'ai-marketing-expert' ),
-			'public_discussions'      => __( 'Public discussions page via [aime_discussions] shortcode', 'ai-marketing-expert' ),
-		);
-	}
-
 	/* ── Initialisation ─────────────────────────────────── */
 
 	public function init(): void {
@@ -108,7 +85,7 @@ class ChatbotModule extends Module {
 		add_action( 'aime_chatbot_index_post', array( Services\KnowledgeIndexer::class, 'index_single_post' ) );
 		add_action( 'before_delete_post', array( Services\KnowledgeIndexer::class, 'remove_post_knowledge' ) );
 
-		// Public discussions shortcode (Pro).
+		// Public discussions shortcode.
 		add_shortcode( 'aime_discussions', array( $this, 'render_discussions_shortcode' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_discussions_css' ) );
 	}
@@ -153,7 +130,6 @@ class ChatbotModule extends Module {
 			business_hours longtext,
 			banned_words text,
 			page_rules longtext,
-			is_pro tinyint(1) NOT NULL DEFAULT 0,
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -259,7 +235,7 @@ class ChatbotModule extends Module {
 		$wpdb->query( "ALTER TABLE {$conversations_table} MODIFY is_public tinyint(1) NOT NULL DEFAULT 0" );
 	}
 
-	/* ── Public Discussions Shortcode (Pro) ───────────────── */
+	/* ── Public Discussions Shortcode ────────────────────── */
 
 	public function maybe_enqueue_discussions_css(): void {
 		global $post;
@@ -275,10 +251,6 @@ class ChatbotModule extends Module {
 	}
 
 	public function render_discussions_shortcode( $atts ): string {
-		if ( ! aime_has_pro() ) {
-			return '<p class="aime-discussions-notice">' . esc_html__( 'Public Discussions requires Pro.', 'ai-marketing-expert' ) . '</p>';
-		}
-
 		$atts = shortcode_atts( array(
 			'per_page' => 10,
 			'bot_id'   => 0,
@@ -696,7 +668,7 @@ class ChatbotModule extends Module {
 			'poll_interval_seconds'     => 5,
 			'max_message_length'        => 500,
 			'consent_message'           => __( 'We use cookies and chat data to provide you with the best support experience. By starting this chat, you consent to our collection and use of this data in accordance with our Privacy Policy. You can end the chat at any time.', 'ai-marketing-expert' ),
-			'gdpr_enabled'              => false,
+			'gdpr_enabled'              => true,
 			'enable_typing_indicator'   => true,
 			'enable_read_receipts'      => true,
 		);
@@ -706,7 +678,7 @@ class ChatbotModule extends Module {
 		$theme_config['sound_enabled']          = ! empty( $gs['enable_sound_notification'] );
 		$theme_config['poll_interval']           = (int) ( $gs['poll_interval_seconds'] ?? 5 );
 		$theme_config['max_message_length']      = (int) ( $gs['max_message_length'] ?? 500 );
-		$theme_config['gdpr_enabled']            = ! empty( $gs['gdpr_enabled'] );
+		$theme_config['gdpr_enabled']            = ! isset( $gs['gdpr_enabled'] ) || ! empty( $gs['gdpr_enabled'] );
 		$theme_config['consent_message']         = $gs['consent_message'] ?? '';
 		$theme_config['enable_typing_indicator'] = ! empty( $gs['enable_typing_indicator'] );
 		$theme_config['enable_read_receipts']    = ! empty( $gs['enable_read_receipts'] );
@@ -722,7 +694,6 @@ class ChatbotModule extends Module {
 			'themeConfig'   => $theme_config,
 			'leadConfig'    => $lead_config,
 			'visitorId'     => $visitor_id,
-			'hasPro'        => aime_has_pro(),
 			'businessHours' => json_decode( $bot->business_hours ?: '{}', true ) ?: array(),
 			'siteUrl'       => home_url(),
 			'siteName'      => get_bloginfo( 'name' ),
@@ -890,14 +861,9 @@ class ChatbotModule extends Module {
 			gmdate( 'Y-m-d H:i:s', strtotime( '-24 hours' ) )
 		) );
 
-		// Purge old conversations based on data retention setting.
+		// Purge old conversations based on data retention setting (0 = keep forever).
 		$settings       = get_option( 'aime_chatbot_settings', array() );
 		$retention_days = absint( $settings['data_retention_days'] ?? 90 );
-
-		// Free tier capped at 7 days; Pro uses the setting (0 = keep forever).
-		if ( ! aime_has_pro() ) {
-			$retention_days = min( $retention_days ?: 7, 7 );
-		}
 
 		if ( $retention_days > 0 ) {
 			$cutoff = gmdate( 'Y-m-d H:i:s', strtotime( "-{$retention_days} days" ) );

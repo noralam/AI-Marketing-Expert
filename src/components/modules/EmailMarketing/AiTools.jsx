@@ -11,12 +11,10 @@ import Card from '../../common/Card';
 import LoadingBtn from '../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice';
 import Notice from '../../common/Notice';
-import ProLock, { isProActive, ProLabel } from '../../common/ProLock';
 
 const AiTools = () => {
 	const { get, post, error, clearError } = useApi();
 	const slowWarning = useSlowWarning();
-	const hasPro = isProActive();
 	const [ copied, setCopied ] = useState( false );
 
 	const handleCopy = useCallback( ( text ) => {
@@ -235,7 +233,7 @@ const AiTools = () => {
 				</Card>
 
 				{ /* Content Scorer */ }
-				<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Content Scorer', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+				<Card title={ __( 'Content Scorer', 'ai-marketing-expert' ) }>
 					<TextareaControl label={ __( 'Email Content', 'ai-marketing-expert' ) } value={ content } onChange={ setContent } rows={ 4 } placeholder={ __( 'Paste your email content...', 'ai-marketing-expert' ) } />
 					{ scoreLoading ? (
 						<LoadingBtn primary>{ __( 'Scoring...', 'ai-marketing-expert' ) }</LoadingBtn>
@@ -273,7 +271,7 @@ const AiTools = () => {
 							{ scoreResult.raw && <p>{ scoreResult.raw }</p> }
 						</div>
 					) }
-				</Card></ProLock>
+				</Card>
 
 				{ /* Spam Checker */ }
 				<Card title={ __( 'Spam Checker', 'ai-marketing-expert' ) }>
@@ -336,7 +334,7 @@ const AiTools = () => {
 				</Card>
 
 				{ /* Send Time Optimizer */ }
-				<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Send Time Optimizer', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+				<Card title={ __( 'Send Time Optimizer', 'ai-marketing-expert' ) }>
 					<TextControl label={ __( 'Industry', 'ai-marketing-expert' ) } value={ sendTimeIndustry } onChange={ setSendTimeIndustry } placeholder={ __( 'e.g. SaaS, E-commerce, Education...', 'ai-marketing-expert' ) } __nextHasNoMarginBottom />
 					{ sendTimeLoading ? (
 						<LoadingBtn primary>{ __( 'Analyzing...', 'ai-marketing-expert' ) }</LoadingBtn>
@@ -376,10 +374,10 @@ const AiTools = () => {
 							) : <p>{ sendTimeResult }</p> }
 						</div>
 					) }
-				</Card></ProLock>
+				</Card>
 
 				{ /* Segment Suggestions */ }
-				<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Segment Suggestions', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+				<Card title={ __( 'Segment Suggestions', 'ai-marketing-expert' ) }>
 					<TextControl label={ __( 'Goal', 'ai-marketing-expert' ) } value={ segGoal } onChange={ setSegGoal } placeholder={ __( 'e.g. Increase engagement, Re-engage inactive...', 'ai-marketing-expert' ) } __nextHasNoMarginBottom />
 					{ segLoading ? (
 						<LoadingBtn primary>{ __( 'Suggesting...', 'ai-marketing-expert' ) }</LoadingBtn>
@@ -395,7 +393,7 @@ const AiTools = () => {
 							) : <p>{ typeof segResult === 'string' ? segResult : JSON.stringify( segResult ) }</p> }
 						</div>
 					) }
-				</Card></ProLock>
+				</Card>
 			</div>
 		</div>
 	);

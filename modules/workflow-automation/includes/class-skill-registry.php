@@ -26,11 +26,7 @@ class SkillRegistry {
 	 * collisions with user-created skill IDs (which use `custom-` prefix
 	 * plus a uuid fragment).
 	 *
-	 * Freemium: SEO Strategist + Readability Coach are free (the RankMath
-	 * baseline every post needs). The rest + custom skills are Pro —
-	 * see resolve() which drops them silently on the free tier.
-	 *
-	 * @return array<string,array{id:string,title:string,description:string,instructions:string,outputs:string[],is_pro:bool}>
+	 * @return array<string,array{id:string,title:string,description:string,instructions:string,outputs:string[]}>
 	 */
 	public static function builtins(): array {
 		return array(
@@ -40,7 +36,6 @@ class SkillRegistry {
 				'description'  => __( 'Outputs focus keyword, SEO title, meta description, slug and heading plan meeting RankMath/Yoast standards.', 'ai-marketing-expert' ),
 				'instructions' => 'SEO rules: pick exactly ONE focus keyword (2-4 words). SEO title max 60 chars with keyword near the start, include one number and one power word. Meta description 140-160 chars with keyword naturally. Slug 3-5 lowercase words containing the keyword slug. Plan 3-5 H2 headings, at least one containing the keyword or a close variant. Keyword must fit naturally in the first 100 words with ~1% density target.',
 				'outputs'      => array( 'focus_keyword', 'seo_title', 'meta_description', 'slug' ),
-				'is_pro'       => false,
 			),
 			'aime-readability'    => array(
 				'id'           => 'aime-readability',
@@ -48,7 +43,6 @@ class SkillRegistry {
 				'description'  => __( 'Short paragraphs, lists, TOC and FAQ for Content Readability green.', 'ai-marketing-expert' ),
 				'instructions' => 'Readability rules: short paragraphs (max 4 lines), one idea per section, include one bulleted or numbered list, add a 4-question FAQ section, end with 3 key takeaways. For articles over 800 words include a Table of Contents plan with anchor ids.',
 				'outputs'      => array( 'outline' ),
-				'is_pro'       => false,
 			),
 			'aime-image-director' => array(
 				'id'           => 'aime-image-director',
@@ -56,7 +50,6 @@ class SkillRegistry {
 				'description'  => __( 'Generates 3 distinct concrete stock-photo queries to avoid duplicate images.', 'ai-marketing-expert' ),
 				'instructions' => 'Image rules: propose exactly 3 DISTINCT stock-photo search queries (2-4 English words each, concrete nouns, no punctuation, no repeats). Each query must match a different section of the article. Never reuse generic single words like "marketing" or "business" alone.',
 				'outputs'      => array( 'image_queries' ),
-				'is_pro'       => true,
 			),
 			'aime-link-planner'   => array(
 				'id'           => 'aime-link-planner',
@@ -64,7 +57,6 @@ class SkillRegistry {
 				'description'  => __( 'Plans internal and external links so posts never ship with zero links.', 'ai-marketing-expert' ),
 				'instructions' => 'Link rules: suggest 2 internal link topics (existing site content the article should reference) and 1-2 authoritative external sources (docs, studies, official guides). Use descriptive anchor text, never "click here". Mark external links as dofollow-worthy references.',
 				'outputs'      => array( 'internal_link_hints', 'external_source_hints' ),
-				'is_pro'       => true,
 			),
 			'aime-wordpress-expert' => array(
 				'id'           => 'aime-wordpress-expert',
@@ -72,7 +64,6 @@ class SkillRegistry {
 				'description'  => __( 'Keeps topics practical for WordPress users: how-tos, listicles, product-led angles.', 'ai-marketing-expert' ),
 				'instructions' => 'WordPress angle: prefer practical how-to guides, listicles and product-led topics useful to WordPress site owners. Mention concrete WP screens, plugins or settings where relevant. Avoid generic advice that ignores WordPress context.',
 				'outputs'      => array(),
-				'is_pro'       => true,
 			),
 			'aime-social-hook'    => array(
 				'id'           => 'aime-social-hook',
@@ -80,7 +71,6 @@ class SkillRegistry {
 				'description'  => __( 'One-line social hook + CTA for downstream social/email steps.', 'ai-marketing-expert' ),
 				'instructions' => 'Social rules: also output a one-line social hook (max 120 chars, curiosity or benefit led) and a short call to action (max 12 words) suitable for promoting this topic on social and email.',
 				'outputs'      => array( 'social_hook', 'cta' ),
-				'is_pro'       => true,
 			),
 		);
 	}
@@ -146,8 +136,6 @@ class SkillRegistry {
 	/**
 	 * Resolve a list of requested skill IDs to valid skill arrays.
 	 * Unknown IDs are silently dropped so renamed/deleted skills never break runs.
-	 * Pro skills (and all custom skills) are dropped on the free tier so free
-	 * workflows keep their free baseline instead of failing.
 	 *
 	 * @param mixed $ids Array or comma-separated string from step config.
 	 * @return array<int,array>
@@ -159,14 +147,10 @@ class SkillRegistry {
 		if ( ! is_array( $ids ) ) {
 			return array();
 		}
-		$has_pro = function_exists( 'aime_has_pro' ) ? aime_has_pro() : false;
-		$out     = array();
+		$out = array();
 		foreach ( $ids as $id ) {
 			$skill = self::get( (string) $id );
 			if ( null === $skill ) {
-				continue;
-			}
-			if ( ! $has_pro && ( ! empty( $skill['is_pro'] ) || ! empty( $skill['custom'] ) ) ) {
 				continue;
 			}
 			$out[] = $skill;
@@ -244,13 +228,11 @@ class SkillRegistry {
 	public static function for_api(): array {
 		$out = array();
 		foreach ( self::all() as $skill ) {
-			$is_pro = ! empty( $skill['is_pro'] ) || ! empty( $skill['custom'] );
 			$out[]  = array(
 				'id'          => $skill['id'],
 				'title'       => $skill['title'],
 				'description' => $skill['description'] ?? '',
 				'outputs'     => array_values( (array) ( $skill['outputs'] ?? array() ) ),
-				'is_pro'      => (bool) $is_pro,
 				'custom'      => ! empty( $skill['custom'] ),
 			);
 		}

@@ -11,13 +11,11 @@ import Card from '../../common/Card';
 import EmptyState from '../../common/EmptyState';
 import { SkeletonBlock } from '../../common/Skeleton';
 import { toast } from '../../common/Toast';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
 const emptyVoice = { name: '', description: '', tone_rules: '', style_rules: '', avoid_rules: '', is_default: false };
 
 const BrandVoices = () => {
 	const { get, post, put, del, loading } = useApi();
-	const hasPro = isProActive();
 	const [ voices, setVoices ] = useState( [] );
 	const [ editing, setEditing ] = useState( null );
 	const [ generating, setGenerating ] = useState( null );
@@ -32,10 +30,6 @@ const BrandVoices = () => {
 	useEffect( () => { fetchVoices(); }, [ fetchVoices ] );
 
 	const saveVoice = async () => {
-		if ( ! hasPro ) {
-			toast( __( 'Brand Voices are available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		if ( ! editing?.name?.trim() ) {
 			toast( __( 'Brand voice name is required.', 'ai-marketing-expert' ), 'error' );
 			return;
@@ -55,10 +49,6 @@ const BrandVoices = () => {
 	};
 
 	const deleteVoice = async ( id ) => {
-		if ( ! hasPro ) {
-			toast( __( 'Brand Voices are available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		if ( ! window.confirm( __( 'Delete this brand voice?', 'ai-marketing-expert' ) ) ) return;
 		try {
 			await del( `/content/brand-voices/${ id }` );
@@ -70,10 +60,6 @@ const BrandVoices = () => {
 	};
 
 	const generateVoice = async () => {
-		if ( ! hasPro ) {
-			toast( __( 'AI Brand Voice generation is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		setAiWorking( true );
 		try {
 			const res = await post( '/content/brand-voices/generate', generating || {} );
@@ -98,13 +84,12 @@ const BrandVoices = () => {
 	return (
 		<div className="aime-brand-voices">
 			<div className="aime-page-header">
-				<h2 className="aime-pro-card-header">{ __( 'Brand Voices', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</h2>
+				<h2>{ __( 'Brand Voices', 'ai-marketing-expert' ) }</h2>
 				<div className="aime-page-header-actions">
-					{ ! hasPro && <ProUpgradeButton /> }
-					<Button variant="secondary" icon={ starFilled } disabled={ ! hasPro } onClick={ () => setGenerating( { business_name: '', industry: '', audience: '', personality: '', goals: '' } ) }>
+					<Button variant="secondary" icon={ starFilled } onClick={ () => setGenerating( { business_name: '', industry: '', audience: '', personality: '', goals: '' } ) }>
 						{ __( 'Generate with AI', 'ai-marketing-expert' ) }
 					</Button>
-					<Button variant="primary" disabled={ ! hasPro } onClick={ () => setEditing( { ...emptyVoice } ) }>{ __( 'New Voice', 'ai-marketing-expert' ) }</Button>
+					<Button variant="primary" onClick={ () => setEditing( { ...emptyVoice } ) }>{ __( 'New Voice', 'ai-marketing-expert' ) }</Button>
 				</div>
 			</div>
 

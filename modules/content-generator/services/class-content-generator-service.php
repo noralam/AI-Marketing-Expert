@@ -823,7 +823,7 @@ class ContentGeneratorService {
 		);
 	}
 
-	/* ── GENERATE image prompt (PRO) ─────────────────── */
+	/* ── GENERATE image prompt ───────────────────────── */
 
 	public function generate_image_prompt( string $title, string $content ): array {
 		$stripped = mb_substr( wp_strip_all_tags( $content ), 0, 1000 );

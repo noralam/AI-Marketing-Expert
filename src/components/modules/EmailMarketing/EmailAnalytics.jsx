@@ -24,13 +24,11 @@ import {
 	XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from 'recharts';
 import useApi from '../../../hooks/useApi';
-import useEmailUsage from '../../../hooks/useEmailUsage';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import EmptyState from '../../common/EmptyState';
 import ArcGauge from '../../common/ArcGauge';
-import QuotaMeters from '../../common/QuotaMeters';
 import { RankRow } from '../../common/RankBar';
 import { formatDateTime } from '../../../utils/datetime';
 
@@ -124,7 +122,6 @@ const clampRate = ( value ) => Math.max( 0, Math.min( Number( value ) || 0, 100 
 
 const EmailAnalytics = ( { onNavigate } ) => {
 	const { get, loading, error, clearError } = useApi();
-	const { usage } = useEmailUsage();
 	const [ days, setDays ] = useState( 30 );
 	const [ data, setData ] = useState( null );
 	const [ activityLog, setActivityLog ] = useState( [] );
@@ -251,29 +248,6 @@ const EmailAnalytics = ( { onNavigate } ) => {
 		</div>
 	);
 
-	const quota = (
-		<QuotaMeters
-			items={ [
-				{
-					key: 'campaigns',
-					label: __( 'Campaigns this month', 'ai-marketing-expert' ),
-					usage: usage?.campaigns_per_month,
-				},
-				{
-					key: 'scheduled',
-					label: __( 'Scheduled at once', 'ai-marketing-expert' ),
-					usage: usage?.scheduled_campaigns,
-				},
-				{
-					key: 'automations',
-					label: __( 'Automations', 'ai-marketing-expert' ),
-					usage: usage?.automations,
-					note: __( 'total, not monthly', 'ai-marketing-expert' ),
-				},
-			] }
-		/>
-	);
-
 	const growthCard = (
 		<Card title={ __( 'Subscriber Growth', 'ai-marketing-expert' ) }>
 			{ growthHasShape ? (
@@ -368,7 +342,6 @@ const EmailAnalytics = ( { onNavigate } ) => {
 			<div className="aime-email-analytics">
 				{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 				{ header }
-				{ quota }
 				<Card>
 					<EmptyState
 						title={ __( 'No email has gone out in this range.', 'ai-marketing-expert' ) }
@@ -394,9 +367,6 @@ const EmailAnalytics = ( { onNavigate } ) => {
 			{ error && <Notice type="error" message={ error } dismissible onDismiss={ clearError } /> }
 
 			{ header }
-
-			{ /* Free-plan headroom, above the numbers it constrains. */ }
-			{ quota }
 
 			{ /*
 			  * Three gauges instead of five flat KPI cards. Each is a bounded share

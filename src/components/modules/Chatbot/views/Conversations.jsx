@@ -7,12 +7,10 @@ import { __, sprintf } from '@wordpress/i18n';
 import { Button, SelectControl, SearchControl, CheckboxControl } from '@aime/wp-components';
 import { Icon, trash, seen, globe, lock, chevronDown, chevronUp } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import { apiGet } from '../../../../utils/api';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import ConfirmModal from '../../../common/ConfirmModal';
-import { ProUpgradeButton } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 import { PER_PAGE } from '../../../../utils/constants';
 
@@ -43,7 +41,6 @@ const STATUS_LABELS = {
 
 const Conversations = ( { onNavigate } ) => {
 	const { get, post, del, loading } = useApi();
-	const { hasPro } = usePro();
 	const [ items, setItems ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );
 	const [ page, setPage ] = useState( 1 );
@@ -190,7 +187,7 @@ const Conversations = ( { onNavigate } ) => {
 		}
 	};
 
-	/* Export leads from selected conversations as CSV download (Pro). */
+	/* Export leads from selected conversations as CSV download. */
 	const handleExportLeads = async () => {
 		if ( ! selected.length ) return;
 		try {
@@ -253,25 +250,18 @@ const Conversations = ( { onNavigate } ) => {
 						<Button variant="secondary" size="small" onClick={ () => handleBulk( 'close' ) }>
 							{ __( 'Close', 'ai-marketing-expert' ) }
 						</Button>
-						{ hasPro && (
-							<Button variant="secondary" size="small" onClick={ () => handleBulk( 'make_public' ) }>
-								{ __( 'Make Public', 'ai-marketing-expert' ) }
-							</Button>
-						) }
-						{ hasPro && (
-							<Button variant="secondary" size="small" onClick={ () => handleBulk( 'make_private' ) }>
-								{ __( 'Make Private', 'ai-marketing-expert' ) }
-							</Button>
-						) }
+						<Button variant="secondary" size="small" onClick={ () => handleBulk( 'make_public' ) }>
+							{ __( 'Make Public', 'ai-marketing-expert' ) }
+						</Button>
+						<Button variant="secondary" size="small" onClick={ () => handleBulk( 'make_private' ) }>
+							{ __( 'Make Private', 'ai-marketing-expert' ) }
+						</Button>
 						<Button
 							variant="secondary"
 							size="small"
-							onClick={ hasPro ? handleExportLeads : undefined }
-							disabled={ ! hasPro }
+							onClick={ handleExportLeads }
 						>
-							{ hasPro
-								? __( 'Export Leads', 'ai-marketing-expert' )
-								: __( 'Export Leads (Pro)', 'ai-marketing-expert' ) }
+							{ __( 'Export Leads', 'ai-marketing-expert' ) }
 						</Button>
 					</div>
 				) }
@@ -386,9 +376,8 @@ const Conversations = ( { onNavigate } ) => {
 												/>
 												<Button
 													icon={ String( conv.is_public ) === '1' ? globe : lock }
-													label={ hasPro ? ( String( conv.is_public ) === '1' ? __( 'Public - click to hide', 'ai-marketing-expert' ) : __( 'Hidden - click to show', 'ai-marketing-expert' ) ) : __( 'Public Discussions (Pro)', 'ai-marketing-expert' ) }
-													onClick={ hasPro ? () => handleTogglePublic( conv.id ) : undefined }
-													disabled={ ! hasPro }
+													label={ String( conv.is_public ) === '1' ? __( 'Public - click to hide', 'ai-marketing-expert' ) : __( 'Hidden - click to show', 'ai-marketing-expert' ) }
+													onClick={ () => handleTogglePublic( conv.id ) }
 													size="small"
 													className={ String( conv.is_public ) === '1' ? 'aime-btn-public' : 'aime-btn-hidden' }
 												/>
@@ -449,7 +438,7 @@ const Conversations = ( { onNavigate } ) => {
 					aria-controls="aime-shortcode-info-panel"
 				>
 					<span className="aime-shortcode-info__title">
-						{ __( 'Public Discussions', 'ai-marketing-expert' ) }{ ! hasPro ? ' - Pro' : '' }
+						{ __( 'Public Discussions', 'ai-marketing-expert' ) }
 					</span>
 					<Icon icon={ shortcodeOpen ? chevronUp : chevronDown } size={ 20 } />
 				</button>
@@ -458,24 +447,19 @@ const Conversations = ( { onNavigate } ) => {
 					<div className="aime-shortcode-info__inner" id="aime-shortcode-info-panel">
 						<div className="aime-shortcode-info__text">
 							<p style={ { margin: 0, color: '#555', fontSize: '13px' } }>
-								{ hasPro
-									? __( 'Show conversations on any page as a community discussion board. Add the shortcode below to a page or post. Use the', 'ai-marketing-expert' )
-									: __( 'Show conversations on any page as a community discussion board. Upgrade to Pro to use this shortcode and public visibility controls.', 'ai-marketing-expert' )
-								}{ ' ' }
+								{ __( 'Show conversations on any page as a community discussion board. Add the shortcode below to a page or post. Use the', 'ai-marketing-expert' ) }{ ' ' }
 								<span style={ { verticalAlign: 'middle' } }>{ '🌐' }</span> { __( 'icon in the table to show/hide individual conversations.', 'ai-marketing-expert' ) }
 							</p>
 						</div>
 						<div className="aime-shortcode-info__code">
 							<code>[aime_discussions]</code>
-							{ hasPro ? (
-								<Button
-									variant="secondary"
-									size="small"
-									onClick={ copyShortcode }
-								>
-									{ copied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy', 'ai-marketing-expert' ) }
-								</Button>
-							) : <ProUpgradeButton /> }
+							<Button
+								variant="secondary"
+								size="small"
+								onClick={ copyShortcode }
+							>
+								{ copied ? __( 'Copied!', 'ai-marketing-expert' ) : __( 'Copy', 'ai-marketing-expert' ) }
+							</Button>
 						</div>
 					</div>
 				) }

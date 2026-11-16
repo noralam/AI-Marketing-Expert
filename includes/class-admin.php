@@ -61,7 +61,7 @@ class Admin {
 			'ai-marketing-expert',
 			array( $this, 'render_app' ),
 			'dashicons-megaphone',
-			2
+			30
 		);
 
 		$this->hook_suffixes[] = $this->hook_suffix;
@@ -369,9 +369,7 @@ class Admin {
 			'adminUrl'       => admin_url(),
 			'pluginUrl'      => AIME_PLUGIN_URL,
 			'version'        => AIME_VERSION,
-			'hasPro'         => aime_has_pro(),
 			'modules'        => $this->modules->get_dashboard_configs(),
-			'freeLimits'     => aime_free_limits(),
 			'siteUrl'        => home_url(),
 			'siteName'       => get_bloginfo( 'name' ),
 			'timezone'       => wp_timezone_string(),
@@ -388,7 +386,6 @@ class Admin {
 				'displayName' => wp_get_current_user()->display_name,
 				'email'       => wp_get_current_user()->user_email,
 			),
-			'proUrl'         => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ),
 			'menuSlug'       => 'ai-marketing-expert',
 			'isDebug'        => defined( 'WP_DEBUG' ) && WP_DEBUG,
 		);
@@ -436,11 +433,6 @@ class Admin {
 			'<a href="' . esc_url( admin_url( 'admin.php?page=ai-marketing-expert-ai-providers' ) ) . '">' .
 				esc_html__( 'Settings', 'ai-marketing-expert' ) . '</a>',
 		);
-
-		if ( ! aime_has_pro() ) {
-			$plugin_links[] = '<a href="' . esc_url( apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ) ) . '" style="color: #FF6B35; font-weight: bold;" target="_blank">' .
-				esc_html__( 'Go Pro', 'ai-marketing-expert' ) . '</a>';
-		}
 
 		return array_merge( $plugin_links, $links );
 	}

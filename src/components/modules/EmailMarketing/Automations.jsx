@@ -10,7 +10,6 @@ import useEmailUsage from '../../../hooks/useEmailUsage';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import QuotaMeters from '../../common/QuotaMeters';
 import { menuUrl } from '../../../utils/menuUrl';
 import { formatDate } from '../../../utils/datetime';
 
@@ -198,17 +197,6 @@ const Automations = ( { onNavigate } ) => {
 					dismissible={ false }
 				/>
 			) }
-
-			<QuotaMeters
-				items={ [
-					{
-						key: 'automations',
-						label: __( 'Automations', 'ai-marketing-expert' ),
-						usage: usage?.automations,
-						note: __( 'total, not monthly', 'ai-marketing-expert' ),
-					},
-				] }
-			/>
 
 			<div className="aime-stats-grid" style={ { gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 20 } }>
 				<div className="aime-stat-card-modern">

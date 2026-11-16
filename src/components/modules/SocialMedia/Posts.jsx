@@ -11,7 +11,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import ConfirmModal from '../../common/ConfirmModal';
 import { toast } from '../../common/Toast';
-import { SOCIAL_POST_STATUS, SOCIAL_PLATFORMS, FREE_LIMITS } from '../../../utils/constants';
+import { SOCIAL_POST_STATUS, SOCIAL_PLATFORMS } from '../../../utils/constants';
 
 const PER_PAGE = 20;
 
@@ -24,9 +24,6 @@ const Posts = ( { onNavigate } ) => {
 	const [ statusFilter, setStatusFilter ] = useState( '' );
 	const [ selected, setSelected ] = useState( [] );
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
-	const hasPro = !! window.aimeData?.hasPro;
-	const monthlyLimit = FREE_LIMITS.social_posts_per_month || 30;
-	const scheduledLimit = FREE_LIMITS.social_scheduled_posts || 3;
 
 	const fetchPosts = useCallback( async () => {
 		try {
@@ -148,13 +145,6 @@ const Posts = ( { onNavigate } ) => {
 					{ __( '+ New Post', 'ai-marketing-expert' ) }
 				</Button>
 			</div>
-
-			{ ! hasPro && (
-				<Notice
-					type="info"
-					message={ sprintf( __( 'Free plan includes %1$d posts per month and %2$d scheduled posts at a time. Upgrade to Pro for unlimited posting and scheduling.', 'ai-marketing-expert' ), monthlyLimit, scheduledLimit ) }
-				/>
-			) }
 
 			{ /* Filters */ }
 			<Card>

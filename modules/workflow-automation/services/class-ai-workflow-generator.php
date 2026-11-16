@@ -187,6 +187,15 @@ Your job is to translate the user's natural language goal into a strictly valid,
 			return $response;
 		}
 
+		if ( is_array( $response ) && empty( $response['success'] ) ) {
+			$err_msg  = ! empty( $response['message'] ) ? (string) $response['message'] : ( ! empty( $response['error'] ) ? (string) $response['error'] : __( 'AI provider failed to generate the workflow.', 'ai-marketing-expert' ) );
+			$fallback = self::match_fallback_recipe( $user_prompt, $brand_voice_id );
+			if ( $fallback ) {
+				return $fallback;
+			}
+			return new \WP_Error( 'ai_generation_failed', $err_msg );
+		}
+
 		$raw_content = trim( (string) ( $response['content'] ?? '' ) );
 		if ( empty( $raw_content ) ) {
 			$fallback = self::match_fallback_recipe( $user_prompt, $brand_voice_id );

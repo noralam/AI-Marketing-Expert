@@ -1,5 +1,5 @@
 /**
- * Topic Map - topical authority map with AI generation (Pro).
+ * Topic Map - topical authority map with AI generation.
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
@@ -8,14 +8,12 @@ import { Button, TextControl, TextareaControl } from '@aime/wp-components';
 import { trash, pencil } from '@wordpress/icons';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, StackedBar, SortArrow } from './SeoCharts';
@@ -28,7 +26,6 @@ const TYPE_COLORS = {
 
 const TopicMap = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
-	const { proUrl } = usePro();
 	const slowWarning = useSlowWarning();
 	const [ topics, setTopics ] = useState( [] );
 	const [ generating, setGenerating ] = useState( false );
@@ -108,20 +105,8 @@ const TopicMap = ( { onNavigate } ) => {
 					<h2>{ __( 'Topical Authority Map', 'ai-marketing-expert' ) }</h2>
 				</div>
 
-				<UsageNotice
-					usage={ usage?.topics }
-					featureLabel={ __( 'topics', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-					kind="storage"
-				/>
-
 				{ /* AI Generation */ }
 				<Card title={ __( 'Generate Topic Map', 'ai-marketing-expert' ) }>
-					<UsageNotice
-						usage={ usage?.generate_map }
-						featureLabel={ __( 'topic map generation', 'ai-marketing-expert' ) }
-						proUrl={ proUrl }
-					/>
 					<div className="aime-form-grid aime-form-grid-2">
 						<TextControl
 							label={ __( 'Niche / Main Topic', 'ai-marketing-expert' ) }

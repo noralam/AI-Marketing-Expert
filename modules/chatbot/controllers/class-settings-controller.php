@@ -23,7 +23,7 @@ class SettingsController {
 		'poll_interval_seconds'     => 5,
 		'max_message_length'        => 500,
 		'consent_message'           => 'We use cookies and chat data to provide you with the best support experience. By starting this chat, you consent to our collection and use of this data in accordance with our Privacy Policy. You can end the chat at any time.',
-		'gdpr_enabled'              => false,
+		'gdpr_enabled'              => true,
 		'data_retention_days'       => 90,
 		'rate_limit_per_minute'     => 20,
 		'enable_typing_indicator'   => true,
@@ -52,14 +52,6 @@ class SettingsController {
 	public function save_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$current = get_option( self::OPTION_KEY, array() );
 		$params  = $request->get_json_params();
-
-		if ( ! aime_has_pro() ) {
-			$params['poll_interval_seconds'] = self::DEFAULTS['poll_interval_seconds'];
-			$params['max_message_length'] = self::DEFAULTS['max_message_length'];
-			$params['data_retention_days'] = self::DEFAULTS['data_retention_days'];
-			$params['rate_limit_per_minute'] = self::DEFAULTS['rate_limit_per_minute'];
-			$params['enable_read_receipts'] = self::DEFAULTS['enable_read_receipts'];
-		}
 
 		$text_fields = array(
 			'global_system_prompt',

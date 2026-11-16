@@ -85,7 +85,6 @@ class ActionRegistry {
 				'label'       => $def['label'] ?? $type,
 				'module'      => $def['module'] ?? '',
 				'description' => $def['description'] ?? '',
-				'is_pro'      => (bool) ( $def['is_pro'] ?? false ),
 				'available'   => $available,
 				// Fields statically ruled invisible server-side (e.g.
 				// WooCommerce-only fields on non-WooCommerce sites) are dropped

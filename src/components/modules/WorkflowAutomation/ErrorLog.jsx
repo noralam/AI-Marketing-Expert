@@ -37,8 +37,8 @@ const formatDate = ( value ) => formatDateTime( value );
  */
 const hintFor = ( text ) => {
 	const t = ( text || '' ).toLowerCase();
-	if ( t.includes( 'monthly run limit' ) || t.includes( 'free plan' ) ) {
-		return __( 'Free-plan limit. Runs resume next month, or upgrade to Pro.', 'ai-marketing-expert' );
+	if ( t.includes( 'run limit' ) ) {
+		return __( 'Run limit reached. Runs will resume next cycle.', 'ai-marketing-expert' );
 	}
 	if ( t.includes( 'timed out' ) || t.includes( 'timeout' ) || t.includes( 'curl error 28' ) ) {
 		return __( 'The AI request took too long. Try a shorter article, fewer steps, or a faster model.', 'ai-marketing-expert' );
@@ -60,9 +60,6 @@ const hintFor = ( text ) => {
 	}
 	if ( t.includes( 'missing its required' ) || t.includes( 'no topic' ) ) {
 		return __( 'A step is missing required configuration. Open the workflow and fill it in.', 'ai-marketing-expert' );
-	}
-	if ( t.includes( 'requires pro' ) || t.includes( 'require a pro' ) ) {
-		return __( 'This step needs a Pro plan.', 'ai-marketing-expert' );
 	}
 	return '';
 };

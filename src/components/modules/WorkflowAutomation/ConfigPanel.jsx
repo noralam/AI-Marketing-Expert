@@ -10,7 +10,7 @@ import ConfigFields from './ConfigFields';
 import { Button, SelectControl, TextControl, TextareaControl } from '../../common/WpComponents';
 import Notice from '../../common/Notice';
 import { toast } from '../../common/Toast';
-import { PRO_TONES, toneSelectOptions } from '../../../utils/aiOptions';
+import { toneSelectOptions } from '../../../utils/aiOptions';
 
 const WEEKDAYS = [
 	{ value: 1, label: __( 'Mon', 'ai-marketing-expert' ) },
@@ -24,13 +24,12 @@ const WEEKDAYS = [
 
 /**
  * Tone dropdown matching the Content Generator editor: shared tone list,
- * "(PRO)" labels + block-with-toast on free, and any unknown legacy value
- * kept selectable so old workflows don't silently change.
+ * and any unknown legacy value kept selectable so old workflows don't silently change.
  */
-const ToneSelect = ( { label, value, onChange, hasPro, emptyLabel, help } ) => {
+const ToneSelect = ( { label, value, onChange, emptyLabel, help } ) => {
 	const options = [
 		...( emptyLabel ? [ { value: '', label: emptyLabel } ] : [] ),
-		...toneSelectOptions( hasPro ),
+		...toneSelectOptions(),
 	];
 	if ( value && ! options.some( ( o ) => o.value === value ) ) {
 		options.push( { value, label: value } );
@@ -40,21 +39,13 @@ const ToneSelect = ( { label, value, onChange, hasPro, emptyLabel, help } ) => {
 			label={ label }
 			value={ value || '' }
 			options={ options }
-			onChange={ ( v ) => {
-				if ( ! hasPro && PRO_TONES.includes( v ) ) {
-					toast( __( 'This tone is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-					return;
-				}
-				onChange( v );
-			} }
+			onChange={ ( v ) => onChange( v ) }
 			help={ help }
 		/>
 	);
 };
 
-const PRO_SCHEDULES = [ 'daily', 'custom' ];
-
-const ScheduleControls = ( { wf, set, hasPro = false } ) => {
+const ScheduleControls = ( { wf, set } ) => {
 	const selectedDays = ( wf.schedule_days || '' ).split( ',' ).filter( ( d ) => d !== '' ).map( Number );
 	const toggleDay = ( day ) => {
 		const next = selectedDays.includes( day )
@@ -70,18 +61,12 @@ const ScheduleControls = ( { wf, set, hasPro = false } ) => {
 				value={ wf.schedule_type }
 				options={ [
 					{ value: 'once', label: __( 'Once', 'ai-marketing-expert' ) },
-					{ value: 'daily', label: __( 'Daily', 'ai-marketing-expert' ) + ( hasPro ? '' : ' (Pro)' ) },
+					{ value: 'daily', label: __( 'Daily', 'ai-marketing-expert' ) },
 					{ value: 'weekly', label: __( 'Weekly', 'ai-marketing-expert' ) },
 					{ value: 'monthly', label: __( 'Monthly', 'ai-marketing-expert' ) },
-					{ value: 'custom', label: __( 'Custom interval', 'ai-marketing-expert' ) + ( hasPro ? '' : ' (Pro)' ) },
+					{ value: 'custom', label: __( 'Custom interval', 'ai-marketing-expert' ) },
 				] }
-				onChange={ ( v ) => {
-					if ( ! hasPro && PRO_SCHEDULES.includes( v ) ) {
-						toast( __( 'Daily and custom-interval schedules require Pro.', 'ai-marketing-expert' ), 'warning' );
-						return;
-					}
-					set( 'schedule_type', v );
-				} }
+				onChange={ ( v ) => set( 'schedule_type', v ) }
 			/>
 			{ wf.schedule_type === 'once' && (
 				<TextControl
@@ -358,7 +343,6 @@ const ConfigPanel = ( {
 	onUpdateStepConfig,
 	onDeleteNode,
 	onDeselect,
-	hasPro = false,
 	keywordSuggestions = [],
 	tagSuggestions = [],
 	brandVoices = [],
@@ -446,12 +430,11 @@ const ConfigPanel = ( {
 					/>
 				) }
 				{ workflow.trigger_type === 'schedule' ? (
-					<ScheduleControls wf={ workflow } set={ ( k, v ) => setWorkflowField( { [ k ]: v } ) } hasPro={ hasPro } />
+					<ScheduleControls wf={ workflow } set={ ( k, v ) => setWorkflowField( { [ k ]: v } ) } />
 				) : (
 					<ConfigFields
 						fields={ triggerDef?.fields || [] }
 						config={ workflow.trigger_config || {} }
-						hasPro={ hasPro }
 						keywordSuggestions={ keywordSuggestions }
 						tagSuggestions={ tagSuggestions }
 						onChange={ ( key, value ) =>
@@ -517,16 +500,15 @@ const ConfigPanel = ( {
 						<ConfigFields
 							fields={ def?.fields || [] }
 							config={ step.config || {} }
-							hasPro={ hasPro }
 							keywordSuggestions={ keywordSuggestions }
 							tagSuggestions={ tagSuggestions }
 							onChange={ ( key, value ) => onUpdateStepConfig( selectedNode.id, key, value ) }
 							parentActionType={ parentActionType }
+							stepActionType={ step.action_type }
 						/>
 						<ToneSelect
 							label={ __( 'Tone override (optional)', 'ai-marketing-expert' ) }
 							value={ step.tone_override || '' }
-							hasPro={ hasPro }
 							emptyLabel={ __( 'Use workflow tone', 'ai-marketing-expert' ) }
 							onChange={ ( v ) => onUpdateStep( selectedNode.id, { tone_override: v } ) }
 						/>
@@ -571,16 +553,11 @@ const ConfigPanel = ( {
 			<ToneSelect
 				label={ __( 'Default tone', 'ai-marketing-expert' ) }
 				value={ workflow.tone || 'professional' }
-				hasPro={ hasPro }
 				onChange={ ( v ) => setWorkflowField( { tone: v } ) }
 			/>
 			{ brandVoices.length > 0 && (
 				<SelectControl
-					label={
-						hasPro
-							? __( 'Brand voice', 'ai-marketing-expert' )
-							: `${ __( 'Brand voice', 'ai-marketing-expert' ) } (PRO)`
-					}
+					label={ __( 'Brand voice', 'ai-marketing-expert' ) }
 					value={ String( workflow.brand_voice_id || 0 ) }
 					options={ [
 						{ value: '0', label: __( 'Default voice', 'ai-marketing-expert' ) },
@@ -588,10 +565,6 @@ const ConfigPanel = ( {
 					] }
 					help={ __( 'Applied to AI content steps in this workflow.', 'ai-marketing-expert' ) }
 					onChange={ ( v ) => {
-						if ( ! hasPro && Number( v ) !== 0 ) {
-							toast( __( 'Brand Voice is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-							return;
-						}
 						setWorkflowField( { brand_voice_id: Number( v ) || 0 } );
 					} }
 				/>

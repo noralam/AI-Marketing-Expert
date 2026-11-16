@@ -18,9 +18,7 @@ import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import EmptyState from '../../common/EmptyState';
 import { SkeletonBlock, SkeletonTable } from '../../common/Skeleton';
-import { ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import useApi from '../../../hooks/useApi';
-import { FREE_LIMITS } from '../../../utils/constants';
 import { formatDateTime } from '../../../utils/datetime';
 
 /* AI provider logo paths (SVG) */
@@ -77,9 +75,6 @@ const AiProvidersPage = () => {
 	const [ aiFetchedModels, setAiFetchedModels ] = useState( null );
 	const [ aiFetchingModels, setAiFetchingModels ] = useState( false );
 	const [ aiTestResults, setAiTestResults ] = useState( {} );
-	const hasPro = !! window.aimeData?.hasPro;
-	const aiProviderLimit = FREE_LIMITS.ai_provider_connections || 2;
-	const aiProviderLimitReached = ! hasPro && aiConnections.length >= aiProviderLimit;
 
 	// AI usage dashboard state.
 	const [ pageTab, setPageTab ] = useState( 'providers' );
@@ -129,17 +124,6 @@ const AiProvidersPage = () => {
 	/* AI connection handlers */
 
 	const aiOpenCreate = () => {
-		if ( aiProviderLimitReached ) {
-			setNotice( {
-				type: 'warning',
-				message: sprintf(
-					__( 'Free plan includes %d AI provider connections. Upgrade to Pro for unlimited providers.', 'ai-marketing-expert' ),
-					aiProviderLimit
-				),
-			} );
-			return;
-		}
-
 		setAiEditId( null );
 		setAiFetchedModels( null );
 		setAiForm( {
@@ -215,17 +199,6 @@ const AiProvidersPage = () => {
 			setNotice( { type: 'error', message: __( 'Base URL is required for a custom provider.', 'ai-marketing-expert' ) } );
 			return;
 		}
-		if ( ! aiEditId && aiProviderLimitReached ) {
-			setNotice( {
-				type: 'warning',
-				message: sprintf(
-					__( 'Free plan includes %d AI provider connections. Upgrade to Pro for unlimited providers.', 'ai-marketing-expert' ),
-					aiProviderLimit
-				),
-			} );
-			return;
-		}
-
 		setAiSaving( true );
 		try {
 			const payload = { ...aiForm };
@@ -482,10 +455,7 @@ const AiProvidersPage = () => {
 				</div>
 				{ pageTab === 'providers' && (
 					<Button variant="primary" onClick={ aiOpenCreate }>
-						<span className="aime-pro-inline-action">
-							{ __( '+ Add Provider', 'ai-marketing-expert' ) }
-							{ aiProviderLimitReached && <ProLabel>{ __( 'Pro', 'ai-marketing-expert' ) }</ProLabel> }
-						</span>
+						{ __( '+ Add Provider', 'ai-marketing-expert' ) }
 					</Button>
 				) }
 			</div>
@@ -507,17 +477,6 @@ const AiProvidersPage = () => {
 					</button>
 				) ) }
 			</div>
-
-			{ pageTab === 'providers' && ! hasPro && (
-				<Notice
-					type={ aiProviderLimitReached ? 'warning' : 'info' }
-					message={ sprintf(
-						__( 'Free plan includes %1$d AI provider connections. You currently have %2$d. Upgrade to Pro for unlimited providers.', 'ai-marketing-expert' ),
-						aiProviderLimit,
-						aiConnections.length
-					) }
-				/>
-			) }
 
 			{ /* Empty state */ }
 			{ pageTab === 'providers' && aiConnections.length === 0 && (
@@ -1093,14 +1052,13 @@ const AiProvidersPage = () => {
 							variant="primary"
 							onClick={ aiHandleSave }
 							isBusy={ aiSaving }
-							disabled={ aiSaving || ( ! aiEditId && aiProviderLimitReached ) }
+							disabled={ aiSaving }
 						>
 							{ aiSaving
 								? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving…', 'ai-marketing-expert' ) }</>
 								: aiEditId ? __( 'Update Provider', 'ai-marketing-expert' ) : __( 'Add Provider', 'ai-marketing-expert' )
 							}
 						</Button>
-						{ ! aiEditId && aiProviderLimitReached && <ProUpgradeButton /> }
 					</div>
 				</Modal>
 			) }

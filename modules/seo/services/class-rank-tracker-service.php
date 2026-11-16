@@ -116,7 +116,7 @@ class RankTrackerService {
 	}
 
 	/**
-	 * Process daily rank checks for all targeted keywords (cron job, Pro only).
+	 * Process daily rank checks for all targeted keywords (cron job).
 	 */
 	public function process_daily_checks(): void {
 		global $wpdb;

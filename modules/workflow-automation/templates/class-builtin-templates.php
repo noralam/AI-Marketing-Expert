@@ -29,7 +29,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Weekly Blog Engine', 'ai-marketing-expert' ),
 			'description'      => __( 'AI Brain picks a fresh topic weekly, writes a blog draft, and runs an SEO audit you can act on.', 'ai-marketing-expert' ),
 			'icon'             => 'edit',
-			'is_pro'           => false,
 			'requires_modules' => array( 'content-generator', 'seo' ),
 			'workflow'         => array(
 				'name'          => __( 'Weekly Blog Engine', 'ai-marketing-expert' ),
@@ -65,7 +64,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Welcome New Subscriber', 'ai-marketing-expert' ),
 			'description'      => __( 'When someone subscribes, enroll them into your welcome funnel and give your team a heads-up.', 'ai-marketing-expert' ),
 			'icon'             => 'users',
-			'is_pro'           => false,
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Welcome New Subscriber', 'ai-marketing-expert' ),
@@ -94,7 +92,6 @@ class BuiltinTemplates {
 				$cutoff_min
 			),
 			'icon'             => 'shopping-cart',
-			'is_pro'           => false,
 			'requires_plugin'  => 'woocommerce',
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
@@ -140,7 +137,6 @@ class BuiltinTemplates {
 				$cutoff_min
 			),
 			'icon'             => 'shopping-cart',
-			'is_pro'           => true,
 			'requires_plugin'  => 'woocommerce',
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
@@ -218,7 +214,6 @@ class BuiltinTemplates {
 				$cutoff_min
 			),
 			'icon'             => 'shopping-cart',
-			'is_pro'           => true,
 			'requires_plugin'  => 'woocommerce',
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
@@ -324,7 +319,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Inbound Webhook Lead Processor', 'ai-marketing-expert' ),
 			'description'      => __( 'Receives leads from external forms or webhooks, enrolls them into an email funnel, and notifies your team.', 'ai-marketing-expert' ),
 			'icon'             => 'zap',
-			'is_pro'           => false,
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Inbound Webhook Lead Processor', 'ai-marketing-expert' ),
@@ -332,7 +326,7 @@ class BuiltinTemplates {
 				'trigger_type'  => 'event',
 				'trigger_event' => 'inbound_webhook',
 				'trigger_config' => array(
-					'webhook_token' => 'lead-' . wp_generate_password( 8, false ),
+					'webhook_token' => 'lead-' . wp_generate_password( 24, false ),
 				),
 			),
 			'steps'            => array(
@@ -363,7 +357,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Contact Form 7 Auto-Responder & Alert', 'ai-marketing-expert' ),
 			'description'      => __( 'When someone submits a Contact Form 7 form, sends an instant greeting email to the submitter and alerts your team.', 'ai-marketing-expert' ),
 			'icon'             => 'mail',
-			'is_pro'           => false,
 			'requires_plugin'  => 'contact-form-7',
 			'workflow'         => array(
 				'name'          => __( 'Contact Form 7 Lead Auto-Responder', 'ai-marketing-expert' ),
@@ -403,7 +396,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Daily Smart Content', 'ai-marketing-expert' ),
 			'description'      => __( 'Lightweight daily pair: the Brain rotates a fresh topic, writes a short blog draft, and schedules a matching social post about it.', 'ai-marketing-expert' ),
 			'icon'             => 'zap',
-			'is_pro'           => true,
 			'requires_modules' => array( 'content-generator', 'social-media' ),
 			'workflow'         => array(
 				'name'          => __( 'Daily Smart Content', 'ai-marketing-expert' ),
@@ -434,13 +426,10 @@ class BuiltinTemplates {
 			),
 		);
 
-		/* ── Pro ──────────────────────────────────────────── */
-
 		$templates['seo_gatekeeper'] = array(
 			'name'             => __( 'SEO Quality Gate', 'ai-marketing-expert' ),
 			'description'      => __( 'Brain picks the topic and writes a draft. Audit scores it: 70+ schedules promotion, below 70 you get a fix-it email with the score.', 'ai-marketing-expert' ),
 			'icon'             => 'shield',
-			'is_pro'           => true,
 			'requires_modules' => array( 'content-generator', 'seo', 'social-media' ),
 			'workflow'         => array(
 				'name'          => __( 'SEO Quality Gate', 'ai-marketing-expert' ),
@@ -489,7 +478,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Publish + Promote', 'ai-marketing-expert' ),
 			'description'      => __( 'The moment a post goes live, AI drafts a platform social post and a promo email about it. No manual topic entry needed.', 'ai-marketing-expert' ),
 			'icon'             => 'share',
-			'is_pro'           => true,
 			'requires_modules' => array( 'social-media', 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Publish + Promote', 'ai-marketing-expert' ),
@@ -512,7 +500,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Gated Autopilot', 'ai-marketing-expert' ),
 			'description'      => __( 'Daily hands-off pipeline: write, publish, audit. Score 60+ auto-promotes on social and email; a weaker piece stops and emails you instead.', 'ai-marketing-expert' ),
 			'icon'             => 'trending-up',
-			'is_pro'           => true,
 			'requires_modules' => array( 'content-generator', 'seo', 'social-media', 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Gated Autopilot', 'ai-marketing-expert' ),
@@ -563,7 +550,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Monthly Content Batch', 'ai-marketing-expert' ),
 			'description'      => __( 'One theme, four assets: the Brain locks a monthly angle (JSON mode) and turns out blog, ad copy, email draft, and social post in a single run.', 'ai-marketing-expert' ),
 			'icon'             => 'layers',
-			'is_pro'           => true,
 			'requires_modules' => array( 'content-generator', 'email-marketing', 'social-media' ),
 			'workflow'         => array(
 				'name'                  => __( 'Monthly Content Batch', 'ai-marketing-expert' ),
@@ -605,7 +591,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Smart Product Showcase', 'ai-marketing-expert' ),
 			'description'      => __( 'Rotates through your WooCommerce products weekly: showcase article (with stock imagery), five ad variations priced-and-benefit aware, and a promo email draft.', 'ai-marketing-expert' ),
 			'icon'             => 'shopping-cart',
-			'is_pro'           => true,
 			'requires_modules' => array( 'content-generator', 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Smart Product Showcase', 'ai-marketing-expert' ),
@@ -643,7 +628,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Chatbot Lead Nurture', 'ai-marketing-expert' ),
 			'description'      => __( 'Every chatbot lead lands in your nurture funnel and your team gets an instant, token-filled summary of who they are and where they came from.', 'ai-marketing-expert' ),
 			'icon'             => 'message-circle',
-			'is_pro'           => true,
 			'requires_modules' => array( 'chatbot', 'email-marketing' ),
 			'workflow'         => array(
 				'name'          => __( 'Chatbot Lead Nurture', 'ai-marketing-expert' ),
@@ -666,7 +650,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Content Repurposing Engine', 'ai-marketing-expert' ),
 			'description'      => __( 'Every published post becomes a multi-format content pack: Twitter thread, LinkedIn post, and email newsletter intro—all AI-generated from the original article.', 'ai-marketing-expert' ),
 			'icon'             => 'repeat',
-			'is_pro'           => true,
 			'requires_modules' => array(),
 			'workflow'         => array(
 				'name'          => __( 'Content Repurposing Engine', 'ai-marketing-expert' ),
@@ -695,7 +678,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Smart Product Descriptions', 'ai-marketing-expert' ),
 			'description'      => __( 'When you publish a product, AI generates three variations: short (for cards), medium (main description), and long (SEO-focused), plus 5 benefit bullets.', 'ai-marketing-expert' ),
 			'icon'             => 'tag',
-			'is_pro'           => false,
 			'requires_modules' => array(),
 			'workflow'         => array(
 				'name'          => __( 'Smart Product Descriptions', 'ai-marketing-expert' ),
@@ -730,7 +712,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Blog to Email Mini-Course', 'ai-marketing-expert' ),
 			'description'      => __( 'Turn any published blog post into a 3-email mini-course: introduction, deep-dive, and action steps—perfect for nurture sequences or lead magnets.', 'ai-marketing-expert' ),
 			'icon'             => 'mail',
-			'is_pro'           => true,
 			'requires_modules' => array(),
 			'workflow'         => array(
 				'name'          => __( 'Blog to Email Mini-Course', 'ai-marketing-expert' ),
@@ -765,7 +746,6 @@ class BuiltinTemplates {
 			'name'             => __( 'Post-Purchase Review Request', 'ai-marketing-expert' ),
 			'description'      => __( 'When a WooCommerce order is completed, automatically wait 1 hour and send a personalized thank you email requesting a product review.', 'ai-marketing-expert' ),
 			'icon'             => 'star',
-			'is_pro'           => true,
 			'requires_plugin'  => 'woocommerce',
 			'requires_modules' => array( 'email-marketing' ),
 			'workflow'         => array(

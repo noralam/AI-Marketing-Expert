@@ -129,10 +129,11 @@ class ContextKnowledgeStore {
 			return '';
 		}
 
-		$response = wp_remote_get( $url, array(
-			'timeout'     => 15,
-			'redirection' => 2,
-			'user-agent'  => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
+		$response = wp_safe_remote_get( $url, array(
+			'timeout'            => 15,
+			'redirection'        => 2,
+			'reject_unsafe_urls' => true,
+			'user-agent'         => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
 		) );
 
 		if ( is_wp_error( $response ) ) {

@@ -1,5 +1,5 @@
 /**
- * Link Building - backlink pipeline CRUD + AI outreach email (Pro).
+ * Link Building - backlink pipeline CRUD + AI outreach email.
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
@@ -7,11 +7,9 @@ import { __ } from '@wordpress/i18n';
 import { Button } from '@aime/wp-components';
 import { trash, edit } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import UsageNotice from '../../../common/UsageNotice';
 import ConfirmModal from '../../../common/ConfirmModal';
 import { toast } from '../../../common/Toast';
 import { DonutChart, HBarChart, SortArrow } from './SeoCharts';
@@ -53,7 +51,6 @@ const emptyForm = {
 
 const LinkBuilding = ( { onNavigate } ) => {
 	const { get, post, put, del, loading, error, clearError } = useApi();
-	const { proUrl } = usePro();
 	const [ backlinks, setBacklinks ] = useState( [] );
 	const [ usage, setUsage ] = useState( null );
 	const [ total, setTotal ] = useState( 0 );
@@ -219,19 +216,6 @@ const LinkBuilding = ( { onNavigate } ) => {
 						{ __( '+ Add Prospect', 'ai-marketing-expert' ) }
 					</Button>
 				</div>
-
-				<UsageNotice
-					usage={ usage?.prospects }
-					featureLabel={ __( 'link prospects', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-					kind="storage"
-				/>
-
-				<UsageNotice
-					usage={ usage?.outreach }
-					featureLabel={ __( 'AI outreach email', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-				/>
 
 				{ /* Add/Edit Form Modal */ }
 				{ showForm && (

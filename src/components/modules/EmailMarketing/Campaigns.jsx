@@ -10,7 +10,6 @@ import useEmailUsage from '../../../hooks/useEmailUsage';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import QuotaMeters from '../../common/QuotaMeters';
 
 const STATUS_OPTIONS = [
 	{ label: __( 'All', 'ai-marketing-expert' ), value: '' },
@@ -89,21 +88,6 @@ const Campaigns = ( { onNavigate } ) => {
 
 			{ notice && <Notice type={ notice.type } message={ notice.message } onDismiss={ () => setNotice( null ) } /> }
 			{ error && <Notice type="error" message={ error } onDismiss={ clearError } /> }
-
-			<QuotaMeters
-				items={ [
-					{
-						key: 'campaigns',
-						label: __( 'Campaigns this month', 'ai-marketing-expert' ),
-						usage: usage?.campaigns_per_month,
-					},
-					{
-						key: 'scheduled',
-						label: __( 'Scheduled at once', 'ai-marketing-expert' ),
-						usage: usage?.scheduled_campaigns,
-					},
-				] }
-			/>
 
 			<Card>
 				<div className="aime-table-toolbar">

@@ -44,13 +44,6 @@ final class Plugin {
 	private ?DashboardWidget $dashboard_widget = null;
 
 	/**
-	 * Upgrade notice handler.
-	 *
-	 * @var UpgradeNotice|null
-	 */
-	private ?UpgradeNotice $upgrade_notice = null;
-
-	/**
 	 * WooCommerce Cart Tracker & Recovery Engine.
 	 *
 	 * @var CartTracker|null
@@ -156,10 +149,6 @@ final class Plugin {
 			// Dashboard widget (WP admin dashboard only).
 			require_once AIME_PLUGIN_DIR . 'includes/admin/class-dashboard-widget.php';
 			$this->dashboard_widget = new DashboardWidget( $this->modules );
-
-			// Upgrade to Pro notice.
-			require_once AIME_PLUGIN_DIR . 'includes/admin/class-upgrade-notice.php';
-			$this->upgrade_notice = new UpgradeNotice();
 		}
 
 		/**
@@ -244,8 +233,6 @@ final class Plugin {
 		if ( ! hash_equals( (string) $expected, (string) $token ) ) {
 			wp_die( 'Unauthorized: invalid cron token.', 'Unauthorized', array( 'response' => 403 ) );
 		}
-
-		@set_time_limit( 120 );
 
 		do_action( 'aime_minutely_tasks' );
 		do_action( 'aime_process_email_queue' );
@@ -365,7 +352,7 @@ final class Plugin {
 		do_action( 'aime_minutely_tasks' );
 
 		// Process scheduled workflows.
-		do_action( 'aime_workflow_dispatch_due' );
+		do_action( 'aime_workflow_dispatch' );
 
 		// Process scheduled social media posts.
 		do_action( 'aime_publish_scheduled_social_posts' );

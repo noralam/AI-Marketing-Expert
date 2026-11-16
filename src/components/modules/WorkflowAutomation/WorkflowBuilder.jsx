@@ -13,7 +13,6 @@ import { toast } from '../../common/Toast';
 import Loader from '../../common/Loader';
 import LoadingBtn from '../../common/LoadingBtn';
 import ConfirmModal from '../../common/ConfirmModal';
-import { isProActive } from '../../common/ProLock';
 import { Button, SelectControl } from '../../common/WpComponents';
 import WorkflowCanvas from './WorkflowCanvas';
 import NodePalette from './NodePalette';
@@ -137,11 +136,6 @@ const triggerSummary = ( wf, triggers ) => {
 };
 
 const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
-	const hasPro = isProActive();
-	// Free-plan step cap, mirrored from the server so the builder shows the
-	// limit before a save is rejected for exceeding it.
-	const stepLimit = window.aimeData?.freeLimits?.workflow_steps || 3;
-
 	const [ loading, setLoading ] = useState( true );
 	const [ saving, setSaving ] = useState( false );
 	const [ actions, setActions ] = useState( [] );
@@ -355,11 +349,6 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 	}, [ setEdges ] );
 
 	const addAction = useCallback( ( type, position = null ) => {
-		const def = actionsByType[ type ];
-		if ( def?.is_pro && ! hasPro ) {
-			toast( __( 'This step type requires Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		setNodes( ( nds ) => {
 			const pos = position || {
 				x: nds.length ? Math.max( ...nds.map( ( n ) => n.position.x ) ) : 0,
@@ -376,7 +365,7 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 			];
 		} );
 		setDirty( true );
-	}, [ actionsByType, hasPro, setNodes ] );
+	}, [ actionsByType, setNodes ] );
 
 	const updateStep = useCallback( ( nodeId, patch ) => {
 		setNodes( ( nds ) =>
@@ -618,11 +607,11 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 				label: def?.label || step.action_type,
 				summary: configSummary( step, def ),
 				invalid: invalidNodeIds.has( n.id ),
-				locked: n.type === 'condition' && ! hasPro,
+				locked: false,
 				runStatus: runState ? runStatus : null,
 			},
 		};
-	} ), [ nodes, wf, triggers, actionsByType, invalidNodeIds, hasPro, runState, runStatusByKey ] );
+	} ), [ nodes, wf, triggers, actionsByType, invalidNodeIds, runState, runStatusByKey ] );
 
 	const goBack = () => {
 		if ( dirty ) {
@@ -651,19 +640,6 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 						onChange={ ( e ) => setWorkflowField( { name: e.target.value } ) }
 					/>
 					{ dirty && <span className="aime-wf-dirty-dot" title={ __( 'Unsaved changes', 'ai-marketing-expert' ) }>●</span> }
-					{ ! hasPro && (
-						<span
-							className="aime-wf-step-meter"
-							title={ __( 'Free plan step limit per workflow. Upgrade to Pro for unlimited steps.', 'ai-marketing-expert' ) }
-						>
-							{ sprintf(
-								/* translators: 1: steps used, 2: free step limit */
-								__( 'Free plan: %1$d of %2$d steps used', 'ai-marketing-expert' ),
-								( nodes || [] ).filter( ( n ) => n.id !== 'trigger' ).length,
-								stepLimit
-							) }
-						</span>
-					) }
 				</div>
 				<div className="aime-wf-topbar__right">
 					<Button
@@ -703,7 +679,7 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 			</div>
 
 			<div className="aime-wf-layout">
-				<NodePalette actions={ actions } hasPro={ hasPro } onAdd={ addAction } />
+				<NodePalette actions={ actions } onAdd={ addAction } />
 				<WorkflowCanvas
 					nodes={ displayNodes }
 					edges={ edges }
@@ -723,7 +699,6 @@ const WorkflowBuilder = ( { id, initialWorkflow, onBack, onNavigate } ) => {
 					onUpdateStepConfig={ updateStepConfig }
 					onDeleteNode={ deleteNode }
 					onDeselect={ deselect }
-					hasPro={ hasPro }
 					keywordSuggestions={ vaultKeywords }
 					tagSuggestions={ wpTags }
 					brandVoices={ brandVoices }

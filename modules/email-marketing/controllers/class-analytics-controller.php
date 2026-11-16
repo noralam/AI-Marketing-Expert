@@ -207,10 +207,7 @@ class AnalyticsController {
 		);
 
 		$sent = (int) ( $stats->sent ?? 0 );
-		$recipient_lists = aime_has_pro() ? $this->get_campaign_recipient_lists( $id ) : array( 'counts' => array() );
-		if ( ! aime_has_pro() ) {
-			$top_links = array();
-		}
+		$recipient_lists = $this->get_campaign_recipient_lists( $id );
 
 		return new \WP_REST_Response( array(
 			'campaign'               => $campaign,

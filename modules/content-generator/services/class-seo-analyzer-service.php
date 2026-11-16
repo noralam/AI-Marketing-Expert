@@ -62,7 +62,7 @@ class SeoAnalyzerService {
 	}
 
 	/**
-	 * Analyze and optimize — AI-powered detailed SEO analysis + rewrite suggestions (PRO feature).
+	 * Analyze and optimize — AI-powered detailed SEO analysis + rewrite suggestions.
 	 *
 	 * @param  string $content   The HTML content.
 	 * @param  array  $keywords  Target keywords.

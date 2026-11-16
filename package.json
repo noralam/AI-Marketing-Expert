@@ -1,6 +1,6 @@
 {
 	"name": "ai-marketing-expert",
-	"version": "1.2.8",
+	"version": "1.2.11",
 	"description": "AI Marketing Expert - All-in-one AI-powered marketing toolkit for WordPress",
 	"author": "Developer Jehan",
 	"license": "GPL-2.0-or-later",
@@ -9,6 +9,9 @@
 		"ai-marketing-expert.php",
 		"uninstall.php",
 		"readme.txt",
+		"package.json",
+		"webpack.config.js",
+		"src/**",
 		"includes/**",
 		"modules/**",
 		"build/**",

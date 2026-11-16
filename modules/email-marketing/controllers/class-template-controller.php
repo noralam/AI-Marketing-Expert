@@ -292,12 +292,9 @@ class TemplateController {
 				'content'         => $this->get_notification_alert_template_content(),
 			),
 
-			/*
-			 * ── PRO TEMPLATES (7) ─────────────────────────────
-			 */
 			array(
 				'name'            => __( 'Product Launch', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Stylish product launch template with hero image area and dual CTA.', 'ai-marketing-expert' ),
+				'description'     => __( 'Stylish product launch template with hero image area and dual CTA.', 'ai-marketing-expert' ),
 				'category'        => 'promotional',
 				'type'            => 'html',
 				'design_template' => 'card',
@@ -306,7 +303,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Event Invitation', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Elegant event/webinar invitation with date and RSVP button.', 'ai-marketing-expert' ),
+				'description'     => __( 'Elegant event/webinar invitation with date and RSVP button.', 'ai-marketing-expert' ),
 				'category'        => 'event',
 				'type'            => 'html',
 				'design_template' => 'card',
@@ -315,7 +312,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Re-engagement', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Win back inactive subscribers with a personal touch.', 'ai-marketing-expert' ),
+				'description'     => __( 'Win back inactive subscribers with a personal touch.', 'ai-marketing-expert' ),
 				'category'        => 'followup',
 				'type'            => 'html',
 				'design_template' => 'card',
@@ -324,7 +321,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Feedback Request', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Ask for customer feedback or reviews after purchase.', 'ai-marketing-expert' ),
+				'description'     => __( 'Ask for customer feedback or reviews after purchase.', 'ai-marketing-expert' ),
 				'category'        => 'followup',
 				'type'            => 'html',
 				'design_template' => 'card',
@@ -333,7 +330,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Seasonal Sale', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Bold seasonal / holiday sale template with countdown feel.', 'ai-marketing-expert' ),
+				'description'     => __( 'Bold seasonal / holiday sale template with countdown feel.', 'ai-marketing-expert' ),
 				'category'        => 'promotional',
 				'type'            => 'html',
 				'design_template' => 'card',
@@ -342,7 +339,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Digest / Roundup', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Weekly/monthly content digest with multi-article layout.', 'ai-marketing-expert' ),
+				'description'     => __( 'Weekly/monthly content digest with multi-article layout.', 'ai-marketing-expert' ),
 				'category'        => 'newsletter',
 				'type'            => 'html',
 				'design_template' => 'simple',
@@ -351,7 +348,7 @@ class TemplateController {
 			),
 			array(
 				'name'            => __( 'Minimal Dark', 'ai-marketing-expert' ),
-				'description'     => __( 'PRO — Sleek dark-mode email for modern brands.', 'ai-marketing-expert' ),
+				'description'     => __( 'Sleek dark-mode email for modern brands.', 'ai-marketing-expert' ),
 				'category'        => 'general',
 				'type'            => 'html',
 				'design_template' => 'card',

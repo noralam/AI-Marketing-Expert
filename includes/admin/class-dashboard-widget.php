@@ -285,18 +285,6 @@ class DashboardWidget {
 						<?php esc_html_e( 'Help', 'ai-marketing-expert' ); ?>
 						<span class="dashicons dashicons-external"></span>
 					</a>
-					<?php if ( ! aime_has_pro() ) : ?>
-						<span class="aime-dw__footer-sep" aria-hidden="true"></span>
-						<a
-							class="aime-dw__ext-link aime-dw__ext-link--pro"
-							href="<?php echo esc_url( apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ) ); ?>"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<?php esc_html_e( 'Go Pro', 'ai-marketing-expert' ); ?>
-							<span class="dashicons dashicons-external"></span>
-						</a>
-					<?php endif; ?>
 				</span>
 				<button type="button" class="aime-dw__refresh" id="aime-dw-refresh-btn" aria-label="<?php esc_attr_e( 'Refresh', 'ai-marketing-expert' ); ?>">
 					<span class="dashicons dashicons-update"></span>

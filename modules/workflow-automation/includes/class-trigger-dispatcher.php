@@ -150,18 +150,6 @@ class TriggerDispatcher {
 	 * @param array $payload     Event payload snapshot.
 	 */
 	private function queue_execution( int $workflow_id, array $payload ): void {
-		// Free-plan monthly run cap: record the blocked fire instead of
-		// queueing a run the engine would only skip.
-		if ( $this->repo->monthly_run_limit_reached() ) {
-			$this->repo->record_skipped_execution(
-				$workflow_id,
-				'event',
-				__( 'Monthly run limit reached on the free plan. Runs resume next month — upgrade to Pro for unlimited runs.', 'ai-marketing-expert' )
-			);
-			aime_log( sprintf( 'Workflow #%d event trigger skipped: free monthly run limit reached.', $workflow_id ), 'info', 'workflow-automation' );
-			return;
-		}
-
 		$steps_total  = $this->repo->count_steps( $workflow_id );
 		$execution_id = $this->repo->start_execution( $workflow_id, 'event', $steps_total, 'queued', $payload );
 

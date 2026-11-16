@@ -28,7 +28,7 @@ class BotController {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin bot listing should reflect current conversation totals.
 		$bots = $wpdb->get_results( $wpdb->prepare(
-			'SELECT id, name, status, theme_id, is_pro, created_at, updated_at
+			'SELECT id, name, status, theme_id, created_at, updated_at
 			 FROM %i ORDER BY created_at DESC',
 			$bots_table
 		) );
@@ -94,29 +94,11 @@ class BotController {
 	/* ── CREATE bot ──────────────────────────────────── */
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			global $wpdb;
-			$p          = $wpdb->prefix;
-			$bots_table = $p . 'aime_chatbot_bots';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Limit enforcement needs the current bot count.
-			$count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $bots_table ) );
-			$limit = aime_free_limits()['chatbot_bots'] ?? 1;
-			if ( $count >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Bot limit reached. Upgrade to Pro for unlimited bots.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		global $wpdb;
 		$p   = $wpdb->prefix;
 		$now = current_time( 'mysql', true );
 
-		$params = $request->get_json_params();
-
-		$params = $this->sanitize_free_params( $params );
+		$params = $request->get_json_params() ?: array();
 		$status = sanitize_key( $params['status'] ?? 'active' );
 		$theme  = sanitize_key( $params['theme_id'] ?? 'default' );
 
@@ -133,7 +115,6 @@ class BotController {
 			'business_hours'      => wp_json_encode( $params['business_hours'] ?? new \stdClass() ),
 			'banned_words'        => sanitize_textarea_field( $params['banned_words'] ?? '' ),
 			'page_rules'          => wp_json_encode( $params['page_rules'] ?? new \stdClass() ),
-			'is_pro'              => 0,
 			'created_at'          => $now,
 			'updated_at'          => $now,
 		);
@@ -164,7 +145,7 @@ class BotController {
 			return new \WP_REST_Response( array( 'message' => __( 'Bot not found.', 'ai-marketing-expert' ) ), 404 );
 		}
 
-		$params = $this->sanitize_free_params( $request->get_json_params() );
+		$params = $request->get_json_params() ?: array();
 		$data   = array( 'updated_at' => current_time( 'mysql', true ) );
 
 		$text_fields = array( 'name' );
@@ -201,61 +182,6 @@ class BotController {
 		$wpdb->update( $bots_table, $data, array( 'id' => $id ) );
 
 		return new \WP_REST_Response( array( 'message' => __( 'Bot updated successfully.', 'ai-marketing-expert' ) ) );
-	}
-
-	private function sanitize_free_params( array $params ): array {
-		if ( aime_has_pro() ) {
-			return $params;
-		}
-
-		$params['theme_id'] = 'default';
-		$params['theme_config'] = array(
-			'position'      => sanitize_key( $params['theme_config']['position'] ?? 'bottom-right' ),
-			'offset_y'      => $this->clamp_offset( $params['theme_config']['offset_y'] ?? 0 ),
-			'offset_x'      => $this->clamp_offset( $params['theme_config']['offset_x'] ?? 0 ),
-			'primary_color' => '#4f46e5',
-			'bubble_icon'   => 'chat',
-		);
-
-		$lead_config = $params['lead_capture_config'] ?? array();
-		if ( ! is_array( $lead_config ) ) {
-			$lead_config = array();
-		}
-		$fields = $lead_config['fields'] ?? array( 'email', 'name' );
-		if ( ! is_array( $fields ) ) {
-			$fields = array( 'email', 'name' );
-		}
-
-		$free_trigger = sanitize_key( $lead_config['trigger'] ?? 'after_messages' );
-
-		$params['lead_capture_config'] = array(
-			'enabled'       => ! empty( $lead_config['enabled'] ),
-			'trigger'       => in_array( $free_trigger, array( 'after_messages', 'start' ), true ) ? $free_trigger : 'after_messages',
-			'trigger_count' => max( 1, absint( $lead_config['trigger_count'] ?? 3 ) ),
-			'fields'        => array_values( array_intersect( array( 'email', 'name' ), array_map( 'sanitize_key', $fields ) ) ),
-			'heading'       => sanitize_text_field( $lead_config['heading'] ?? __( 'Get in touch', 'ai-marketing-expert' ) ),
-		);
-
-		$params['page_rules'] = array();
-		$params['business_hours'] = new \stdClass();
-		$params['offline_message'] = '';
-		$params['banned_words'] = '';
-		$params['system_prompt'] = '';
-		$knowledge_config = $params['knowledge_config'] ?? array();
-		if ( ! is_array( $knowledge_config ) ) {
-			$knowledge_config = array();
-		}
-
-		$params['knowledge_config'] = array(
-			'max_history_messages'  => 20,
-			'response_tone'         => sanitize_key( $knowledge_config['response_tone'] ?? 'friendly' ),
-			'response_length'       => 'short',
-			'response_style'        => 'confident',
-			'sales_focused'         => false,
-			'custom_response_style' => sanitize_textarea_field( $knowledge_config['custom_response_style'] ?? '' ),
-		);
-
-		return $params;
 	}
 
 	private function sanitize_theme_config( $theme_config ): array {
@@ -330,15 +256,9 @@ class BotController {
 		return new \WP_REST_Response( array( 'message' => __( 'Bot deleted successfully.', 'ai-marketing-expert' ) ) );
 	}
 
-	/* ── DUPLICATE bot (Pro) ─────────────────────────── */
+	/* ── DUPLICATE bot ──────────────────────────────── */
 
 	public function duplicate( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Duplicating bots requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		global $wpdb;
 		$p  = $wpdb->prefix;
 		$id = absint( $request->get_param( 'id' ) );

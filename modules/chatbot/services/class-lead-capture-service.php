@@ -36,8 +36,8 @@ class LeadCaptureService {
 			),
 		);
 
-		// Pro: add configurable tags.
-		if ( aime_has_pro() && ! empty( $lead_config['tags'] ) ) {
+		// Add configurable tags if specified.
+		if ( ! empty( $lead_config['tags'] ) ) {
 			$lead_data['tags'] = array_merge( $lead_data['tags'], (array) $lead_config['tags'] );
 		}
 

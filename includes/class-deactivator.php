@@ -28,6 +28,15 @@ class Deactivator {
 		wp_clear_scheduled_hook( 'aime_seo_rank_check' );
 		wp_clear_scheduled_hook( 'aime_seo_automation_process' );
 		wp_clear_scheduled_hook( 'aime_publish_scheduled_social_posts' );
+		wp_clear_scheduled_hook( 'aime_workflow_dispatch' );
+		wp_clear_scheduled_hook( 'aime_workflow_execute_single' );
+		wp_clear_scheduled_hook( 'aime_workflow_resume_execution' );
+		wp_clear_scheduled_hook( 'aime_check_abandoned_carts' );
+		wp_clear_scheduled_hook( 'aime_b2b_lead_autopilot_daily' );
+		wp_clear_scheduled_hook( 'aime_content_sync_scheduled_articles' );
+		wp_clear_scheduled_hook( 'aime_sync_esp_bounces' );
+		wp_clear_scheduled_hook( 'aime_process_bounce_mailbox' );
+		wp_clear_scheduled_hook( 'aime_run_ai_jobs' );
 
 		// Clear transients.
 		delete_transient( 'aime_activation_redirect' );

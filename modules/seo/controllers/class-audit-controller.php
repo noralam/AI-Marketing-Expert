@@ -110,21 +110,6 @@ class AuditController {
 	 * Run a new on-page SEO audit.
 	 */
 	public function run_audit( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$limit = aime_free_limits()['seo_audits_monthly'] ?? 5;
-			if ( SeoModule::get_monthly_audit_count() >= $limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: monthly SEO audit limit */
-						__( 'Free plan allows %d audits per month. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-						$limit
-					),
-				), 403 );
-			}
-		}
-
 		$wp_post_id    = absint( $request->get_param( 'wp_post_id' ) );
 		$url           = esc_url_raw( $request->get_param( 'url' ) ?? '' );
 		$keyword_focus = sanitize_text_field( $request->get_param( 'keyword_focus' ) ?? '' );

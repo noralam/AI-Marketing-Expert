@@ -13,6 +13,7 @@
 
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import apiFetch from '@wordpress/api-fetch';
 import { Modal, SearchControl } from '../../common/WpComponents';
 import { toast } from '../../common/Toast';
 import { splitPromptsForAction } from './promptLibrary';
@@ -31,21 +32,19 @@ const PromptCard = ( { entry, onUse } ) => (
 	</button>
 );
 
-const SkillCard = ( { entry, active, locked, onToggle } ) => (
+const SkillCard = ( { entry, active, onToggle } ) => (
 	<button
 		type="button"
 		className={ `aime-wf-promptlib__card${ active ? ' is-active' : '' }` }
 		onClick={ () => onToggle( entry ) }
 		title={
-			locked
-				? __( 'This skill requires Pro.', 'ai-marketing-expert' )
-				: active
-					? __( 'Remove skill', 'ai-marketing-expert' )
-					: __( 'Add skill', 'ai-marketing-expert' )
+			active
+				? __( 'Remove skill', 'ai-marketing-expert' )
+				: __( 'Add skill', 'ai-marketing-expert' )
 		}
 	>
 		<span className="aime-wf-promptlib__card-title">
-			{ locked ? '🔒 ' : active ? '✓ ' : '+ ' }
+			{ active ? '✓ ' : '+ ' }
 			{ entry.title }
 		</span>
 		<span className="aime-wf-promptlib__card-text">{ entry.description }</span>
@@ -59,27 +58,66 @@ const PromptLibraryModal = ( {
 	skills = [],
 	customSkills = [],
 	activeSkillIds = [],
-	hasPro = false,
 	onClose,
 	onUse,
 	onToggleSkill,
 } ) => {
 	const [ query, setQuery ] = useState( '' );
+	const [ showAddCustom, setShowAddCustom ] = useState( false );
+	const [ newTitle, setNewTitle ] = useState( '' );
+	const [ newDesc, setNewDesc ] = useState( '' );
+	const [ newInstructions, setNewInstructions ] = useState( '' );
+	const [ savingCustom, setSavingCustom ] = useState( false );
+	const [ createdSkills, setCreatedSkills ] = useState( [] );
 	const isSkills = mode === 'skills';
 
 	if ( ! open ) {
 		return null;
 	}
 
-	// Pro gate for skill toggles (server re-enforces in resolve()).
-	// REST skills use `is_pro`, static catalog uses `isPro`; customs lock too.
-	const isSkillPro = ( entry ) => !! ( entry.isPro || entry.is_pro || entry.custom );
+	const isSkillPro = () => false;
 	const handleSkillToggle = ( entry ) => {
-		if ( isSkillPro( entry ) && ! hasPro ) {
-			toast( __( 'This skill requires Pro.', 'ai-marketing-expert' ), 'warning' );
+		onToggleSkill && onToggleSkill( entry );
+	};
+
+	const handleCreateCustomSkill = () => {
+		if ( ! newTitle.trim() || ! newInstructions.trim() ) {
+			toast( __( 'Title and instructions are required.', 'ai-marketing-expert' ), 'error' );
 			return;
 		}
-		onToggleSkill && onToggleSkill( entry );
+		setSavingCustom( true );
+		apiFetch( {
+			path: '/aime/v1/workflow-automation/skills',
+			method: 'POST',
+			data: {
+				title: newTitle.trim(),
+				description: newDesc.trim(),
+				instructions: newInstructions.trim(),
+			},
+		} )
+			.then( ( res ) => {
+				setSavingCustom( false );
+				if ( res?.id ) {
+					const entry = {
+						id: res.id,
+						title: newTitle.trim(),
+						description: newDesc.trim(),
+						instructions: newInstructions.trim(),
+						custom: true,
+					};
+					setCreatedSkills( ( prev ) => [ ...prev, entry ] );
+					onToggleSkill && onToggleSkill( entry );
+					setNewTitle( '' );
+					setNewDesc( '' );
+					setNewInstructions( '' );
+					setShowAddCustom( false );
+					toast( __( 'Custom skill created and selected!', 'ai-marketing-expert' ), 'success' );
+				}
+			} )
+			.catch( ( err ) => {
+				setSavingCustom( false );
+				toast( err?.message || __( 'Could not create skill.', 'ai-marketing-expert' ), 'error' );
+			} );
 	};
 
 	const needle = query.trim().toLowerCase();
@@ -103,7 +141,7 @@ const PromptLibraryModal = ( {
 		onClose();
 	};
 
-	const allSkills = [ ...SKILL_LIBRARY, ...( skills || [] ), ...( customSkills || [] ) ];
+	const allSkills = [ ...SKILL_LIBRARY, ...( skills || [] ), ...( customSkills || [] ), ...createdSkills ];
 	const seen = new Set();
 	const dedupedSkills = allSkills.filter( ( s ) => {
 		if ( ! s || ! s.id || seen.has( s.id ) ) {
@@ -183,12 +221,57 @@ const PromptLibraryModal = ( {
 						) }
 					</p>
 
-					<SearchControl
-						value={ query }
-						onChange={ setQuery }
-						placeholder={ __( 'Search skills…', 'ai-marketing-expert' ) }
-						className="aime-wf-promptlib__search"
-					/>
+					<div style={ { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' } }>
+						<SearchControl
+							value={ query }
+							onChange={ setQuery }
+							placeholder={ __( 'Search skills…', 'ai-marketing-expert' ) }
+							className="aime-wf-promptlib__search"
+						/>
+						<button
+							type="button"
+							className="button button-secondary"
+							style={ { whiteSpace: 'nowrap', height: '36px' } }
+							onClick={ () => setShowAddCustom( ! showAddCustom ) }
+						>
+							{ showAddCustom ? __( 'Cancel', 'ai-marketing-expert' ) : __( '+ Add Custom Skill', 'ai-marketing-expert' ) }
+						</button>
+					</div>
+
+					{ showAddCustom && (
+						<div style={ { background: '#f8fafc', padding: '12px', borderRadius: '6px', marginBottom: '16px', border: '1px solid #cbd5e1' } }>
+							<h4 style={ { margin: '0 0 8px 0', fontSize: '13px', fontWeight: 600 } }>{ __( 'Create Custom Brain Skill', 'ai-marketing-expert' ) }</h4>
+							<input
+								type="text"
+								placeholder={ __( 'Skill Title (e.g. Technical SEO Guard)', 'ai-marketing-expert' ) }
+								value={ newTitle }
+								onChange={ ( e ) => setNewTitle( e.target.value ) }
+								style={ { width: '100%', marginBottom: '8px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #ccc' } }
+							/>
+							<input
+								type="text"
+								placeholder={ __( 'Short Description', 'ai-marketing-expert' ) }
+								value={ newDesc }
+								onChange={ ( e ) => setNewDesc( e.target.value ) }
+								style={ { width: '100%', marginBottom: '8px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #ccc' } }
+							/>
+							<textarea
+								placeholder={ __( 'Prompt instructions/rules to inject into AI Brain...', 'ai-marketing-expert' ) }
+								value={ newInstructions }
+								onChange={ ( e ) => setNewInstructions( e.target.value ) }
+								rows={ 3 }
+								style={ { width: '100%', marginBottom: '8px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #ccc' } }
+							/>
+							<button
+								type="button"
+								className="button button-primary"
+								disabled={ savingCustom || ! newTitle.trim() || ! newInstructions.trim() }
+								onClick={ handleCreateCustomSkill }
+							>
+								{ savingCustom ? __( 'Saving…', 'ai-marketing-expert' ) : __( 'Save & Select Skill', 'ai-marketing-expert' ) }
+							</button>
+						</div>
+					) }
 
 					<div className="aime-wf-promptlib__list">
 						{ filteredSkills.map( ( entry ) => (
@@ -196,7 +279,7 @@ const PromptLibraryModal = ( {
 								key={ entry.id }
 								entry={ entry }
 								active={ ( activeSkillIds || [] ).includes( entry.id ) }
-								locked={ isSkillPro( entry ) && ! hasPro }
+								locked={ false }
 								onToggle={ handleSkillToggle }
 							/>
 						) ) }

@@ -7,7 +7,6 @@ import { __ } from '@wordpress/i18n';
 import { Button, TextControl, SelectControl, Spinner } from '@aime/wp-components';
 import { trash, seen } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
@@ -26,7 +25,6 @@ const SCORE_COLOR = ( score ) => {
 
 const OnPageAudit = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
-	const { hasPro, freeLimits } = usePro();
 	const slowWarning = useSlowWarning();
 	const [ audits, setAudits ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );

@@ -21,8 +21,6 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import { isProActive, ProLabel, openProUpgrade } from '../../common/ProLock';
-import ProBadge from '../../Layout/ProBadge';
 import { formatDateTime } from '../../../utils/datetime';
 
 const providerIconTypes = {
@@ -147,8 +145,6 @@ const emptyForm = {
 
 const SmtpSettings = () => {
 	const { get, post, del } = useApi();
-	const hasPro = isProActive();
-	const freeSmtpLimit = Number( window.aimeData?.freeLimits?.email_smtp_connections || 2 );
 
 	const [ connections, setConnections ]   = useState( [] );
 	const [ siteMailEnabled, setSiteMailEnabled ] = useState( true );
@@ -188,7 +184,6 @@ const SmtpSettings = () => {
 		} );
 	}, [ providers ] );
 	const countedSmtpConnections = connections.filter( ( conn ) => conn.provider !== 'wp_mail' ).length;
-	const smtpLimitReached = ! hasPro && countedSmtpConnections >= freeSmtpLimit;
 	const outlookSmtpHosts = {
 		personal: 'smtp-mail.outlook.com',
 		business: 'smtp.office365.com',
@@ -231,10 +226,6 @@ const SmtpSettings = () => {
 
 	/* Modal helpers */
 	const openCreate = () => {
-		if ( smtpLimitReached ) {
-			setNotice( { type: 'warning', message: sprintf( __( 'Free sites can create up to %d SMTP connections. Upgrade to Pro for unlimited connections.', 'ai-marketing-expert' ), freeSmtpLimit ) } );
-			return;
-		}
 		setEditId( null );
 		setForm( {
 			...emptyForm,
@@ -683,7 +674,7 @@ const SmtpSettings = () => {
 					</p>
 				</div>
 				<Button variant="primary" onClick={ openCreate }>
-					<span className="aime-pro-inline-action">{ __( '+ Add Connection', 'ai-marketing-expert' ) }{ smtpLimitReached && <ProLabel /> }</span>
+					{ __( '+ Add Connection', 'ai-marketing-expert' ) }
 				</Button>
 			</div>
 
@@ -732,7 +723,7 @@ const SmtpSettings = () => {
 							{ __( 'Add your first SMTP connection to start sending emails reliably.', 'ai-marketing-expert' ) }
 						</p>
 						<Button variant="primary" onClick={ openCreate }>
-							<span className="aime-pro-inline-action">{ __( '+ Add Connection', 'ai-marketing-expert' ) }{ smtpLimitReached && <ProLabel /> }</span>
+							{ __( '+ Add Connection', 'ai-marketing-expert' ) }
 						</Button>
 					</div>
 				</Card>
@@ -1231,48 +1222,12 @@ const SmtpSettings = () => {
 						</div>
 
 						{ /* Bounce & Deliverability Section for this Connection */ }
-						{ [ 'gmail', 'outlook', 'custom' ].includes( form.provider ) && ( () => {
-							const isPrimaryConn = form.is_primary || connections.length <= 1 || ( editId && connections.some( ( c ) => c.id === editId && c.is_primary ) );
-							const canConfigureImap = hasPro || isPrimaryConn;
-
-							if ( ! canConfigureImap ) {
-								return (
-									<div style={ { marginTop: 16, padding: '14px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 } }>
-										<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } }>
-											<div style={ { fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 } }>
-												<span>📥 { __( 'Automatic Bounce Detection (IMAP)', 'ai-marketing-expert' ) }</span>
-												<ProBadge />
-											</div>
-											<button
-												type="button"
-												onClick={ openProUpgrade }
-												style={ { background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 600, color: '#4f46e5', cursor: 'pointer' } }
-											>
-												{ __( 'Unlock in Pro →', 'ai-marketing-expert' ) }
-											</button>
-										</div>
-										<p style={ { fontSize: 12, color: '#64748b', margin: 0 } }>
-											{ __( 'Multi-Mailbox Shield (Pro): Your primary sending mailbox is protected for free. Upgrade to Pro to monitor multiple sending mailboxes simultaneously.', 'ai-marketing-expert' ) }
-										</p>
+						{ [ 'gmail', 'outlook', 'custom' ].includes( form.provider ) && (
+							<div style={ { marginTop: 16, padding: '14px 16px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8 } }>
+								<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.bounce_imap?.enabled ? 12 : 0 } }>
+									<div style={ { fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 } }>
+										<span>📥 { __( 'Automatic Bounce Detection (IMAP)', 'ai-marketing-expert' ) }</span>
 									</div>
-								);
-							}
-
-							return (
-								<div style={ { marginTop: 16, padding: '14px 16px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8 } }>
-									<div style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.bounce_imap?.enabled ? 12 : 0 } }>
-										<div style={ { fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 } }>
-											<span>📥 { __( 'Automatic Bounce Detection (IMAP)', 'ai-marketing-expert' ) }</span>
-											{ hasPro ? (
-												<span style={ { background: '#ecfdf5', color: '#065f46', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 } }>
-													PRO ACTIVE
-												</span>
-											) : (
-												<span style={ { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700 } }>
-													FREE PRIMARY SHIELD
-												</span>
-											) }
-										</div>
 										<ToggleControl
 											label=""
 											checked={ !! form.bounce_imap?.enabled }
@@ -1476,8 +1431,8 @@ const SmtpSettings = () => {
 										</div>
 									) }
 								</div>
-							);
-						} )() }
+							)
+						}
 
 						{ [ 'brevo', 'sendgrid', 'mailgun', 'amazon_ses', 'postmark', 'sparkpost', 'resend' ].includes( form.provider ) && (
 							<div style={ { marginTop: 16, padding: '12px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 } }>
@@ -1485,7 +1440,6 @@ const SmtpSettings = () => {
 								<div>
 									<div style={ { fontSize: 12, fontWeight: 600, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 } }>
 										<span>{ __( 'Cloud Suppression Sync Supported', 'ai-marketing-expert' ) }</span>
-										<ProBadge />
 									</div>
 									<p style={ { fontSize: 11, color: '#2563eb', margin: '2px 0 0' } }>
 										{ __( 'Bounces, blocks, and spam complaints are automatically fetched via official Cloud API. No IMAP mailbox required.', 'ai-marketing-expert' ) }

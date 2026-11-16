@@ -370,15 +370,12 @@ class EmailMarketingModule extends Module {
 	}
 
 	public function run_b2b_lead_autopilot(): void {
-		if ( ! aime_has_pro() ) {
-			return;
-		}
 		$controller = new Controllers\SubscriberController();
 		$controller->run_scheduled_autopilot();
 	}
 
 	public function run_sync_esp_bounces(): void {
-		if ( ! aime_has_pro() || ! (bool) get_option( 'aime_auto_sync_esp', true ) ) {
+		if ( ! (bool) get_option( 'aime_auto_sync_esp', true ) ) {
 			return;
 		}
 		Services\CloudEspSyncService::sync_all();
@@ -403,7 +400,7 @@ class EmailMarketingModule extends Module {
 			)
 		);
 
-		// Scan bounce mailboxes (1 primary mailbox on Free, or all mailboxes on Pro).
+		// Scan bounce mailboxes across active SMTP connections.
 		if ( class_exists( 'WPSpace\AiMarketingExpert\ImapBounceService' ) ) {
 			\WPSpace\AiMarketingExpert\ImapBounceService::process_all_mailboxes();
 		}
@@ -938,9 +935,7 @@ class EmailMarketingModule extends Module {
 	}
 
 	/**
-	 * Build the unsubscribe-page copy. Free installs always show the fixed
-	 * thank-you text and a re-subscribe button; Pro installs may override the
-	 * heading, message, and button label from the email settings.
+	 * Build the unsubscribe-page copy.
 	 *
 	 * @return array{title:string,heading:string,message:string,resubscribe_button:string}
 	 */
@@ -951,10 +946,6 @@ class EmailMarketingModule extends Module {
 			'message'            => __( 'Thank you. You will no longer receive emails from us. Changed your mind? You can subscribe again below.', 'ai-marketing-expert' ),
 			'resubscribe_button' => __( 'Subscribe again', 'ai-marketing-expert' ),
 		);
-
-		if ( ! aime_has_pro() ) {
-			return $defaults;
-		}
 
 		$heading = trim( (string) get_option( 'aime_unsubscribe_heading', '' ) );
 		$message = trim( (string) get_option( 'aime_unsubscribe_message', '' ) );
@@ -1111,7 +1102,7 @@ class EmailMarketingModule extends Module {
 	 * @return string 2-letter uppercase ISO country code or empty string.
 	 */
 	private function resolve_tracking_country( string $ip, int $subscriber_id = 0 ): string {
-		// 1. Cloudflare IP country header (instant 0ms resolution).
+		// 1. Cloudflare IP country header (local header, zero external calls).
 		if ( ! empty( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ) {
 			$country = strtoupper( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ) );
 			if ( 'XX' !== $country && 'T1' !== $country && 2 === strlen( $country ) ) {
@@ -1119,11 +1110,13 @@ class EmailMarketingModule extends Module {
 			}
 		}
 
-		// 2. Server GeoIP header (mod_geoip / Nginx GeoIP).
-		if ( ! empty( $_SERVER['GEOIP_COUNTRY_CODE'] ) ) {
-			$country = strtoupper( sanitize_text_field( wp_unslash( $_SERVER['GEOIP_COUNTRY_CODE'] ) ) );
-			if ( 2 === strlen( $country ) ) {
-				return $country;
+		// 2. Server GeoIP header (mod_geoip / Nginx GeoIP / reverse proxy).
+		foreach ( array( 'GEOIP_COUNTRY_CODE', 'HTTP_X_COUNTRY_CODE', 'HTTP_X_GEOIP_COUNTRY' ) as $header_key ) {
+			if ( ! empty( $_SERVER[ $header_key ] ) ) {
+				$country = strtoupper( sanitize_text_field( wp_unslash( $_SERVER[ $header_key ] ) ) );
+				if ( 2 === strlen( $country ) ) {
+					return $country;
+				}
 			}
 		}
 
@@ -1141,47 +1134,7 @@ class EmailMarketingModule extends Module {
 			}
 		}
 
-		// 4. IP-based resolution (only for valid public IPv4/IPv6, cached 30 days).
-		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-			$cache_key = 'aime_geo_' . md5( $ip );
-			$cached    = get_transient( $cache_key );
-			if ( false !== $cached ) {
-				return (string) $cached;
-			}
-
-			$response = wp_remote_get(
-				sprintf( 'http://ip-api.com/json/%s?fields=countryCode', rawurlencode( $ip ) ),
-				array( 'timeout' => 2 )
-			);
-
-			if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
-				$data = json_decode( wp_remote_retrieve_body( $response ), true );
-				if ( ! empty( $data['countryCode'] ) && 2 === strlen( (string) $data['countryCode'] ) ) {
-					$code = strtoupper( (string) $data['countryCode'] );
-					set_transient( $cache_key, $code, 30 * DAY_IN_SECONDS );
-					return $code;
-				}
-			}
-
-			// Cache negative result for 1 day to avoid re-querying failing IP.
-			set_transient( $cache_key, '', DAY_IN_SECONDS );
-		}
-
 		return '';
-	}
-
-	/* ── Pro features list ───────────────────────────────── */
-
-	public function get_pro_features(): array {
-		return array(
-			'unlimited_contacts'    => __( 'Unlimited contacts', 'ai-marketing-expert' ),
-			'email_automations'     => __( 'Visual automation builder', 'ai-marketing-expert' ),
-			'advanced_segmentation' => __( 'Advanced audience segmentation', 'ai-marketing-expert' ),
-			'ab_testing'            => __( 'A/B testing for campaigns', 'ai-marketing-expert' ),
-			'custom_fields'         => __( 'Custom contact fields', 'ai-marketing-expert' ),
-			'ai_intelligence'       => __( 'AI-powered email intelligence', 'ai-marketing-expert' ),
-			'advanced_analytics'    => __( 'Advanced analytics & reports', 'ai-marketing-expert' ),
-		);
 	}
 
 	/* ── Database — 22 table schema ─────────────────────── */

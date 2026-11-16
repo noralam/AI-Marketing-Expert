@@ -22,7 +22,6 @@ import {
 	Legend,
 } from 'recharts';
 import useApi from '../../../hooks/useApi';
-import usePro from '../../../hooks/usePro';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
@@ -127,7 +126,6 @@ const buildSeries = ( days, created, published ) => {
 
 const ContentAnalytics = ( { onNavigate } ) => {
 	const { get, loading, error, clearError } = useApi();
-	const { hasPro, freeLimits } = usePro();
 	const [ stats, setStats ] = useState( null );
 	const [ days, setDays ] = useState( 30 );
 
@@ -149,11 +147,6 @@ const ContentAnalytics = ( { onNavigate } ) => {
 	}
 
 	const totals = stats?.totals || {};
-	const monthlyCount = totals.articles_this_month || 0;
-	const monthlyLimit = freeLimits?.content_articles_per_month || 10;
-	const monthlyPercent = monthlyLimit > 0
-		? Math.min( 100, ( monthlyCount / monthlyLimit ) * 100 )
-		: 0;
 
 	const totalArticles = Number( totals.total_articles || 0 );
 	const totalPublished = Number( totals.total_published || 0 );
@@ -312,38 +305,6 @@ const ContentAnalytics = ( { onNavigate } ) => {
 					</p>
 				</Card>
 			</div>
-
-			{ /*
-			  * The only hard limit on this page, so it stays a card of its own
-			  * rather than becoming a fourth gauge. A quota is a warning, and a
-			  * warning parked in a row of statistics reads as a statistic.
-			  */ }
-			{ ! hasPro && monthlyCount > 0 && (
-				<Card title={ __( 'Monthly Usage', 'ai-marketing-expert' ) }>
-					<div className="aime-usage-bar-wrap">
-						<div className="aime-usage-labels">
-							<span>
-								{ sprintf(
-									/* translators: 1: remaining articles, 2: monthly limit. */
-									__( '%1$s of %2$s articles remaining this month', 'ai-marketing-expert' ),
-									Math.max( 0, monthlyLimit - monthlyCount ).toLocaleString(),
-									monthlyLimit.toLocaleString()
-								) }
-							</span>
-							<span>
-								{ sprintf(
-									/* translators: %s: number of articles used this month. */
-									__( '%s used', 'ai-marketing-expert' ),
-									monthlyCount.toLocaleString()
-								) }
-							</span>
-						</div>
-						<div className="aime-usage-bar">
-							<div className="aime-usage-bar-fill" style={ { width: `${ monthlyPercent }%` } } />
-						</div>
-					</div>
-				</Card>
-			) }
 
 			<div className="aime-charts-grid aime-charts-grid--wide-first">
 				<Card title={ __( 'Created vs Published', 'ai-marketing-expert' ) }>

@@ -271,17 +271,6 @@ class RestApi {
 			)
 		);
 
-		// GET /aime/v1/pro/status - Pro license status.
-		register_rest_route(
-			$namespace,
-			'/pro/status',
-			array(
-				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_pro_status' ),
-				'permission_callback' => array( $this, 'admin_permission_check' ),
-			)
-		);
-
 		// GET /aime/v1/dashboard/stats - Overview stats.
 		register_rest_route(
 			$namespace,
@@ -601,7 +590,8 @@ class RestApi {
 	 * @return \WP_REST_Response
 	 */
 	public function run_due_automations(): \WP_REST_Response {
-		do_action( 'aime_process_automations' );
+		do_action( 'aime_minutely_tasks' );
+		do_action( 'aime_workflow_dispatch' );
 
 		return new \WP_REST_Response(
 			array(
@@ -632,11 +622,8 @@ class RestApi {
 			);
 		}
 
-		@set_time_limit( 120 );
-
 		do_action( 'aime_minutely_tasks' );
-		do_action( 'aime_process_email_queue' );
-		do_action( 'aime_process_automations' );
+		do_action( 'aime_workflow_dispatch' );
 		do_action( 'aime_process_bounce_mailbox' );
 
 		return new \WP_REST_Response(
@@ -1022,22 +1009,6 @@ class RestApi {
 	}
 
 	/**
-	 * GET /pro/status - Pro license status.
-	 *
-	 * @param \WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response
-	 */
-	public function get_pro_status( \WP_REST_Request $request ): \WP_REST_Response {
-		return new \WP_REST_Response(
-			array(
-				'has_pro'      => aime_has_pro(),
-				'license_info' => apply_filters( 'aime_pro_license_info', array() ),
-				'pro_url'      => apply_filters( 'aime_pro_url', 'https://wpthemespace.com/product/ai-marketing-expert/#aime-pricing' ),
-			)
-		);
-	}
-
-	/**
 	 * GET /dashboard/stats - Overview dashboard stats.
 	 *
 	 * @param \WP_REST_Request $request Request object.
@@ -1329,24 +1300,6 @@ class RestApi {
 			}
 		}
 
-		if ( ! \aime_has_pro() && ! $is_update ) {
-			$limits      = \aime_free_limits();
-			$limit       = (int) ( $limits['ai_provider_connections'] ?? 2 );
-
-			if ( count( $connections ) >= $limit ) {
-				return new \WP_REST_Response(
-					array(
-						'message' => sprintf(
-							/* translators: %d: number of free AI provider connections */
-							__( 'AI provider limit reached. Free plan allows %d AI provider connections. Upgrade to Pro for unlimited providers.', 'ai-marketing-expert' ),
-							$limit
-						),
-					),
-					403
-				);
-			}
-		}
-
 		$conn = AiProvider::save_connection( $params );
 
 		return new \WP_REST_Response( array(
@@ -1523,26 +1476,6 @@ class RestApi {
 	public function create_ai_job( \WP_REST_Request $request ) {
 		$params = $request->get_json_params();
 		$type   = sanitize_key( $params['type'] ?? 'generate' );
-
-		// Free tier keeps a shallow queue; Pro is unlimited.
-		if ( ! \aime_has_pro() ) {
-			$limits = \aime_free_limits();
-			$limit  = (int) ( $limits['ai_jobs_queued'] ?? 5 );
-
-			if ( $limit > 0 && JobQueue::count_active() >= $limit ) {
-				return new \WP_REST_Response(
-					array(
-						'success' => false,
-						'message' => sprintf(
-							/* translators: %d: number of background jobs allowed on the free plan */
-							__( 'Background job limit reached. Free plan allows %d queued jobs at a time. Upgrade to Pro for unlimited jobs.', 'ai-marketing-expert' ),
-							$limit
-						),
-					),
-					403
-				);
-			}
-		}
 
 		$payload = array(
 			'prompt'     => (string) ( $params['prompt'] ?? '' ),

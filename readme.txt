@@ -4,7 +4,7 @@ Tags: email marketing, lead finder, ai marketing, b2b leads, ai chatbot
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: trunk
+Stable tag: 1.2.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,7 @@ Powered by your choice of leading AI models (ChatGPT, Claude, Gemini, or OpenRou
 
 The built-in **SEO Analyzer** module gives you AI-powered keyword research, on-page audits, rank tracking, and topical authority mapping — all without leaving WordPress.
 
-🔗 **[View Plugin Website](https://wpthemespace.com/ai-marketing-expert/)** | 🚀 **[Upgrade to Pro](https://wpthemespace.com/product/ai-marketing-expert/)** | 🚀 **[View documentation](https://wpthemespace.com/ai-marketing-expert-docs)**
+🔗 **[View Plugin Website](https://wpthemespace.com/ai-marketing-expert/)** | 🚀 **[View documentation](https://wpthemespace.com/ai-marketing-expert-docs)**
 
 Whether you are a blogger, an e-commerce store owner, a small business, or a freelancer managing client sites, AI Marketing Expert gives you enterprise-grade marketing automation at zero extra tool cost.
 
@@ -33,18 +33,16 @@ Whether you are a blogger, an e-commerce store owner, a small business, or a fre
 * **AI-native** — Every module uses AI to write, optimize, and automate your marketing
 * **Your AI, your keys** — Connect OpenAI, Anthropic Claude, Google Gemini, or OpenRouter
 * **Modular** — Activate only the modules you need
-* **Privacy-first** — API keys encrypted at rest (AES-256), no third-party data sharing
-* **Generous free tier** — Real value without a subscription
-
-👉 **[Upgrade to Pro](https://wpthemespace.com/product/ai-marketing-expert/)** to unlock unlimited everything.
+* **Privacy-first** — API keys encrypted at rest (AES-256), GDPR-compliant chatbot consent enabled by default
+* **100% Free & Fully Functional** — Unlimited email campaigns, subscribers, AI content generation, custom presets, SEO audits, rank tracking, and chatbot conversations with your own API keys.
 
 ---
 
-= 📧 Email Marketing (Free + Pro) =
+= 📧 Email Marketing =
 
 A complete email CRM, cold outreach, and campaign system built inside WordPress — no Mailchimp or external lead generation subscriptions needed.
 
-**🎯 B2B Lead Finder & Autopilot Pipeline (NEW in 1.2.5)**
+**🎯 B2B Lead Finder & Autopilot Pipeline**
 
 * **Instant Prospect Search** — Find verified B2B leads by job title/role (CEO, Founder, CMO, Sales Lead), industry, location, and company size.
 * **1-Click Lead Collection** — Collect discovered prospects directly into your verified subscriber lists with a single click.
@@ -54,23 +52,23 @@ A complete email CRM, cold outreach, and campaign system built inside WordPress 
 
 **Subscriber Management**
 
-* Unlimited subscribers (Free)
+* Unlimited subscribers
 * Add, edit, bulk manage, and delete subscribers
 * Custom fields, tags, and list segmentation
-* Import from CSV, WordPress users, or WooCommerce customers
+* Import & Export from CSV, WordPress users, or WooCommerce customers
 * Full subscriber profile with activity history and notes
 * Public subscribe form via REST API
 
 **Campaigns**
 
-* Create and schedule email campaigns (30/month Free, Unlimited Pro)
+* Create, schedule, and send unlimited email campaigns
 * Choose recipients by list, tag, or audience segment
 * Track open rates, click rates, unsubscribes, and per-link click metrics
 * Live campaign progress monitoring
 
 **Email Automation & Drip Funnels**
 
-* Multi-step drip/funnel sequences with triggers (2 funnels Free, Unlimited Pro)
+* Multi-step drip/funnel sequences with triggers
 * Enroll and unenroll subscribers per funnel
 * Funnel performance metrics dashboard
 
@@ -87,22 +85,17 @@ A complete email CRM, cold outreach, and campaign system built inside WordPress 
 * Test connection before saving
 * List-Unsubscribe headers + one-click unsubscribe footer for compliance
 
-**Email Deliverability & Bounce Management (NEW in 1.2.8)**
+**Email Deliverability & Bounce Management**
 
 * **Zero-Config IMAP Bounce Detection** — Pure PHP IMAP4 SSL socket engine that automatically connects to your mailbox using existing SMTP credentials with zero manual IMAP setup. Independent of the deprecated ext-imap extension (PHP 8.1–8.4+ ready).
-* **Cloud ESP Suppression Sync (Pro)** — Autonomous background synchronization for Brevo, SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs.
+* **Cloud ESP Suppression Sync** — Autonomous background synchronization for Brevo, SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs.
 * **Pre-flight DNS MX Deliverability Guard** — Pre-checks recipient domain DNS MX records before dispatch to prevent bounces from invalid domains.
 * **Custom Tracking Domain (Branded CNAME)** — Use your own branded domain (e.g., https://track.yourdomain.com) for open and click tracking.
 * **Deliverability Health Dashboard** — Real-time monitoring of clean vs quarantined bounce ratios with on-demand bounce scanning.
 
-**Free vs Pro**
-
-* Free: Unlimited subscribers, 30 campaigns/month, 2 automation funnels, basic segmentation (lists & tags)
-* Pro: Unlimited campaigns, unlimited funnels, advanced segmentation (custom fields, behavior), A/B testing
-
 ---
 
-= 📝 AI Content Generator (Free + Pro) =
+= 📝 AI Content Generator =
 
 Write complete, SEO-optimized blog posts with one click using the AI content generator.
 
@@ -117,36 +110,26 @@ Write complete, SEO-optimized blog posts with one click using the AI content gen
 * Save generation presets with custom brand voice settings
 * Article generation history and per-article stats
 
-**Free vs Pro**
-
-* Free: 20 articles/month, up to 2,000 words
-* Pro: Unlimited articles, up to 5,000 words, custom presets, AI image prompt generation, multi-language content
-
 ---
 
-= 🔍 SEO Analyzer (Free + Pro) =
+= 🔍 SEO Analyzer =
 
 AI-powered SEO intelligence and on-page optimization without leaving WordPress. The SEO Analyzer module covers everything from keyword discovery to rank tracking — no separate SEO tool needed.
 
 * **Keyword Research** — Discover keyword opportunities with AI analysis
-* **Keyword Vault** — Save and manage keywords persistently (50 Free, Unlimited Pro)
+* **Keyword Vault** — Save and manage keywords persistently
 * **On-Page SEO Audits** — Audit any post or page; auto-audit triggers on post save
-* **Site-Wide Batch Audits** — Audit all posts at once (Pro)
-* **Topical Authority Mapping** — Build pillar + cluster content maps with visual coverage (Pro)
-* **Content Calendar** — Plan content around keyword targets (Pro)
-* **Rank Tracking** — Daily keyword rank checks with historical trend charts (Pro)
-* **Link Building Pipeline** — AI-powered outreach suggestions and prospect management (Pro)
-* **Entity SEO & Schema** — Structured data suggestions and competitor gap analysis (Pro)
-* **Export** — CSV and PDF export of all reports (Pro)
-
-**Free vs Pro**
-
-* Free: 10 keyword searches/month, 50 keyword vault, 5 audits/month
-* Pro: Unlimited keywords, unlimited vault, unlimited audits, rank tracking, topical authority, competitor analysis
+* **Site-Wide Batch Audits** — Audit all posts at once
+* **Topical Authority Mapping** — Build pillar + cluster content maps with visual coverage
+* **Content Calendar** — Plan content around keyword targets
+* **Rank Tracking** — Daily keyword rank checks with historical trend charts
+* **Link Building Pipeline** — AI-powered outreach suggestions and prospect management
+* **Entity SEO & Schema** — Structured data suggestions and competitor gap analysis
+* **Export** — CSV and PDF export of all reports
 
 ---
 
-= 📱 Social Media Scheduler (Free + Pro) =
+= 📱 Social Media Scheduler =
 
 Schedule and publish AI-generated social posts to Facebook, Instagram, LinkedIn, and X/Twitter directly from WordPress.
 
@@ -156,41 +139,32 @@ Schedule and publish AI-generated social posts to Facebook, Instagram, LinkedIn,
 * AI caption generation optimized per platform
 * AI hashtag suggestions
 * 5-minute WP-Cron processing for reliable scheduled delivery
-* Visual drag-and-drop scheduling calendar (Pro)
-* Repurpose blog articles as social posts with one click (Pro)
-* Bulk upload and schedule multiple posts at once (Pro)
+* Visual drag-and-drop scheduling calendar
+* Repurpose blog articles as social posts with one click
+* Bulk upload and schedule multiple posts at once
 * Engagement analytics: likes, comments, shares, reach, impressions
-
-**Free vs Pro**
-
-* Free: 2 connected accounts, 30 posts/month, 3 scheduled posts
-* Pro: Unlimited accounts, unlimited posts, unlimited scheduled posts, visual calendar, AI repurposing, bulk scheduling
 
 ---
 
-= 💬 AI Chatbot (Free + Pro) =
+= 💬 AI Chatbot =
 
 Add an intelligent AI chatbot to your WordPress site for 24/7 customer support, lead capture, and visitor engagement.
 
 * Create and configure chatbot instances with a custom system prompt and personality
 * Customizable widget colors, position, and branding
 * Full conversation history in WordPress admin
-* **Knowledge Base** — Index documents, URLs, and WooCommerce products so the AI gives accurate site-specific answers (Pro)
+* **Knowledge Base** — Index documents, URLs, and WooCommerce products so the AI gives accurate site-specific answers
 * **Lead Capture** — Configurable forms inside the chat widget; leads are automatically saved as subscribers in the Email module
-* **Human Takeover** — Escalate live conversations to a human agent (Pro)
-* **Business Hours** — Set availability windows and configure offline messages (Pro)
-* **Custom CSS Theming** — Full visual customization (Pro)
+* **Human Takeover** — Escalate live conversations to a human agent
+* **Business Hours** — Set availability windows and configure offline messages
+* **Custom CSS Theming** — Full visual customization
 * `[aime_discussions]` shortcode for a public discussions page
 * Visitor satisfaction rating and conversation analytics
-
-**Free vs Pro**
-
-* Free: 1 chatbot, 100 conversations/month
-* Pro: Unlimited chatbots, unlimited conversations, knowledge base (docs, URLs, WooCommerce), human takeover, business hours, custom CSS
+* GDPR-compliant opt-in consent notice enabled by default
 
 ---
 
-= 🛒 WooCommerce Cart Abandonment & Recovery (Free + Pro) =
+= 🛒 WooCommerce Cart Abandonment & Recovery =
 
 Recover lost store revenue automatically without paying for separate expensive SaaS tools like CartBounty, Klaviyo, or Abandoned Cart Pro.
 
@@ -204,31 +178,21 @@ Recover lost store revenue automatically without paying for separate expensive S
 * **Order Recovery Detection** — Automatically detects when a customer completes their order, marking carts as recovered and attributing recovered revenue.
 * **Universal Workflow Integration** — Seamlessly triggers automated recovery email sequences, discount offers, and store manager alerts via Workflow Automation.
 
-**Free vs Pro**
-
-* Free: Real-time cart tracking, guest capture, 1-click recovery URLs, 1 active recovery workflow sequence
-* Pro: Unlimited recovery workflows, multi-step timed recovery funnels, dynamic coupons, advanced attribution analytics
-
 ---
 
-= ⚙️ Workflow Automation (Free + Pro) =
+= ⚙️ Workflow Automation =
 
 Chain actions from every module into scheduled, automated marketing workflows — like a built-in Zapier for your WordPress marketing stack.
 
 * **Visual Workflow Builder** — Canvas-based visual step editor with drag-and-drop branching and real-time execution graphs
-* **Text-to-Workflow AI Generator (NEW in 1.2.6)** — Describe your automation in plain natural language (English or Bengali) or pick from 8 high-converting recipes, and AI builds the entire canvas graph automatically
-* **Wait / Delay Step (NEW in 1.2.6)** — Pause workflow execution between steps for seconds, minutes, hours, or days (e.g. Abandoned Cart -> Wait 1 Hour -> Send Email 1 -> Wait 24 Hours -> Send Email 2)
+* **Text-to-Workflow AI Generator** — Describe your automation in plain natural language (English or Bengali) or pick from 8 high-converting recipes, and AI builds the entire canvas graph automatically
+* **Wait / Delay Step** — Pause workflow execution between steps for seconds, minutes, hours, or days (e.g. Abandoned Cart -> Wait 1 Hour -> Send Email 1 -> Wait 24 Hours -> Send Email 2)
 * **Direct Email Sending** — Dispatch instant emails using your configured multi-connection SMTP pool with dynamic token substitution
 * **E-Commerce Triggers** — WooCommerce Cart Abandoned and WooCommerce Order Completed with minimum value filters and recovery URLs
 * **Lead & Event Triggers** — Inbound Webhook, Contact Form 7 Submission, User Registered, Comment Posted, New Subscriber, and Post Published
 * **Schedule Triggers** — Once, hourly, daily, weekly, monthly, or custom intervals
-* **Conditional Logic** — Branch workflows with Yes/No paths based on upstream step results, text matches, or numeric score comparisons (Pro)
+* **Conditional Logic** — Branch workflows with Yes/No paths based on upstream step results, text matches, or numeric score comparisons
 * **Pre-Built Blueprint Templates** — Instant starter blueprints including Cart Recovery, Post-Purchase Review Requests, CF7 Auto-Responders, and Content Repurposing engines
-
-**Free vs Pro**
-
-* Free: 2 active workflows, 3 steps per workflow, 30 runs/month, core triggers, starter templates
-* Pro: Unlimited workflows, unlimited steps, unlimited runs, all webhook & event triggers, conditional logic, full template library
 
 ---
 
@@ -251,7 +215,7 @@ API keys are encrypted at rest using AES-256-GCM authenticated encryption with W
 * All API keys and SMTP credentials are encrypted at rest (AES-256-GCM)
 * SSRF protection on all remote URL fetches
 * HMAC-signed email tracking links
-* No subscriber or visitor data is ever sent to third parties
+* Subscriber lists and captured contact details remain on your WordPress server; AI providers receive only the prompts and chat messages needed to generate responses (with visitor opt-in consent enabled by default)
 * Full compliance with WordPress coding standards and Plugin Check
 
 ---
@@ -310,11 +274,11 @@ Google AI Studio (Gemini) is the easiest to start with — it offers a free API 
 
 = Is the email marketing feature really free with unlimited subscribers? =
 
-Yes. The free tier includes unlimited subscribers and 30 campaigns per month. There is no subscriber cap on the free plan.
+Yes. It includes unlimited subscribers and unlimited email campaigns. There is no artificial subscriber or campaign cap.
 
 = Does the chatbot work with WooCommerce? =
 
-Yes. The Pro plan allows you to index your WooCommerce product catalog into the chatbot knowledge base so it can answer product questions, check availability, and assist shoppers automatically.
+Yes. You can index your WooCommerce product catalog into the chatbot knowledge base so it can answer product questions, check availability, and assist shoppers automatically.
 
 = Can I use multiple AI providers at the same time? =
 
@@ -330,7 +294,7 @@ Yes. The social scheduler supports LinkedIn personal profiles and company pages 
 
 = Is my data secure? =
 
-Yes. All API keys and SMTP credentials are encrypted at rest using AES-256-GCM authenticated encryption. No subscriber data or conversation data is ever sent to third parties. Email tracking uses HMAC-signed URLs to prevent open redirect abuse.
+Yes. All API keys and SMTP credentials are encrypted at rest using AES-256-GCM authenticated encryption. Subscriber lists and contact records remain strictly on your own WordPress server. Chatbot queries and prompt instructions are transmitted to your configured AI provider only to generate replies, with visitor opt-in consent enabled by default. Email tracking uses HMAC-signed URLs to prevent open redirect abuse.
 
 = Can I import existing email subscribers? =
 
@@ -340,16 +304,119 @@ Yes. You can import subscribers from a CSV file, sync from WordPress registered 
 
 Visit [wordpress.org/support/plugin/ai-marketing-expert/](https://wordpress.org/support/plugin/ai-marketing-expert/) for documentation and support.
 
+== External Services ==
+
+This plugin connects to external third-party services to deliver AI generation, social posting, email deliverability, and media assets. Data is transmitted only when you actively configure, enable, or trigger these specific integrations:
+
+1. **AI Providers (OpenAI, Anthropic Claude, Google Gemini, OpenRouter)**
+* **What it is and what it is used for:** Generative artificial intelligence APIs used to generate marketing copy, blog posts, email templates, SEO suggestions, and live chatbot answers.
+* **What data is sent and when:** Submitted text prompts, article topics, or chatbot visitor messages are sent when you request content generation or when a visitor interacts with the chatbot. Personal visitor email addresses are never transmitted to AI providers.
+* **Terms & Privacy Policies:**
+  - OpenAI: [Terms of Use](https://openai.com/policies/terms-of-use/) | [Privacy Policy](https://openai.com/policies/privacy-policy/)
+  - Anthropic: [Terms of Service](https://www.anthropic.com/legal/commercial-terms) | [Privacy Policy](https://www.anthropic.com/privacy)
+  - Google Gemini / AI Studio: [Terms of Service](https://policies.google.com/terms) | [Privacy Policy](https://policies.google.com/privacy)
+  - OpenRouter: [Terms of Service](https://openrouter.ai/terms) | [Privacy Policy](https://openrouter.ai/privacy)
+
+2. **WPSpace OAuth Proxy (https://oauth.wpthemespace.com/v1)**
+* **What it is and what it is used for:** A secure OAuth proxy provided by WPThemeSpace to facilitate OAuth 2.0 authorization code exchange and token refresh for connected social media networks (Facebook, Instagram, LinkedIn, X/Twitter) without bundling client application secrets inside client-side code.
+* **What data is sent and when:** Temporary authorization codes, refresh tokens, platform identifier, and your website callback URL are sent only when an administrator initiates or refreshes a social media connection.
+* **Terms of Use:** [Terms of Service](https://wpthemespace.com/terms-of-service/)
+* **Privacy Policy:** [Privacy Policy](https://wpthemespace.com/privacy-policy/)
+
+3. **Mailgun API (https://api.mailgun.net)**
+* **What it is and what it is used for:** Mailgun REST API is used in Email Deliverability to synchronize bounce records and suppression lists to protect sender reputation.
+* **What data is sent and when:** Sends your Mailgun API key in the request header to retrieve bounce statistics when manual or scheduled suppression synchronization is executed.
+* **Terms of Use:** [Terms of Service](https://www.mailgun.com/legal/terms/)
+* **Privacy Policy:** [Privacy Policy](https://www.mailgun.com/legal/privacy-policy/)
+
+4. **Brevo API (https://api.brevo.com)**
+* **What it is and what it is used for:** Brevo REST API is used in Email Deliverability to synchronize hard bounce and spam complaint events.
+* **What data is sent and when:** Sends your Brevo API key in the request header to query suppression events when synchronization is run.
+* **Terms of Use:** [Terms of Use](https://www.brevo.com/legal/termsofuse/)
+* **Privacy Policy:** [Privacy Policy](https://www.brevo.com/legal/privacypolicy/)
+
+5. **Twilio SendGrid API (https://api.sendgrid.com)**
+* **What it is and what it is used for:** SendGrid REST API is used in Email Deliverability to synchronize bounce suppression events.
+* **What data is sent and when:** Sends your SendGrid API key in the Authorization header to retrieve suppressed bounce events when synchronization is executed.
+* **Terms of Use:** [Terms of Service](https://www.twilio.com/en-us/legal/tos)
+* **Privacy Policy:** [Privacy Policy](https://www.twilio.com/en-us/legal/privacy)
+
+6. **Amazon SES & SNS (AWS)**
+* **What it is and what it is used for:** Amazon Simple Email Service (SES) is used for outbound email dispatch, and Amazon SNS handles delivery notifications and bounce/complaint webhooks.
+* **What data is sent and when:** Outbound email content and recipient addresses are sent via SMTP relay when campaigns are dispatched.
+* **Terms of Use:** [Service Terms](https://aws.amazon.com/service-terms/)
+* **Privacy Policy:** [Privacy Policy](https://aws.amazon.com/privacy/)
+
+7. **SparkPost**
+* **What it is and what it is used for:** Outbound email relay via SparkPost SMTP.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with SparkPost SMTP.
+* **Terms of Use:** [Terms of Service](https://www.sparkpost.com/policies/services/)
+* **Privacy Policy:** [Privacy Policy](https://www.sparkpost.com/policies/privacy/)
+
+8. **Stock Photo Providers (Pexels & Pixabay)**
+* **What it is and what it is used for:** Royalty-free photo search and download for social posts and blog articles.
+* **What data is sent and when:** Search keywords are sent when an administrator searches for stock photos in the media selector.
+* **Terms & Privacy Policies:**
+  - Pexels: [Terms of Service](https://www.pexels.com/terms-of-service/) | [Privacy Policy](https://www.pexels.com/privacy-policy/)
+  - Pixabay: [Terms of Service](https://pixabay.com/service/terms/) | [Privacy Policy](https://pixabay.com/service/privacy/)
+
+9. **Social Media Networks (Meta, LinkedIn, X/Twitter)**
+* **What it is and what it is used for:** Publishing approved marketing posts and captions to your connected social channels.
+* **What data is sent and when:** Post copy, media, and authorization tokens when scheduling or publishing posts.
+* **Privacy Policies:**
+  - Meta: [Privacy Policy](https://www.facebook.com/privacy/policy/)
+  - LinkedIn: [Privacy Policy](https://www.linkedin.com/legal/privacy-policy)
+  - X (Twitter): [Privacy Policy](https://twitter.com/en/privacy)
+
+10. **Postmark (ActiveCampaign)**
+* **What it is and what it is used for:** Optional SMTP email delivery relay.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with Postmark SMTP.
+* **Terms & Privacy:** [Terms of Service](https://postmarkapp.com/terms-of-service) | [Privacy Policy](https://postmarkapp.com/privacy-policy)
+
+11. **Resend**
+* **What it is and what it is used for:** Optional modern developer SMTP email delivery relay.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with Resend SMTP.
+* **Terms & Privacy:** [Terms of Service](https://resend.com/legal/terms-of-service) | [Privacy Policy](https://resend.com/legal/privacy-policy)
+
+12. **SendLayer**
+* **What it is and what it is used for:** Optional transactional and marketing SMTP email delivery relay.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with SendLayer SMTP.
+* **Terms & Privacy:** [Terms of Service](https://sendlayer.com/terms/) | [Privacy Policy](https://sendlayer.com/privacy-policy/)
+
+13. **SMTP.com**
+* **What it is and what it is used for:** Optional high-volume SMTP email delivery relay.
+* **What data is sent and when:** Outbound emails and recipient addresses when sending campaigns configured with SMTP.com.
+* **Terms & Privacy:** [Terms of Service](https://www.smtp.com/legal/terms-of-service/) | [Privacy Policy](https://www.smtp.com/legal/privacy-policy/)
+
+== Source Code & Build Instructions ==
+
+All unminified, human-readable JavaScript (`.js`, `.jsx`) and SCSS/CSS (`.scss`, `.css`) source files for the compiled assets in `build/` are included directly inside the `src/` directory of this plugin, along with `package.json` and `webpack.config.js`.
+
+The public development repository is accessible at:
+https://github.com/noralam/AI-Marketing-Expert
+
+To compile the production JavaScript and CSS assets in `build/` from the `src/` directory:
+1. Ensure Node.js (version 18 or newer) and npm are installed.
+2. In the plugin root directory, install the development dependencies:
+   `npm install`
+3. Build the production assets into `build/`:
+   `npm run build`
+4. For active development with watch mode:
+   `npm start`
+
+**Third-Party Libraries Included:**
+* **Animate.css** (`assets/css/animate.min.css`) — MIT License, source code available at https://github.com/animate-css/animate.css
+* **React Flow (`@xyflow/react`)** — MIT License, source code available at https://github.com/xyflow/xyflow
+* **Recharts (`recharts`)** — MIT License, source code available at https://github.com/recharts/recharts
+* **DOMPurify (`dompurify`)** — Apache-2.0 / MPL-2.0 License, source code available at https://github.com/cure53/DOMPurify
+
 == Privacy Policy ==
 
-AI Marketing Expert connects to third-party services to deliver AI generation, social posting, and email deliverability. Data is transmitted only when you actively configure and use these features.
+AI Marketing Expert connects to external services to deliver AI generation, social posting, stock media, and email deliverability. Data is transmitted only when you actively configure, enable, or interact with these features.
 
-* **AI Providers** (OpenAI, Anthropic Claude, Google Gemini, OpenRouter): Only your submitted prompt text is transmitted to generate content, SEO suggestions, or chat replies. No subscriber records or personal data are ever sent. [OpenAI Privacy](https://openai.com/policies/privacy-policy) | [Anthropic Privacy](https://www.anthropic.com/privacy) | [Google Privacy](https://policies.google.com/privacy) | [OpenRouter Privacy](https://openrouter.ai/privacy)
-* **Social Networks** (Meta Facebook/Instagram, LinkedIn, X/Twitter): Transmits post copy, media, and OAuth tokens when scheduling or publishing posts. [Meta Privacy](https://www.facebook.com/privacy/policy/) | [LinkedIn Privacy](https://www.linkedin.com/legal/privacy-policy) | [X Privacy](https://twitter.com/en/privacy)
-* **Stock Images** (Pexels, Pixabay): Queries keywords to fetch media previews when searching photos. [Pexels Terms](https://www.pexels.com/terms/) | [Pixabay Terms](https://pixabay.com/service/terms/)
-* **Email & ESPs**: Sends outbound emails via your own SMTP server. Suppression sync queries bounce lists from your ESP account (Brevo, SendGrid, Mailgun) to safeguard sender reputation.
-
-All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in your WordPress database. All subscriber lists, analytics, and customer data remain strictly on your own server.
+* **AI Chatbot & Visitor Privacy:** When the AI Chatbot is active on your site, visitor messages and conversation context are transmitted to your configured AI provider (OpenAI, Claude, Gemini, or OpenRouter) strictly to generate contextual responses. A GDPR-compliant visitor opt-in consent notice is enabled by default to ensure visitors give affirmative consent prior to chatting. Visitor email addresses are never transmitted to third-party AI providers.
+* **Subscriber & Customer Data:** All email subscriber records, lists, tags, analytics, and contact history are stored strictly within your own WordPress database. They are never shared or sold to third parties.
+* **Encryption at Rest:** All third-party API credentials, secret tokens, and SMTP passwords are encrypted at rest using AES-256-GCM authenticated encryption.
 
 == Screenshots ==
 
@@ -364,10 +431,24 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 
 == Changelog ==
 
+= 1.2.11 =
+* Removed all artificial usage limits, quotas, and Pro gates: all built-in features (custom presets, keyword vault, rank tracking, email campaigns, chatbot, and workflows) are 100% free and fully functional.
+* Included unminified human-readable source code in `src/` and documented public GitHub repository and build instructions in readme.txt for Guideline 4 compliance.
+* Chatbot visitor privacy: GDPR opt-in consent notice enabled by default; personal visitor email addresses are never transmitted to third-party AI providers.
+* Security: Hardened REST API status webhooks with strict authentication validation in permission_callback.
+* Changed admin menu position from 2 to standard 30 to respect core WordPress navigation hierarchy.
+* Removed set_time_limit(0) across background retry and workflow engines.
+* Added comprehensive External Services documentation covering all API integrations, terms of service, and privacy policies.
+* Fixed broken Pexels terms link in readme.txt to official terms-of-service URL.
+
+= 1.2.9 =
+* Fix: Important security update.
+* Improved: Social media platform connectivity and OAuth setup.
+
 = 1.2.8 =
-* New: B2B Lead Finder Free Tier — Free users can now discover and collect up to 5 verified B2B leads daily (up to 100 leads/month) with real-time quota meters, 1-click CRM list importing, and live DNS MX deliverability checks with zero WordPress.org guideline violations.
+* New: B2B Lead Finder — Discover and collect verified B2B leads with 1-click CRM list importing and live DNS MX deliverability checks.
 * New: Zero-Config IMAP Bounce Detection — Pure PHP IMAP4 SSL socket client that auto-derives and connects to bounce mailboxes directly using your existing SMTP credentials (Gmail, Outlook, Hostinger, cPanel, Custom) with zero manual IMAP setup. Completely independent of the deprecated ext-imap extension, ensuring 100% compatibility across PHP 8.1, 8.2, 8.3, and PHP 8.4+.
-* New: Cloud ESP Suppression Synchronization (Pro) — Autonomous background synchronization for Brevo (Sendinblue), SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs and quarantine dead addresses before sender reputation is harmed.
+* New: Cloud ESP Suppression Synchronization — Autonomous background synchronization for Brevo (Sendinblue), SendGrid, and Mailgun to automatically pull hard bounce events and spam complaints via REST APIs and quarantine dead addresses before sender reputation is harmed.
 * New: Deliverability & Bounce Health Overview — Dedicated dashboard displaying real-time list health metrics (Active Subscribers, Quarantined Bounces, Unsubscribes), manual "Scan & Quarantine Now" action with instant toast notifications, and recent bounce audit logs.
 * New: Pre-flight DNS MX Deliverability Guard — Pre-checks recipient domain DNS MX records right before SMTP dispatch to prevent sending to dead or non-existent domains.
 * New: Custom Tracking Domain (Branded CNAME) — Configure a branded tracking domain (e.g., https://track.yourdomain.com) for click and open tracking links to elevate domain authority, sender trust, and inbox placement.
@@ -440,7 +521,7 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 * New: Generate Blog Post step now supports multiple categories (multi-select with search) and an optional writing brief with its own prompt library.
 * New: Enroll in Funnel step can add contacts to Lists and Tags, and can create the contact automatically when the email is new.
 * New: clickable {token} chips under token-capable fields (Custom Prompt, notification and campaign fields) so dynamic values are easy to discover.
-* New: Dashboard widget footer with Help and Go Pro links.
+* New: Dashboard widget footer with Help and documentation links.
 * Fixed: social posts scheduled from a device in a different timezone could publish hours early or late — schedule times are now converted to the site timezone.
 * Fixed: social posts that crashed mid-publish no longer stay stuck forever; the queue reclaims them and gives up cleanly after 3 attempts.
 * Fixed: Facebook publishing and OAuth unified on Graph API v25.0, and manual Facebook connections now request all required Page permissions.
@@ -450,7 +531,7 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 * Fixed: workflow templates now open the step that still needs setup (e.g. picking a funnel) right after applying.
 * Fixed: legacy single-category selections remain visible and editable after the multi-category upgrade.
 * Improved: word count default for generated posts is now 1500; AI Brain URL cache default extended to 30 days.
-* Improved: free-tier ad-copy runs log clearly when WooCommerce product rotation (Pro) is skipped.
+* Improved: Ad-copy runs log clearly when WooCommerce product rotation runs.
 * Improved: AI Brain custom JSON output now uses provider-native structured output (JSON schema), so the model returns the brief in a guaranteed shape instead of free-form text that had to be parsed.
 * Fixed: reasoning models (for example muse-spark-1.2, DeepSeek R1, o-series) leaked their internal thinking text into AI Brain custom JSON output, which could break the JSON or produce an empty topic.
 * Fixed: models that return their answer in a separate reasoning field are now read correctly on OpenAI, OpenRouter and custom OpenAI-compatible connections, instead of being treated as an empty response.
@@ -478,7 +559,7 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 * Fixed: campaign recipient count could double mid-send under concurrent processing (duplicate emails). Added a unique constraint on the send queue and a one-time de-duplication migration.
 * Fixed: paused campaigns that were still resolving their audience could not be paused reliably.
 * New: "End Campaign" button to fully stop an in-progress campaign and view its final status.
-* New (Pro): provider feedback-loop webhooks to auto-move spam complaints to the Complaint list and hard bounces to the Bounced list.
+* New: Provider feedback-loop webhooks to auto-move spam complaints to the Complaint list and hard bounces to the Bounced list.
   Point your ESP (Amazon SES via SNS, SendGrid, Mailgun, Postmark) at:
   - Complaints: POST {site}/wp-json/aime/v1/email/webhook/complaint
   - Bounces:    POST {site}/wp-json/aime/v1/email/webhook/bounce
@@ -487,7 +568,7 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 
 = 1.1.0 =
 * Initial public release on WordPress.org
-* Email Marketing module: unlimited subscribers, 30 campaigns/month on free tier
+* Email Marketing module: unlimited subscribers and full campaign creation tools
 * Content Generator module: AI article generation with SEO analysis
 * SEO Analyzer module: keyword research, vault, rank tracking, and on-page audits
 * Social Media module: Facebook, Instagram, and X/Twitter scheduling
@@ -499,8 +580,11 @@ All API credentials and SMTP passwords are encrypted at rest (AES-256-GCM) in yo
 
 == Upgrade Notice ==
 
+= 1.2.9 =
+Important security update and enhancements for social media connections. Upgrading is strongly recommended for all users.
+
 = 1.2.8 =
-Major Deliverability & Lead Finder Release: B2B Lead Finder Free Tier (5 leads/day, 100/month), Zero-Config Pure PHP IMAP Bounce Detection (PHP 8.4 ready), Cloud ESP Suppression Sync (Brevo, SendGrid, Mailgun), Custom Tracking Domain support, Pre-flight DNS MX Deliverability Guard, and Deliverability Health Dashboard. Highly recommended for all users.
+Major Deliverability & Lead Finder Release: B2B Lead Finder, Zero-Config Pure PHP IMAP Bounce Detection (PHP 8.4 ready), Cloud ESP Suppression Sync (Brevo, SendGrid, Mailgun), Custom Tracking Domain support, Pre-flight DNS MX Deliverability Guard, and Deliverability Health Dashboard. Highly recommended for all users.
 
 = 1.2.7 =
 Feature Release: Free Stock Photos (Pexels & Pixabay) in Social Media Composer, Universal Stock Photo Global Settings, Caption Length Selector (short/medium/long), and fixed Instagram caption truncation for rich, engaging social posts. Highly recommended for all users.

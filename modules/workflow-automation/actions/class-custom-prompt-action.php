@@ -42,7 +42,7 @@ class CustomPromptAction extends BaseAction {
 		// Auto-fetch URLs in the prompt so the AI receives page content.
 		$prompt = self::inject_url_contents( $prompt );
 
-		// Brand voice (Pro) keeps free-form output consistent with the batch.
+		// Brand voice keeps free-form output consistent with the batch.
 		$voice_prompt = self::brand_voice_system_prompt( $context );
 		if ( '' !== $voice_prompt ) {
 			$prompt .= "\n\nBrand voice guidelines:\n" . mb_substr( $voice_prompt, 0, 800 );
@@ -73,8 +73,10 @@ class CustomPromptAction extends BaseAction {
 			}
 		}
 
-		// Store full output so downstream steps can read it.
+		// Store full output and content alias so downstream steps can read it.
 		$reference['full_output'] = $output;
+		$reference['content']     = $output;
+		$reference['word_count']  = function_exists( 'aime_count_words' ) ? aime_count_words( $output ) : str_word_count( wp_strip_all_tags( $output ) );
 
 		aime_log( 'Workflow custom prompt executed.', 'info', 'workflow-automation' );
 

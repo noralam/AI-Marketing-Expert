@@ -122,7 +122,7 @@ wp_remote_post( rest_url( 'aime/v1/email/webhook/subscribe' ), array(
         'status'        => 'subscribed',
         'custom_fields' => array(
             'company'      => 'Acme Inc',
-            'license_type' => 'pro',
+            'license_type' => 'customer',
         ),
     ) ),
     'timeout' => 10,

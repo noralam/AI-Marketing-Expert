@@ -7,7 +7,7 @@
  *  2. Block disposable / temporary email domains
  *  3. MX record check (domain has a mail server)
  *
- * Designed to be extensible via filters for Pro features.
+ * Designed to be extensible via standard WordPress filters.
  *
  * @package WPSpace\AiMarketingExpert
  */
@@ -183,7 +183,7 @@ class EmailValidator {
 		}
 
 		/**
-		 * Final filter: allow Pro or third-party to add extra checks.
+		 * Final filter: allow third-party add-ons to add extra checks.
 		 *
 		 * Return a WP_Error to reject, or true to accept.
 		 *

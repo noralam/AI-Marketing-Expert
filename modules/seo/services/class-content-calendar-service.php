@@ -140,7 +140,6 @@ class ContentCalendarService {
 				'status'       => 'planned',
 				'planned_date' => sanitize_text_field( $item['planned_date'] ?? '' ) ?: null,
 				'notes'        => sanitize_textarea_field( $item['brief'] ?? '' ),
-				'is_pro'       => aime_has_pro() ? 1 : 0,
 			) );
 
 			if ( $wpdb->insert_id ) {

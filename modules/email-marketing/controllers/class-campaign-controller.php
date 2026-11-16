@@ -240,31 +240,22 @@ class CampaignController {
 		global $wpdb;
 		$p = $wpdb->prefix;
 
-		$has_pro = aime_has_pro();
-		$limits  = aime_free_limits();
-
 		$campaigns_used = $this->get_monthly_send_count();
-		$campaigns_max  = (int) ( $limits['campaigns_per_month'] ?? 30 );
 		$scheduled_used = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_campaigns WHERE status = 'scheduled'" );
-		$scheduled_max  = (int) ( $limits['email_scheduled_campaigns'] ?? 3 );
 		$funnels_used   = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_funnels" );
-		$funnels_max    = (int) ( $limits['email_funnels'] ?? 2 );
 
-		// `remaining` is null on Pro, which the UI reads as "unlimited" — a
-		// large number would render as a countdown to a wall that isn't there.
-		$block = static function ( int $used, int $max ) use ( $has_pro ): array {
+		$block = static function ( int $used ): array {
 			return array(
 				'used'      => $used,
-				'limit'     => $has_pro ? null : $max,
-				'remaining' => $has_pro ? null : max( 0, $max - $used ),
+				'limit'     => null,
+				'remaining' => null,
 			);
 		};
 
 		return new \WP_REST_Response( array(
-			'has_pro'             => $has_pro,
-			'campaigns_per_month' => $block( $campaigns_used, $campaigns_max ),
-			'scheduled_campaigns' => $block( $scheduled_used, $scheduled_max ),
-			'automations'         => $block( $funnels_used, $funnels_max ),
+			'campaigns_per_month' => $block( $campaigns_used ),
+			'scheduled_campaigns' => $block( $scheduled_used ),
+			'automations'         => $block( $funnels_used ),
 		) );
 	}
 
@@ -299,39 +290,7 @@ class CampaignController {
 
 		$scheduled_at = sanitize_text_field( $request->get_param( 'scheduled_at' ) ?? '' );
 
-		// Free-tier monthly campaign metering (draft → send/schedule transitions only,
-		// so resume/retry on the same campaign is never double-counted).
-		if ( ! aime_has_pro() ) {
-			$limits    = aime_free_limits();
-			$max_month = (int) ( $limits['campaigns_per_month'] ?? 30 );
-			if ( $this->get_monthly_send_count() >= $max_month ) {
-				return new \WP_REST_Response( array(
-					'message'       => sprintf(
-						/* translators: %d: number of campaigns allowed per month on the free plan. */
-						__( 'Free sites can send %d campaigns per month. Upgrade to Pro for unlimited campaigns.', 'ai-marketing-expert' ),
-						$max_month
-					),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		if ( $scheduled_at ) {
-			if ( ! aime_has_pro() ) {
-				$limits    = aime_free_limits();
-				$max_free  = (int) ( $limits['email_scheduled_campaigns'] ?? 3 );
-				$scheduled = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$p}aime_campaigns WHERE status = 'scheduled'" );
-				if ( $scheduled >= $max_free ) {
-					return new \WP_REST_Response( array(
-						'message'       => sprintf(
-							/* translators: %d: number of campaigns that may be scheduled at once on the free plan. */
-							__( 'Free sites can schedule up to %d campaigns. Upgrade to Pro for unlimited scheduled campaigns.', 'ai-marketing-expert' ),
-							$max_free
-						),
-						'limit_reached' => true,
-					), 403 );
-				}
-			}
 			$wpdb->update( "{$p}aime_campaigns", array(
 				'status'       => 'scheduled',
 				'scheduled_at' => $scheduled_at,
@@ -411,10 +370,6 @@ class CampaignController {
 	/* ── A/B VARIANT ──────────────────────────────────── */
 
 	public function create_variant( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'A/B testing is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$p         = $wpdb->prefix;
 		$parent_id = absint( $request->get_param( 'id' ) );
@@ -697,9 +652,6 @@ class CampaignController {
 		}
 		if ( $r->has_param( 'settings' ) ) {
 			$settings = map_deep( $r->get_param( 'settings' ), 'sanitize_text_field' );
-			if ( ! aime_has_pro() && is_array( $settings ) ) {
-				unset( $settings['segments'], $settings['audience_offset'], $settings['audience_limit'], $settings['utm_source'], $settings['utm_medium'], $settings['utm_campaign'], $settings['send_throttle'] );
-			}
 			$data['settings'] = wp_json_encode( $settings );
 		}
 		return $data;

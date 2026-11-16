@@ -74,21 +74,37 @@ class WorkflowTokens {
 			return self::dot_path( is_array( $context['event'] ?? null ) ? $context['event'] : array(), substr( $token, 6 ) );
 		}
 
-		// {previous.field.sub} — dot path into the most recent step's reference.
+		// {previous.field.sub} — dot path into the most recent step's reference (or preview).
 		if ( 0 === strpos( $token, 'previous.' ) ) {
+			$sub    = substr( $token, 9 );
 			$latest = self::latest_previous( $context );
+			if ( 'preview' === $sub && isset( $latest['preview'] ) ) {
+				return (string) $latest['preview'];
+			}
 			$ref    = is_array( $latest['reference'] ?? null ) ? $latest['reference'] : array();
-			return self::dot_path( $ref, substr( $token, 9 ) );
+			return self::dot_path( $ref, $sub );
 		}
 
-		// {action_type.field.sub} — most recent output of a given action type,
-		// falling back to the direct parent's reference.
+		// {action_type.field.sub}, {step_key.field.sub}, or {alias.field.sub} —
+		// matches most recent output of a given action type, step key, or step alias.
 		if ( false !== strpos( $token, '.' ) ) {
 			list( $type, $path ) = explode( '.', $token, 2 );
 			foreach ( array_reverse( is_array( $context['previous'] ?? null ) ? $context['previous'] : array() ) as $entry ) {
-				if ( (string) ( $entry['action_type'] ?? '' ) === $type && self::has_path( is_array( $entry['reference'] ?? null ) ? $entry['reference'] : array(), $path ) ) {
-					return self::dot_path( (array) $entry['reference'], $path );
+				$action_type = (string) ( $entry['action_type'] ?? '' );
+				$step_key    = (string) ( $entry['step_key'] ?? '' );
+				$alias       = (string) ( $entry['alias'] ?? '' );
+
+				if ( $action_type === $type || $step_key === $type || $alias === $type ) {
+					if ( 'preview' === $path && isset( $entry['preview'] ) ) {
+						return (string) $entry['preview'];
+					}
+					if ( isset( $entry['reference'] ) && self::has_path( is_array( $entry['reference'] ) ? $entry['reference'] : array(), $path ) ) {
+						return self::dot_path( (array) $entry['reference'], $path );
+					}
 				}
+			}
+			if ( 'preview' === $path && isset( $context['parent_output']['preview'] ) ) {
+				return (string) $context['parent_output']['preview'];
 			}
 			$parent_ref = is_array( $context['parent_output']['reference'] ?? null ) ? $context['parent_output']['reference'] : array();
 			if ( self::has_path( $parent_ref, $path ) ) {

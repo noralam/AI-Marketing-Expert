@@ -7,7 +7,6 @@
 
 namespace WPSpace\AiMarketingExpert\Modules\ContentGenerator\Controllers;
 
-use WPSpace\AiMarketingExpert\Pro;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,15 +29,6 @@ class PresetController {
 	/* ── CREATE preset ───────────────────────────────── */
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		// Custom presets are PRO.
-		$check = Pro::gate( 'Custom Presets' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array(
-				'message'      => $check->get_error_message(),
-				'pro_required' => true,
-			), 403 );
-		}
-
 		global $wpdb;
 		$p             = $wpdb->prefix;
 		$presets_table = $p . 'aime_content_presets';
@@ -55,7 +45,6 @@ class PresetController {
 			'system_instructions' => sanitize_textarea_field( $request->get_param( 'system_instructions' ) ?: '' ),
 			'default_category_id' => absint( $request->get_param( 'default_category_id' ) ) ?: null,
 			'is_default'          => 0,
-			'is_pro'              => 1,
 			'created_at'          => $now,
 			'updated_at'          => $now,
 		);
@@ -83,14 +72,6 @@ class PresetController {
 		$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $presets_table, $id ) );
 		if ( ! $existing ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Preset not found.', 'ai-marketing-expert' ) ), 404 );
-		}
-
-		// Editing non-default presets requires PRO.
-		if ( ! $existing->is_default ) {
-			$check = Pro::gate( 'Custom Presets' );
-			if ( is_wp_error( $check ) ) {
-				return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-			}
 		}
 
 		$data = array( 'updated_at' => current_time( 'mysql', true ) );

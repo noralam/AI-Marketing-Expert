@@ -35,20 +35,7 @@ class ArticleController {
 	}
 
 	private function scheduled_limit_reached( int $exclude_id = 0 ): bool {
-		if ( aime_has_pro() ) {
-			return false;
-		}
-
-		global $wpdb;
-		$limits = aime_free_limits();
-		$max    = (int) ( $limits['content_scheduled_posts'] ?? 3 );
-		$count  = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$wpdb->prefix}aime_content_articles WHERE status = %s AND id != %d",
-			'scheduled',
-			$exclude_id
-		) );
-
-		return $count >= $max;
+		return false;
 	}
 
 	private static function build_cache_key( string $prefix, array $parts = array() ): string {
@@ -133,7 +120,7 @@ class ArticleController {
 
 		// Fetch.
 		$query = "SELECT id, title, slug, status, topic, tone, word_count_target, actual_word_count, language, post_type,
-					seo_score, readability_score, wp_post_id, preset_id, is_pro, created_at, updated_at, scheduled_publish_at, published_at
+					seo_score, readability_score, wp_post_id, preset_id, created_at, updated_at, scheduled_publish_at, published_at
 				  FROM {$p}aime_content_articles {$where}
 				  ORDER BY created_at DESC LIMIT %d OFFSET %d";
 		$args[] = $per_page;
@@ -223,19 +210,6 @@ class ArticleController {
 	/* ── CREATE article ──────────────────────────────── */
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		// Check free limit.
-		if ( ! aime_has_pro() ) {
-			$monthly = \WPSpace\AiMarketingExpert\Modules\ContentGenerator\ContentGeneratorModule::get_monthly_article_count();
-			$limits  = aime_free_limits();
-			$limit   = $limits['content_articles_per_month'] ?? 10;
-			if ( $monthly >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'    => __( 'Monthly article limit reached. Upgrade to Pro for unlimited articles.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		global $wpdb;
 		$p   = $wpdb->prefix;
 		$now = current_time( 'mysql', true );
@@ -248,16 +222,8 @@ class ArticleController {
 			$post_type = 'post';
 		}
 
-		$tone = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
-		if ( ! aime_has_pro() && in_array( $tone, array( 'humorous', 'formal', 'conversational' ), true ) ) {
-			$tone = 'professional';
-		}
-
+		$tone              = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
 		$word_count_target = absint( $request->get_param( 'word_count_target' ) ?: $request->get_param( 'word_count' ) ?: 1000 );
-		if ( ! aime_has_pro() ) {
-			$limits            = aime_free_limits();
-			$word_count_target = min( $word_count_target, (int) ( $limits['content_max_words'] ?? 2000 ) );
-		}
 
 		$data = array(
 			'title'             => $title,
@@ -278,7 +244,7 @@ class ArticleController {
 			'featured_image_url' => esc_url_raw( $request->get_param( 'featured_image_url' ) ?: '' ),
 			'featured_image_id'  => absint( $request->get_param( 'featured_image_id' ) ) ?: null,
 			'preset_id'         => absint( $request->get_param( 'preset_id' ) ) ?: null,
-			'brand_voice_id'    => aime_has_pro() ? ( absint( $request->get_param( 'brand_voice_id' ) ) ?: null ) : null,
+			'brand_voice_id'    => absint( $request->get_param( 'brand_voice_id' ) ) ?: null,
 			'meta_title'        => sanitize_text_field( $request->get_param( 'meta_title' ) ?: '' ),
 			'meta_description'  => sanitize_textarea_field( $request->get_param( 'meta_description' ) ?: '' ),
 			'seo_score'         => absint( $request->get_param( 'seo_score' ) ?: 0 ),
@@ -342,11 +308,7 @@ class ArticleController {
 		}
 
 		if ( $request->has_param( 'tone' ) ) {
-			$tone = sanitize_text_field( $request->get_param( 'tone' ) );
-			if ( ! aime_has_pro() && in_array( $tone, array( 'humorous', 'formal', 'conversational' ), true ) ) {
-				$tone = 'professional';
-			}
-			$data['tone'] = $tone;
+			$data['tone'] = sanitize_text_field( $request->get_param( 'tone' ) );
 		}
 
 		if ( $request->has_param( 'featured_image_url' ) ) {
@@ -418,16 +380,11 @@ class ArticleController {
 		}
 
 		if ( $request->has_param( 'word_count_target' ) ) {
-			$word_count_target = absint( $request->get_param( 'word_count_target' ) );
-			if ( ! aime_has_pro() ) {
-				$limits            = aime_free_limits();
-				$word_count_target = min( $word_count_target, (int) ( $limits['content_max_words'] ?? 2000 ) );
-			}
-			$data['word_count_target'] = $word_count_target;
+			$data['word_count_target'] = absint( $request->get_param( 'word_count_target' ) );
 		}
 
 		if ( $request->has_param( 'brand_voice_id' ) ) {
-			$data['brand_voice_id'] = aime_has_pro() ? absint( $request->get_param( 'brand_voice_id' ) ) : null;
+			$data['brand_voice_id'] = absint( $request->get_param( 'brand_voice_id' ) ) ?: null;
 		}
 
 		$wpdb->update( "{$p}aime_content_articles", $data, array( 'id' => $id ) );
@@ -480,10 +437,6 @@ class ArticleController {
 		$id          = absint( $request->get_param( 'id' ) );
 		$post_status = sanitize_text_field( $request->get_param( 'post_status' ) ?: 'draft' );
 		$scheduled_at = $this->normalize_scheduled_datetime( (string) ( $request->get_param( 'scheduled_publish_at' ) ?: '' ) );
-		if ( 'future' === $post_status && $scheduled_at && $this->scheduled_limit_reached( $id ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Free sites can schedule up to 3 posts at a time. Upgrade to Pro for more scheduled posts.', 'ai-marketing-expert' ), 'pro_required' => true ), 403 );
-		}
-
 		$publisher = new PublisherService();
 		$result    = $publisher->publish( $id, $post_status, $scheduled_at );
 		if ( ! empty( $result['success'] ) ) {
@@ -498,10 +451,6 @@ class ArticleController {
 
 		if ( ! $scheduled_at ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Valid schedule date and time is required.', 'ai-marketing-expert' ) ), 400 );
-		}
-
-		if ( $this->scheduled_limit_reached( $id ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Free sites can schedule up to 3 posts at a time. Upgrade to Pro for more scheduled posts.', 'ai-marketing-expert' ), 'pro_required' => true ), 403 );
 		}
 
 		$publisher = new PublisherService();

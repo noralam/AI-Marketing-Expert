@@ -66,9 +66,9 @@ class AiBrainAction extends BaseAction {
 		}
 
 		// 4. Build the full AI prompt.
-		// Custom JSON mode (Pro): request machine-readable output so downstream
+		// JSON mode: request machine-readable output so downstream
 		// steps can read reference['json'] directly.
-		$want_json = 'json' === sanitize_key( (string) ( $config['output_format'] ?? 'brief' ) ) && aime_has_pro();
+		$want_json = 'json' === sanitize_key( (string) ( $config['output_format'] ?? 'brief' ) );
 
 		$system_instructions = "You are a content strategist helping plan marketing content.\n\n";
 

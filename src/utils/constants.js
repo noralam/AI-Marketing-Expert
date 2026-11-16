@@ -114,30 +114,4 @@ export const SOCIAL_CHAR_LIMITS = {
 	linkedin: 3000,
 };
 
-// Free-tier limits (merged from server via aimeData).
-export const FREE_LIMITS = window.aimeData?.freeLimits || {
-	email_subscribers: -1,
-	email_lists: 10,
-	email_templates: 3,
-	email_template_imports_free: 4,
-	email_scheduled_campaigns: 3,
-	email_funnels: 2,
-	email_smtp_connections: 2,
-	ai_provider_connections: 2,
-	csv_import_rows: 100,
-	campaigns_per_month: 30,
-	subscribers: -1,
-	campaign_sends: 1000,
-	content_articles_per_month: 20,
-	content_max_words: 2000,
-	content_presets: 4,
-	content_scheduled_posts: 3,
-	articles_per_month: 20,
-	ai_generations: 50,
-	social_accounts: 2,
-	social_posts_per_month: 30,
-	social_scheduled_posts: 3,
-	social_ai_captions: 30,
-};
-
 export const PER_PAGE = 20;

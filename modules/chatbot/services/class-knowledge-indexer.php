@@ -42,24 +42,7 @@ class KnowledgeIndexer {
 		global $wpdb;
 		$p = $wpdb->prefix;
 
-		$is_pro = aime_has_pro();
-		$limits = aime_free_limits();
-		$limit  = $is_pro ? 9999 : ( $limits['chatbot_knowledge_pages'] ?? 50 );
-
-		// Get current index count.
-		$current = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$p}aime_chatbot_knowledge WHERE bot_id = %d AND type = 'wp_content'",
-			$bot_id
-		) );
-
-		$remaining = max( 0, $limit - $current );
-		if ( 0 === $remaining ) {
-			return array(
-				'indexed' => 0,
-				'skipped' => 0,
-				'errors'  => array( __( 'Page/post limit reached.', 'ai-marketing-expert' ) ),
-			);
-		}
+		$batch_limit = 200;
 
 		// Get published posts/pages not yet indexed.
 		$already_indexed = $wpdb->get_col( $wpdb->prepare(
@@ -81,7 +64,7 @@ class KnowledgeIndexer {
 			   AND ID NOT IN ({$exclude})
 			 ORDER BY post_date DESC
 			 LIMIT %d",
-			$remaining
+			$batch_limit
 		) );
 
 		$indexed = 0;
@@ -129,7 +112,7 @@ class KnowledgeIndexer {
 	}
 
 	/* ══════════════════════════════════════════════════════
-	 *  WooCommerce Products (Pro only)
+	 *  WooCommerce Products
 	 * ══════════════════════════════════════════════════════ */
 
 	private function index_woo_products( int $bot_id ): array {

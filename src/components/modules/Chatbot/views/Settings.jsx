@@ -6,11 +6,9 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextControl, TextareaControl, SelectControl, ToggleControl, TabPanel, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProLock, { ProLabel } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 
 const TABS = [
@@ -35,7 +33,6 @@ const parseNumber = ( value, fallback, allowZero = false ) => {
 
 const Settings = () => {
 	const { get, post, loading, error, clearError } = useApi();
-	const { hasPro } = usePro();
 	const [ settings, setSettings ] = useState( null );
 	const [ saving, setSaving ] = useState( false );
 	const [ success, setSuccess ] = useState( '' );
@@ -151,47 +148,38 @@ const Settings = () => {
 										checked={ !! settings.enable_buy_now_link }
 										onChange={ ( v ) => setField( 'enable_buy_now_link', v ) }
 									/>
-									<ProLock locked={ ! hasPro }>
 									<ToggleControl
-										label={ hasPro ? __( 'Read Receipts', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Read Receipts', 'ai-marketing-expert' ) }</ProLabel> }
+										label={ __( 'Read Receipts', 'ai-marketing-expert' ) }
 										help={ __( 'Show read indicators for messages.', 'ai-marketing-expert' ) }
 										checked={ !! settings.enable_read_receipts }
 										onChange={ ( v ) => setField( 'enable_read_receipts', v ) }
 									/>
-									</ProLock>
 									<div className="aime-form-grid aime-form-grid-2">
-										<ProLock locked={ ! hasPro }>
 										<TextControl
-											label={ hasPro ? __( 'Poll Interval (seconds)', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Poll Interval (seconds)', 'ai-marketing-expert' ) }</ProLabel> }
+											label={ __( 'Poll Interval (seconds)', 'ai-marketing-expert' ) }
 											help={ __( 'How often the widget checks for new messages.', 'ai-marketing-expert' ) }
 											type="number"
 											value={ settings.poll_interval_seconds || 5 }
 											onChange={ ( v ) => setField( 'poll_interval_seconds', parseNumber( v, 5 ) ) }
 											__nextHasNoMarginBottom
 										/>
-										</ProLock>
-										<ProLock locked={ ! hasPro }>
 										<TextControl
-											label={ hasPro ? __( 'Max Message Length', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Max Message Length', 'ai-marketing-expert' ) }</ProLabel> }
+											label={ __( 'Max Message Length', 'ai-marketing-expert' ) }
 											help={ __( 'Maximum characters allowed per visitor message.', 'ai-marketing-expert' ) }
 											type="number"
 											value={ settings.max_message_length || 500 }
 											onChange={ ( v ) => setField( 'max_message_length', parseNumber( v, 500 ) ) }
 											__nextHasNoMarginBottom
 										/>
-										</ProLock>
 									</div>
-									<ProLock locked={ ! hasPro }>
 									<TextControl
-										label={ hasPro ? __( 'Rate Limit (per minute)', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Rate Limit (per minute)', 'ai-marketing-expert' ) }</ProLabel> }
+										label={ __( 'Rate Limit (per minute)', 'ai-marketing-expert' ) }
 										help={ __( 'Maximum messages a visitor can send per minute.', 'ai-marketing-expert' ) }
 										type="number"
 										value={ settings.rate_limit_per_minute ?? 10 }
 										onChange={ ( v ) => setField( 'rate_limit_per_minute', parseNumber( v, 10, true ) ) }
 										__nextHasNoMarginBottom
 									/>
-									</ProLock>
-									{ ! hasPro && <Notice type="info" message={ __( 'Advanced behavior controls require Pro. Free users keep the standard message length, polling, rate limit, and read receipt settings.', 'ai-marketing-expert' ) } /> }
 									<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 										{ saving
 											? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>
@@ -250,17 +238,14 @@ const Settings = () => {
 										rows={ 3 }
 									/>
 								) }
-								<ProLock locked={ ! hasPro }>
 								<TextControl
-									label={ hasPro ? __( 'Data Retention (days)', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Data Retention (days)', 'ai-marketing-expert' ) }</ProLabel> }
+									label={ __( 'Data Retention (days)', 'ai-marketing-expert' ) }
 									help={ __( 'How long to keep conversation data. Set 0 for no auto-deletion.', 'ai-marketing-expert' ) }
 									type="number"
 									value={ settings.data_retention_days ?? 90 }
 									onChange={ ( v ) => setField( 'data_retention_days', parseNumber( v, 90, true ) ) }
 									__nextHasNoMarginBottom
 								/>
-								</ProLock>
-								{ ! hasPro && <Notice type="info" message={ __( 'Custom data retention requires Pro. Free users keep the standard retention period.', 'ai-marketing-expert' ) } /> }
 								<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving } style={ { marginTop: 16 } }>
 									{ saving
 										? <><Spinner style={ { marginRight: 4 } } />{ __( 'Saving...', 'ai-marketing-expert' ) }</>

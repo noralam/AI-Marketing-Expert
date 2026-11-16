@@ -40,22 +40,6 @@ class SocialMediaModule extends Module {
 		return '1.0.0';
 	}
 
-	/* ── Pro features ───────────────────────────────────── */
-
-	public function get_pro_features(): array {
-		return array(
-			'unlimited_accounts'  => __( 'Unlimited social accounts (free: 2)', 'ai-marketing-expert' ),
-			'unlimited_posts'     => __( 'Unlimited posts per month (free: 30/month)', 'ai-marketing-expert' ),
-			'unlimited_scheduled' => __( 'Unlimited scheduled posts (free: 3 at a time)', 'ai-marketing-expert' ),
-			'visual_calendar'     => __( 'Visual drag-and-drop scheduling calendar', 'ai-marketing-expert' ),
-			'ai_repurpose'        => __( 'AI auto-repurpose articles to social posts', 'ai-marketing-expert' ),
-			'ai_image_captions'   => __( 'AI-powered image caption suggestions', 'ai-marketing-expert' ),
-			'bulk_scheduling'     => __( 'Bulk schedule multiple posts at once', 'ai-marketing-expert' ),
-			'cross_posting'       => __( 'Cross-post to multiple accounts simultaneously', 'ai-marketing-expert' ),
-			'unlimited_ai'        => __( 'Unlimited AI caption & hashtag generations', 'ai-marketing-expert' ),
-		);
-	}
-
 	/* ── Initialisation ─────────────────────────────────── */
 
 	public function init(): void {

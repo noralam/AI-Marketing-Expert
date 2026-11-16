@@ -11,7 +11,7 @@
 	--aime-primary-rgb: 27, 94, 32;
 	--aime-accent: #2E7D32;
 	--aime-accent-light: rgba(46, 125, 50, 0.10);
-	--aime-pro-color: #FF6B35;
+	--aime-brand-orange: #FF6B35;
 	--aime-success: #2E7D32;
 	--aime-success-light: rgba(46, 125, 50, 0.08);
 	--aime-warning: #F9A825;
@@ -19,7 +19,7 @@
 	// #F9A825 on a tinted background fails contrast at label sizes, so warning
 	// *text* gets its own darker value rather than reusing the signal colour.
 	--aime-warning-dark: #8A5A00;
-	--aime-pro-light: rgba(255, 107, 53, 0.10);
+	--aime-brand-orange-light: rgba(255, 107, 53, 0.10);
 	--aime-error: #D32F2F;
 	--aime-error-light: rgba(211, 47, 47, 0.08);
 	--aime-error-dark: #9B1C1C;
@@ -246,24 +246,6 @@
 	}
 }
 
-.aime-pro-link {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	color: var(--aime-pro-color);
-	font-weight: 600;
-	font-size: 12px;
-	text-decoration: none;
-	padding: 4px 8px;
-	border-radius: 4px;
-	background: rgba(255, 107, 53, 0.1);
-
-	&:hover {
-		background: rgba(255, 107, 53, 0.2);
-		color: var(--aime-pro-color);
-	}
-}
-
 // Navigation
 .aime-sidebar-nav {
 	flex: 1;
@@ -445,20 +427,6 @@
 		font-size: 13px;
 		line-height: 1.5;
 	}
-}
-
-// Pro Badge
-.aime-pro-badge {
-	display: inline-block;
-	background: var(--aime-pro-color);
-	color: white;
-	font-size: 9px;
-	font-weight: 700;
-	padding: 2px 6px;
-	border-radius: 3px;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	line-height: 1.4;
 }
 
 // Main Content
@@ -1293,107 +1261,6 @@
 #aime-app .aime-compose-bar__left button svg {
     fill: #1a1a1a;
 }
-// License Status
-// Inside a Card titled "License Status", a full-width tinted slab restated the
-// card and left a large empty green field when Pro is active. One line of state
-// carries the same information: a status mark, the label, and the action.
-.aime-license-status {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-
-	h3,
-	strong {
-		margin: 0;
-		font-size: 15px;
-		font-weight: 600;
-		color: var(--aime-text);
-	}
-
-	p {
-		margin: 2px 0 0;
-		font-size: 13px;
-		color: var(--aime-text-light);
-	}
-}
-
-.aime-license-status__mark {
-	flex-shrink: 0;
-	width: 9px;
-	height: 9px;
-	border-radius: 50%;
-	// Ring rather than a bare dot: it survives on a white surface at 9px.
-	box-shadow: 0 0 0 3px currentColor;
-	background: currentColor;
-	opacity: 0.9;
-}
-
-.aime-license-status__text {
-	min-width: 0;
-	flex: 1;
-}
-
-.aime-license-status.is-free,
-.aime-license-free {
-	.aime-license-status__mark { color: var(--aime-pro-color); }
-}
-
-.aime-license-status.is-pro,
-.aime-license-pro {
-	.aime-license-status__mark { color: var(--aime-success); }
-}
-
-.aime-license-status__content {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-}
-
-.aime-analytics-upgrade {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto auto;
-	align-items: center;
-	gap: 18px;
-	padding: 16px 18px;
-	margin: 0 0 20px;
-	background: linear-gradient(135deg, rgba(255, 107, 53, 0.10), rgba(27, 94, 32, 0.06));
-	border: 1px solid rgba(255, 107, 53, 0.24);
-	border-radius: var(--aime-radius);
-	box-shadow: var(--aime-shadow);
-
-	h3 {
-		margin: 2px 0 4px;
-		font-size: 16px;
-	}
-
-	p {
-		margin: 0;
-		color: var(--aime-text-light);
-		font-size: 13px;
-		line-height: 1.45;
-	}
-
-	ul {
-		display: flex;
-		gap: 8px;
-		flex-wrap: wrap;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	li {
-		padding: 4px 8px;
-		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.75);
-		color: var(--aime-text);
-		font-size: 12px;
-		font-weight: 600;
-	}
-}
-
-.aime-analytics-upgrade__eyebrow,
 // Label role. Was 700/0.04em — 700 is reserved for numbers, and every other
 // eyebrow and column header on the page tracks at 0.02em.
 .aime-dashboard-hero__eyebrow {
@@ -1403,42 +1270,9 @@
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.02em;
-	color: var(--aime-pro-color);
+	color: var(--aime-brand-orange);
 }
 
-// Pro Gate
-.aime-pro-gate {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 400px;
-}
-
-.aime-pro-gate-content {
-	text-align: center;
-	max-width: 460px;
-	padding: 48px 24px;
-
-	h2 {
-		margin: 16px 0 8px;
-	}
-
-	p {
-		color: var(--aime-text-light);
-		margin-bottom: 24px;
-	}
-}
-
-.aime-pro-gate-actions {
-	display: flex;
-	gap: 12px;
-	justify-content: center;
-}
-
-.aime-btn-pro {
-	background: var(--aime-pro-color) !important;
-	border-color: var(--aime-pro-color) !important;
-}
 html body #aime-app .components-select-control__input{
 	padding: 2px 10px!important;
 	border-radius: 0 !important;
@@ -1450,70 +1284,6 @@ input.aime-premium-input[type=color]
 }
 .components-base-control {
     margin-bottom: 1rem;
-}
-// Pro Page
-.aime-pro-hero {
-	text-align: center;
-	padding: 48px 24px;
-	background: var(--aime-white);
-	border-radius: var(--aime-radius);
-	border: 1px solid var(--aime-border);
-	margin-bottom: 32px;
-
-	h1 {
-		margin: 16px 0 8px;
-	}
-}
-
-.aime-pro-subtitle {
-	font-size: 16px;
-	color: var(--aime-text-light);
-	margin-bottom: 24px !important;
-}
-
-.aime-btn-pro-large {
-	padding: 12px 32px !important;
-	font-size: 15px !important;
-	background: var(--aime-pro-color) !important;
-	border-color: var(--aime-pro-color) !important;
-}
-
-.aime-pro-features-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: 16px;
-	margin-bottom: 32px;
-}
-
-.aime-pro-feature-card {
-	h3 {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin: 0 0 8px;
-		font-size: 15px;
-		color: var(--aime-pro-color);
-	}
-
-	p {
-		margin: 0;
-		font-size: 13px;
-		color: var(--aime-text-light);
-	}
-}
-
-.aime-pro-cta-bottom {
-	text-align: center;
-	padding: 32px;
-
-	h2 {
-		margin-bottom: 16px;
-	}
-}
-
-.aime-pro-active {
-	text-align: center;
-	padding: 48px 24px;
 }
 
 // Welcome Banner
@@ -2165,16 +1935,6 @@ input.aime-premium-input[type=color]
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-}
-
-.aime-badge-pro {
-	background: var(--aime-primary);
-	color: white;
-}
-
-.aime-badge-free {
-	background: #f0f0f0;
-	color: var(--aime-text-light);
 }
 
 .aime-top-bar-subheading {
@@ -6838,61 +6598,6 @@ input.aime-premium-input[type=color]
 // .aime-performance-metric was a bordered, shadowed box inside a card — a card
 // nested in a card, which the inset floor (--aime-bg-subtle) exists to avoid.
 
-// ── Upgrade CTA Banner ───────────────────────────────────
-.aime-upgrade-card {
-	max-width: 920px;
-	margin: 32px auto 24px;
-	background: linear-gradient(135deg, var(--aime-primary) 0%, var(--aime-accent) 55%, var(--aime-pro-color) 100%);
-	border: none;
-	box-shadow: var(--aime-shadow-lg);
-
-	.aime-card-body {
-		padding: 0;
-	}
-}
-
-#aime-app {
-	.aime-upgrade-banner {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: 16px;
-		padding: 24px 32px;
-
-		// White on a saturated gradient renders visually lighter than the same
-		// weight on white, so this one keeps 700 and picks up a little tracking
-		// rather than dropping to the 600 that Title uses on white.
-		h3 {
-			color: #fff;
-			font-size: 15px;
-			font-weight: 700;
-			letter-spacing: 0.01em;
-			margin: 0 0 4px;
-		}
-
-		p {
-			color: rgba(255, 255, 255, 0.85);
-			margin: 0;
-			font-size: 13px;
-			line-height: 1.5;
-		}
-
-		.components-button.is-primary {
-			background: #fff !important;
-			color: var(--aime-primary);
-			border: none;
-			font-weight: 600;
-			box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
-
-			&:hover {
-				background: #f6fff7 !important;
-				color: var(--aime-primary-hover);
-			}
-		}
-	}
-}
-
 // Table toolbar
 .aime-table-pagination {
 	display: flex;
@@ -8008,11 +7713,6 @@ input.aime-premium-input[type=color]
 
 	.aime-module-cards-grid {
 		grid-template-columns: 1fr;
-	}
-
-	.aime-upgrade-banner {
-		flex-direction: column;
-		text-align: center;
 	}
 }
 
@@ -12603,12 +12303,6 @@ input.aime-premium-input[type=color]
 	}
 }
 
-.aime-humanize-pro-hint {
-	font-size: 11px;
-	color: #764ba2;
-	font-style: italic;
-}
-
 .aime-content-editor-side {
 	display: flex;
 	flex-direction: column;
@@ -14780,63 +14474,6 @@ input.aime-premium-input[type=color]
 @keyframes aime-fade-in {
 	from { opacity: 0; transform: translateY(4px); }
 	to { opacity: 1; transform: translateY(0); }
-}
-
-.aime-pro-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.aime-pro-upgrade-btn {
-	border: 1px solid var(--aime-pro-color);
-	background: var(--aime-pro-color);
-	color: #fff;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: 600;
-	line-height: 1.4;
-	padding: 5px 10px;
-}
-
-.aime-pro-upgrade-btn--small {
-	font-size: 11px;
-	padding: 3px 8px;
-}
-
-.aime-pro-lock {
-	position: relative;
-	border: 1px solid rgba(255, 107, 53, 0.28);
-	border-radius: var(--aime-radius-sm);
-	padding: 10px;
-	background: rgba(255, 107, 53, 0.04);
-}
-
-.aime-pro-lock__content {
-	pointer-events: none;
-	filter: grayscale(0.15);
-	opacity: 0.58;
-}
-
-.aime-pro-lock__overlay {
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 8px;
-}
-
-.aime-pro-inline-action {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.aime-pro-card-header {
-	display: flex;
-	align-items: center;
-	gap: 8px;
 }
 
 // ============================================

@@ -34,11 +34,12 @@ class ChatService {
 		$knowledge_config = json_decode( $conversation->knowledge_config ?? '{}', true ) ?: array();
 		$history_limit    = max( 1, min( 100, absint( $knowledge_config['max_history_messages'] ?? 20 ) ) );
 
-		// 1. Retrieve recent conversation history.
+		// 1. Retrieve recent conversation history (exclude system messages to protect lead privacy).
 		$history = $wpdb->get_results( $wpdb->prepare(
 			"SELECT sender_type, content
 			 FROM {$p}aime_chatbot_messages
 			 WHERE conversation_id = %d
+			   AND sender_type IN ('visitor', 'ai')
 			 ORDER BY created_at DESC
 			 LIMIT %d",
 			$conversation->id,
@@ -139,7 +140,7 @@ class ChatService {
 			$system_prompt = $this->get_default_system_prompt();
 		}
 
-		// Replace variables (Pro feature, but we support basic ones for free too).
+		// Replace variables.
 		$system_prompt = str_replace(
 			array( '{site_name}', '{bot_name}', '{page_url}' ),
 			array(
@@ -150,16 +151,7 @@ class ChatService {
 			$system_prompt
 		);
 
-		// Visitor context (sanitize to prevent prompt injection via stored visitor data).
-		if ( ! empty( $conversation->visitor_name ) ) {
-			$safe_name = sanitize_text_field( $conversation->visitor_name );
-			$system_prompt .= sprintf( "\n\nThe visitor's name is %s.", $safe_name );
-		}
-		if ( ! empty( $conversation->visitor_email ) ) {
-			$safe_email = sanitize_email( $conversation->visitor_email );
-			$system_prompt .= sprintf( " Their email is %s.", $safe_email );
-		}
-
+		// Privacy protection: Never transmit personal contact details (names, emails) to third-party AI providers.
 		$parts[] = $system_prompt;
 
 		// Knowledge context.

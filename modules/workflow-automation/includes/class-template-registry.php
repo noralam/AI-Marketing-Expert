@@ -8,7 +8,6 @@
  *       'name'             => __( 'Weekly Blog Engine', ... ),
  *       'description'      => __( '...', ... ),
  *       'icon'             => 'edit',              // client icon key
- *       'is_pro'           => false,
  *       'requires_modules' => array( 'content-marketing' ),
  *       'workflow'         => array( ... ),        // sanitize_workflow()-compatible fields
  *       'steps'            => array(               // blueprint steps, re-keyed on apply
@@ -75,7 +74,6 @@ class TemplateRegistry {
 				'name'             => (string) ( $tpl['name'] ?? $id ),
 				'description'      => (string) ( $tpl['description'] ?? '' ),
 				'icon'             => (string) ( $tpl['icon'] ?? 'settings' ),
-				'is_pro'           => ! empty( $tpl['is_pro'] ),
 				'requires_modules' => array_values( (array) ( $tpl['requires_modules'] ?? array() ) ),
 				'available'        => self::is_available( $tpl ),
 				'steps_count'      => count( (array) ( $tpl['steps'] ?? array() ) ),

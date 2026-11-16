@@ -6,12 +6,9 @@ import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextareaControl, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
-import { ProUpgradeButton, openProUpgrade } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 import { renderMarkdown } from '../../../../utils/renderMessage';
 import sanitizeHtml from '../../../../utils/sanitizeHtml';
@@ -34,7 +31,6 @@ const SENDER_LABELS = {
 
 const ConversationView = ( { id, onBack } ) => {
 	const { get, post, loading, error, clearError } = useApi();
-	const { hasPro } = usePro();
 	const [ conversation, setConversation ] = useState( null );
 	const [ messages, setMessages ] = useState( [] );
 	const [ reply, setReply ] = useState( '' );
@@ -166,20 +162,19 @@ const ConversationView = ( { id, onBack } ) => {
 					{ conversation.visitor_name && ` \u2014 ${ conversation.visitor_name }` }
 				</h2>
 				<div className="aime-page-header-actions">
-					<Button variant="secondary" onClick={ hasPro ? handleExport : undefined } disabled={ ! hasPro }>
-						{ hasPro ? __( 'Export CSV', 'ai-marketing-expert' ) : __( 'Export CSV (Pro)', 'ai-marketing-expert' ) }
+					<Button variant="secondary" onClick={ handleExport }>
+						{ __( 'Export CSV', 'ai-marketing-expert' ) }
 					</Button>
 					{ isActive && ! isTakeover && (
 						<Button
 							variant="primary"
-							onClick={ hasPro ? handleTakeover : undefined }
-							disabled={ ! hasPro || takingOver }
+							onClick={ handleTakeover }
+							disabled={ takingOver }
 							isBusy={ takingOver }
 						>
-							{ hasPro ? __( 'Take Over', 'ai-marketing-expert' ) : __( 'Take Over (Pro)', 'ai-marketing-expert' ) }
+							{ __( 'Take Over', 'ai-marketing-expert' ) }
 						</Button>
 					) }
-					{ ! hasPro && <ProUpgradeButton /> }
 					{ isActive && (
 						<Button variant="secondary" isDestructive onClick={ handleClose }>
 							{ __( 'Close Conversation', 'ai-marketing-expert' ) }
@@ -256,36 +251,27 @@ const ConversationView = ( { id, onBack } ) => {
 				{ /* Admin reply input (requires human takeover) */ }
 				{ isActive && (
 					<div style={ { borderTop: '1px solid #e0e0e0', paddingTop: 16, marginTop: 16 } }>
-						{ isTakeover || ! hasPro ? (
-							<>
-								{ ! hasPro && ! isTakeover ? (
-									<ProGate
-										feature={ __( 'Human Takeover', 'ai-marketing-expert' ) }
-										description={ __( 'Reply to visitors directly by taking over conversations from the AI.', 'ai-marketing-expert' ) }
-									/>
-								) : (
-									<div className="aime-reply-box">
-										<TextareaControl
-											label={ __( 'Reply as Agent', 'ai-marketing-expert' ) }
-											value={ reply }
-											onChange={ setReply }
-											rows={ 3 }
-											placeholder={ __( 'Type your message...', 'ai-marketing-expert' ) }
-										/>
-										<Button
-											variant="primary"
-											onClick={ handleSendReply }
-											isBusy={ sending }
-											disabled={ sending || ! reply.trim() }
-										>
-											{ sending
-												? <><Spinner style={ { marginRight: 4 } } />{ __( 'Sending...', 'ai-marketing-expert' ) }</>
-												: __( 'Send Reply', 'ai-marketing-expert' )
-											}
-										</Button>
-									</div>
-								) }
-							</>
+						{ isTakeover ? (
+							<div className="aime-reply-box">
+								<TextareaControl
+									label={ __( 'Reply as Agent', 'ai-marketing-expert' ) }
+									value={ reply }
+									onChange={ setReply }
+									rows={ 3 }
+									placeholder={ __( 'Type your message...', 'ai-marketing-expert' ) }
+								/>
+								<Button
+									variant="primary"
+									onClick={ handleSendReply }
+									isBusy={ sending }
+									disabled={ sending || ! reply.trim() }
+								>
+									{ sending
+										? <><Spinner style={ { marginRight: 4 } } />{ __( 'Sending...', 'ai-marketing-expert' ) }</>
+										: __( 'Send Reply', 'ai-marketing-expert' )
+									}
+								</Button>
+							</div>
 						) : (
 							<Notice
 								type="info"
@@ -295,7 +281,7 @@ const ConversationView = ( { id, onBack } ) => {
 										<button
 											type="button"
 											className="aime-notice-action-link"
-											onClick={ hasPro ? handleTakeover : openProUpgrade }
+											onClick={ handleTakeover }
 											disabled={ takingOver }
 											title={ __( 'Take over this conversation', 'ai-marketing-expert' ) }
 										>

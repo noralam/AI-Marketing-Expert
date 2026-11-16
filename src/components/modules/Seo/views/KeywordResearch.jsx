@@ -7,7 +7,6 @@ import { useState, useMemo, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Button, TextControl, TextareaControl, SelectControl, TabPanel, Spinner } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import { apiGet } from '../../../../utils/api';
 import Card from '../../../common/Card';
@@ -15,7 +14,6 @@ import LoadingBtn from '../../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../../common/AiNotice';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import UsageNotice from '../../../common/UsageNotice';
 import { toast } from '../../../common/Toast';
 import { navigateToNewArticle } from '../../../../utils/seoContentBridge';
 
@@ -402,25 +400,12 @@ const priorityDistribution = ( keywords ) => {
 
 const KeywordResearch = ( { onNavigate } ) => {
 	const { get, post, loading, error, clearError } = useApi();
-	const { hasPro, proUrl } = usePro();
 	const slowWarning = useSlowWarning();
 	const recentState = useMemo( loadRecentState, [] );
 
-	// Free-plan per-feature usage: { keyword_research: {used, limit}, ... }.
 	const [ researchUsage, setResearchUsage ] = useState( null );
 
-	useEffect( () => {
-		if ( hasPro ) return;
-		// Raw apiGet: avoids toggling the shared useApi loading state on mount.
-		apiGet( '/seo/research/usage' )
-			.then( ( res ) => setResearchUsage( res?.usage || null ) )
-			.catch( () => {} );
-	}, [ hasPro ] );
-
-	const limitReached = ( key ) => {
-		const u = researchUsage?.[ key ];
-		return ! hasPro && !! u && u.limit != null && u.used >= u.limit;
-	};
+	const limitReached = () => false;
 
 	const bumpUsage = ( key ) => {
 		setResearchUsage( ( prev ) => (
@@ -570,7 +555,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 			const res = await post( '/seo/research/keywords', {
 				seed_keyword: seed.trim(),
 				language,
-				country: hasPro ? countries.join( ', ' ) : ( countries[ 0 ] || 'US' ),
+				country: countries.join( ', ' ) || 'US',
 			} );
 			if ( res && res.success === false ) {
 				toast( res.message || __( 'Research failed. Please try again.', 'ai-marketing-expert' ), 'error' );
@@ -642,7 +627,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 		if ( saved > 0 ) setSelected( [] );
 	};
 
-	/* -- Niche Analysis (Pro) ---------------------------------- */
+	/* -- Niche Analysis --------------------------------------- */
 
 	const handleNicheAnalysis = async () => {
 		if ( ! niche.trim() ) return;
@@ -659,7 +644,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 		}
 	};
 
-	/* -- Competitor Gap (Pro) ---------------------------------- */
+	/* -- Competitor Gap ---------------------------------------- */
 
 	const handleCompetitorGap = async () => {
 		if ( ! domain.trim() || ! competitors.trim() ) return;
@@ -679,7 +664,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 		}
 	};
 
-	/* -- Content Brief (Pro) ----------------------------------- */
+	/* -- Content Brief ----------------------------------------- */
 
 	const handleContentBrief = async () => {
 		if ( ! briefKeyword.trim() ) return;
@@ -1653,14 +1638,8 @@ const KeywordResearch = ( { onNavigate } ) => {
 						{ ( tab ) => {
 							/* -- Keyword Research Tab -------- */
 							if ( tab.name === 'keyword' ) {
-								const kwExhausted = limitReached( 'keyword_research' );
 								return (
 									<div className="aime-settings-form">
-										<UsageNotice
-											usage={ researchUsage?.keyword_research }
-											featureLabel={ __( 'Keyword Research', 'ai-marketing-expert' ) }
-											proUrl={ proUrl }
-										/>
 										<div className="aime-form-grid aime-form-grid-3">
 											<TextControl
 												label={ __( 'Seed Keyword', 'ai-marketing-expert' ) }
@@ -1700,60 +1679,43 @@ const KeywordResearch = ( { onNavigate } ) => {
 												__nextHasNoMarginBottom
 												__next40pxDefaultSize
 											/>
-											{ hasPro ? (
-												<SelectControl
-													label={ __( 'Countries (up to 5)', 'ai-marketing-expert' ) }
-													value=""
-													options={ [
-														{ label: __( '+ Add a country…', 'ai-marketing-expert' ), value: '' },
-														...COUNTRY_OPTIONS.filter( ( o ) => ! countries.includes( o.value ) ),
-													] }
-													onChange={ ( v ) => {
-														if ( v && countries.length < MAX_COUNTRIES ) {
-															setCountries( [ ...countries, v ] );
-														}
-													} }
-													__nextHasNoMarginBottom
-													__next40pxDefaultSize
-												/>
-											) : (
-												<SelectControl
-													label={ __( 'Country', 'ai-marketing-expert' ) }
-													value={ countries[ 0 ] || 'US' }
-													options={ COUNTRY_OPTIONS }
-													onChange={ ( v ) => setCountries( [ v ] ) }
-													__nextHasNoMarginBottom
-													__next40pxDefaultSize
-												/>
-											) }
+											<SelectControl
+												label={ __( 'Countries (up to 5)', 'ai-marketing-expert' ) }
+												value=""
+												options={ [
+													{ label: __( '+ Add a country…', 'ai-marketing-expert' ), value: '' },
+													...COUNTRY_OPTIONS.filter( ( o ) => ! countries.includes( o.value ) ),
+												] }
+												onChange={ ( v ) => {
+													if ( v && countries.length < MAX_COUNTRIES ) {
+														setCountries( [ ...countries, v ] );
+													}
+												} }
+												__nextHasNoMarginBottom
+												__next40pxDefaultSize
+											/>
 										</div>
-										{ hasPro ? (
-											<div className="aime-tag-list" style={ { marginTop: 4, justifyContent: 'flex-end' } }>
-												{ countries.map( ( c ) => (
-													<span key={ c } className="aime-tag" style={ { display: 'inline-flex', alignItems: 'center', gap: 4 } }>
-														{ COUNTRY_OPTIONS.find( ( o ) => o.value === c )?.label || c }
-														{ countries.length > 1 && (
-															<button
-																type="button"
-																onClick={ () => setCountries( countries.filter( ( x ) => x !== c ) ) }
-																aria-label={ __( 'Remove country', 'ai-marketing-expert' ) }
-																style={ { border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1, color: '#666' } }
-															>
-																{ '×' }
-															</button>
-														) }
-													</span>
-												) ) }
-											</div>
-										) : (
-											<p style={ { margin: '4px 0 0', fontSize: 12, color: '#757575', textAlign: 'right' } }>
-												{ __( 'Pro version can target multiple countries at once.', 'ai-marketing-expert' ) }
-											</p>
-										) }
+										<div className="aime-tag-list" style={ { marginTop: 4, justifyContent: 'flex-end' } }>
+											{ countries.map( ( c ) => (
+												<span key={ c } className="aime-tag" style={ { display: 'inline-flex', alignItems: 'center', gap: 4 } }>
+													{ COUNTRY_OPTIONS.find( ( o ) => o.value === c )?.label || c }
+													{ countries.length > 1 && (
+														<button
+															type="button"
+															onClick={ () => setCountries( countries.filter( ( x ) => x !== c ) ) }
+															aria-label={ __( 'Remove country', 'ai-marketing-expert' ) }
+															style={ { border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1, color: '#666' } }
+														>
+															{ '×' }
+														</button>
+													) }
+												</span>
+											) ) }
+										</div>
 										<Button
 											variant="primary"
 											onClick={ handleResearch }
-											disabled={ loading || ! seed.trim() || kwExhausted }
+											disabled={ loading || ! seed.trim() }
 											isBusy={ loading }
 											style={ { marginTop: 16 } }
 										>
@@ -1811,14 +1773,8 @@ const KeywordResearch = ( { onNavigate } ) => {
 
 							/* -- Niche Analysis Tab --------- */
 							if ( tab.name === 'niche' ) {
-								const nicheExhausted = limitReached( 'niche_analysis' );
 								return (
 									<div className="aime-settings-form">
-										<UsageNotice
-											usage={ researchUsage?.niche_analysis }
-											featureLabel={ __( 'Niche Analysis', 'ai-marketing-expert' ) }
-											proUrl={ proUrl }
-										/>
 										<TextControl
 											label={ __( 'Niche / Industry', 'ai-marketing-expert' ) }
 											value={ niche }
@@ -1832,7 +1788,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 											<Button
 												variant="primary"
 												onClick={ handleNicheAnalysis }
-												disabled={ ! isAiConfigured() || ! niche.trim() || nicheExhausted }
+												disabled={ ! isAiConfigured() || ! niche.trim() }
 												title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 												style={ { marginTop: 16 } }
 											>
@@ -1846,14 +1802,8 @@ const KeywordResearch = ( { onNavigate } ) => {
 
 							/* -- Competitor Gap Tab --------- */
 							if ( tab.name === 'competitor' ) {
-								const gapExhausted = limitReached( 'competitor_gap' );
 								return (
 									<div className="aime-settings-form">
-										<UsageNotice
-											usage={ researchUsage?.competitor_gap }
-											featureLabel={ __( 'Competitor Gap Analysis', 'ai-marketing-expert' ) }
-											proUrl={ proUrl }
-										/>
 										<TextControl
 											label={ __( 'Your Domain', 'ai-marketing-expert' ) }
 											value={ domain }
@@ -1876,7 +1826,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 											<Button
 												variant="primary"
 												onClick={ handleCompetitorGap }
-												disabled={ ! isAiConfigured() || ! domain.trim() || ! competitors.trim() || gapExhausted }
+												disabled={ ! isAiConfigured() || ! domain.trim() || ! competitors.trim() }
 												title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 												style={ { marginTop: 16 } }
 											>
@@ -1889,14 +1839,8 @@ const KeywordResearch = ( { onNavigate } ) => {
 							}
 
 							/* -- Content Brief Tab ---------- */
-							const briefExhausted = limitReached( 'content_brief' );
 							return (
 								<div className="aime-settings-form">
-									<UsageNotice
-										usage={ researchUsage?.content_brief }
-										featureLabel={ __( 'AI Content Brief', 'ai-marketing-expert' ) }
-										proUrl={ proUrl }
-									/>
 									<TextControl
 										label={ __( 'Target Keyword', 'ai-marketing-expert' ) }
 										value={ briefKeyword }
@@ -1910,7 +1854,7 @@ const KeywordResearch = ( { onNavigate } ) => {
 										<Button
 											variant="primary"
 											onClick={ handleContentBrief }
-											disabled={ ! isAiConfigured() || ! briefKeyword.trim() || briefExhausted }
+											disabled={ ! isAiConfigured() || ! briefKeyword.trim() }
 											title={ ! isAiConfigured() ? aiDisabledTitle() : undefined }
 											style={ { marginTop: 16 } }
 										>

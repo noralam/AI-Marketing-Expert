@@ -1,6 +1,6 @@
 /**
  * TemplatePicker — card grid shown for "New Workflow": a blank workflow
- * card first, then the templates library (some free, most Pro).
+ * card first, then the templates library.
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
@@ -8,14 +8,11 @@ import { __, sprintf } from '@wordpress/i18n';
 import { apiGet, apiPost } from '../../../utils/api';
 import { toast } from '../../common/Toast';
 import Loader from '../../common/Loader';
-import ProBadge from '../../Layout/ProBadge';
-import { isProActive } from '../../common/ProLock';
 import { Button } from '../../common/WpComponents';
 import { triggerIcon } from './utils/icons';
 import AiWorkflowModal from './AiWorkflowModal';
 
 const TemplatePicker = ( { onBack, onNavigate } ) => {
-	const hasPro = isProActive();
 	const [ loading, setLoading ] = useState( true );
 	const [ templates, setTemplates ] = useState( [] );
 	const [ applyingId, setApplyingId ] = useState( null );
@@ -105,7 +102,6 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 				</button>
 
 				{ templates.map( ( tpl ) => {
-					const locked = tpl.is_pro && ! hasPro;
 					const unavailable = tpl.available === false;
 					return (
 						<button
@@ -117,10 +113,7 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 							onClick={ () => apply( tpl ) }
 						>
 							<span className="aime-wf-template-card__icon">{ triggerIcon( tpl.trigger_event || tpl.trigger_type ) }</span>
-							<strong>
-								{ tpl.name }
-								{ locked && <ProBadge /> }
-							</strong>
+							<strong>{ tpl.name }</strong>
 							<span className="aime-wf-template-card__desc">{ tpl.description }</span>
 							<span className="aime-wf-template-card__meta">
 								{ sprintf(
@@ -129,7 +122,6 @@ const TemplatePicker = ( { onBack, onNavigate } ) => {
 									tpl.steps_count
 								) }
 								{ applyingId === tpl.id && ` · ${ __( 'Creating…', 'ai-marketing-expert' ) }` }
-								{ locked && ` · ${ __( 'Pro', 'ai-marketing-expert' ) }` }
 							</span>
 						</button>
 					);

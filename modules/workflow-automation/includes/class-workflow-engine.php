@@ -70,6 +70,16 @@ class WorkflowEngine {
 				is_array( $context ) ? $context : array()
 			);
 		}
+
+		// Delayed executions rescue: check any waiting executions whose resume_at has passed.
+		foreach ( $this->repo->due_waiting( 5 ) as $waiting_exec ) {
+			$ctx       = json_decode( (string) ( $waiting_exec->context ?? '' ), true );
+			$resume_at = (int) ( $ctx['_suspended']['resume_at'] ?? 0 );
+			if ( $resume_at > 0 && time() >= $resume_at ) {
+				$paused_step = (string) ( $ctx['_suspended']['paused_step_key'] ?? '' );
+				$this->resume_execution( (int) $waiting_exec->id, $paused_step );
+			}
+		}
 	}
 
 	/**
@@ -93,21 +103,6 @@ class WorkflowEngine {
 			return $this->fail_result( 'Execution already claimed.' );
 		}
 
-		// Free-plan monthly run cap — the one choke point every trigger type
-		// passes through. The skipped row keeps the history honest, and the
-		// schedule still advances so the workflow resumes by itself next month.
-		if ( $this->repo->monthly_run_limit_reached( $execution_id ) ) {
-			$reason = __( 'Monthly run limit reached on the free plan. Runs resume next month — upgrade to Pro for unlimited runs.', 'ai-marketing-expert' );
-			if ( $execution_id > 0 ) {
-				$this->repo->finish_execution( $execution_id, 'skipped', array(), $reason );
-			} else {
-				$this->repo->record_skipped_execution( $workflow_id, $trigger, $reason );
-			}
-			$this->advance_schedule_only( $workflow );
-			aime_log( sprintf( 'Workflow #%d skipped: free monthly run limit reached.', $workflow_id ), 'info', 'workflow-automation' );
-			return $this->fail_result( $reason );
-		}
-
 		// Concurrency guard: skip if a run is already in flight for this workflow.
 		// add_option() is an atomic DB insert — two concurrent consumers cannot
 		// both win it, unlike a transient check-then-set pair.
@@ -119,11 +114,6 @@ class WorkflowEngine {
 			return $this->fail_result( 'Workflow already running.' );
 		}
 		self::$executing = true;
-
-		// Give long AI generations room to run.
-		if ( function_exists( 'set_time_limit' ) ) {
-			set_time_limit( 0 );
-		}
 
 		$steps = $this->repo->steps_for( $workflow_id );
 
@@ -190,19 +180,6 @@ class WorkflowEngine {
 
 			$config = $this->decode_config( $step->config );
 
-			// Pro enforcement (defense in depth behind the REST validator).
-			if ( 'condition' === $step->action_type && ! aime_has_pro() ) {
-				$this->record_output( $execution_id, $workflow_id, $step, 'failed', '', array(), __( 'Condition steps require Pro.', 'ai-marketing-expert' ) );
-				$counts['failed']++;
-				$step_errors[] = $this->label_error( $step, __( 'Condition steps require Pro.', 'ai-marketing-expert' ) );
-				if ( 'stop' === $policy ) {
-					$halted = true;
-					break;
-				}
-				$this->enqueue_children( $queue, $children, $step, false, null, 'default' );
-				continue;
-			}
-
 			// Per-step tone override + parent output layered onto workflow context.
 			$step_context                   = $context;
 			$step_context['step_id']        = (int) $step->id;
@@ -221,7 +198,10 @@ class WorkflowEngine {
 				continue;
 			}
 
-			$output = array(
+			$step_alias = (string) ( $config['alias'] ?? ( $step->alias ?? $step->step_key ) );
+			$output     = array(
+				'step_key'    => (string) $step->step_key,
+				'alias'       => $step_alias,
 				'action_type' => (string) $step->action_type,
 				'preview'     => $result['preview'],
 				'reference'   => $result['reference'],
@@ -231,6 +211,20 @@ class WorkflowEngine {
 				$this->record_output( $execution_id, $workflow_id, $step, 'success', $result['preview'], $result['reference'], '' );
 				$counts['success']++;
 				$context['previous'][] = $output;
+
+				// Handle asynchronous delay suspension:
+				if ( ! empty( $result['reference']['deferred'] ) && ! empty( $result['reference']['resume_at'] ) ) {
+					$resume_at = (int) $result['reference']['resume_at'];
+					$this->suspend_for_delay( $execution_id, $workflow_id, $step, $queue, $children, $context, $counts, $executed, $resume_at, $output );
+					$this->release_lock( $workflow_id );
+					self::$executing = false;
+					return array(
+						'success'      => true,
+						'execution_id' => $execution_id,
+						'status'       => 'waiting',
+						'resumes_at'   => $resume_at,
+					);
+				}
 
 				if ( 'condition' === $step->action_type ) {
 					// Follow only the taken branch; record the other subtree skipped.
@@ -317,6 +311,265 @@ class WorkflowEngine {
 
 		aime_log(
 			sprintf( 'Workflow #%d "%s" ran (%s): %d ok, %d failed, %d skipped.', $workflow_id, $workflow->name, $status, $counts['success'], $counts['failed'], $counts['skipped'] ),
+			'failed' === $status ? 'warning' : 'info',
+			'workflow-automation'
+		);
+
+		return array(
+			'success'      => 'failed' !== $status,
+			'execution_id' => $execution_id,
+			'status'       => $status,
+			'error'        => $error_summary,
+		);
+	}
+
+	/**
+	 * Suspend a workflow execution at a delay step for future resumption.
+	 */
+	private function suspend_for_delay( int $execution_id, int $workflow_id, object $step, array $queue, array $children, array $context, array $counts, array $executed, int $resume_at, array $output ): void {
+		$pending_queue = array();
+		foreach ( $queue as $item ) {
+			$pending_queue[] = array(
+				'step_key'       => (string) $item['step']->step_key,
+				'parent_success' => (bool) $item['parent_success'],
+				'parent_output'  => $item['parent_output'],
+			);
+		}
+
+		$context['_suspended'] = array(
+			'paused_step_key' => (string) $step->step_key,
+			'resume_at'       => $resume_at,
+			'counts'          => $counts,
+			'executed_keys'   => array_keys( $executed ),
+			'pending_queue'   => $pending_queue,
+		);
+
+		$this->repo->pause_execution( $execution_id, $counts, $context );
+
+		wp_schedule_single_event( $resume_at, 'aime_workflow_resume_execution', array( $execution_id, (string) $step->step_key ) );
+
+		aime_log(
+			sprintf( 'Workflow #%d execution #%d paused at delay step "%s" until %s UTC.', $workflow_id, $execution_id, $step->step_key, gmdate( 'Y-m-d H:i:s', $resume_at ) ),
+			'info',
+			'workflow-automation'
+		);
+	}
+
+	/**
+	 * Resume an asynchronously paused execution after delay.
+	 *
+	 * @param int    $execution_id  Execution ID.
+	 * @param string $from_step_key The delay step key that just completed.
+	 * @return array
+	 */
+	public function resume_execution( int $execution_id, string $from_step_key = '' ): array {
+		$execution = $this->repo->find_execution( $execution_id );
+		if ( ! $execution || 'waiting' !== $execution->status ) {
+			return $this->fail_result( 'Execution not in waiting status.' );
+		}
+
+		$workflow_id = (int) $execution->workflow_id;
+		$workflow    = $this->repo->find( $workflow_id );
+		if ( ! $workflow ) {
+			$this->repo->finish_execution( $execution_id, 'failed', array(), 'Workflow no longer exists.' );
+			return $this->fail_result( 'Workflow not found.' );
+		}
+
+		if ( ! $this->acquire_lock( $workflow_id ) ) {
+			// Workflow is temporarily executing another run; retry in 60 seconds.
+			wp_schedule_single_event( time() + 60, 'aime_workflow_resume_execution', array( $execution_id, $from_step_key ) );
+			return $this->fail_result( 'Workflow locked; reschedule.' );
+		}
+		self::$executing = true;
+
+		$this->repo->resume_execution_state( $execution_id );
+
+		$steps = $this->repo->steps_for( $workflow_id );
+
+		$children = array();
+		$by_key   = array();
+		foreach ( $steps as $step ) {
+			$children[ (string) $step->parent_key ][] = $step;
+			$by_key[ (string) $step->step_key ]       = $step;
+		}
+		foreach ( $children as &$siblings ) {
+			usort( $siblings, static fn ( $a, $b ) => $a->step_order <=> $b->step_order ?: $a->id <=> $b->id );
+		}
+		unset( $siblings );
+
+		$context = json_decode( (string) ( $execution->context ?? '' ), true ) ?: array();
+		$counts  = array(
+			'success' => (int) $execution->steps_succeeded,
+			'failed'  => (int) $execution->steps_failed,
+			'skipped' => (int) $execution->steps_skipped,
+		);
+
+		$suspended     = $context['_suspended'] ?? array();
+		$executed_keys = $suspended['executed_keys'] ?? array();
+		$executed      = array_fill_keys( $executed_keys, true );
+		$pending_saved = $suspended['pending_queue'] ?? array();
+		$paused_key    = ! empty( $from_step_key ) ? $from_step_key : ( $suspended['paused_step_key'] ?? '' );
+
+		unset( $context['_suspended'] );
+
+		$queue = array();
+
+		// Enqueue children of the paused delay step.
+		if ( '' !== $paused_key && isset( $by_key[ $paused_key ] ) ) {
+			$delay_step   = $by_key[ $paused_key ];
+			$delay_output = null;
+			foreach ( array_reverse( $context['previous'] ?? array() ) as $prev ) {
+				if ( ( $prev['step_key'] ?? '' ) === $paused_key ) {
+					$delay_output = $prev;
+					break;
+				}
+			}
+			$this->enqueue_children( $queue, $children, $delay_step, true, $delay_output, 'default' );
+		}
+
+		// Re-append other pending items that were queued prior to suspension.
+		foreach ( $pending_saved as $item ) {
+			$s_key = (string) ( $item['step_key'] ?? '' );
+			if ( isset( $by_key[ $s_key ] ) && ! isset( $executed[ $s_key ] ) ) {
+				$queue[] = array(
+					'step'           => $by_key[ $s_key ],
+					'parent_success' => (bool) ( $item['parent_success'] ?? true ),
+					'parent_output'  => $item['parent_output'] ?? null,
+				);
+			}
+		}
+
+		$policy       = (string) $workflow->failure_policy;
+		$halted       = false;
+		$engine_error = false;
+		$step_errors  = array();
+
+		try {
+			while ( $queue ) {
+				$entry = array_shift( $queue );
+				$step  = $entry['step'];
+
+				$executed[ (string) $step->step_key ] = true;
+
+				if ( 'if_previous_succeeded' === $step->run_condition && ! $entry['parent_success'] ) {
+					$this->record_output( $execution_id, $workflow_id, $step, 'skipped', __( 'Skipped: parent step did not succeed.', 'ai-marketing-expert' ), array(), '' );
+					$counts['skipped']++;
+					$this->enqueue_children( $queue, $children, $step, false, null, 'default' );
+					continue;
+				}
+
+				$config = $this->decode_config( $step->config );
+
+				$step_context                   = $context;
+				$step_context['step_id']        = (int) $step->id;
+				$step_context['parent_output']  = $entry['parent_output'];
+				$step_context['parent_success'] = (bool) $entry['parent_success'];
+				if ( ! empty( $step->tone_override ) ) {
+					$step_context['tone'] = (string) $step->tone_override;
+				}
+
+				$result = $this->run_step_with_retry( (string) $step->action_type, $config, $step_context, $policy );
+
+				if ( ! empty( $result['skipped'] ) ) {
+					$this->record_output( $execution_id, $workflow_id, $step, 'skipped', $result['error'], array(), $result['error'] );
+					$counts['skipped']++;
+					$this->enqueue_children( $queue, $children, $step, false, null, 'default' );
+					continue;
+				}
+
+				$step_alias = (string) ( $config['alias'] ?? ( $step->alias ?? $step->step_key ) );
+				$output     = array(
+					'step_key'    => (string) $step->step_key,
+					'alias'       => $step_alias,
+					'action_type' => (string) $step->action_type,
+					'preview'     => $result['preview'],
+					'reference'   => $result['reference'],
+				);
+
+				if ( $result['success'] ) {
+					$this->record_output( $execution_id, $workflow_id, $step, 'success', $result['preview'], $result['reference'], '' );
+					$counts['success']++;
+					$context['previous'][] = $output;
+
+					// Another delay encountered?
+					if ( ! empty( $result['reference']['deferred'] ) && ! empty( $result['reference']['resume_at'] ) ) {
+						$resume_at = (int) $result['reference']['resume_at'];
+						$this->suspend_for_delay( $execution_id, $workflow_id, $step, $queue, $children, $context, $counts, $executed, $resume_at, $output );
+						$this->release_lock( $workflow_id );
+						self::$executing = false;
+						return array(
+							'success'      => true,
+							'execution_id' => $execution_id,
+							'status'       => 'waiting',
+							'resumes_at'   => $resume_at,
+						);
+					}
+
+					if ( 'condition' === $step->action_type ) {
+						$taken = ( 'no' === ( $result['reference']['branch'] ?? 'yes' ) ) ? 'no' : 'yes';
+						$this->enqueue_children( $queue, $children, $step, true, $output, $taken );
+						$this->skip_subtree( $execution_id, $workflow_id, $children, $step, $taken, $counts, $executed );
+					} else {
+						$this->enqueue_children( $queue, $children, $step, true, $output, 'default' );
+					}
+				} else {
+					$this->record_output( $execution_id, $workflow_id, $step, 'failed', $result['preview'], $result['reference'], $result['error'] );
+					$counts['failed']++;
+					$step_errors[] = $this->label_error( $step, $result['error'] );
+
+					if ( 'stop' === $policy ) {
+						$halted = true;
+						break;
+					}
+					$this->enqueue_children( $queue, $children, $step, false, $output, 'default' );
+				}
+			}
+		} catch ( \Throwable $e ) {
+			$halted        = true;
+			$engine_error  = true;
+			$step_errors[] = sprintf(
+				__( 'Workflow engine error: %1$s (%2$s:%3$d)', 'ai-marketing-expert' ),
+				$e->getMessage(),
+				basename( $e->getFile() ),
+				$e->getLine()
+			);
+			aime_log( sprintf( 'Workflow #%d engine error on resume: %s', $workflow_id, $e->getMessage() ), 'error', 'workflow-automation' );
+		}
+
+		foreach ( $steps as $step ) {
+			if ( ! isset( $executed[ (string) $step->step_key ] ) ) {
+				$this->record_output( $execution_id, $workflow_id, $step, 'skipped', $halted ? __( 'Skipped: workflow halted.', 'ai-marketing-expert' ) : __( 'Skipped: branch not taken.', 'ai-marketing-expert' ), array(), '' );
+				$counts['skipped']++;
+				$executed[ (string) $step->step_key ] = true;
+			}
+		}
+
+		if ( $engine_error ) {
+			$status = $counts['success'] > 0 ? 'partial' : 'failed';
+		} elseif ( $counts['failed'] > 0 && $counts['success'] > 0 ) {
+			$status = 'partial';
+		} elseif ( $counts['failed'] > 0 && 0 === $counts['success'] ) {
+			$status = 'failed';
+		} else {
+			$status = 'success';
+		}
+
+		$error_summary = implode( ' | ', array_slice( array_filter( $step_errors ), 0, 3 ) );
+		if ( $halted ) {
+			$suffix = __( 'Stopped after the first failure (failure policy: stop).', 'ai-marketing-expert' );
+			$error_summary = '' !== $error_summary ? $error_summary . ' — ' . $suffix : $suffix;
+		}
+		$this->repo->finish_execution( $execution_id, $status, $counts, mb_substr( $error_summary, 0, 1000 ) );
+
+		$this->release_lock( $workflow_id );
+		self::$executing = false;
+
+		if ( $step_errors ) {
+			$this->send_failure_digest( $workflow, $step_errors, $execution_id, $status );
+		}
+
+		aime_log(
+			sprintf( 'Workflow #%d "%s" resumed and completed (%s): %d ok, %d failed, %d skipped.', $workflow_id, $workflow->name, $status, $counts['success'], $counts['failed'], $counts['skipped'] ),
 			'failed' === $status ? 'warning' : 'info',
 			'workflow-automation'
 		);

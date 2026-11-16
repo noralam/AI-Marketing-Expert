@@ -47,7 +47,7 @@ class BlogPostAction extends BaseAction {
 			$ai_brain_brief = self::resolve_from_context( $context, 'full_output', 'custom_prompt' );
 		}
 
-		// Topic rotation (Pro): a topics list overrides the single topic —
+		// Topic rotation: a topics list overrides the single topic —
 		// each run picks a different one so scheduled posts stay varied.
 		$topic = self::rotated_topic( $config, $context );
 		if ( '' === $topic ) {
@@ -72,19 +72,6 @@ class BlogPostAction extends BaseAction {
 		}
 		$language = sanitize_text_field( (string) ( $config['language'] ?? 'en' ) );
 		$language = '' !== $language ? $language : 'en';
-
-		// Free tier: cap word count using the shared content limit.
-		if ( ! aime_has_pro() ) {
-			$limits = aime_free_limits();
-			$cap    = (int) ( $limits['content_max_words'] ?? 2000 );
-			$words  = min( $words, $cap );
-			if ( $words_max > 0 ) {
-				$words_max = min( $words_max, $cap );
-			}
-		}
-		if ( $words_max > 0 && $words_max <= $words ) {
-			$words_max = 0; // Ceiling collapsed into the floor after capping.
-		}
 
 		// Universal SEO contract: prefer Brain focus package, fall back to keywords.
 		// All values sanitized here; the contract builder expects clean strings.
@@ -118,7 +105,7 @@ class BlogPostAction extends BaseAction {
 			}
 		}
 
-		// Brand voice (Pro): resolve step voice or workflow default into system instructions.
+		// Brand voice: resolve step voice or workflow default into system instructions.
 		$brand_voice_id = absint( $config['brand_voice_id'] ?? 0 );
 		$voice_prompt   = '';
 		if ( $brand_voice_id > 0 ) {
@@ -355,7 +342,7 @@ class BlogPostAction extends BaseAction {
 			'tone'              => sanitize_text_field( $tone ),
 			'language'          => sanitize_text_field( $language ),
 			'word_count_target' => $words,
-			'actual_word_count' => str_word_count( wp_strip_all_tags( $body ) ),
+			'actual_word_count' => function_exists( 'aime_count_words' ) ? aime_count_words( $body ) : str_word_count( wp_strip_all_tags( $body ) ),
 			'outline'           => wp_json_encode( $result['parsed']['outline'] ?? array() ),
 			'category_ids'      => wp_json_encode( $category_ids ),
 			'tag_ids'           => wp_json_encode( $tags ),
@@ -425,7 +412,7 @@ class BlogPostAction extends BaseAction {
 			return $body;
 		}
 		// TOC for long articles missing one.
-		$words = str_word_count( wp_strip_all_tags( $body ) );
+		$words = function_exists( 'aime_count_words' ) ? aime_count_words( $body ) : str_word_count( wp_strip_all_tags( $body ) );
 		if ( $words >= 800 && false === stripos( $body, 'aime-article-toc' ) ) {
 			if ( preg_match_all( '/<h2\b[^>]*>(.*?)<\/h2>/is', $body, $m ) && count( $m[1] ) >= 2 ) {
 				$items = array();
@@ -533,10 +520,6 @@ class BlogPostAction extends BaseAction {
 		}
 
 		if ( 'ai' === $mode ) {
-			if ( ! aime_has_pro() ) {
-				aime_log( 'Workflow blog post: AI featured image requires Pro; skipping.', 'warning', 'workflow-automation' );
-				return $none;
-			}
 			try {
 				// Mirror GenerateController's prompt builder.
 				$stripped = mb_substr( wp_strip_all_tags( $body ), 0, 500 );

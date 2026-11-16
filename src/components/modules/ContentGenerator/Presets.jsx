@@ -1,5 +1,5 @@
 /**
- * Presets - manage generation presets (custom presets are PRO).
+ * Presets - manage generation presets.
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
@@ -7,14 +7,11 @@ import { __ } from '@wordpress/i18n';
 import { Button } from '@aime/wp-components';
 import { trash, edit } from '@wordpress/icons';
 import useApi from '../../../hooks/useApi';
-// import usePro from '../../../hooks/usePro';
 import Card from '../../common/Card';
 import EmptyState from '../../common/EmptyState';
 import { SkeletonBlock } from '../../common/Skeleton';
-// import ProGate from '../../common/ProGate';
 import ConfirmModal from '../../common/ConfirmModal';
 import { toast } from '../../common/Toast';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
 const TONES = [
 	{ label: 'Professional', value: 'professional' },
@@ -49,7 +46,6 @@ const defaultPreset = {
 
 const Presets = () => {
 	const { get, post, put, del, loading } = useApi();
-	const hasPro = isProActive();
 	const [ presets, setPresets ] = useState( [] );
 	const [ editPreset, setEditPreset ] = useState( null );
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
@@ -68,10 +64,6 @@ const Presets = () => {
 	}, [ fetchPresets ] );
 
 	const handleSave = async () => {
-		if ( ! hasPro && ! editPreset.id ) {
-			toast( __( 'New presets are available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		try {
 			if ( editPreset.id ) {
 				await put( `/content/presets/${ editPreset.id }`, editPreset );
@@ -88,11 +80,6 @@ const Presets = () => {
 	};
 
 	const handleDelete = async ( id ) => {
-		const preset = presets.find( ( item ) => item.id === id );
-		if ( ! hasPro && preset && ! Number( preset.is_default ) ) {
-			toast( __( 'Custom presets are available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		try {
 			await del( `/content/presets/${ id }` );
 			toast( __( 'Preset deleted.', 'ai-marketing-expert' ) );
@@ -107,13 +94,9 @@ const Presets = () => {
 		<div className="aime-presets">
 			<div className="aime-page-header">
 				<h2>{ __( 'Generation Presets', 'ai-marketing-expert' ) }</h2>
-				{ /* ProGate removed for dev mode */ }
-				<span className="aime-pro-inline-action">
-					<Button variant="primary" disabled={ ! hasPro } onClick={ () => setEditPreset( { ...defaultPreset } ) }>
-						{ __( 'New Preset', 'ai-marketing-expert' ) }
-					</Button>
-					{ ! hasPro && <><ProLabel /><ProUpgradeButton /></> }
-				</span>
+				<Button variant="primary" onClick={ () => setEditPreset( { ...defaultPreset } ) }>
+					{ __( 'New Preset', 'ai-marketing-expert' ) }
+				</Button>
 			</div>
 
 			{ loading && ! presets.length ? (
@@ -135,9 +118,7 @@ const Presets = () => {
 				/>
 			) : (
 				<div className="aime-presets-grid">
-					{ presets.map( ( preset ) => {
-						const isCustomLocked = ! hasPro && ! Number( preset.is_default );
-						return (
+					{ presets.map( ( preset ) => (
 						<Card key={ preset.id } className="aime-preset-card">
 							<div className="aime-preset-header">
 								<h3>{ preset.name }</h3>
@@ -159,11 +140,9 @@ const Presets = () => {
 								<Button
 									icon={ edit }
 									label={ __( 'Edit', 'ai-marketing-expert' ) }
-									disabled={ isCustomLocked }
-									onClick={ () => isCustomLocked ? toast( __( 'Custom presets are available in Pro.', 'ai-marketing-expert' ), 'warning' ) : setEditPreset( { ...preset } ) }
+									onClick={ () => setEditPreset( { ...preset } ) }
 									size="small"
 								/>
-								{ isCustomLocked && <ProLabel /> }
 								{ ! preset.is_default && (
 									<Button
 										icon={ trash }
@@ -175,7 +154,7 @@ const Presets = () => {
 								) }
 							</div>
 						</Card>
-					); } ) }
+					) ) }
 				</div>
 			) }
 

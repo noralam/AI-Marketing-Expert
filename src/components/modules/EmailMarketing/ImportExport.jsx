@@ -9,7 +9,6 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Notice from '../../common/Notice';
 import CsvImportModal from '../../common/CsvImportModal';
-import { isProActive, ProLabel } from '../../common/ProLock';
 
 const SOURCE_OPTIONS = [
 	{ label: __( 'CSV', 'ai-marketing-expert' ), value: 'csv' },
@@ -50,7 +49,6 @@ const SKIP_REASON_LABELS = {
 
 const ImportExport = () => {
 	const { post, get, loading, error, clearError } = useApi();
-	const hasPro = isProActive();
 	const [ source, setSource ] = useState( 'csv' );
 	const [ doubleOptin, setDoubleOptin ] = useState( false );
 	const [ result, setResult ] = useState( null );
@@ -65,18 +63,10 @@ const ImportExport = () => {
 	const [ newStatus, setNewStatus ] = useState( 'subscribed' );
 
 	const updateValidation = ( key, value ) => {
-		if ( ! hasPro && [ 'skip_disposable', 'skip_role_based', 'skip_spam_patterns', 'check_mx' ].includes( key ) ) {
-			return;
-		}
 		setValidation( ( prev ) => ( { ...prev, [ key ]: value } ) );
 	};
 
-	const validationForRequest = () => {
-		if ( hasPro ) {
-			return validation;
-		}
-		return { ...validation, skip_disposable: false, skip_role_based: false, skip_spam_patterns: false, check_mx: false };
-	};
+	const validationForRequest = () => validation;
 
 	const renderSkipReasons = () => {
 		const reasons = Object.entries( result?.skip_reasons || {} ).filter( ( [ , count ] ) => count > 0 );
@@ -132,10 +122,6 @@ const ImportExport = () => {
 	};
 
 	const handleExport = async () => {
-		if ( ! hasPro ) {
-			return;
-		}
-
 		try {
 			const res = await get( '/email/subscribers?per_page=99999' );
 			const rows = ( res.items || [] ).map( ( s ) =>
@@ -171,11 +157,11 @@ const ImportExport = () => {
 					<div className="aime-import-validation-options">
 						<label className="aime-premium-form-label">{ __( 'Validation & Cleanup', 'ai-marketing-expert' ) }</label>
 						<CheckboxControl label={ __( 'Skip invalid email format', 'ai-marketing-expert' ) } checked={ validation.skip_invalid_format } onChange={ ( v ) => updateValidation( 'skip_invalid_format', v ) } />
-						<CheckboxControl label={ <ProLabel>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_disposable } onChange={ ( v ) => updateValidation( 'skip_disposable', v ) } disabled={ ! hasPro } />
+						<CheckboxControl label={ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) } checked={ validation.skip_disposable } onChange={ ( v ) => updateValidation( 'skip_disposable', v ) } />
 						<CheckboxControl label={ __( 'Skip test, fake, localhost, and placeholder emails', 'ai-marketing-expert' ) } checked={ validation.skip_test_fake } onChange={ ( v ) => updateValidation( 'skip_test_fake', v ) } />
-						<CheckboxControl label={ <ProLabel>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_role_based } onChange={ ( v ) => updateValidation( 'skip_role_based', v ) } disabled={ ! hasPro } />
-						<CheckboxControl label={ <ProLabel>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_spam_patterns } onChange={ ( v ) => updateValidation( 'skip_spam_patterns', v ) } disabled={ ! hasPro } />
-						<CheckboxControl label={ <ProLabel>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.check_mx } onChange={ ( v ) => updateValidation( 'check_mx', v ) } disabled={ ! hasPro } />
+						<CheckboxControl label={ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) } checked={ validation.skip_role_based } onChange={ ( v ) => updateValidation( 'skip_role_based', v ) } />
+						<CheckboxControl label={ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) } checked={ validation.skip_spam_patterns } onChange={ ( v ) => updateValidation( 'skip_spam_patterns', v ) } />
+						<CheckboxControl label={ __( 'Check MX records before import', 'ai-marketing-expert' ) } checked={ validation.check_mx } onChange={ ( v ) => updateValidation( 'check_mx', v ) } />
 					</div>
 
 					{ source === 'wp_users' && (
@@ -239,9 +225,9 @@ const ImportExport = () => {
 					</Button>
 				</Card>
 
-				<Card title={ <span className="aime-pro-card-header">{ __( 'Export Contacts', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+				<Card title={ __( 'Export Contacts', 'ai-marketing-expert' ) }>
 					<p>{ __( 'Download all subscribers as a CSV file.', 'ai-marketing-expert' ) }</p>
-					<Button variant="secondary" onClick={ handleExport } isBusy={ loading && hasPro }>
+					<Button variant="secondary" onClick={ handleExport } isBusy={ loading }>
 						{ loading
 							? <><Spinner style={ { marginRight: 4 } } />{ __( 'Exporting...', 'ai-marketing-expert' ) }</>
 							: __( 'Download CSV', 'ai-marketing-expert' )
@@ -256,7 +242,6 @@ const ImportExport = () => {
 					tags={ tags }
 					validation={ validation }
 					onValidationChange={ setValidation }
-					hasPro={ hasPro }
 					onClose={ () => setShowCsvModal( false ) }
 					onImported={ ( res ) => {
 						setShowCsvModal( false );
@@ -282,11 +267,11 @@ const ImportExport = () => {
 							<div className="aime-import-validation-options">
 								<label className="aime-premium-form-label">{ __( 'Validation & Cleanup', 'ai-marketing-expert' ) }</label>
 								<CheckboxControl label={ __( 'Skip invalid email format', 'ai-marketing-expert' ) } checked={ validation.skip_invalid_format } onChange={ ( v ) => updateValidation( 'skip_invalid_format', v ) } />
-								<CheckboxControl label={ <ProLabel>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_disposable } onChange={ ( v ) => updateValidation( 'skip_disposable', v ) } disabled={ ! hasPro } />
+								<CheckboxControl label={ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) } checked={ validation.skip_disposable } onChange={ ( v ) => updateValidation( 'skip_disposable', v ) } />
 								<CheckboxControl label={ __( 'Skip test, fake, localhost, and placeholder emails', 'ai-marketing-expert' ) } checked={ validation.skip_test_fake } onChange={ ( v ) => updateValidation( 'skip_test_fake', v ) } />
-								<CheckboxControl label={ <ProLabel>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_role_based } onChange={ ( v ) => updateValidation( 'skip_role_based', v ) } disabled={ ! hasPro } />
-								<CheckboxControl label={ <ProLabel>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.skip_spam_patterns } onChange={ ( v ) => updateValidation( 'skip_spam_patterns', v ) } disabled={ ! hasPro } />
-								<CheckboxControl label={ <ProLabel>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && validation.check_mx } onChange={ ( v ) => updateValidation( 'check_mx', v ) } disabled={ ! hasPro } />
+								<CheckboxControl label={ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) } checked={ validation.skip_role_based } onChange={ ( v ) => updateValidation( 'skip_role_based', v ) } />
+								<CheckboxControl label={ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) } checked={ validation.skip_spam_patterns } onChange={ ( v ) => updateValidation( 'skip_spam_patterns', v ) } />
+								<CheckboxControl label={ __( 'Check MX records before import', 'ai-marketing-expert' ) } checked={ validation.check_mx } onChange={ ( v ) => updateValidation( 'check_mx', v ) } />
 							</div>
 							<div className="aime-csv-options-grid">
 								<div className="aime-csv-option">

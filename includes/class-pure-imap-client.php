@@ -44,14 +44,27 @@ class PureImapClient {
 	 * @return true|\WP_Error
 	 */
 	public function connect( string $host, int $port = 993, string $encryption = 'ssl' ) {
-		$prefix = ( 'ssl' === $encryption || 993 === $port ) ? 'ssl://' : ( 'tls' === $encryption ? 'tls://' : 'tcp://' );
-		$target = $prefix . $host . ':' . $port;
+		$resolved_ip = gethostbyname( $host );
+		if ( ! apply_filters( 'aime_allow_private_imap_host', false, $host ) ) {
+			if ( ! filter_var( $resolved_ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+				return new \WP_Error(
+					'imap_private_ip',
+					__( 'IMAP host resolves to a disallowed private or reserved IP address.', 'ai-marketing-expert' )
+				);
+			}
+		}
 
-		$context = stream_context_create( array(
+		$use_implicit_ssl = ( 'ssl' === $encryption || 993 === $port );
+		$prefix           = $use_implicit_ssl ? 'ssl://' : 'tcp://';
+		$target           = $prefix . $host . ':' . $port;
+
+		$allow_insecure = (bool) apply_filters( 'aime_imap_allow_self_signed', false, $host );
+		$context        = stream_context_create( array(
 			'ssl' => array(
-				'verify_peer'       => false,
-				'verify_peer_name'  => false,
-				'allow_self_signed' => true,
+				'verify_peer'       => ! $allow_insecure,
+				'verify_peer_name'  => ! $allow_insecure,
+				'allow_self_signed' => $allow_insecure,
+				'peer_name'         => $host,
 			),
 		) );
 
@@ -87,6 +100,26 @@ class PureImapClient {
 		if ( null === $greeting || ( false === strpos( $greeting, '* OK' ) && false === strpos( $greeting, '* PREAUTH' ) ) ) {
 			$this->disconnect();
 			return new \WP_Error( 'imap_invalid_greeting', sprintf( __( 'Unexpected IMAP server greeting: %s', 'ai-marketing-expert' ), (string) $greeting ) );
+		}
+
+		// Negotiate STARTTLS on port 143 or when encryption is tls.
+		if ( 'tls' === $encryption && ! $use_implicit_ssl ) {
+			$starttls_resp = $this->send_command( 'STARTTLS' );
+			if ( is_wp_error( $starttls_resp ) ) {
+				$this->disconnect();
+				return $starttls_resp;
+			}
+			$crypto_method = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+			if ( defined( 'STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT' ) ) {
+				$crypto_method |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
+			}
+			if ( defined( 'STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT' ) ) {
+				$crypto_method |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+			}
+			if ( ! @stream_socket_enable_crypto( $this->socket, true, $crypto_method ) ) {
+				$this->disconnect();
+				return new \WP_Error( 'imap_starttls_failed', __( 'STARTTLS negotiation failed.', 'ai-marketing-expert' ) );
+			}
 		}
 
 		return true;

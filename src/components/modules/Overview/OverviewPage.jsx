@@ -18,7 +18,6 @@ import Notice from '../../common/Notice';
 import EmptyState from '../../common/EmptyState';
 import useApi from '../../../hooks/useApi';
 import { apiGet } from '../../../utils/api';
-import usePro from '../../../hooks/usePro';
 import { menuUrl } from '../../../utils/menuUrl';
 
 /**
@@ -66,13 +65,6 @@ const SERIES = [ 'email', 'content', 'seo', 'chatbot', 'social' ];
  * can really answer.
  */
 const RANGES = [ 7, 30, 90 ];
-
-/*
- * The synthetic 30-day series that used to sit behind the free tier's blurred
- * chart is gone. The activity endpoint is admin-permission only, with no Pro
- * check, so the real chart was always available — the blur was showing people
- * invented numbers about their own site to sell them a feature they had.
- */
 
 /**
  * Activity chart tooltip.
@@ -170,7 +162,6 @@ const ActivityChart = ( { data, labels, height = 300 } ) => (
 
 const OverviewPage = () => {
 	const { loading, get } = useApi();
-	const { hasPro } = usePro();
 	const [ stats, setStats ] = useState( null );
 	const [ error, setError ] = useState( '' );
 	const [ aiProviderCount, setAiProviderCount ] = useState( null );
@@ -253,7 +244,6 @@ const OverviewPage = () => {
 	const social   = stats?.modules?.[ 'social-media' ] || {};
 	const seo      = stats?.modules?.seo || {};
 	const workflow = stats?.modules?.[ 'workflow-automation' ] || {};
-	const proUrl  = window.aimeData?.proUrl || '#/pro';
 	/* ------ First-run setup gate ------
 	 * A setup prompt is only honest when we actually know the answer. A count
 	 * of null means "not looked up yet" and a failed lookup means "unknown" —
@@ -625,10 +615,7 @@ const OverviewPage = () => {
 				</Card>
 			</div>
 
-			{ /* ── Activity ──────────────────────────────────────────────
-			     One chart, one control. The range control only exists for Pro,
-			     because on the free tier the chart underneath it is a demo and
-			     a control that changes nothing is worse than no control. */ }
+			{ /* ── Activity ────────────────────────────────────────────── */ }
 			<Card
 				className="aime-insight-card"
 				title={
@@ -745,20 +732,6 @@ const OverviewPage = () => {
 					);
 				} ) }
 			</div>
-
-			{ ! hasPro && (
-				<Card className="aime-upgrade-card">
-					<div className="aime-upgrade-banner">
-						<div>
-							<h3>{ __( 'Unlock Pro Features', 'ai-marketing-expert' ) }</h3>
-							<p>{ __( 'Get unlimited AI generations, advanced analytics, and priority support.', 'ai-marketing-expert' ) }</p>
-						</div>
-						<a href={ proUrl } target="_blank" rel="noopener noreferrer">
-							<Button variant="primary">{ __( 'Upgrade to Pro', 'ai-marketing-expert' ) }</Button>
-						</a>
-					</div>
-				</Card>
-			) }
 		</div>
 	);
 };

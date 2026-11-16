@@ -28,9 +28,6 @@ class SubscriberController {
 		$pivot_table       = $wpdb->prefix . 'aime_subscriber_pivot';
 
 		$per_page = absint( $request->get_param( 'per_page' ) ?: 20 );
-		if ( ! aime_has_pro() && $per_page > 1000 ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Export contacts is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
 		$page     = absint( $request->get_param( 'page' ) ?: 1 );
 		$offset   = ( $page - 1 ) * $per_page;
 		$search   = sanitize_text_field( $request->get_param( 'search' ) ?? '' );
@@ -113,9 +110,6 @@ class SubscriberController {
 		$mode             = sanitize_text_field( $request->get_param( 'mode' ) ?? 'all' );
 
 		if ( 'segments' === $mode ) {
-			if ( ! aime_has_pro() ) {
-				return new \WP_REST_Response( array( 'message' => __( 'Smart Segments are available in Pro.', 'ai-marketing-expert' ) ), 403 );
-			}
 			return new \WP_REST_Response( array( 'total' => count( $this->resolve_engagement_segments( $segments, $exclude_list_ids, $exclude_tag_ids ) ) ) );
 		}
 
@@ -410,9 +404,6 @@ class SubscriberController {
 		}
 
 		$action = sanitize_text_field( $request->get_param( 'action' ) );
-		if ( ! aime_has_pro() && in_array( $action, array( 'complained', 'remove_tags', 'remove_lists' ), true ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'This bulk action is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
 		$now    = current_time( 'mysql', true );
 		$count  = count( $ids );
 
@@ -895,13 +886,6 @@ class SubscriberController {
 			'check_mx'            => array_key_exists( 'check_mx', $options ) ? (bool) $options['check_mx'] : false,
 		);
 
-		if ( ! aime_has_pro() ) {
-			$validation['skip_disposable']    = false;
-			$validation['skip_role_based']    = false;
-			$validation['skip_spam_patterns'] = false;
-			$validation['check_mx']           = false;
-		}
-
 		return $validation;
 	}
 
@@ -966,9 +950,7 @@ class SubscriberController {
 	}
 
 	private function prepare_long_import_request(): void {
-		if ( function_exists( 'wp_is_ini_value_changeable' ) && wp_is_ini_value_changeable( 'max_execution_time' ) ) {
-			@ini_set( 'max_execution_time', '0' ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-		}
+		// No-op: Do not tamper with PHP execution limits on user servers.
 	}
 
 	private function prime_import_mx_cache( array $emails, array $validation ): void {
@@ -1627,7 +1609,7 @@ class SubscriberController {
 	 *
 	 * Spam complaints cannot be inferred from SMTP send success, so ESPs (Amazon SES via SNS,
 	 * SendGrid, Mailgun, Postmark) POST them here. Mirrors unsubscribe: status → 'complained',
-	 * metric row, activity log, status-change hook. Pro-only.
+	 * metric row, activity log, status-change hook.
 	 */
 	public function webhook_complaint( \WP_REST_Request $request ): \WP_REST_Response {
 		return $this->handle_status_webhook( $request, 'complained', 'complaint' );
@@ -1648,40 +1630,34 @@ class SubscriberController {
 	 * @param string           $metric_type Metric row type ('complaint'|'bounce').
 	 */
 	private function handle_status_webhook( \WP_REST_Request $request, string $new_status, string $metric_type ): \WP_REST_Response {
-		// Pro gate: automatic complaint/bounce handling is a Pro feature.
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response(
-				array( 'message' => __( 'Automatic complaint and bounce handling is available in Pro.', 'ai-marketing-expert' ) ),
-				403
-			);
-		}
-
 		$raw_json = $request->get_body();
 		$payload  = json_decode( $raw_json, true );
 
-		// 1. Amazon SES via SNS Subscription Confirmation handshake.
-		if ( is_array( $payload ) && isset( $payload['Type'] ) && 'SubscriptionConfirmation' === $payload['Type'] && ! empty( $payload['SubscribeURL'] ) ) {
-			wp_remote_get( esc_url_raw( $payload['SubscribeURL'] ), array( 'timeout' => 15 ) );
-			return new \WP_REST_Response( array( 'message' => 'Amazon SNS subscription confirmed successfully.' ), 200 );
-		}
+		// Validate authentication: API key or secret token parameter/header.
+		$token           = sanitize_text_field( $request->get_param( 'token' ) ?: ( $request->get_header( 'x-webhook-token' ) ?: ( $request->get_header( 'x-aime-webhook-token' ) ?: '' ) ) );
+		$settings        = get_option( 'aime_settings', array() );
+		$expected_token  = (string) ( $settings['webhook_secret_token'] ?? ( get_option( 'aime_webhook_token' ) ?: get_option( 'aime_cron_secret_token', '' ) ) );
+		$has_valid_token = ( '' !== $token && '' !== $expected_token && hash_equals( $expected_token, $token ) );
 
-		// Validate authentication: API key, secret token parameter/header, or validated webhook signature.
-		$token           = sanitize_text_field( $request->get_param( 'token' ) ?: ( $request->get_header( 'x-webhook-token' ) ?: '' ) );
-		$expected_token  = get_option( 'aime_cron_secret_token' ) ?: get_option( 'aime_webhook_token' );
-		$has_valid_token = ( $token && $expected_token && hash_equals( (string) $expected_token, (string) $token ) );
-		$is_esp_payload  = is_array( $payload ) && (
-			isset( $payload['Type'] ) || // AWS SNS
-			isset( $payload[0]['event'] ) || // SendGrid
-			isset( $payload['event-data'] ) || // Mailgun
-			isset( $payload['RecordType'] ) || isset( $payload['Type'] ) || // Postmark
-			isset( $payload['event'] ) // Brevo
-		);
-
-		if ( ! \WPSpace\AiMarketingExpert\RestApi::validate_api_key( $request ) && ! $has_valid_token && ! $is_esp_payload ) {
+		if ( ! \WPSpace\AiMarketingExpert\RestApi::validate_api_key( $request ) && ! $has_valid_token ) {
 			return new \WP_REST_Response(
 				array( 'message' => __( 'Invalid or missing API key or authentication token.', 'ai-marketing-expert' ) ),
 				401
 			);
+		}
+
+		// Amazon SES via SNS Subscription Confirmation handshake (authenticated + validated host).
+		if ( is_array( $payload ) && isset( $payload['Type'] ) && 'SubscriptionConfirmation' === $payload['Type'] && ! empty( $payload['SubscribeURL'] ) ) {
+			$subscribe_url = esc_url_raw( (string) $payload['SubscribeURL'] );
+			$parsed_scheme = strtolower( (string) wp_parse_url( $subscribe_url, PHP_URL_SCHEME ) );
+			$parsed_host   = strtolower( (string) wp_parse_url( $subscribe_url, PHP_URL_HOST ) );
+
+			if ( 'https' !== $parsed_scheme || ! preg_match( '/^sns\.[a-z0-9-]+\.amazonaws\.com$/', $parsed_host ) ) {
+				return new \WP_REST_Response( array( 'message' => __( 'Invalid SNS SubscribeURL host.', 'ai-marketing-expert' ) ), 400 );
+			}
+
+			wp_safe_remote_get( $subscribe_url, array( 'timeout' => 15, 'reject_unsafe_urls' => true ) );
+			return new \WP_REST_Response( array( 'message' => 'Amazon SNS subscription confirmed successfully.' ), 200 );
 		}
 
 		// Rate limit: 120 requests per IP per minute.
@@ -1944,7 +1920,6 @@ class SubscriberController {
 		$total_bounced     = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(id) FROM {$subscribers_table} WHERE status = %s", 'bounced' ) );
 
 		return new \WP_REST_Response( array(
-			'is_pro'                 => aime_has_pro(),
 			'preflight_mx_check'     => (bool) get_option( 'aime_preflight_mx_check', true ),
 			'auto_sync_esp'          => (bool) get_option( 'aime_auto_sync_esp', true ),
 			'esp_sync_interval'      => get_option( 'aime_esp_sync_interval', 'daily' ),
@@ -1974,13 +1949,6 @@ class SubscriberController {
 	 * Save Deliverability & Bounce Shield configuration.
 	 */
 	public function save_deliverability_settings( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'pro_required',
-				'message' => __( 'Configuring advanced deliverability settings is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		if ( $request->has_param( 'preflight_mx_check' ) ) {
 			update_option( 'aime_preflight_mx_check', (bool) $request->get_param( 'preflight_mx_check' ), false );
 		}
@@ -2056,14 +2024,6 @@ class SubscriberController {
 	 * Trigger manual Cloud ESP suppression sync endpoint.
 	 */
 	public function sync_esp_endpoint( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Cloud ESP suppression sync is a Pro feature.', 'ai-marketing-expert' ) ), 403 );
-		}
-
-		if ( function_exists( 'set_time_limit' ) ) {
-			@set_time_limit( 45 );
-		}
-
 		try {
 			$result = \WPSpace\AiMarketingExpert\Modules\EmailMarketing\Services\CloudEspSyncService::sync_all();
 		} catch ( \Throwable $t ) {
@@ -2119,56 +2079,14 @@ class SubscriberController {
 	 * @return array
 	 */
 	public static function get_lead_quota(): array {
-		$is_pro = aime_has_pro();
-		if ( $is_pro ) {
-			return array(
-				'is_pro'          => true,
-				'daily_used'      => 0,
-				'daily_limit'     => -1,
-				'monthly_used'    => 0,
-				'monthly_limit'   => -1,
-				'remaining_today' => -1,
-				'can_search'      => true,
-				'can_import'      => true,
-			);
-		}
-
-		$today = current_time( 'Y-m-d' );
-		$month = current_time( 'Y-m' );
-
-		$usage = get_option( 'aime_free_lead_usage', array() );
-		if ( ! is_array( $usage ) ) {
-			$usage = array();
-		}
-
-		if ( ( $usage['date'] ?? '' ) !== $today ) {
-			$usage['date']        = $today;
-			$usage['daily_count'] = 0;
-		}
-
-		if ( ( $usage['month'] ?? '' ) !== $month ) {
-			$usage['month']         = $month;
-			$usage['monthly_count'] = 0;
-		}
-
-		$daily_limit   = 5;
-		$monthly_limit = 100;
-
-		$daily_used   = (int) ( $usage['daily_count'] ?? 0 );
-		$monthly_used = (int) ( $usage['monthly_count'] ?? 0 );
-
-		$can_search = ( $daily_used < $daily_limit ) && ( $monthly_used < $monthly_limit );
-		$can_import = $can_search;
-
 		return array(
-			'is_pro'          => false,
-			'daily_used'      => $daily_used,
-			'daily_limit'     => $daily_limit,
-			'monthly_used'    => $monthly_used,
-			'monthly_limit'   => $monthly_limit,
-			'remaining_today' => max( 0, $daily_limit - $daily_used ),
-			'can_search'      => $can_search,
-			'can_import'      => $can_import,
+			'daily_used'      => 0,
+			'daily_limit'     => -1,
+			'monthly_used'    => 0,
+			'monthly_limit'   => -1,
+			'remaining_today' => -1,
+			'can_search'      => true,
+			'can_import'      => true,
 		);
 	}
 
@@ -2178,32 +2096,7 @@ class SubscriberController {
 	 * @param int $count Number of leads to increment.
 	 */
 	public static function increment_lead_usage( int $count = 1 ): void {
-		if ( aime_has_pro() || $count <= 0 ) {
-			return;
-		}
-
-		$today = current_time( 'Y-m-d' );
-		$month = current_time( 'Y-m' );
-
-		$usage = get_option( 'aime_free_lead_usage', array() );
-		if ( ! is_array( $usage ) ) {
-			$usage = array();
-		}
-
-		if ( ( $usage['date'] ?? '' ) !== $today ) {
-			$usage['date']        = $today;
-			$usage['daily_count'] = 0;
-		}
-
-		if ( ( $usage['month'] ?? '' ) !== $month ) {
-			$usage['month']         = $month;
-			$usage['monthly_count'] = 0;
-		}
-
-		$usage['daily_count']   = (int) ( $usage['daily_count'] ?? 0 ) + $count;
-		$usage['monthly_count'] = (int) ( $usage['monthly_count'] ?? 0 ) + $count;
-
-		update_option( 'aime_free_lead_usage', $usage, false );
+		// Fully unlocked for WordPress.org compliance.
 	}
 
 	/**
@@ -2219,19 +2112,6 @@ class SubscriberController {
 	public function search_leads( \WP_REST_Request $request ): \WP_REST_Response {
 		$quota = self::get_lead_quota();
 
-		if ( ! $quota['is_pro'] && ! $quota['can_search'] ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'free_quota_exceeded',
-				'message' => sprintf(
-					/* translators: 1: daily limit, 2: monthly limit */
-					__( 'You have reached your Free Tier quota (%1$d leads/day, %2$d leads/month). Upgrade to Pro for unlimited leads & 24/7 Autopilot prospecting!', 'ai-marketing-expert' ),
-					$quota['daily_limit'],
-					$quota['monthly_limit']
-				),
-				'quota'   => $quota,
-			), 403 );
-		}
-
 		$industry     = sanitize_text_field( $request->get_param( 'industry' ) ?? '' );
 		$role         = sanitize_text_field( $request->get_param( 'role' ) ?? '' );
 		$location     = sanitize_text_field( $request->get_param( 'location' ) ?? '' );
@@ -2241,12 +2121,6 @@ class SubscriberController {
 		$raw_limit    = $request->get_param( 'limit' );
 		$limit        = ( null !== $raw_per_page && '' !== $raw_per_page ) ? absint( $raw_per_page ) : absint( $raw_limit ?: 10 );
 		$limit        = min( 50, max( 3, $limit ?: 10 ) );
-
-		// Cap Free Tier requests to remaining daily quota (max 5)
-		if ( ! $quota['is_pro'] ) {
-			$remaining = max( 1, $quota['daily_limit'] - $quota['daily_used'] );
-			$limit     = min( $limit, $remaining );
-		}
 
 		$page = max( 1, absint( $request->get_param( 'page' ) ?: 1 ) );
 
@@ -2274,16 +2148,6 @@ class SubscriberController {
 	 * Import verified prospective leads into the subscriber CRM.
 	 */
 	public function import_leads( \WP_REST_Request $request ): \WP_REST_Response {
-		$quota = self::get_lead_quota();
-
-		if ( ! $quota['is_pro'] && ! $quota['can_import'] ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'free_quota_exceeded',
-				'message' => __( 'Free Tier limit reached (5 leads/day, 100 leads/month). Upgrade to Pro to import unlimited leads.', 'ai-marketing-expert' ),
-				'quota'   => $quota,
-			), 403 );
-		}
-
 		global $wpdb;
 		$subscribers_table = $wpdb->prefix . 'aime_subscribers';
 		$now               = current_time( 'mysql', true );
@@ -2291,18 +2155,6 @@ class SubscriberController {
 		$raw_leads = $request->get_param( 'leads' );
 		if ( ! is_array( $raw_leads ) || empty( $raw_leads ) ) {
 			return new \WP_REST_Response( array( 'message' => __( 'No leads provided to import.', 'ai-marketing-expert' ) ), 400 );
-		}
-
-		if ( ! $quota['is_pro'] ) {
-			$remaining = max( 0, $quota['daily_limit'] - $quota['daily_used'] );
-			if ( $remaining <= 0 ) {
-				return new \WP_REST_Response( array(
-					'code'    => 'free_quota_exceeded',
-					'message' => __( 'Daily Free Tier quota reached (5/5). Upgrade to Pro for unlimited leads.', 'ai-marketing-expert' ),
-					'quota'   => $quota,
-				), 403 );
-			}
-			$raw_leads = array_slice( $raw_leads, 0, $remaining );
 		}
 
 		$list_id   = absint( $request->get_param( 'list_id' ) ?: 0 );
@@ -2421,13 +2273,6 @@ class SubscriberController {
 	 * Get current Autopilot configuration and execution statistics.
 	 */
 	public function get_autopilot_config( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'pro_required',
-				'message' => __( 'B2B Lead Autopilot is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$config = get_option( 'aime_lead_autopilot_config', array() );
 		$defaults = array(
 			'enabled'            => false,
@@ -2458,13 +2303,6 @@ class SubscriberController {
 	 * Save Autopilot configuration.
 	 */
 	public function save_autopilot_config( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'pro_required',
-				'message' => __( 'B2B Lead Autopilot is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$current = get_option( 'aime_lead_autopilot_config', array() );
 		$current = is_array( $current ) ? $current : array();
 
@@ -2515,13 +2353,6 @@ class SubscriberController {
 	 * Trigger manual test run of the Autopilot pipeline.
 	 */
 	public function run_autopilot( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'pro_required',
-				'message' => __( 'B2B Lead Autopilot is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$config = get_option( 'aime_lead_autopilot_config', array() );
 		if ( ! is_array( $config ) ) {
 			$config = array();
@@ -2578,13 +2409,6 @@ class SubscriberController {
 	 * Reset persistent Autopilot page pointer back to Page 1.
 	 */
 	public function reset_autopilot_pointer( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'code'    => 'pro_required',
-				'message' => __( 'B2B Lead Autopilot is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$config = get_option( 'aime_lead_autopilot_config', array() );
 		$config = is_array( $config ) ? $config : array();
 

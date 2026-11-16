@@ -263,16 +263,16 @@ class WorkflowRepository {
 	}
 
 	/**
-	 * True when the free plan's monthly run budget is exhausted (always false on Pro).
+	 * Check if monthly run limit is reached (always false).
 	 *
 	 * @param int $exclude_execution_id Current run's own row, if pre-created.
 	 */
 	public function monthly_run_limit_reached( int $exclude_execution_id = 0 ): bool {
-		return aime_limit_reached( 'workflow_runs_monthly', $this->count_runs_this_month( $exclude_execution_id ) );
+		return false;
 	}
 
 	/**
-	 * Record a run the free plan blocked, so the history explains the silence.
+	 * Record a run that was skipped.
 	 */
 	public function record_skipped_execution( int $workflow_id, string $trigger, string $reason ): int {
 		global $wpdb;
@@ -317,6 +317,50 @@ class WorkflowRepository {
 			),
 			array( 'id' => $execution_id )
 		);
+	}
+
+	/**
+	 * Pause an execution in 'waiting' state for delay continuation.
+	 */
+	public function pause_execution( int $execution_id, array $counts, array $context ): void {
+		global $wpdb;
+		$wpdb->update(
+			$this->executions,
+			array(
+				'status'          => 'waiting',
+				'steps_succeeded' => (int) ( $counts['success'] ?? 0 ),
+				'steps_failed'    => (int) ( $counts['failed'] ?? 0 ),
+				'steps_skipped'   => (int) ( $counts['skipped'] ?? 0 ),
+				'context'         => wp_json_encode( $context ),
+			),
+			array( 'id' => $execution_id )
+		);
+	}
+
+	/**
+	 * Resume a paused execution back to 'running'.
+	 */
+	public function resume_execution_state( int $execution_id ): bool {
+		global $wpdb;
+		$updated = $wpdb->query( $wpdb->prepare(
+			"UPDATE {$this->executions} SET status = 'running' WHERE id = %d AND status = 'waiting'",
+			$execution_id
+		) );
+		return (bool) $updated;
+	}
+
+	/**
+	 * Executions paused in 'waiting' state.
+	 *
+	 * @param int $limit
+	 * @return array<int,object>
+	 */
+	public function due_waiting( int $limit = 5 ): array {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$this->executions} WHERE status = 'waiting' ORDER BY id ASC LIMIT %d",
+			$limit
+		) ) ?: array();
 	}
 
 	/**

@@ -3,7 +3,7 @@
  * Plugin Name:       AI Marketing Expert
  * Plugin URI:        https://wpthemespace.com/ai-marketing-expert
  * Description:       All-in-one AI marketing: AI email campaigns, AI content generation,  AI SEO analyzer, social media scheduling, AI chatbot, and AI workflow automation.
- * Version:           1.2.8.8
+ * Version:           1.2.11
  * Requires at least: 6.2
  * Requires PHP:      8.0
  * Author:            Noor Alam
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin constants.
  */
-define( 'AIME_VERSION', '1.2.8.8' );
+define( 'AIME_VERSION', '1.2.11' );
 define( 'AIME_PLUGIN_FILE', __FILE__ );
 define( 'AIME_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AIME_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -74,18 +74,7 @@ require_once AIME_PLUGIN_DIR . 'includes/helpers.php';
  * Activation hook.
  */
 /**
- * Free plan limits.
- *
- * AIME_FREE_SUBSCRIBER_LIMIT is the soft cap surfaced to the UI for the free
- * tier. The free tier is actually unlimited (PHP_INT_MAX) — Pro advertises
- * additional features, not a higher subscriber ceiling. Keep the constant
- * defined so any third-party code that reads it still gets a valid number.
- */
-define( 'AIME_FREE_SUBSCRIBER_LIMIT', PHP_INT_MAX );
-
-/**
- * Dev mode: set to true to unlock all Pro features during development.
- * Set to false before release.
+ * Dev mode: set to true to disable asset caching during development.
  */
 if ( ! defined( 'AIME_DEV_MODE' ) ) {
 	define( 'AIME_DEV_MODE', false );

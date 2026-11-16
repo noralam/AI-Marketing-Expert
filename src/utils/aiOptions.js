@@ -16,8 +16,6 @@ export const TONES = [
 	{ label: 'Conversational', value: 'conversational' },
 ];
 
-export const PRO_TONES = [ 'humorous', 'formal', 'conversational' ];
-
 export const LANGUAGES = [
 	{ label: 'English', value: 'en' },
 	{ label: 'Bengali', value: 'bn' },
@@ -44,14 +42,13 @@ export const LANGUAGES = [
 ];
 
 /**
- * Build SelectControl-ready tone options, tagging Pro-only tones.
+ * Build SelectControl-ready tone options.
  *
- * @param {boolean} hasPro Whether Pro is active.
  * @return {Array<{label: string, value: string}>}
  */
-export function toneSelectOptions( hasPro ) {
+export function toneSelectOptions() {
 	return TONES.map( ( t ) => ( {
 		value: t.value,
-		label: ! hasPro && PRO_TONES.includes( t.value ) ? `${ t.label } (PRO)` : t.label,
+		label: t.label,
 	} ) );
 }

@@ -12,7 +12,6 @@ namespace WPSpace\AiMarketingExpert\Modules\ContentGenerator\Controllers;
 use WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\ContentGeneratorService;
 use WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\SeoAnalyzerService;
 use WPSpace\AiMarketingExpert\Modules\ContentGenerator\Controllers\WorkflowController;
-use WPSpace\AiMarketingExpert\Pro;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -29,36 +28,14 @@ class GenerateController {
 	/* ── GENERATE full article ───────────────────────── */
 
 	public function generate( \WP_REST_Request $request ): \WP_REST_Response {
-		// Check free limit.
-		if ( ! aime_has_pro() ) {
-			$monthly = \WPSpace\AiMarketingExpert\Modules\ContentGenerator\ContentGeneratorModule::get_monthly_article_count();
-			$limits  = aime_free_limits();
-			if ( $monthly >= ( $limits['content_articles_per_month'] ?? 10 ) ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Monthly article limit reached. Upgrade to Pro for unlimited articles.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
-		// Check word count limit.
 		$word_count = absint( $request->get_param( 'word_count' ) ?: 1000 );
-		if ( ! aime_has_pro() ) {
-			$limits   = aime_free_limits();
-			$max      = $limits['content_max_words'] ?? 2000;
-			$word_count = min( $word_count, $max );
-		}
-
-		$topic    = sanitize_text_field( $request->get_param( 'topic' ) );
-		$keywords = array_map( 'sanitize_text_field', $request->get_param( 'keywords' ) ?: array() );
-		$tone     = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
-		if ( ! aime_has_pro() && in_array( $tone, array( 'humorous', 'formal', 'conversational' ), true ) ) {
-			$tone = 'professional';
-		}
-		$language = sanitize_text_field( $request->get_param( 'language' ) ?: 'en' );
-		$outline  = sanitize_textarea_field( $request->get_param( 'outline' ) ?: '' );
+		$topic      = sanitize_text_field( $request->get_param( 'topic' ) );
+		$keywords   = array_map( 'sanitize_text_field', $request->get_param( 'keywords' ) ?: array() );
+		$tone       = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
+		$language   = sanitize_text_field( $request->get_param( 'language' ) ?: 'en' );
+		$outline    = sanitize_textarea_field( $request->get_param( 'outline' ) ?: '' );
 		$serp_context = sanitize_textarea_field( $request->get_param( 'serp_context' ) ?: '' );
-		$include_table_of_contents = aime_has_pro() ? rest_sanitize_boolean( $request->get_param( 'include_table_of_contents' ) ) : false;
+		$include_table_of_contents = rest_sanitize_boolean( $request->get_param( 'include_table_of_contents' ) );
 		if ( $serp_context ) {
 			$outline = trim( $outline . "\n\nSERP-aware brief context:\n" . $serp_context );
 		}
@@ -69,7 +46,7 @@ class GenerateController {
 		if ( ! post_type_exists( $post_type ) ) {
 			$post_type = 'post';
 		}
-		$brand_voice_id = aime_has_pro() ? absint( $request->get_param( 'brand_voice_id' ) ) : 0;
+		$brand_voice_id = absint( $request->get_param( 'brand_voice_id' ) );
 
 		// Load preset if specified.
 		$preset_id = absint( $request->get_param( 'preset_id' ) );
@@ -150,9 +127,9 @@ class GenerateController {
 
 		// Load automation settings.
 		$settings     = get_option( 'aime_content-generator_settings', array() );
-		$auto_meta    = aime_has_pro() ? ( $settings['auto_generate_meta']    ?? true ) : false;
-		$auto_excerpt = aime_has_pro() ? ( $settings['auto_generate_excerpt'] ?? true ) : false;
-		$auto_seo     = aime_has_pro() ? ( $settings['auto_seo_optimize']     ?? true ) : false;
+		$auto_meta    = (bool) ( $settings['auto_generate_meta']    ?? true );
+		$auto_excerpt = (bool) ( $settings['auto_generate_excerpt'] ?? true );
+		$auto_seo     = (bool) ( $settings['auto_seo_optimize']     ?? true );
 
 		$initial_meta_title = $auto_meta ? sanitize_text_field( $article_title ) : '';
 		$initial_meta_desc  = $auto_meta ? sanitize_textarea_field( $excerpt ) : '';
@@ -306,11 +283,6 @@ class GenerateController {
 	/* ── GENERATE outline only ───────────────────────── */
 
 	public function generate_outline( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'Generate Outline' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		$topic    = sanitize_text_field( $request->get_param( 'topic' ) );
 		$keywords = array_map( 'sanitize_text_field', $request->get_param( 'keywords' ) ?: array() );
 		$tone     = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
@@ -349,11 +321,6 @@ class GenerateController {
 	/* ── IMPROVE existing content ────────────────────── */
 
 	public function improve_content( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'Deep Humanize' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		$content     = aime_kses_article( $request->get_param( 'content' ) );
 		$instruction = sanitize_text_field( $request->get_param( 'instruction' ) );
 		$tone        = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
@@ -425,17 +392,9 @@ class GenerateController {
 		return new \WP_REST_Response( $result );
 	}
 
-	/* ── GENERATE IMAGE PROMPT (PRO) ─────────────────── */
+	/* ── GENERATE IMAGE PROMPT ───────────────────────── */
 
 	public function generate_image_prompt( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'AI Image Prompts' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array(
-				'message' => $check->get_error_message(),
-				'pro_required' => true,
-			), 403 );
-		}
-
 		$title   = sanitize_text_field( $request->get_param( 'title' ) );
 		$content = aime_kses_article( $request->get_param( 'content' ) ?: '' );
 
@@ -514,11 +473,6 @@ class GenerateController {
 	/* ── GENERATE IMAGE DIRECTLY (AI) ────────────────── */
 
 	public function generate_image( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'AI Featured Image' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		$title      = sanitize_text_field( $request->get_param( 'title' ) );
 		$content    = aime_kses_article( $request->get_param( 'content' ) ?: '' );
 		$article_id = absint( $request->get_param( 'article_id' ) );

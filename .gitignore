@@ -1,8 +1,6 @@
 # Dependencies
 node_modules/
 
-
-
 # Environment files
 .env
 .env.local
@@ -15,46 +13,61 @@ Thumbs.db
 *.swo
 *~
 
-# IDE
+# IDE & MCP tooling
 .idea/
 .vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
+.claude/
+.impeccable/
+.playwright-mcp/
+graphify-out/
 
-# Logs
+# Logs & temp data
 *.log
 npm-debug.log*
+firebase-debug.log
+data/
+*.db
+*.sqlite
+cookies/
 
-# WordPress
+# WordPress local runtime
 wp-content/uploads/
 wp-content/cache/
 
-# OAuth proxy (separate deployment)
-oauth-proxy/
-
-# Tools (dev utilities)
-tools/
-
-# Landing page (marketing site)
+# Marketing assets, videos & creative productions
+plugin-videos/
+FINAL_VIDEO_OUTPUT/
+ads-plan/
 landing-page/
+oauth-proxy/
+chrome-extension/
+docs/
+tools/
+scripts/
 
-# Internal planning docs
+# Media files
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.mp3
+*.wav
+
+# Internal dev notes, audit docs, PRDs & roadmaps
+md files/
+next-update/
+master_issue.md
+wordpress_closure_notice_remove.md
+B2B-Problem-and-Solve.md
 AI_workflow_Automation_PRD.md
+IMPROVEMENTS.md
+README.md
+*.tmp
 
-# IDE / config (local)
-.claude/
-
-# Playwright MCP test artifacts (console logs, page dumps)
-.playwright-mcp/
-
-# Plugin zip
+# Plugin distribution zip
 *.zip
-
-# Marketing agent local profiles & environments
-marketing-agent/.venv/
-marketing-agent/sessions/
-marketing-agent/temp_images/
-__pycache__/
-*.pyc

@@ -25,9 +25,6 @@ class AiController {
 		$prompt      = sanitize_textarea_field( $request->get_param( 'prompt' ) );
 		$style       = sanitize_text_field( $request->get_param( 'style' ) ?: 'professional' );
 		$layout_mode = sanitize_text_field( $request->get_param( 'layout_mode' ) ?: 'table-safe' );
-		if ( ! aime_has_pro() && ( 'table-safe' === $layout_mode || in_array( $style, array( 'formal', 'humorous', 'minimalist' ), true ) ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Advanced AI tones and table-safe email layout are available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
 
 		$layout_instruction = 'Use table-based email HTML only. Build the layout with email-safe tables, rows, and cells. Avoid div-based page structure. Use inline CSS only. Make it compatible with Gmail, Outlook, and mobile email clients.';
 
@@ -337,10 +334,6 @@ class AiController {
 	/* ── SCORE EMAIL CONTENT ─────────────────────────── */
 
 	public function score_content( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Content Scorer is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		$content = wp_kses_post( $request->get_param( 'content' ) );
 		$subject = sanitize_text_field( $request->get_param( 'subject' ) ?: '' );
 
@@ -371,10 +364,6 @@ class AiController {
 	/* ── SEND TIME OPTIMIZER ─────────────────────────── */
 
 	public function optimize_send_time( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Send Time Optimizer is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$p = $wpdb->prefix;
 		$industry = sanitize_text_field( $request->get_param( 'industry' ) ?: 'general' );
@@ -647,10 +636,6 @@ class AiController {
 	/* ── SEGMENT SUGGESTIONS ─────────────────────────── */
 
 	public function segment_suggestions( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Segment Suggestions are available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$p = $wpdb->prefix;
 
@@ -682,10 +667,6 @@ class AiController {
 	/* ── A/B TEST ANALYSIS ───────────────────────────── */
 
 	public function ab_test_analysis( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'A/B test analysis is available in Pro.', 'ai-marketing-expert' ) ), 403 );
-		}
-
 		global $wpdb;
 		$p  = $wpdb->prefix;
 		$id = absint( $request->get_param( 'id' ) );

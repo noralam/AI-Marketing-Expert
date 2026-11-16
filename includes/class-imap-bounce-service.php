@@ -18,7 +18,6 @@ class ImapBounceService {
 
 	/**
 	 * Process incoming bounce emails across all configured IMAP mailboxes (per-connection + legacy).
-	 * Pro-only automated bounce scanner.
 	 *
 	 * @return array { processed: int, bounced: int, errors: array }
 	 */
@@ -38,7 +37,6 @@ class ImapBounceService {
 			'errors'    => array(),
 		);
 
-		$is_pro          = aime_has_pro();
 		$processed_count = 0;
 		$all_start_time  = microtime( true );
 		$max_total_time  = 18; // Maximum 18 seconds across all mailboxes to ensure fast web response
@@ -52,11 +50,6 @@ class ImapBounceService {
 
 			if ( empty( $conn['enabled'] ) || empty( $conn['bounce_imap']['enabled'] ) ) {
 				continue;
-			}
-
-			// In Free tier, limit to 1 primary sending mailbox. Pro users get unlimited multi-account mailboxes.
-			if ( ! $is_pro && $processed_count >= 1 ) {
-				break;
 			}
 
 			$imap_cfg = $conn['bounce_imap'];
@@ -75,7 +68,7 @@ class ImapBounceService {
 
 		// 2. Backward compatibility: Process legacy global bounce IMAP settings if configured.
 		$legacy_settings = get_option( 'aime_bounce_imap_settings', array() );
-		if ( ( microtime( true ) - $all_start_time ) <= $max_total_time && ( $is_pro || 0 === $processed_count ) && ! empty( $legacy_settings['enabled'] ) && ! empty( $legacy_settings['host'] ) && ! empty( $legacy_settings['username'] ) ) {
+		if ( ( microtime( true ) - $all_start_time ) <= $max_total_time && ! empty( $legacy_settings['enabled'] ) && ! empty( $legacy_settings['host'] ) && ! empty( $legacy_settings['username'] ) ) {
 			$sub_res = self::process_single_mailbox( $legacy_settings, 10 );
 			$result['processed'] += $sub_res['processed'];
 			$result['bounced']   += $sub_res['bounced'];

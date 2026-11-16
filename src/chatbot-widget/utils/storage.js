@@ -33,8 +33,6 @@ export function getVisitorId() {
 		} catch ( e ) {
 			// silent
 		}
-		// Also set as cookie for server-side access
-		document.cookie = `aime_visitor_id=${ id };path=/;max-age=31536000;SameSite=Lax`;
 	}
 	return id;
 }

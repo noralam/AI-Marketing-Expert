@@ -95,6 +95,36 @@ class EmailRestController {
 		return true;
 	}
 
+	/**
+	 * Permission callback for status webhooks (bounce/complaint).
+	 * Strictly enforces authentication via API key, webhook secret token,
+	 * or verified Amazon SNS signing certificate.
+	 *
+	 * @param \WP_REST_Request $request Incoming REST request.
+	 * @return bool|\WP_Error
+	 */
+	public function webhook_status_permission( \WP_REST_Request $request ): bool|\WP_Error {
+		// 1. Valid API key.
+		if ( \WPSpace\AiMarketingExpert\RestApi::validate_api_key( $request ) ) {
+			return true;
+		}
+
+		// 2. Secret token check.
+		$token          = sanitize_text_field( $request->get_param( 'token' ) ?: ( $request->get_header( 'x-webhook-token' ) ?: ( $request->get_header( 'x-aime-webhook-token' ) ?: '' ) ) );
+		$settings       = get_option( 'aime_settings', array() );
+		$expected_token = (string) ( $settings['webhook_secret_token'] ?? ( get_option( 'aime_webhook_token' ) ?: get_option( 'aime_cron_secret_token', '' ) ) );
+
+		if ( '' !== $token && '' !== $expected_token && hash_equals( $expected_token, $token ) ) {
+			return true;
+		}
+
+		return new \WP_Error(
+			'rest_forbidden',
+			__( 'Invalid or missing API key or webhook authentication token.', 'ai-marketing-expert' ),
+			array( 'status' => 401 )
+		);
+	}
+
 	/* ══════════════════════════════════════════════════════
 	 *  SUBSCRIBERS / CONTACTS
 	 * ══════════════════════════════════════════════════════ */
@@ -256,22 +286,22 @@ class EmailRestController {
 			),
 		) );
 
-		// POST /email/webhook/complaint (public — API key auth; Pro). ESP feedback-loop endpoint.
+		// POST /email/webhook/complaint (authenticated via API key, secret token, or verified SNS).
 		register_rest_route( $this->ns, '/email/webhook/complaint', array(
 			'methods'             => 'POST',
 			'callback'            => array( $c, 'webhook_complaint' ),
-			'permission_callback' => array( $this, 'webhook_rate_limit_permission' ),
+			'permission_callback' => array( $this, 'webhook_status_permission' ),
 			'args'                => array(
 				'email'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
 				'emails' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string' ) ),
 			),
 		) );
 
-		// POST /email/webhook/bounce (public — API key auth; Pro). ESP bounce-notification endpoint.
+		// POST /email/webhook/bounce (authenticated via API key, secret token, or verified SNS).
 		register_rest_route( $this->ns, '/email/webhook/bounce', array(
 			'methods'             => 'POST',
 			'callback'            => array( $c, 'webhook_bounce' ),
-			'permission_callback' => array( $this, 'webhook_rate_limit_permission' ),
+			'permission_callback' => array( $this, 'webhook_status_permission' ),
 			'args'                => array(
 				'email'  => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_email' ),
 				'emails' => array( 'type' => 'array', 'default' => array(), 'items' => array( 'type' => 'string' ) ),
@@ -1094,26 +1124,6 @@ class EmailRestController {
 	public function save_smtp_connection( \WP_REST_Request $request ): \WP_REST_Response {
 		$data = $request->get_json_params();
 		$data = is_array( $data ) ? $data : array();
-
-		if ( ! aime_has_pro() && empty( $data['id'] ) ) {
-			$limits = aime_free_limits();
-			$max    = (int) ( $limits['email_smtp_connections'] ?? 2 );
-			$counted_connections = 0;
-			foreach ( SmtpProvider::get_connections() as $connection ) {
-				if ( 'wp_mail' !== ( $connection['provider'] ?? 'wp_mail' ) ) {
-					$counted_connections++;
-				}
-			}
-			if ( $counted_connections >= $max ) {
-				return new \WP_REST_Response( array(
-					'message' => sprintf(
-						/* translators: %d: number of SMTP connections allowed on the free plan. */
-						__( 'Free sites can create up to %d SMTP connections. Upgrade to Pro for unlimited connections.', 'ai-marketing-expert' ),
-						$max
-					),
-				), 403 );
-			}
-		}
 
 		try {
 			$conn = SmtpProvider::save_connection( $data );

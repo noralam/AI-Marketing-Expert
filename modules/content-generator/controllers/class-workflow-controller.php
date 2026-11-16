@@ -8,7 +8,6 @@
 namespace WPSpace\AiMarketingExpert\Modules\ContentGenerator\Controllers;
 
 use WPSpace\AiMarketingExpert\AiProvider;
-use WPSpace\AiMarketingExpert\Pro;
 use WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\ParsesAiJson;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -168,11 +167,6 @@ class WorkflowController {
 	}
 
 	public function save_brand_voice( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'Brand Voices' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		global $wpdb;
 		$brand_voices_table = $wpdb->prefix . 'aime_content_brand_voices';
 		$id                 = absint( $request->get_param( 'id' ) );
@@ -209,11 +203,6 @@ class WorkflowController {
 	}
 
 	public function delete_brand_voice( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'Brand Voices' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		global $wpdb;
 		$brand_voices_table = $wpdb->prefix . 'aime_content_brand_voices';
 		$id                 = absint( $request->get_param( 'id' ) );
@@ -223,11 +212,6 @@ class WorkflowController {
 	}
 
 	public function generate_brand_voice( \WP_REST_Request $request ): \WP_REST_Response {
-		$check = Pro::gate( 'AI Brand Voice' );
-		if ( is_wp_error( $check ) ) {
-			return new \WP_REST_Response( array( 'message' => $check->get_error_message(), 'pro_required' => true ), 403 );
-		}
-
 		$business_name = sanitize_text_field( $request->get_param( 'business_name' ) ?: '' );
 		$industry      = sanitize_text_field( $request->get_param( 'industry' ) ?: '' );
 		$audience      = sanitize_textarea_field( $request->get_param( 'audience' ) ?: '' );

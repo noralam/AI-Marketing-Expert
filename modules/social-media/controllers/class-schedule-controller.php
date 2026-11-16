@@ -7,7 +7,6 @@
 
 namespace WPSpace\AiMarketingExpert\Modules\SocialMedia\Controllers;
 
-use WPSpace\AiMarketingExpert\Pro;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

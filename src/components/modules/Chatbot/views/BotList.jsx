@@ -7,17 +7,14 @@ import { __ } from '@wordpress/i18n';
 import { Button, SearchControl } from '@aime/wp-components';
 import { edit, trash, copy, seen } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
 import ConfirmModal from '../../../common/ConfirmModal';
-import { ProUpgradeButton } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 
 const BotList = ( { onNavigate } ) => {
 	const { get, post, put, del, loading } = useApi();
-	const { hasPro } = usePro();
 	const [ bots, setBots ] = useState( [] );
 	const [ search, setSearch ] = useState( '' );
 	const [ confirmDelete, setConfirmDelete ] = useState( null );
@@ -73,23 +70,17 @@ const BotList = ( { onNavigate } ) => {
 	const filtered = search
 		? bots.filter( ( b ) => b.name.toLowerCase().includes( search.toLowerCase() ) )
 		: bots;
-	const freeBotLimitReached = ! hasPro && bots.length >= 1;
 
 	return (
 		<div className="aime-bot-list">
 			<div className="aime-page-header">
 				<h2>{ __( 'Chatbots', 'ai-marketing-expert' ) } <span className="aime-count">({ bots.length })</span></h2>
 				<div className="aime-page-header-actions">
-					<Button variant="primary" onClick={ () => onNavigate( 'new-bot' ) } disabled={ freeBotLimitReached }>
+					<Button variant="primary" onClick={ () => onNavigate( 'new-bot' ) }>
 						{ __( '+ New Chatbot', 'ai-marketing-expert' ) }
 					</Button>
-					{ freeBotLimitReached && <ProUpgradeButton /> }
 				</div>
 			</div>
-
-			{ freeBotLimitReached && (
-				<Notice type="info" message={ __( 'Free plan includes 1 chatbot. Upgrade to Pro for additional chatbots.', 'ai-marketing-expert' ) } />
-			) }
 
 			<Card>
 				<div className="aime-table-toolbar">
@@ -158,9 +149,8 @@ const BotList = ( { onNavigate } ) => {
 											/>
 											<Button
 												icon={ copy }
-												label={ hasPro ? __( 'Duplicate', 'ai-marketing-expert' ) : __( 'Duplicate (Pro)', 'ai-marketing-expert' ) }
-												onClick={ hasPro ? () => handleDuplicate( bot.id ) : undefined }
-												disabled={ ! hasPro }
+												label={ __( 'Duplicate', 'ai-marketing-expert' ) }
+												onClick={ () => handleDuplicate( bot.id ) }
 												size="small"
 											/>
 											<Button

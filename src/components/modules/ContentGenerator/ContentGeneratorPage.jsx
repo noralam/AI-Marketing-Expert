@@ -24,10 +24,8 @@ import Presets from './Presets';
 import ContentAnalytics from './ContentAnalytics';
 import ContentSettings from './ContentSettings';
 import BrandVoices from './BrandVoices';
-import { isProActive } from '../../common/ProLock';
 
 const ContentGeneratorPage = () => {
-	const hasPro = isProActive();
 	const parseHash = () => {
 		const hash = window.location.hash.replace( '#', '' );
 		if ( ! hash ) return { key: 'analytics', params: {} };
@@ -49,7 +47,7 @@ const ContentGeneratorPage = () => {
 		{ key: 'analytics', label: __( 'Analytics', 'ai-marketing-expert' ), icon: chartBar },
 		{ key: 'articles', label: __( 'Articles', 'ai-marketing-expert' ), icon: postContent },
 		{ key: 'new-article', label: __( 'New Article', 'ai-marketing-expert' ), icon: edit },
-		{ key: 'brand-voices', label: __( 'Brand Voices', 'ai-marketing-expert' ), icon: starFilled, badgeLabel: hasPro ? '' : __( 'PRO', 'ai-marketing-expert' ) },
+		{ key: 'brand-voices', label: __( 'Brand Voices', 'ai-marketing-expert' ), icon: starFilled },
 		{ key: 'presets', label: __( 'Presets', 'ai-marketing-expert' ), icon: page },
 		{ key: 'settings', label: __( 'Settings', 'ai-marketing-expert' ), icon: cog },
 	];

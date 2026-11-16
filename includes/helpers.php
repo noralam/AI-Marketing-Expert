@@ -12,29 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Check if the Pro addon is active and licensed.
- * In dev mode (AIME_DEV_MODE = true), always returns true.
- *
- * @return bool
- */
-function aime_has_pro(): bool {
-	if ( defined( 'AIME_DEV_MODE' ) && AIME_DEV_MODE ) {
-		return true;
-	}
-	return (bool) apply_filters( 'aime_has_pro', false );
-}
-
-/**
- * Check if a specific module has pro features available.
- *
- * @param string $module_id Module identifier.
- * @return bool
- */
-function aime_module_has_pro( string $module_id ): bool {
-	return (bool) apply_filters( "aime_{$module_id}_has_pro", aime_has_pro() );
-}
-
-/**
  * Get a plugin option.
  *
  * @param string $key     Option key.
@@ -297,6 +274,18 @@ function aime_run_database_prune( int $days = -1, bool $force_logs = false ): ar
 		$details['campaign_emails'] = $pruned;
 	}
 
+	// 5. Abandoned carts table (guest cart data older than retention period).
+	$carts_table = "{$p}aime_abandoned_carts";
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $carts_table ) ) === $carts_table ) {
+		$pruned = (int) $wpdb->query( $wpdb->prepare(
+			"DELETE FROM %i WHERE status IN ('abandoned', 'recovered', 'expired') AND updated_at < %s",
+			$carts_table,
+			$cutoff
+		) );
+		$total_pruned += $pruned;
+		$details['abandoned_carts'] = $pruned;
+	}
+
 	return array(
 		'total_pruned' => $total_pruned,
 		'cutoff'       => $cutoff,
@@ -382,6 +371,20 @@ function aime_get_database_hygiene_stats(): array {
 		$stats['expired_rows'] += $expired;
 	}
 
+	// 5. Abandoned carts.
+	$carts_table = "{$p}aime_abandoned_carts";
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $carts_table ) ) === $carts_table ) {
+		$total   = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $carts_table ) );
+		$expired = $cutoff ? (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status IN ('abandoned', 'recovered', 'expired') AND updated_at < %s", $carts_table, $cutoff ) ) : 0;
+		$stats['tables']['abandoned_carts'] = array(
+			'label'   => __( 'Abandoned Carts History', 'ai-marketing-expert' ),
+			'total'   => $total,
+			'expired' => $expired,
+		);
+		$stats['total_rows']   += $total;
+		$stats['expired_rows'] += $expired;
+	}
+
 	return $stats;
 }
 
@@ -393,95 +396,26 @@ function aime_prune_logs(): void {
 }
 
 /**
- * Get free plan limits.
- *
- * @return array
- */
-function aime_free_limits(): array {
-	return apply_filters( 'aime_free_limits', array(
-		'email_subscribers'          => \AIME_FREE_SUBSCRIBER_LIMIT,
-		'email_lists'                => 10,
-		'email_templates'            => 3,
-		'email_template_imports_free' => 4,
-		'email_scheduled_campaigns'  => 3,
-		'email_funnels'              => 2,
-		'email_smtp_connections'     => 2,
-		'ai_provider_connections'     => 2,
-		'ai_jobs_queued'             => 5,
-		'csv_import_rows'            => 100,
-		'campaigns_per_month'        => 30,
-		'content_articles_per_month' => 20,
-		'content_max_words'          => 2000,
-		'content_presets'            => 4,
-		'content_scheduled_posts'    => 3,
-		// Chatbot.
-		'chatbot_bots'                    => 1,
-		'chatbot_conversations_monthly'   => 100,
-		'chatbot_knowledge_qa'            => 50,
-		'chatbot_knowledge_pages'         => 50,
-		'chatbot_themes'                  => 3,
-		'chatbot_history_days'            => 7,
-		// Social Media.
-		'social_accounts'                 => 2,
-		'social_posts_per_month'          => 30,
-		'social_scheduled_posts'          => 3,
-		'social_ai_captions'              => 30,
-		// SEO.
-		'seo_keyword_research_monthly'    => 10,
-		'seo_keywords_saved'              => 50,
-		'seo_audits_monthly'              => 5,
-		'seo_rank_keywords'               => 5,
-		'seo_niche_analysis_monthly'      => 3,
-		'seo_competitor_gap_monthly'      => 3,
-		'seo_content_brief_monthly'       => 5,
-		'seo_topics'                      => 10,
-		'seo_topic_map_generate_monthly'  => 1,
-		'seo_calendar_items'              => 10,
-		'seo_calendar_generate_monthly'   => 1,
-		'seo_backlink_prospects'          => 10,
-		'seo_outreach_monthly'            => 3,
-		'seo_automation_tasks'            => 1,
-		'seo_automation_runs_monthly'     => 10,
-		// Workflow Automation.
-		'workflows_active'                => 2,
-		'workflow_steps'                  => 3,
-		'workflow_runs_monthly'           => 30,
-	) );
-}
-
-/**
  * Check if a free limit has been reached.
+ * Built-in features have no artificial usage limits.
  *
  * @param string $limit_key Limit key.
  * @param int    $current   Current count.
- * @return bool True if limit reached.
+ * @return bool Always false (unlimited).
  */
 function aime_limit_reached( string $limit_key, int $current ): bool {
-	if ( aime_has_pro() ) {
-		return false;
-	}
-
-	$limits = aime_free_limits();
-	$limit  = $limits[ $limit_key ] ?? PHP_INT_MAX;
-
-	return $current >= $limit;
+	return false;
 }
 
 /**
- * Get the number of uses remaining for a free-plan limit.
+ * Get the number of uses remaining for a limit.
  *
  * @param string $limit_key Limit key.
  * @param int    $current   Current count.
- * @return int|null Remaining uses, or null when unlimited (Pro).
+ * @return null Always null (unlimited).
  */
 function aime_limit_remaining( string $limit_key, int $current ): ?int {
-	if ( aime_has_pro() ) {
-		return null;
-	}
-
-	$limit = aime_free_limits()[ $limit_key ] ?? PHP_INT_MAX;
-
-	return max( 0, $limit - $current );
+	return null;
 }
 
 /**
@@ -491,12 +425,12 @@ function aime_limit_remaining( string $limit_key, int $current ): ?int {
  *
  * @param string $limit_key Limit key.
  * @param int    $current   Current count.
- * @return array{used:int,limit:int|null}
+ * @return array{used:int,limit:null}
  */
 function aime_usage_payload( string $limit_key, int $current ): array {
 	return array(
 		'used'  => $current,
-		'limit' => aime_has_pro() ? null : ( aime_free_limits()[ $limit_key ] ?? null ),
+		'limit' => null,
 	);
 }
 

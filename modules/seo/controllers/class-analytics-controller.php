@@ -45,8 +45,6 @@ class AnalyticsController {
 		$monthly_research = SeoModule::get_monthly_research_count();
 		$monthly_audits   = SeoModule::get_monthly_audit_count();
 
-		$limits = aime_free_limits();
-
 		return new \WP_REST_Response( array(
 			'success'           => true,
 			'stats'             => $stats,
@@ -55,24 +53,23 @@ class AnalyticsController {
 			'upcoming_calendar' => $upcoming_calendar,
 			'usage'             => array(
 				'research_used'  => $monthly_research,
-				'research_limit' => aime_has_pro() ? null : ( $limits['seo_keyword_research_monthly'] ?? 10 ),
+				'research_limit' => null,
 				'audit_used'     => $monthly_audits,
-				'audit_limit'    => aime_has_pro() ? null : ( $limits['seo_audits_monthly'] ?? 5 ),
+				'audit_limit'    => null,
 				'keywords_saved' => SeoModule::get_keyword_count(),
-				'keywords_limit' => aime_has_pro() ? null : ( $limits['seo_keywords_saved'] ?? 50 ),
+				'keywords_limit' => null,
 				'rank_tracked'   => SeoModule::get_tracked_keyword_count(),
-				'rank_limit'     => aime_has_pro() ? null : ( $limits['seo_rank_keywords'] ?? 5 ),
+				'rank_limit'     => null,
 				'niche_used'     => SeoModule::get_monthly_feature_count( 'niche_analysis' ),
-				'niche_limit'    => aime_has_pro() ? null : ( $limits['seo_niche_analysis_monthly'] ?? 3 ),
+				'niche_limit'    => null,
 				'gap_used'       => SeoModule::get_monthly_feature_count( 'competitor_gap' ),
-				'gap_limit'      => aime_has_pro() ? null : ( $limits['seo_competitor_gap_monthly'] ?? 3 ),
+				'gap_limit'      => null,
 				'brief_used'     => SeoModule::get_monthly_feature_count( 'content_brief' ),
-				'brief_limit'    => aime_has_pro() ? null : ( $limits['seo_content_brief_monthly'] ?? 5 ),
+				'brief_limit'    => null,
 				'topics'         => aime_usage_payload( 'seo_topics', SeoModule::get_topic_count() ),
 				'calendar_items' => aime_usage_payload( 'seo_calendar_items', SeoModule::get_calendar_count() ),
 				'prospects'      => aime_usage_payload( 'seo_backlink_prospects', SeoModule::get_backlink_count() ),
 			),
-			'is_pro' => aime_has_pro(),
 		) );
 	}
 

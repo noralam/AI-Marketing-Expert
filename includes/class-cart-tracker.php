@@ -513,17 +513,20 @@ class CartTracker {
 		$now = current_time( 'mysql', true );
 
 		foreach ( $abandoned_rows as $row ) {
-			// Update status to abandoned.
-			$wpdb->update(
-				$table,
-				array(
-					'status'       => self::STATUS_ABANDONED,
-					'abandoned_at' => $now,
-				),
-				array( 'id' => $row->id ),
-				array( '%s', '%s' ),
-				array( '%d' )
+			// Atomic claim: only proceed if this process transitioned status from in_progress to abandoned.
+			$claimed = $wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$table} SET status = %s, abandoned_at = %s WHERE id = %d AND status = %s",
+					self::STATUS_ABANDONED,
+					$now,
+					(int) $row->id,
+					self::STATUS_IN_PROGRESS
+				)
 			);
+
+			if ( 1 !== (int) $claimed ) {
+				continue;
+			}
 
 			$cart_items = json_decode( (string) $row->cart_contents, true );
 			$cart_items = is_array( $cart_items ) ? $cart_items : array();

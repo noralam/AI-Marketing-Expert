@@ -1,5 +1,5 @@
 /**
- * Repurpose - turn Content Generator articles into social posts (Pro).
+ * Repurpose - turn Content Generator articles into social posts.
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from '@wordpress/element';
@@ -11,7 +11,6 @@ import useSlowWarning from '../../../hooks/useSlowWarning';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import LoadingBtn from '../../common/LoadingBtn';
-import ProGate from '../../common/ProGate';
 import { toast } from '../../common/Toast';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice';
 import { SOCIAL_PLATFORMS } from '../../../utils/constants';
@@ -473,11 +472,7 @@ const Repurpose = ( { onNavigate } ) => {
 		</div>
 	);
 
-	return (
-		<ProGate feature="social_repurpose" description={ __( 'Upgrade to Pro to repurpose your blog articles into social media posts powered by AI.', 'ai-marketing-expert' ) }>
-			{ repurposeContent }
-		</ProGate>
-	);
+	return repurposeContent;
 };
 
 export default Repurpose;

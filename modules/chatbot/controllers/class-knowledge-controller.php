@@ -81,51 +81,6 @@ class KnowledgeController {
 		$params          = $request->get_json_params();
 		$type            = sanitize_text_field( $params['type'] ?? 'qa_pair' );
 
-		// Free limit checks.
-		if ( ! aime_has_pro() ) {
-			$limits = aime_free_limits();
-
-			if ( 'qa_pair' === $type ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Limit enforcement needs the current knowledge count.
-				$count = (int) $wpdb->get_var( $wpdb->prepare(
-					"SELECT COUNT(*) FROM %i WHERE bot_id = %d AND type = 'qa_pair'",
-					$knowledge_table,
-					$bot_id
-				) );
-				$limit = $limits['chatbot_knowledge_qa'] ?? 50;
-				if ( $count >= $limit ) {
-					return new \WP_REST_Response( array(
-						'message'       => __( 'Q&A pair limit reached. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-						'limit_reached' => true,
-					), 403 );
-				}
-			}
-
-			if ( 'wp_content' === $type ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Limit enforcement needs the current knowledge count.
-				$count = (int) $wpdb->get_var( $wpdb->prepare(
-					"SELECT COUNT(*) FROM %i WHERE bot_id = %d AND type = 'wp_content'",
-					$knowledge_table,
-					$bot_id
-				) );
-				$limit = $limits['chatbot_knowledge_pages'] ?? 50;
-				if ( $count >= $limit ) {
-					return new \WP_REST_Response( array(
-						'message'       => __( 'Page/post limit reached. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-						'limit_reached' => true,
-					), 403 );
-				}
-			}
-
-			// Pro-only types.
-			$pro_types = array( 'woo_product', 'document', 'url' );
-			if ( in_array( $type, $pro_types, true ) ) {
-				return new \WP_REST_Response( array(
-					'message' => __( 'This knowledge source type requires Pro.', 'ai-marketing-expert' ),
-				), 403 );
-			}
-		}
-
 		$now  = current_time( 'mysql', true );
 		$data = array(
 			'bot_id'     => $bot_id,
@@ -210,13 +165,6 @@ class KnowledgeController {
 		$allowed = array( 'wp_content', 'woo_product', 'wp_posts' );
 		if ( ! in_array( $type, $allowed, true ) ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Invalid index type.', 'ai-marketing-expert' ) ), 400 );
-		}
-
-		// Pro check for WooCommerce.
-		if ( 'woo_product' === $type && ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'WooCommerce indexing requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
 		}
 
 		// Map wp_posts to wp_content with post_type filter.

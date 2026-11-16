@@ -31,6 +31,11 @@ class Activator {
 			);
 		}
 
+		// Ensure active modules are initialized so their table creation hooks are registered.
+		if ( class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
+			Plugin::instance()->modules()->init_active_modules();
+		}
+
 		// Create database tables.
 		Database::migrate();
 

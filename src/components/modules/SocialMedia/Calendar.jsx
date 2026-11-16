@@ -1,5 +1,5 @@
 /**
- * Calendar - visual calendar view for scheduled social posts (Pro).
+ * Calendar - visual calendar view for scheduled social posts.
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
@@ -8,7 +8,6 @@ import { Button } from '@aime/wp-components';
 import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
-import ProGate from '../../common/ProGate';
 import { toast } from '../../common/Toast';
 import { SOCIAL_PLATFORMS, SOCIAL_POST_STATUS } from '../../../utils/constants';
 import { siteToday } from '../../../utils/datetime';
@@ -257,11 +256,7 @@ const Calendar = ( { onNavigate } ) => {
 		</div>
 	);
 
-	return (
-		<ProGate feature="social_visual_calendar" description={ __( 'Upgrade to Pro to access the visual social media calendar with drag-and-drop scheduling.', 'ai-marketing-expert' ) }>
-			{ calendarContent }
-		</ProGate>
-	);
+	return calendarContent;
 };
 
 export default Calendar;

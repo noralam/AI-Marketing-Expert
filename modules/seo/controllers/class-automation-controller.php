@@ -19,8 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AutomationController {
 
 	/**
-	 * Toggles driven by WP-Cron rather than a publish hook. Pro only —
-	 * free users trigger the same work manually via run_task().
+	 * Toggles driven by WP-Cron rather than a publish hook.
 	 */
 	const CRON_TOGGLES = array( 'auto_internal_links', 'auto_rank_check' );
 
@@ -34,7 +33,6 @@ class AutomationController {
 		return new \WP_REST_Response( array(
 			'success' => true,
 			'data'    => $settings,
-			'is_pro'  => aime_has_pro(),
 			'usage'   => array(
 				'tasks' => aime_usage_payload( 'seo_automation_tasks', SeoModule::get_active_automation_count() ),
 				'runs'  => aime_usage_payload( 'seo_automation_runs_monthly', SeoModule::get_monthly_feature_count( 'automation_run' ) ),
@@ -48,40 +46,6 @@ class AutomationController {
 	 */
 	public function save_settings( \WP_REST_Request $request ): \WP_REST_Response {
 		$params = $request->get_params();
-
-		if ( ! aime_has_pro() ) {
-			foreach ( self::CRON_TOGGLES as $toggle ) {
-				if ( ! empty( $params[ $toggle ] ) ) {
-					return new \WP_REST_Response( array(
-						'success' => false,
-						'message' => __( 'Scheduled automation is a Pro feature. On the free plan you can run this task manually instead.', 'ai-marketing-expert' ),
-					), 403 );
-				}
-			}
-
-			$service  = new AutomationService();
-			$settings = array_merge( $service->get_settings(), $params );
-			$enabled  = 0;
-
-			foreach ( array( 'auto_audit_on_publish', 'auto_meta_on_publish' ) as $toggle ) {
-				if ( ! empty( $settings[ $toggle ] ) ) {
-					$enabled++;
-				}
-			}
-
-			$task_limit = aime_free_limits()['seo_automation_tasks'] ?? 1;
-			if ( $enabled > $task_limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: active automation task limit on the free plan */
-						__( 'Free plan allows %d active automation task. Turn one off or upgrade to Pro to run them all together.', 'ai-marketing-expert' ),
-						$task_limit
-					),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
 
 		$service  = new AutomationService();
 		$settings = $service->save_settings( $params );
@@ -175,21 +139,6 @@ class AutomationController {
 	 * Manually trigger an automation task. Free plan is metered.
 	 */
 	public function run_task( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			$limit = aime_free_limits()['seo_automation_runs_monthly'] ?? 10;
-			if ( SeoModule::get_monthly_feature_count( 'automation_run' ) >= $limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: monthly manual automation run limit on the free plan */
-						__( 'Free plan allows %d manual automation runs per month. Upgrade to Pro for unlimited runs and scheduling.', 'ai-marketing-expert' ),
-						$limit
-					),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$task = sanitize_key( $request->get_param( 'task' ) ?? '' );
 
 		if ( ! $task ) {
@@ -204,10 +153,6 @@ class AutomationController {
 		switch ( $task ) {
 			case 'internal_links':
 				$service->process_scheduled_tasks( true );
-
-				if ( ! aime_has_pro() ) {
-					SeoModule::increment_monthly_feature( 'automation_run' );
-				}
 
 				return new \WP_REST_Response( array(
 					'success' => true,

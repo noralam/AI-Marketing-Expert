@@ -811,16 +811,6 @@ class CampaignProcessor {
 		// If the email already has its own custom footer or unsubscribe link,
 		// avoid appending a duplicate default footer card.
 		if ( self::has_custom_footer( $body ) ) {
-			// Free tier: mandatory AIME branding credit.
-			if ( ! aime_has_pro() ) {
-				$branding_token = 'wpthemespace.com/product/ai-marketing-expert';
-				if ( false === stripos( $body, $branding_token ) && false === stripos( $body, 'AI Marketing Expert WordPress Plugin' ) ) {
-					$branding_html = '<p class="aime-free-branding" style="margin:16px 0 0;text-align:center;color:#64748b;font-size:12px">Email sent by <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert WordPress Plugin</a></p>';
-					$body = ( false !== stripos( $body, '</body>' ) )
-						? str_ireplace( '</body>', $branding_html . '</body>', $body )
-						: $body . $branding_html;
-				}
-			}
 			return $body;
 		}
 
@@ -833,11 +823,6 @@ class CampaignProcessor {
 		// Build footer parts only from non-empty sources.
 		$footer_parts = array();
 
-		// Free tier: mandatory AIME branding credit.
-		if ( ! aime_has_pro() ) {
-			$footer_parts[] = '<p class="aime-free-branding" style="margin:0 0 8px;color:#64748b;font-size:12px">Email sent by <a href="https://wpthemespace.com/product/ai-marketing-expert/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">AI Marketing Expert WordPress Plugin</a></p>';
-		}
-
 		// Add custom footer if not empty.
 		if ( '' !== $footer ) {
 			$footer_parts[] = $footer;
@@ -848,7 +833,7 @@ class CampaignProcessor {
 			$footer_parts[] = '<p style="margin:8px 0 0;color:#64748b;font-size:12px">' . esc_html( $company_name ) . ( $company_name && $company_address ? '<br>' : '' ) . nl2br( esc_html( $company_address ) ) . '</p>';
 		}
 
-		// Add unsubscribe link only if text is explicitly set (Pro: may be overridden; Free: always shown).
+		// Add unsubscribe link if text is set.
 		if ( '' !== $unsubscribe_text ) {
 			$footer_parts[] = '<p style="margin:8px 0 0"><a href="' . $unsubscribe_url . '" style="color:#64748b">' . esc_html( $unsubscribe_text ) . '</a></p>';
 		}

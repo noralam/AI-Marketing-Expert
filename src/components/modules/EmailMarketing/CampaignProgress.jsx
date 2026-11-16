@@ -12,7 +12,6 @@ import useApi from '../../../hooks/useApi';
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import ProLock, { isProActive, ProLabel } from '../../common/ProLock';
 import { toSiteInput, siteInputToUtc } from '../../../utils/datetime';
 
 const COLORS = [ '#3858e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6' ];
@@ -79,7 +78,6 @@ const LIVE_PROGRESS_INTERVAL_MS = 15000;
 const RECIPIENTS_PER_PAGE = 25;
 
 const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
-	const hasPro = isProActive();
 	const { get, post, loading, error, clearError } = useApi();
 	const [ data, setData ] = useState( null );
 	const [ report, setReport ] = useState( null );
@@ -513,7 +511,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 						)}
 					</Card>
 
-					<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Link Activity', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+					<Card title={ __( 'Link Activity', 'ai-marketing-expert' ) }>
 						{ topLinks.length > 0 ? (
 							<div className="aime-link-activity-list">
 								{ topLinks.map( ( link, index ) => {
@@ -542,7 +540,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 								<p>{ __( 'Tracked links will appear here after recipients click campaign links.', 'ai-marketing-expert' ) }</p>
 							</div>
 						) }
-					</Card></ProLock>
+					</Card>
 				</div>
 
 				{ Boolean( report?.opens_timeline?.length > 0 ) && (
@@ -565,7 +563,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 					</Card>
 				) }
 
-				<ProLock locked={ ! hasPro }><Card title={ <span className="aime-pro-card-header">{ __( 'Recipient Activity', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span> }>
+				<Card title={ __( 'Recipient Activity', 'ai-marketing-expert' ) }>
 					<div className="aime-recipient-tabs" role="tablist" aria-label={ __( 'Campaign recipient activity', 'ai-marketing-expert' ) }>
 						{ recipientTabs.map( ( tab ) => {
 							const count = recipientLists.counts?.[ tab.key ] ?? ( recipientLists[ tab.key ] || [] ).length;
@@ -621,7 +619,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 							<p>{ __( 'Recipient activity will appear here as opens, clicks, unsubscribes, or bounces are recorded.', 'ai-marketing-expert' ) }</p>
 						</div>
 					) }
-				</Card></ProLock>
+				</Card>
 				</>
 			) }
 
@@ -629,7 +627,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 			{ Boolean( data.campaign?.email_body ) && (
 				<Card
 					title={
-						<span className="aime-pro-card-header" style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' } }>
+						<span style={ { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' } }>
 							<span>
 								{ __( 'Email Template Preview', 'ai-marketing-expert' ) }
 								{ data.campaign?.email_subject && (
@@ -639,7 +637,6 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 								) }
 							</span>
 							<span style={ { display: 'inline-flex', alignItems: 'center', gap: 8 } }>
-								{ ! hasPro && <ProLabel /> }
 								<Button
 									variant="secondary"
 									size="small"
@@ -652,7 +649,7 @@ const CampaignProgress = ( { id, sendStartedAt = 0, onBack, onNavigate } ) => {
 									size="small"
 									onClick={ handleUseForNewCampaign }
 									isBusy={ creatingCopy }
-									disabled={ ! hasPro || creatingCopy }
+									disabled={ creatingCopy }
 								>
 									{ creatingCopy ? __( 'Creating draft...', 'ai-marketing-expert' ) : __( 'Use for New Campaign', 'ai-marketing-expert' ) }
 								</Button>

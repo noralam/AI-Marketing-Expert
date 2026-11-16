@@ -89,21 +89,6 @@ class KeywordController {
 	 * Create a keyword.
 	 */
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$limit = aime_free_limits()['seo_keywords_saved'] ?? 50;
-			if ( SeoModule::get_keyword_count() >= $limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: saved keyword limit */
-						__( 'Free plan allows up to %d saved keywords. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-						$limit
-					),
-				), 403 );
-			}
-		}
-
 		global $wpdb;
 		$p = $wpdb->prefix;
 

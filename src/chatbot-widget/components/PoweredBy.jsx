@@ -1,8 +1,5 @@
 /**
  * PoweredBy — branding footer.
- *
- * Free: Powered by AI Marketing Expert (links to wordpress.org plugin).
- * Pro:  Powered by <Home URL> (links to the site's home URL).
  */
 const getCleanUrl = ( url ) => {
 	if ( ! url ) {
@@ -14,13 +11,13 @@ const getCleanUrl = ( url ) => {
 		.replace( /\/$/, '' );
 };
 
-const PoweredBy = ( { hideBranding, hasPro, siteUrl, siteName } ) => {
+const PoweredBy = ( { hideBranding, siteUrl, siteName } ) => {
 	if ( hideBranding ) return null;
 
-	if ( hasPro ) {
-		const targetUrl = siteUrl || '/';
-		const cleanUrl = getCleanUrl( siteUrl ) || siteName || 'Home';
+	const targetUrl = siteUrl || '/';
+	const cleanUrl = getCleanUrl( siteUrl ) || siteName || '';
 
+	if ( cleanUrl ) {
 		return (
 			<div className="aime-chat-powered">
 				<a

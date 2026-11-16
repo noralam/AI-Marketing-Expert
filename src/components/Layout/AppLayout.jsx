@@ -1,7 +1,7 @@
 /**
  * App Layout - Magical Shop Builder style layout.
  *
- * Top header bar: plugin icon + name + version + PRO badge + doc/support links.
+ * Top header bar: plugin icon + name + version + doc/support links.
  * Below: optional internal sidebar (for modules) + main content.
  */
 
@@ -10,10 +10,9 @@ import { Icon } from '@aime/wp-components';
 import { megaphone } from '@wordpress/icons';
 import ErrorBoundary from '../common/ErrorBoundary';
 import ToastContainer from '../common/Toast';
-import { ProUpgradeButton } from '../common/ProLock';
 
 const AppLayout = ( { children, sidebar, subHeading, module } ) => {
-	const { version, hasPro, proUrl, siteName } = window.aimeData || {};
+	const { version } = window.aimeData || {};
 
 	return (
 		<div className="aime-app-layout" data-module={ module || 'overview' }>
@@ -30,17 +29,11 @@ const AppLayout = ( { children, sidebar, subHeading, module } ) => {
 					<span className="aime-top-bar-version">
 						v{ version || '1.0.0' }
 					</span>
-					{ hasPro ? (
-						<span className="aime-top-bar-badge aime-badge-pro">PRO</span>
-					) : (
-						<span className="aime-top-bar-badge aime-badge-free">FREE</span>
-					) }
 					{ subHeading && (
 						<span className="aime-top-bar-subheading">{ subHeading }</span>
 					) }
 				</div>
 				<div className="aime-top-bar-right">
-					{ ! hasPro && <ProUpgradeButton /> }
 					<a
 						href="https://www.youtube.com/watch?v=BiYoVVesf1s"
 						target="_blank"

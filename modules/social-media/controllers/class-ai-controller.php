@@ -7,7 +7,6 @@
 
 namespace WPSpace\AiMarketingExpert\Modules\SocialMedia\Controllers;
 
-use WPSpace\AiMarketingExpert\Pro;
 use WPSpace\AiMarketingExpert\AiProvider;
 use WPSpace\AiMarketingExpert\Modules\SocialMedia\Services\AiSocialService;
 use WPSpace\AiMarketingExpert\Modules\SocialMedia\SocialMediaModule;
@@ -22,19 +21,6 @@ class AiController {
 	 * Generate a caption for a post.
 	 */
 	public function generate_caption( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$monthly = SocialMediaModule::get_monthly_ai_count();
-			$limits  = aime_free_limits();
-			$limit   = $limits['social_ai_captions'] ?? 30;
-			if ( $monthly >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Monthly AI caption limit reached. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$platform = sanitize_text_field( $request->get_param( 'platform' ) ?: 'facebook' );
 		$topic    = sanitize_textarea_field( $request->get_param( 'topic' ) ?: '' );
 		$tone     = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
@@ -59,19 +45,6 @@ class AiController {
 	 * Generate hashtags.
 	 */
 	public function generate_hashtags( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit (shared with captions).
-		if ( ! aime_has_pro() ) {
-			$monthly = SocialMediaModule::get_monthly_ai_count();
-			$limits  = aime_free_limits();
-			$limit   = $limits['social_ai_captions'] ?? 30;
-			if ( $monthly >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Monthly AI caption limit reached. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$content  = sanitize_textarea_field( $request->get_param( 'content' ) ?: '' );
 		$platform = sanitize_text_field( $request->get_param( 'platform' ) ?: 'facebook' );
 		$count    = min( 30, max( 1, absint( $request->get_param( 'count' ) ) ) ) ?: 10;
@@ -91,17 +64,9 @@ class AiController {
 	}
 
 	/**
-	 * Repurpose content from Content Generator articles — Pro only.
+	 * Repurpose content from Content Generator articles.
 	 */
 	public function repurpose( \WP_REST_Request $request ): \WP_REST_Response {
-		$gate = Pro::gate( 'AI Social Repurpose' );
-		if ( is_wp_error( $gate ) ) {
-			return new \WP_REST_Response( array(
-				'message'      => $gate->get_error_message(),
-				'pro_required' => true,
-			), 403 );
-		}
-
 		$article_id  = absint( $request->get_param( 'article_id' ) );
 		$wp_post_id  = absint( $request->get_param( 'wp_post_id' ) );
 		$platform    = sanitize_text_field( $request->get_param( 'platform' ) ?: 'facebook' );
@@ -127,17 +92,9 @@ class AiController {
 	}
 
 	/**
-	 * Generate a caption for an image — Pro only.
+	 * Generate a caption for an image.
 	 */
 	public function image_caption( \WP_REST_Request $request ): \WP_REST_Response {
-		$gate = Pro::gate( 'AI Image Captions' );
-		if ( is_wp_error( $gate ) ) {
-			return new \WP_REST_Response( array(
-				'message'      => $gate->get_error_message(),
-				'pro_required' => true,
-			), 403 );
-		}
-
 		$image_url = esc_url_raw( $request->get_param( 'image_url' ) ?: '' );
 		$platform  = sanitize_text_field( $request->get_param( 'platform' ) ?: 'facebook' );
 		$tone      = sanitize_text_field( $request->get_param( 'tone' ) ?: 'professional' );
@@ -160,19 +117,6 @@ class AiController {
 	 * Generate an image using AI from a text prompt.
 	 */
 	public function generate_image( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check (shared with captions).
-		if ( ! aime_has_pro() ) {
-			$monthly = SocialMediaModule::get_monthly_ai_count();
-			$limits  = aime_free_limits();
-			$limit   = $limits['social_ai_captions'] ?? 30;
-			if ( $monthly >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Monthly AI limit reached. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		$prompt      = sanitize_textarea_field( $request->get_param( 'prompt' ) ?: '' );
 		$content     = sanitize_textarea_field( $request->get_param( 'content' ) ?: '' );
 		$platform    = sanitize_text_field( $request->get_param( 'platform' ) ?: 'facebook' );

@@ -7,12 +7,9 @@ import { __, sprintf } from '@wordpress/i18n';
 import { Button, ToggleControl, SelectControl, Spinner, CheckboxControl } from '@aime/wp-components';
 import { trash } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProLock from '../../../common/ProLock';
-import UsageNotice from '../../../common/UsageNotice';
 import { toast } from '../../../common/Toast';
 import { DonutChart, SortArrow } from './SeoCharts';
 
@@ -49,7 +46,6 @@ const STATUS_COLORS = {
 
 const SeoAutomation = ( { onNavigate } ) => {
 	const { get, put, post, loading, error, clearError } = useApi();
-	const { hasPro, proUrl } = usePro();
 
 	const [ settings, setSettings ] = useState( null );
 	const [ usage, setUsage ] = useState( null );
@@ -306,15 +302,7 @@ const SeoAutomation = ( { onNavigate } ) => {
 
 	if ( ! settings ) return null;
 
-	const isCronLocked = ( key ) => ! hasPro && cronToggles.includes( key );
-	const runsExhausted = !! usage?.runs && usage.runs.limit != null
-		&& usage.runs.used >= usage.runs.limit;
-	const tasksFull = !! usage?.tasks && usage.tasks.limit != null
-		&& usage.tasks.used >= usage.tasks.limit;
-
-	// Free plan caps how many publish-hook rules can be on at once; block turning
-	// on a new one when the cap is already met, but always allow turning one off.
-	const canEnableTask = ( key ) => !! settings[ key ] || ! tasksFull;
+	const canEnableTask = () => true;
 
 	return (
 		<>
@@ -325,13 +313,6 @@ const SeoAutomation = ( { onNavigate } ) => {
 					<h2>{ __( 'SEO Automation', 'ai-marketing-expert' ) }</h2>
 				</div>
 
-				<UsageNotice
-					usage={ usage?.tasks }
-					featureLabel={ __( 'automation rules', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-					kind="storage"
-				/>
-
 				{ /* Automation toggles */ }
 				<Card title={ __( 'Automation Rules', 'ai-marketing-expert' ) }>
 					<div className="aime-settings-form">
@@ -340,7 +321,6 @@ const SeoAutomation = ( { onNavigate } ) => {
 							help={ __( 'Automatically run an on-page SEO audit whenever a post or page is published.', 'ai-marketing-expert' ) }
 							checked={ !! settings.auto_audit_on_publish }
 							onChange={ ( v ) => setField( 'auto_audit_on_publish', v ) }
-							disabled={ ! canEnableTask( 'auto_audit_on_publish' ) }
 						/>
 						{ settings.auto_audit_on_publish && postTypes.length > 0 && (
 							<div className="aime-settings-subgroup">
@@ -360,7 +340,6 @@ const SeoAutomation = ( { onNavigate } ) => {
 							help={ __( 'Automatically generate meta title and description using AI when a post is published (only if empty).', 'ai-marketing-expert' ) }
 							checked={ !! settings.auto_meta_on_publish }
 							onChange={ ( v ) => setField( 'auto_meta_on_publish', v ) }
-							disabled={ ! canEnableTask( 'auto_meta_on_publish' ) }
 						/>
 						{ settings.auto_meta_on_publish && postTypes.length > 0 && (
 							<div className="aime-settings-subgroup">
@@ -375,19 +354,13 @@ const SeoAutomation = ( { onNavigate } ) => {
 								) ) }
 							</div>
 						) }
-						<ProLock locked={ isCronLocked( 'auto_internal_links' ) }>
-							<ToggleControl
-								label={ __( 'Auto Internal Link Suggestions', 'ai-marketing-expert' ) }
-								help={ isCronLocked( 'auto_internal_links' )
-									? __( 'Scheduled scanning is a Pro feature. On the free plan you can still run a scan manually below.', 'ai-marketing-expert' )
-									: __( 'Periodically scan recent posts and suggest internal links via AI.', 'ai-marketing-expert' )
-								}
-								checked={ !! settings.auto_internal_links }
-								onChange={ ( v ) => setField( 'auto_internal_links', v ) }
-								disabled={ isCronLocked( 'auto_internal_links' ) }
-							/>
-						</ProLock>
-						{ settings.auto_internal_links && ! isCronLocked( 'auto_internal_links' ) && (
+						<ToggleControl
+							label={ __( 'Auto Internal Link Suggestions', 'ai-marketing-expert' ) }
+							help={ __( 'Periodically scan recent posts and suggest internal links via AI.', 'ai-marketing-expert' ) }
+							checked={ !! settings.auto_internal_links }
+							onChange={ ( v ) => setField( 'auto_internal_links', v ) }
+						/>
+						{ settings.auto_internal_links && (
 							<SelectControl
 								label={ __( 'Internal Link Scan Frequency', 'ai-marketing-expert' ) }
 								value={ settings.internal_link_frequency || 'weekly' }
@@ -396,13 +369,6 @@ const SeoAutomation = ( { onNavigate } ) => {
 								__nextHasNoMarginBottom
 							/>
 						) }
-						<div style={ { marginTop: 16 } }>
-							<UsageNotice
-								usage={ usage?.runs }
-								featureLabel={ __( 'manual automation', 'ai-marketing-expert' ) }
-								proUrl={ proUrl }
-							/>
-						</div>
 						<div style={ { marginTop: 16, display: 'flex', gap: 8, alignItems: 'center' } }>
 							<Button variant="primary" onClick={ handleSave } isBusy={ saving } disabled={ saving }>
 								{ saving
@@ -414,7 +380,7 @@ const SeoAutomation = ( { onNavigate } ) => {
 								variant="secondary"
 								onClick={ () => handleRunTask( 'internal_links' ) }
 								isBusy={ runningTask === 'internal_links' }
-								disabled={ !! runningTask || runsExhausted }
+								disabled={ !! runningTask }
 							>
 								{ runningTask === 'internal_links'
 									? <><Spinner style={ { marginRight: 4 } } />{ __( 'Scanning\u2026', 'ai-marketing-expert' ) }</>

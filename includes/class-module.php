@@ -70,24 +70,6 @@ abstract class Module {
 	abstract public function register_routes(): void;
 
 	/**
-	 * Check if this module has pro features available.
-	 *
-	 * @return bool
-	 */
-	public function has_pro(): bool {
-		return aime_module_has_pro( $this->get_id() );
-	}
-
-	/**
-	 * Get the list of pro features for this module.
-	 *
-	 * @return array [ 'feature_key' => 'Feature description', ... ]
-	 */
-	public function get_pro_features(): array {
-		return array();
-	}
-
-	/**
 	 * Get module settings.
 	 *
 	 * @param string $key     Setting key.
@@ -144,13 +126,11 @@ abstract class Module {
 	 */
 	public function get_dashboard_config(): array {
 		return array(
-			'id'           => $this->get_id(),
-			'name'         => $this->get_name(),
-			'description'  => $this->get_description(),
-			'icon'         => $this->get_icon(),
-			'version'      => $this->get_version(),
-			'has_pro'      => $this->has_pro(),
-			'pro_features' => $this->get_pro_features(),
+			'id'          => $this->get_id(),
+			'name'        => $this->get_name(),
+			'description' => $this->get_description(),
+			'icon'        => $this->get_icon(),
+			'version'     => $this->get_version(),
 		);
 	}
 }

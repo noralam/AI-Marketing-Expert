@@ -32,10 +32,6 @@ class CloudEspSyncService {
 			'details'       => array(),
 		);
 
-		if ( ! aime_has_pro() ) {
-			return $results;
-		}
-
 		$connections = SmtpProvider::get_connections();
 		$seen_providers = array();
 

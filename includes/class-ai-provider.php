@@ -1378,13 +1378,6 @@ class AiProvider {
 	private static function with_retry( callable $fn, string $label = '' ): array {
 		$background = self::is_background_context();
 
-		if ( $background && function_exists( 'set_time_limit' ) ) {
-			// Only in cron/CLI: large AI generations can take 2-5 minutes, and
-			// without this the PHP watchdog kills the process mid-cURL.
-			// Never in web requests — see is_background_context().
-			set_time_limit( 0 );
-		}
-
 		$result = $fn();
 
 		// Retries with sleep() are reserved for background context. In a web

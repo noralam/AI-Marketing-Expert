@@ -121,6 +121,11 @@ const GuideStep = ( { step } ) => (
 
 const pluginUrl = window.aimeData?.pluginUrl || '';
 
+// Feature flag: Enable 1-Click OAuth for Meta (Facebook & Instagram).
+// Set to false while Meta App Review is pending so Facebook & Instagram use direct manual token setup.
+// Set to true once Meta approves the app to re-enable 1-Click Connect for Facebook & Instagram.
+const ENABLE_META_OAUTH = true;
+
 const platforms = [
 	{
 		id: 'facebook',
@@ -239,7 +244,7 @@ const ConnectAccountModal = ( { account = null, onClose, onConnected } ) => {
 
 						if ( callbackRes?.requires_selection ) {
 							setCandidatesData( callbackRes );
-							const avail = callbackRes.has_pro ? callbackRes.accounts.length : ( callbackRes.available_slots ?? 2 );
+							const avail = callbackRes.accounts.length;
 							const initialSelected = [];
 							let count = 0;
 							for ( const acc of callbackRes.accounts ) {
@@ -396,13 +401,13 @@ const ConnectAccountModal = ( { account = null, onClose, onConnected } ) => {
 								{ __( 'Choose a platform to connect:', 'ai-marketing-expert' ) }
 							</p>
 							{ platforms.map( ( p ) => {
-								const isOneClick = ( p.id === 'facebook' || p.id === 'instagram' || p.id === 'linkedin' );
+								const isOneClick = ( ( ENABLE_META_OAUTH && ( p.id === 'facebook' || p.id === 'instagram' ) ) || p.id === 'linkedin' );
 								return (
 									<button
 										key={ p.id }
 										className="aime-platform-connect-btn"
 										onClick={ () => {
-											if ( p.id === 'instagram' ) {
+											if ( ENABLE_META_OAUTH && p.id === 'instagram' ) {
 												setSelectedPlatform( 'instagram' );
 												setInstagramConfirmed( false );
 												setStep( 'instagram_prerequisites' );
@@ -684,45 +689,12 @@ const ConnectAccountModal = ( { account = null, onClose, onConnected } ) => {
 											: __( 'Select Instagram Accounts', 'ai-marketing-expert' ) }
 									</h4>
 									<div style={ { fontSize: 12, color: 'var(--aime-text-muted)', marginTop: 2 } }>
-										{ candidatesData.has_pro
-											? __( 'Pro plan active: You can connect unlimited accounts.', 'ai-marketing-expert' )
-											: sprintf(
-												__( 'Free plan allows up to %1$d accounts (%2$d slot%3$s remaining).', 'ai-marketing-expert' ),
-												2,
-												candidatesData.available_slots || 0,
-												( candidatesData.available_slots === 1 ? '' : 's' )
-											) }
+										{ __( 'Select the accounts you want to connect.', 'ai-marketing-expert' ) }
 									</div>
 								</div>
 							</div>
 
-							{ ! candidatesData.has_pro && (
-								<div style={ {
-									padding: '10px 14px',
-									background: '#f0f9ff',
-									border: '1px solid #bae6fd',
-									borderRadius: 8,
-									marginBottom: 14,
-									fontSize: 12,
-									color: '#0369a1',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'space-between',
-								} }>
-									<span>
-										{ sprintf(
-											__( 'Choose up to %d account%s to connect with your Free plan:', 'ai-marketing-expert' ),
-											candidatesData.available_slots || 0,
-											candidatesData.available_slots === 1 ? '' : 's'
-										) }
-									</span>
-									<span style={ { fontWeight: 700 } }>
-										{ `${ selectedAccountIds.length } / ${ candidatesData.available_slots || 0 } ${ __( 'selected', 'ai-marketing-expert' ) }` }
-									</span>
-								</div>
-							) }
-
-							{ candidatesData.has_pro && candidatesData.accounts.length > 1 && (
+							{ candidatesData.accounts.length > 1 && (
 								<div style={ { display: 'flex', justifyContent: 'flex-end', marginBottom: 10 } }>
 									<button
 										type="button"
@@ -750,8 +722,7 @@ const ConnectAccountModal = ( { account = null, onClose, onConnected } ) => {
 								{ candidatesData.accounts.map( ( acc ) => {
 									const isSelected = selectedAccountIds.includes( String( acc.id ) );
 									const isAlready = !! acc.already_connected;
-									const maxSlots = candidatesData.available_slots || 0;
-									const canToggle = isSelected || candidatesData.has_pro || ( selectedAccountIds.length < maxSlots );
+									const canToggle = true;
 
 									return (
 										<div

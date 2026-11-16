@@ -200,7 +200,6 @@ class TopicalAuthorityService {
 			'content_brief'     => sanitize_textarea_field( $topic['brief'] ?? '' ),
 			'word_count_target' => absint( $topic['word_count_target'] ?? 1500 ),
 			'priority'          => min( 5, max( 1, absint( $topic['priority'] ?? 3 ) ) ),
-			'is_pro'            => aime_has_pro() ? 1 : 0,
 		) );
 
 		return $wpdb->insert_id ?: null;

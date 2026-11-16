@@ -41,7 +41,6 @@ class SettingsController {
 		return new \WP_REST_Response( array(
 			'success'  => true,
 			'data'     => $settings,
-			'is_pro'   => aime_has_pro(),
 		) );
 	}
 

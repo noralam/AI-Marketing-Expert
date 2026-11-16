@@ -38,20 +38,49 @@ class DelayAction extends BaseAction {
 		// For pacing and short delays (up to 30 seconds), execute an inline sleep.
 		if ( $seconds > 0 && $seconds <= 30 ) {
 			sleep( $seconds );
+			$duration_label = sprintf( '%d %s', $value, $unit );
+			return self::ok(
+				sprintf(
+					/* translators: %s: duration label */
+					__( 'Wait duration of %s observed.', 'ai-marketing-expert' ),
+					$duration_label
+				),
+				array(
+					'delay_value'   => $value,
+					'delay_unit'    => $unit,
+					'delay_seconds' => $seconds,
+					'deferred'      => false,
+				)
+			);
 		}
 
-		$duration_label = sprintf( '%d %s', $value, $unit );
+		if ( $seconds > 30 ) {
+			$resume_at = time() + $seconds;
+			return self::ok(
+				sprintf(
+					/* translators: 1: delay value, 2: delay unit, 3: resume time formatted */
+					__( 'Execution paused for %1$d %2$s (resumes at %3$s UTC).', 'ai-marketing-expert' ),
+					$value,
+					$unit,
+					gmdate( 'Y-m-d H:i:s', $resume_at )
+				),
+				array(
+					'delay_value'   => $value,
+					'delay_unit'    => $unit,
+					'delay_seconds' => $seconds,
+					'deferred'      => true,
+					'resume_at'     => $resume_at,
+				)
+			);
+		}
 
 		return self::ok(
-			sprintf(
-				/* translators: %s: duration label */
-				__( 'Wait duration of %s observed.', 'ai-marketing-expert' ),
-				$duration_label
-			),
+			__( 'Zero delay observed.', 'ai-marketing-expert' ),
 			array(
-				'delay_value'   => $value,
+				'delay_value'   => 0,
 				'delay_unit'    => $unit,
-				'delay_seconds' => $seconds,
+				'delay_seconds' => 0,
+				'deferred'      => false,
 			)
 		);
 	}

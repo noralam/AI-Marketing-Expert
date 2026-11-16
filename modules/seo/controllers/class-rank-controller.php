@@ -70,29 +70,6 @@ class RankController {
 			), 400 );
 		}
 
-		// Free limit check on tracked keywords.
-		if ( ! aime_has_pro() ) {
-			$limit = aime_free_limits()['seo_rank_keywords'] ?? 5;
-			global $wpdb;
-			$p = $wpdb->prefix;
-			$is_already_tracked = (bool) $wpdb->get_var( $wpdb->prepare(
-				"SELECT id FROM {$p}aime_seo_keywords WHERE id = %d AND (current_rank IS NOT NULL OR status = %s)",
-				$keyword_id,
-				'targeted'
-			) );
-
-			if ( ! $is_already_tracked && SeoModule::get_tracked_keyword_count() >= $limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: tracked keyword limit */
-						__( 'Free plan allows tracking up to %d keywords. Upgrade to Pro for unlimited.', 'ai-marketing-expert' ),
-						$limit
-					),
-				), 403 );
-			}
-		}
-
 		$service = new RankTrackerService();
 		$result  = $service->check_rank( $keyword_id, $engine );
 
@@ -100,16 +77,9 @@ class RankController {
 	}
 
 	/**
-	 * Bulk rank check (Pro).
+	 * Bulk rank check.
 	 */
 	public function bulk_check( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'success' => false,
-				'message' => __( 'Bulk rank checking is a Pro feature.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$keyword_ids = $request->get_param( 'keyword_ids' );
 		if ( empty( $keyword_ids ) || ! is_array( $keyword_ids ) ) {
 			return new \WP_REST_Response( array(

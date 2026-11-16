@@ -45,13 +45,6 @@ class SettingsController {
 		$merged['has_pixabay_key'] = \WPSpace\AiMarketingExpert\Modules\ContentGenerator\Services\StockImageService::is_configured( 'pixabay' );
 		unset( $merged['pexels_api_key'], $merged['pixabay_api_key'] );
 
-		if ( ! aime_has_pro() ) {
-			$merged['auto_seo_optimize']     = false;
-			$merged['auto_generate_meta']    = false;
-			$merged['auto_generate_excerpt'] = false;
-			$merged['auto_internal_links']   = false;
-		}
-
 		return new \WP_REST_Response( $merged );
 	}
 
@@ -137,7 +130,7 @@ class SettingsController {
 
 		$bool_fields = array( 'auto_seo_optimize', 'auto_generate_meta', 'auto_generate_excerpt', 'auto_internal_links' );
 		foreach ( $bool_fields as $field ) {
-			if ( isset( $params[ $field ] ) && aime_has_pro() ) {
+			if ( isset( $params[ $field ] ) ) {
 				$current[ $field ] = (bool) $params[ $field ];
 			}
 		}

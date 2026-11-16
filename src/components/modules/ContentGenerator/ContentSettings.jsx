@@ -11,7 +11,6 @@ import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import { toast } from '../../common/Toast';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
 const TONES = [
 	{ label: 'Professional', value: 'professional' },
@@ -94,7 +93,6 @@ const IMAGE_REUSE_OPTIONS = [
 
 const ContentSettings = ( { initialTab } ) => {
 	const { get, post, loading, error, clearError } = useApi();
-	const hasPro = isProActive();
 	const [ settings, setSettings ] = useState( null );
 	const [ taxonomies, setTaxonomies ] = useState( { categories: [], post_types: [] } );
 	const [ saving, setSaving ] = useState( false );
@@ -138,10 +136,6 @@ const ContentSettings = ( { initialTab } ) => {
 	if ( ! settings ) return null;
 
 	const setField = ( key, value ) => {
-		if ( ! hasPro && [ 'auto_seo_optimize', 'auto_generate_meta', 'auto_generate_excerpt', 'auto_internal_links' ].includes( key ) ) {
-			toast( __( 'Content automation settings are available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		setSettings( ( prev ) => ( { ...prev, [ key ]: value } ) );
 	};
 
@@ -204,48 +198,37 @@ const ContentSettings = ( { initialTab } ) => {
 										</p>
 									</div>
 
-									{ ! hasPro && (
-										<div className="aime-pro-inline-action" style={ { marginBottom: 16 } }>
-											<ProLabel>{ __( 'Automation Settings', 'ai-marketing-expert' ) }</ProLabel>
-											<ProUpgradeButton />
-										</div>
-									) }
-
 									<div className="aime-automation-toggles">
 										<div className="aime-toggle-card">
 											<ToggleControl
-												label={ hasPro ? __( 'Auto SEO Optimize', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto SEO Optimize', 'ai-marketing-expert' ) }</ProLabel> }
+												label={ __( 'Auto SEO Optimize', 'ai-marketing-expert' ) }
 												help={ __( 'Automatically run SEO scoring after article generation.', 'ai-marketing-expert' ) }
-												checked={ hasPro ? ( settings.auto_seo_optimize !== false ) : false }
+												checked={ settings.auto_seo_optimize !== false }
 												onChange={ ( v ) => setField( 'auto_seo_optimize', v ) }
-												disabled={ ! hasPro }
 											/>
 										</div>
 										<div className="aime-toggle-card">
 											<ToggleControl
-												label={ hasPro ? __( 'Auto Generate Meta', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Meta', 'ai-marketing-expert' ) }</ProLabel> }
+												label={ __( 'Auto Generate Meta', 'ai-marketing-expert' ) }
 												help={ __( 'Automatically generate meta title and description.', 'ai-marketing-expert' ) }
-												checked={ hasPro ? ( settings.auto_generate_meta !== false ) : false }
+												checked={ settings.auto_generate_meta !== false }
 												onChange={ ( v ) => setField( 'auto_generate_meta', v ) }
-												disabled={ ! hasPro }
 											/>
 										</div>
 										<div className="aime-toggle-card">
 											<ToggleControl
-												label={ hasPro ? __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) }</ProLabel> }
+												label={ __( 'Auto Generate Excerpt', 'ai-marketing-expert' ) }
 												help={ __( 'Automatically generate article excerpt.', 'ai-marketing-expert' ) }
-												checked={ hasPro ? ( settings.auto_generate_excerpt !== false ) : false }
+												checked={ settings.auto_generate_excerpt !== false }
 												onChange={ ( v ) => setField( 'auto_generate_excerpt', v ) }
-												disabled={ ! hasPro }
 											/>
 										</div>
 										<div className="aime-toggle-card">
 											<ToggleControl
-												label={ hasPro ? __( 'Auto Internal Linking', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Auto Internal Linking', 'ai-marketing-expert' ) }</ProLabel> }
+												label={ __( 'Auto Internal Linking', 'ai-marketing-expert' ) }
 												help={ __( 'Automatically link relevant published articles on publish.', 'ai-marketing-expert' ) }
-												checked={ hasPro ? ( settings.auto_internal_links !== false ) : false }
+												checked={ settings.auto_internal_links !== false }
 												onChange={ ( v ) => setField( 'auto_internal_links', v ) }
-												disabled={ ! hasPro }
 											/>
 										</div>
 									</div>

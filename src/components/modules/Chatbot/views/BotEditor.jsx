@@ -15,12 +15,9 @@ import {
 	Spinner,
 } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
-import ProGate from '../../../common/ProGate';
-import ProLock, { ProLabel } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 
 const THEME_OPTIONS = [
@@ -34,13 +31,13 @@ const POSITION_OPTIONS = [
 	{ label: 'Bottom Left', value: 'bottom-left' },
 ];
 
-const FREE_LEAD_TRIGGERS = [ 'start', 'after_messages' ];
+const FREE_LEAD_TRIGGERS = [ 'start', 'after_messages', 'ai_intent' ];
 const VALID_LEAD_TRIGGERS = [ 'start', 'after_messages', 'ai_intent' ];
 
-const getLeadTriggerOptions = ( hasPro ) => [
+const getLeadTriggerOptions = () => [
 	{ label: __( 'Start with lead form', 'ai-marketing-expert' ), value: 'start' },
 	{ label: __( 'After X messages', 'ai-marketing-expert' ), value: 'after_messages' },
-	{ label: hasPro ? __( 'On AI detection', 'ai-marketing-expert' ) : __( 'On AI detection (Pro)', 'ai-marketing-expert' ), value: 'ai_intent' },
+	{ label: __( 'On AI detection', 'ai-marketing-expert' ), value: 'ai_intent' },
 ];
 
 const RESPONSE_TONE_OPTIONS = [
@@ -99,7 +96,6 @@ const DEFAULT_BOT = {
 
 const BotEditor = ( { id, onBack, onNavigate } ) => {
 	const { get, post, put, loading, error, clearError } = useApi();
-	const { hasPro } = usePro();
 	const [ bot, setBot ] = useState( null );
 	const [ saving, setSaving ] = useState( false );
 	const [ success, setSuccess ] = useState( '' );
@@ -236,18 +232,13 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 	};
 
 	const addPageRule = () => {
-		if ( ! hasPro ) {
-			toast( __( 'Page display rules require Pro.', 'ai-marketing-expert' ), 'error' );
-			return;
-		}
 		const rules = getPageRules();
 		rules.push( { type: 'include', pattern: '/*' } );
 		setPageRules( rules );
 	};
 
 	const normalizeLeadFields = ( fields ) => {
-		const selected = Array.isArray( fields ) ? fields : [];
-		return hasPro ? selected : selected.filter( ( field ) => [ 'email', 'name' ].includes( field ) );
+		return Array.isArray( fields ) ? fields : [];
 	};
 
 	const updatePageRule = ( index, key, value ) => {
@@ -274,7 +265,7 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 			const payload = {
 				name: bot.name,
 				status: bot.status || 'active',
-				system_prompt: hasPro ? ( bot.system_prompt || '' ) : '',
+				system_prompt: bot.system_prompt || '',
 				welcome_message: bot.welcome_message || '',
 				theme_id: bot.theme_id || 'default',
 				theme_config: {
@@ -286,27 +277,23 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 				},
 				lead_capture_config: {
 					...getLeadConfig(),
-					trigger: ( () => {
-						const t = getLeadConfig().trigger || 'after_messages';
-						if ( ! VALID_LEAD_TRIGGERS.includes( t ) ) return 'after_messages';
-						return hasPro || FREE_LEAD_TRIGGERS.includes( t ) ? t : 'after_messages';
-					} )(),
+					trigger: getLeadConfig().trigger || 'after_messages',
 					fields: normalizeLeadFields( getLeadConfig().fields || [ 'email', 'name' ] ),
 				},
 				knowledge_config: {
 					max_history_messages: Math.max( 1, parseInt( bot.max_history_messages, 10 ) || 20 ),
 					response_tone: bot.response_tone || 'friendly',
-					response_length: hasPro ? ( bot.response_length || 'short' ) : 'short',
-					response_style: hasPro ? ( bot.response_style || 'confident' ) : 'confident',
-					sales_focused: hasPro ? !! bot.sales_focused : false,
+					response_length: bot.response_length || 'short',
+					response_style: bot.response_style || 'confident',
+					sales_focused: !! bot.sales_focused,
 					custom_response_style: bot.custom_response_style || '',
 				},
-				page_rules: hasPro ? getPageRules() : [],
+				page_rules: getPageRules(),
 				offline_message: bot.offline_message || '',
 				business_hours: typeof bot.business_hours === 'string'
 					? JSON.parse( bot.business_hours || '{}' )
 					: ( bot.business_hours || {} ),
-				banned_words: hasPro ? ( bot.banned_words || '' ) : '',
+				banned_words: bot.banned_words || '',
 			};
 			if ( isNew ) {
 				const res = await post( '/chatbot/bots', payload );
@@ -331,7 +318,6 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 
 	const leadConfig = getLeadConfig();
 	const pageRules = getPageRules();
-	const freeLeadFields = [ 'email', 'name' ];
 
 	return (
 		<div className="aime-bot-editor">
@@ -395,11 +381,7 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 										onChange={ ( v ) => setField( 'system_prompt', v ) }
 										placeholder={ __( 'Example: You are {bot_name} for {site_name}. Give clear, helpful answers and guide visitors using the current page context from {page_url}.', 'ai-marketing-expert' ) }
 										rows={ 6 }
-										disabled={ ! hasPro }
 									/>
-									{ ! hasPro && (
-										<Notice type="info" message={ __( 'System Prompt with advanced placeholders is available in Pro.', 'ai-marketing-expert' ) } />
-									) }
 									<div className="aime-form-grid aime-form-grid-3">
 										<SelectControl
 											label={ __( 'Answer Tone', 'ai-marketing-expert' ) }
@@ -409,28 +391,25 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 											__nextHasNoMarginBottom
 										/>
 										<SelectControl
-											label={ hasPro ? __( 'Answer Length', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Answer Length', 'ai-marketing-expert' ) }</ProLabel> }
+											label={ __( 'Answer Length', 'ai-marketing-expert' ) }
 											value={ bot.response_length || 'short' }
 											options={ RESPONSE_LENGTH_OPTIONS }
-											onChange={ ( v ) => setField( 'response_length', hasPro ? v : 'short' ) }
-											disabled={ ! hasPro }
+											onChange={ ( v ) => setField( 'response_length', v ) }
 											__nextHasNoMarginBottom
 										/>
 										<SelectControl
-											label={ hasPro ? __( 'Answer Style', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Answer Style', 'ai-marketing-expert' ) }</ProLabel> }
+											label={ __( 'Answer Style', 'ai-marketing-expert' ) }
 											value={ bot.response_style || 'confident' }
 											options={ RESPONSE_STYLE_OPTIONS }
-											onChange={ ( v ) => setField( 'response_style', hasPro ? v : 'confident' ) }
-											disabled={ ! hasPro }
+											onChange={ ( v ) => setField( 'response_style', v ) }
 											__nextHasNoMarginBottom
 										/>
 									</div>
 									<ToggleControl
-										label={ hasPro ? __( 'Sales-focused product answers', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Sales-focused product answers', 'ai-marketing-expert' ) }</ProLabel> }
+										label={ __( 'Sales-focused product answers', 'ai-marketing-expert' ) }
 										help={ __( 'When product knowledge is relevant, highlight benefits and include purchase links when available.', 'ai-marketing-expert' ) }
 										checked={ !! bot.sales_focused }
-										onChange={ ( v ) => setField( 'sales_focused', hasPro ? v : false ) }
-										disabled={ ! hasPro }
+										onChange={ ( v ) => setField( 'sales_focused', v ) }
 									/>
 									<TextareaControl
 										label={ __( 'Custom Response Style', 'ai-marketing-expert' ) }
@@ -450,11 +429,10 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 								<div className="aime-settings-form">
 									<div className="aime-form-grid aime-form-grid-2">
 										<SelectControl
-											label={ hasPro ? __( 'Theme', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Theme', 'ai-marketing-expert' ) }</ProLabel> }
+											label={ __( 'Theme', 'ai-marketing-expert' ) }
 											value={ bot.theme_id || 'default' }
 											options={ THEME_OPTIONS }
-											onChange={ ( v ) => setField( 'theme_id', hasPro ? v : 'default' ) }
-											disabled={ ! hasPro }
+											onChange={ ( v ) => setField( 'theme_id', v ) }
 											__nextHasNoMarginBottom
 										/>
 										<SelectControl
@@ -481,9 +459,8 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 											positiveLabel: __( '+200 right', 'ai-marketing-expert' ),
 										} ) }
 									</div>
-									<ProLock locked={ ! hasPro }>
 									<div className="aime-form-group">
-										<label>{ hasPro ? __( 'Primary Color', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Primary Color', 'ai-marketing-expert' ) }</ProLabel> }</label>
+										<label>{ __( 'Primary Color', 'ai-marketing-expert' ) }</label>
 										<div style={ { display: 'flex', alignItems: 'center', gap: 12 } }>
 											<input
 												type="color"
@@ -499,19 +476,13 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 											/>
 										</div>
 									</div>
-									</ProLock>
-									<ProLock locked={ ! hasPro }>
 									<TextControl
-										label={ hasPro ? __( 'Bubble Icon', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Bubble Icon', 'ai-marketing-expert' ) }</ProLabel> }
+										label={ __( 'Bubble Icon', 'ai-marketing-expert' ) }
 										help={ __( 'Icon type: chat, help, bot, support', 'ai-marketing-expert' ) }
 										value={ bot.bubble_icon || 'chat' }
 										onChange={ ( v ) => setField( 'bubble_icon', v ) }
 										__nextHasNoMarginBottom
 									/>
-									</ProLock>
-									{ ! hasPro && (
-										<Notice type="info" message={ __( 'Upgrade to Pro for custom theme colors and branding options.', 'ai-marketing-expert' ) } />
-									) }
 								</div>
 							);
 						}
@@ -531,8 +502,8 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 											<SelectControl
 												label={ __( 'Trigger', 'ai-marketing-expert' ) }
 												value={ VALID_LEAD_TRIGGERS.includes( leadConfig.trigger ) ? leadConfig.trigger : 'after_messages' }
-												options={ getLeadTriggerOptions( hasPro ) }
-												onChange={ ( v ) => setLeadField( 'trigger', hasPro || FREE_LEAD_TRIGGERS.includes( v ) ? v : 'after_messages' ) }
+												options={ getLeadTriggerOptions() }
+												onChange={ ( v ) => setLeadField( 'trigger', v ) }
 												__nextHasNoMarginBottom
 											/>
 											{ ( leadConfig.trigger || 'after_messages' ) === 'after_messages' && (
@@ -553,17 +524,12 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 											<div className="aime-form-group">
 												<label>{ __( 'Fields', 'ai-marketing-expert' ) }</label>
 												<div style={ { display: 'flex', gap: 16, flexWrap: 'wrap' } }>
-															{ [ 'email', 'name', 'phone', 'company' ].map( ( field ) => {
-																const isLockedField = ! hasPro && ! freeLeadFields.includes( field );
-
-																return (
+													{ [ 'email', 'name', 'phone', 'company' ].map( ( field ) => (
 														<label key={ field } style={ { display: 'flex', alignItems: 'center', gap: 4 } }>
 															<input
 																type="checkbox"
 																checked={ ( leadConfig.fields || [] ).includes( field ) }
-																		disabled={ isLockedField }
 																onChange={ ( e ) => {
-																			if ( isLockedField ) return;
 																	const fields = [ ...( leadConfig.fields || [] ) ];
 																	if ( e.target.checked ) {
 																		fields.push( field );
@@ -574,15 +540,11 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 																	setLeadField( 'fields', fields );
 																} }
 															/>
-																	{ field.charAt( 0 ).toUpperCase() + field.slice( 1 ) }{ isLockedField ? ' (Pro)' : '' }
+															{ field.charAt( 0 ).toUpperCase() + field.slice( 1 ) }
 														</label>
-																);
-															} ) }
+													) ) }
 												</div>
 											</div>
-													{ ! hasPro && (
-														<Notice type="info" message={ __( 'Free plan lead capture includes email and name fields. Phone, company, and advanced triggers require Pro.', 'ai-marketing-expert' ) } />
-													) }
 										</>
 									) }
 								</div>
@@ -597,7 +559,6 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 										{ __( 'Control on which pages this chatbot is displayed. Leave empty to show on all pages. Use patterns like /products/* or /contact.', 'ai-marketing-expert' ) }
 									</p>
 
-									<ProLock locked={ ! hasPro }>
 									{ pageRules.map( ( rule, index ) => (
 										<div key={ index } className="aime-form-grid aime-form-grid-3" style={ { alignItems: 'end', marginBottom: 8 } }>
 											<SelectControl
@@ -631,11 +592,6 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 									<Button variant="secondary" onClick={ addPageRule } style={ { marginTop: 8 } }>
 										{ __( '+ Add Rule', 'ai-marketing-expert' ) }
 									</Button>
-									</ProLock>
-
-									{ ! hasPro && (
-										<Notice type="info" message={ __( 'Page display rules require Pro.', 'ai-marketing-expert' ) } />
-									) }
 								</div>
 							);
 						}
@@ -643,23 +599,21 @@ const BotEditor = ( { id, onBack, onNavigate } ) => {
 						/* Advanced tab */
 						return (
 							<div className="aime-settings-form">
-								<ProGate feature={ __( 'Advanced Settings', 'ai-marketing-expert' ) } description={ __( 'Configure advanced chatbot options like banned words, message history, and more.', 'ai-marketing-expert' ) }>
-									<TextareaControl
-										label={ __( 'Banned Words', 'ai-marketing-expert' ) }
-										help={ __( 'Enter one word or phrase per line to block from visitor messages.', 'ai-marketing-expert' ) }
-										value={ bot.banned_words || '' }
-										onChange={ ( v ) => setField( 'banned_words', v ) }
-										rows={ 3 }
-									/>
-									<TextControl
-										label={ __( 'Max History Messages', 'ai-marketing-expert' ) }
-										help={ __( 'Number of conversation messages included in AI context.', 'ai-marketing-expert' ) }
-										type="number"
-										value={ bot.max_history_messages || 20 }
-										onChange={ ( v ) => setField( 'max_history_messages', parseInt( v ) || 20 ) }
-										__nextHasNoMarginBottom
-									/>
-								</ProGate>
+								<TextareaControl
+									label={ __( 'Banned Words', 'ai-marketing-expert' ) }
+									help={ __( 'Enter one word or phrase per line to block from visitor messages.', 'ai-marketing-expert' ) }
+									value={ bot.banned_words || '' }
+									onChange={ ( v ) => setField( 'banned_words', v ) }
+									rows={ 3 }
+								/>
+								<TextControl
+									label={ __( 'Max History Messages', 'ai-marketing-expert' ) }
+									help={ __( 'Number of conversation messages included in AI context.', 'ai-marketing-expert' ) }
+									type="number"
+									value={ bot.max_history_messages || 20 }
+									onChange={ ( v ) => setField( 'max_history_messages', parseInt( v ) || 20 ) }
+									__nextHasNoMarginBottom
+								/>
 							</div>
 						);
 					} }

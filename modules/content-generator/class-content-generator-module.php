@@ -42,22 +42,6 @@ class ContentGeneratorModule extends Module {
 		return '1.0.0';
 	}
 
-	/* ── Pro features ───────────────────────────────────── */
-
-	public function get_pro_features(): array {
-		return array(
-			'unlimited_articles'   => __( 'Unlimited article generation (free: 10/month)', 'ai-marketing-expert' ),
-			'long_form'            => __( 'Long-form content up to 5,000 words (free: 1,500)', 'ai-marketing-expert' ),
-			'custom_presets'       => __( 'Create custom generation presets', 'ai-marketing-expert' ),
-			'advanced_seo'         => __( 'Advanced per-section SEO analysis', 'ai-marketing-expert' ),
-			'multi_language'       => __( 'Multi-language content (20+ languages)', 'ai-marketing-expert' ),
-			'image_prompts'        => __( 'AI image prompt generation', 'ai-marketing-expert' ),
-			'content_calendar'     => __( 'Scheduled WordPress publishing', 'ai-marketing-expert' ),
-			'custom_instructions'  => __( 'Custom system instructions per preset', 'ai-marketing-expert' ),
-			'advanced_analytics'   => __( 'Advanced content analytics & trends', 'ai-marketing-expert' ),
-		);
-	}
-
 	/* ── Initialisation ─────────────────────────────────── */
 
 	public function init(): void {
@@ -149,7 +133,6 @@ class ContentGeneratorModule extends Module {
 			featured_image_id BIGINT UNSIGNED DEFAULT NULL,
 			preset_id BIGINT UNSIGNED DEFAULT NULL,
 			brand_voice_id BIGINT UNSIGNED DEFAULT NULL,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			scheduled_publish_at DATETIME DEFAULT NULL,
@@ -198,7 +181,6 @@ class ContentGeneratorModule extends Module {
 			system_instructions LONGTEXT,
 			default_category_id BIGINT UNSIGNED DEFAULT NULL,
 			is_default TINYINT(1) NOT NULL DEFAULT 0,
-			is_pro TINYINT(1) NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id)
@@ -256,7 +238,6 @@ class ContentGeneratorModule extends Module {
 				'prompt_template'    => 'Write a comprehensive blog post about the given topic. Include an engaging introduction, well-organized sections with H2 and H3 headings, practical examples, and a compelling conclusion with a call to action.',
 				'system_instructions' => 'You are an expert content writer specializing in informative, SEO-friendly blog posts. Write in a clear, engaging style. Use proper HTML heading tags (h2, h3). Include bullet points and numbered lists where appropriate.',
 				'is_default'         => 1,
-				'is_pro'             => 0,
 				'created_at'         => $now,
 				'updated_at'         => $now,
 			),
@@ -270,7 +251,6 @@ class ContentGeneratorModule extends Module {
 				'prompt_template'    => 'Write a detailed how-to guide about the given topic. Include a brief intro explaining what the reader will learn, numbered step-by-step instructions, tips and warnings where relevant, and a summary of key takeaways.',
 				'system_instructions' => 'You are a technical writer who creates clear, actionable how-to guides. Break complex processes into simple numbered steps. Use HTML heading tags (h2, h3). Include pro tips in bold or callout format.',
 				'is_default'         => 1,
-				'is_pro'             => 0,
 				'created_at'         => $now,
 				'updated_at'         => $now,
 			),
@@ -284,7 +264,6 @@ class ContentGeneratorModule extends Module {
 				'prompt_template'    => 'Write a thorough product review about the given topic. Include an overview, key features, detailed pros and cons, a comparison with alternatives if relevant, and a final verdict with a rating.',
 				'system_instructions' => 'You are a product review expert who writes honest, detailed, and engaging reviews. Use HTML heading tags. Include a pros/cons section formatted as lists. Be balanced but persuasive when the product merits it.',
 				'is_default'         => 1,
-				'is_pro'             => 0,
 				'created_at'         => $now,
 				'updated_at'         => $now,
 			),
@@ -298,7 +277,6 @@ class ContentGeneratorModule extends Module {
 				'prompt_template'    => 'Write an engaging listicle about the given topic. Use a numbered format with each item having its own H2 heading. Include a brief introduction and conclusion. Each item should have 2-3 paragraphs of detail.',
 				'system_instructions' => 'You are a content writer specializing in viral, shareable list articles. Each list item should have a compelling heading. Use HTML heading tags. Make the content scannable yet informative.',
 				'is_default'         => 1,
-				'is_pro'             => 0,
 				'created_at'         => $now,
 				'updated_at'         => $now,
 			),

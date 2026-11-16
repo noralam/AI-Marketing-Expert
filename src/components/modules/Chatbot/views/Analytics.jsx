@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Button, SelectControl } from '@aime/wp-components';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import Card from '../../../common/Card';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
@@ -110,7 +109,6 @@ const CONVERSATION_STATUS_LABELS = {
 
 const Analytics = ( { onNavigate } ) => {
 	const { get, loading, error, clearError } = useApi();
-	const { hasPro, freeLimits } = usePro();
 	const [ stats, setStats ] = useState( null );
 	const [ trends, setTrends ] = useState( [] );
 	const [ days, setDays ] = useState( '30' );
@@ -154,9 +152,6 @@ const Analytics = ( { onNavigate } ) => {
 	if ( loading && ! stats ) {
 		return <Loader variant="dashboard" text={ __( 'Loading analytics...', 'ai-marketing-expert' ) } />;
 	}
-
-	const monthlyConversations = stats?.conversations_this_month || 0;
-	const monthlyLimit = freeLimits?.chatbot_conversations_monthly || 100;
 
 	const kpis = [
 		{ label: __( 'Total Conversations', 'ai-marketing-expert' ), value: stats?.total_conversations || 0, icon: '\uD83D\uDCAC' },
@@ -236,31 +231,6 @@ const Analytics = ( { onNavigate } ) => {
 					</div>
 				) ) }
 			</div>
-
-			{ /* Monthly usage (free plan) — progressive disclosure */ }
-			{ ! hasPro && monthlyConversations > 0 && (
-				<Card title={ __( 'Monthly Usage', 'ai-marketing-expert' ) }>
-					<div className="aime-usage-bar-wrap">
-						<div className="aime-usage-labels">
-							<span>
-								{ sprintf(
-									/* translators: 1: remaining, 2: limit */
-									__( '%1$d of %2$d conversations remaining', 'ai-marketing-expert' ),
-									Math.max( 0, monthlyLimit - monthlyConversations ),
-									monthlyLimit
-								) }
-							</span>
-							<span>{ Math.round( ( monthlyConversations / monthlyLimit ) * 100 ) }%</span>
-						</div>
-						<div className="aime-usage-bar">
-							<div
-								className="aime-usage-bar-fill"
-								style={ { width: `${ Math.min( 100, ( monthlyConversations / monthlyLimit ) * 100 ) }%` } }
-							/>
-						</div>
-					</div>
-				</Card>
-			) }
 
 			{ /* SVG area charts - conversations and messages over time */ }
 			<div className="aime-charts-grid">

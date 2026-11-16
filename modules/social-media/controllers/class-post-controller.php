@@ -289,19 +289,6 @@ class PostController {
 	 * Create a new post (draft or immediate publish).
 	 */
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		// Free limit check.
-		if ( ! aime_has_pro() ) {
-			$monthly = SocialMediaModule::get_monthly_post_count();
-			$limits  = aime_free_limits();
-			$limit   = $limits['social_posts_per_month'] ?? 30;
-			if ( $monthly >= $limit ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Monthly post limit reached. Upgrade to Pro for unlimited posts.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
-
 		global $wpdb;
 		$p   = $wpdb->prefix;
 		$posts_table    = $p . 'aime_social_posts';
@@ -337,13 +324,6 @@ class PostController {
 		$ai_generated = (bool) $request->get_param( 'ai_generated' );
 		$source_type  = sanitize_text_field( $request->get_param( 'source_type' ) ?: 'manual' );
 		$source_id    = absint( $request->get_param( 'source_id' ) ) ?: null;
-
-		if ( $scheduled_at && ! $publish_now && $this->scheduled_limit_reached() ) {
-			return new \WP_REST_Response( array(
-				'message'       => __( 'Scheduled post limit reached. Free plan allows 3 scheduled posts at a time. Upgrade to Pro for unlimited scheduling.', 'ai-marketing-expert' ),
-				'limit_reached' => true,
-			), 403 );
-		}
 
 		// Determine status.
 		$status = 'draft';
@@ -478,12 +458,6 @@ class PostController {
 		}
 		if ( $request->has_param( 'scheduled_at' ) ) {
 			$val = sanitize_text_field( $request->get_param( 'scheduled_at' ) );
-			if ( $val && $this->scheduled_limit_reached( $id ) ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'Scheduled post limit reached. Free plan allows 3 scheduled posts at a time. Upgrade to Pro for unlimited scheduling.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 403 );
-			}
 			$data['scheduled_at'] = $val ?: null;
 			$data['status']       = $val ? ( ! empty( $this->get_social_settings()['approval_workflow'] ) ? 'approval_pending' : 'scheduled' ) : 'draft';
 		}
@@ -649,28 +623,6 @@ class PostController {
 	}
 
 	private function scheduled_limit_reached( int $exclude_id = 0 ): bool {
-		if ( aime_has_pro() ) {
-			return false;
-		}
-
-		global $wpdb;
-		$posts_table = $wpdb->prefix . 'aime_social_posts';
-		$limits = aime_free_limits();
-		$limit = (int) ( $limits['social_scheduled_posts'] ?? 3 );
-
-		if ( $exclude_id > 0 ) {
-			$count = (int) $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM %i WHERE status IN ('scheduled','approval_pending') AND id != %d",
-				$posts_table,
-				$exclude_id
-			) );
-		} else {
-			$count = (int) $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM %i WHERE status IN ('scheduled','approval_pending')",
-				$posts_table
-			) );
-		}
-
-		return $count >= $limit;
+		return false;
 	}
 }

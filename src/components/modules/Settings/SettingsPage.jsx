@@ -10,9 +10,7 @@ import {
 import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import { ProUpgradeButton } from '../../common/ProLock';
 import useApi from '../../../hooks/useApi';
-import usePro from '../../../hooks/usePro';
 
 const isDebug = !! window.aimeData?.isDebug;
 
@@ -41,7 +39,6 @@ const formatCronDelay = ( seconds ) => {
 
 const SettingsPage = () => {
 	const { get, post, del } = useApi();
-	const { hasPro } = usePro();
 	// `useApi` flips its shared `loading` on every request this page makes —
 	// including the debug-log fetch, the cron poll and every toggle. Gating the
 	// page render on it replaced the tab sidebar and the panel with a full-page
@@ -418,26 +415,6 @@ const SettingsPage = () => {
 					{ /* General */ }
 					{ tab === 'general' && (
 						<>
-							<Card title={ __( 'License Status', 'ai-marketing-expert' ) }>
-								<div className={ `aime-license-status ${ hasPro ? 'is-pro' : 'is-free' }` }>
-									<span className="aime-license-status__mark" aria-hidden="true" />
-									<div className="aime-license-status__text">
-										<strong>
-											{ hasPro
-												? __( 'Pro License Active', 'ai-marketing-expert' )
-												: __( 'Free Version', 'ai-marketing-expert' )
-											}
-										</strong>
-										{ ! hasPro && (
-											<p>{ __( 'Upgrade to Pro to unlock all features.', 'ai-marketing-expert' ) }</p>
-										) }
-									</div>
-									{ ! hasPro && (
-										<ProUpgradeButton>{ __( 'Upgrade Pro', 'ai-marketing-expert' ) }</ProUpgradeButton>
-									) }
-								</div>
-							</Card>
-
 							<Card title={ __( 'Import / Export', 'ai-marketing-expert' ) }>
 								<p className="aime-card-description">
 									{ __( 'Export plugin settings and email templates as a JSON file, or import them on another site. API keys and other secrets are never included in exports.', 'ai-marketing-expert' ) }

@@ -224,14 +224,6 @@ class WorkflowRestController {
 	}
 
 	public function create_skill( \WP_REST_Request $req ): \WP_REST_Response {
-		// Custom skills are Pro-only (creation gate; built-in Pro skills are
-		// filtered at runtime by SkillRegistry::resolve()).
-		if ( class_exists( '\\WPSpace\\AiMarketingExpert\\Pro' ) ) {
-			$gate = \WPSpace\AiMarketingExpert\Pro::gate( 'Custom Brain Skills' );
-			if ( is_wp_error( $gate ) ) {
-				return new \WP_REST_Response( array( 'message' => $gate->get_error_message(), 'pro_required' => true ), 403 );
-			}
-		}
 		$id = \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::create( array(
 			'title'        => sanitize_text_field( (string) $req->get_param( 'title' ) ),
 			'instructions' => sanitize_textarea_field( (string) $req->get_param( 'instructions' ) ),
@@ -244,12 +236,6 @@ class WorkflowRestController {
 	}
 
 	public function delete_skill( \WP_REST_Request $req ): \WP_REST_Response {
-		if ( class_exists( '\\WPSpace\\AiMarketingExpert\\Pro' ) ) {
-			$gate = \WPSpace\AiMarketingExpert\Pro::gate( 'Custom Brain Skills' );
-			if ( is_wp_error( $gate ) ) {
-				return new \WP_REST_Response( array( 'message' => $gate->get_error_message(), 'pro_required' => true ), 403 );
-			}
-		}
 		$ok = \WPSpace\AiMarketingExpert\Modules\WorkflowAutomation\Includes\SkillRegistry::delete( sanitize_key( (string) $req['id'] ) );
 		if ( ! $ok ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Skill not found or cannot be deleted.', 'ai-marketing-expert' ) ), 404 );
@@ -292,6 +278,17 @@ class WorkflowRestController {
 	 * @return \WP_REST_Response
 	 */
 	public function receive_webhook( \WP_REST_Request $req ): \WP_REST_Response {
+		$ip  = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0' ) );
+		$key = 'aime_wh_inbound_' . md5( $ip );
+		$hit = (int) get_transient( $key );
+		if ( $hit >= 60 ) {
+			return new \WP_REST_Response(
+				array( 'message' => __( 'Too many requests. Please try again later.', 'ai-marketing-expert' ) ),
+				429
+			);
+		}
+		set_transient( $key, $hit + 1, MINUTE_IN_SECONDS );
+
 		$token = sanitize_text_field( (string) $req->get_param( 'token' ) );
 		if ( empty( $token ) ) {
 			return new \WP_REST_Response( array( 'message' => 'Token required' ), 400 );
@@ -300,8 +297,10 @@ class WorkflowRestController {
 		$params = $req->get_params();
 		unset( $params['token'] );
 
+		$sanitized_data = map_deep( $params, 'sanitize_textarea_field' );
+
 		// Fire universal webhook hook.
-		do_action( 'aime_inbound_webhook_received', $token, $params );
+		do_action( 'aime_inbound_webhook_received', $token, $sanitized_data );
 
 		return new \WP_REST_Response( array( 'received' => true ), 200 );
 	}
@@ -314,10 +313,6 @@ class WorkflowRestController {
 		$template = TemplateRegistry::get( sanitize_key( (string) $req['id'] ) );
 		if ( ! $template ) {
 			return new \WP_REST_Response( array( 'message' => __( 'Template not found.', 'ai-marketing-expert' ) ), 404 );
-		}
-
-		if ( ! empty( $template['is_pro'] ) && ! aime_has_pro() ) {
-			return new \WP_REST_Response( array( 'message' => __( 'This template requires a Pro plan.', 'ai-marketing-expert' ) ), 403 );
 		}
 
 		if ( ! TemplateRegistry::is_available( $template ) ) {
@@ -345,13 +340,18 @@ class WorkflowRestController {
 		$steps = array();
 		$order = 0;
 		foreach ( $blueprint as $step ) {
-			$parent  = (string) ( $step['parent_key'] ?? '' );
-			$steps[] = array(
-				'step_key'    => $key_map[ (string) ( $step['key'] ?? '' ) ],
+			$orig_key = (string) ( $step['key'] ?? '' );
+			$parent   = (string) ( $step['parent_key'] ?? '' );
+			$cfg      = is_array( $step['config'] ?? null ) ? $step['config'] : array();
+			if ( '' !== $orig_key && empty( $cfg['alias'] ) ) {
+				$cfg['alias'] = $orig_key;
+			}
+			$steps[]  = array(
+				'step_key'    => $key_map[ $orig_key ] ?? wp_generate_uuid4(),
 				'parent_key'  => isset( $key_map[ $parent ] ) ? $key_map[ $parent ] : '',
 				'branch'      => $step['branch'] ?? 'default',
 				'action_type' => $step['action_type'] ?? '',
-				'config'      => $step['config'] ?? array(),
+				'config'      => $cfg,
 				'step_order'  => $order++,
 				'position_x'  => (int) ( $step['position_x'] ?? 0 ),
 				'position_y'  => (int) ( $step['position_y'] ?? 0 ),
@@ -381,16 +381,7 @@ class WorkflowRestController {
 	public function create( \WP_REST_Request $req ): \WP_REST_Response {
 		$params = $req->get_json_params() ?: $req->get_params();
 
-		// Free-tier active-workflow limit.
 		$status = sanitize_text_field( $params['status'] ?? 'draft' );
-		if ( 'active' === $status && aime_limit_reached( 'workflows_active', $this->repo->count_active() ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Free plan allows up to 2 active workflows. Upgrade for unlimited.', 'ai-marketing-expert' ) ), 403 );
-		}
-
-		$plan_error = $this->validate_steps_for_plan( $params );
-		if ( $plan_error ) {
-			return $plan_error;
-		}
 
 		// Activating a workflow requires every step's required config to be set.
 		if ( 'active' === $status ) {
@@ -440,15 +431,6 @@ class WorkflowRestController {
 		$params = $req->get_json_params() ?: $req->get_params();
 
 		$status = sanitize_text_field( $params['status'] ?? $wf->status );
-		if ( 'active' === $status && 'active' !== $wf->status
-			&& aime_limit_reached( 'workflows_active', $this->repo->count_active( $id ) ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Free plan allows up to 2 active workflows. Upgrade for unlimited.', 'ai-marketing-expert' ) ), 403 );
-		}
-
-		$plan_error = $this->validate_steps_for_plan( $params );
-		if ( $plan_error ) {
-			return $plan_error;
-		}
 
 		// Activating a workflow requires every step's required config to be set.
 		// The list-screen Activate toggle sends no steps, so fall back to the
@@ -522,25 +504,24 @@ class WorkflowRestController {
 			return $config_error;
 		}
 
-		// Free-plan monthly run cap: reject up front — clearer than queueing a
-		// run the engine would only skip.
-		if ( $this->repo->monthly_run_limit_reached() ) {
-			$limit = (int) ( aime_free_limits()['workflow_runs_monthly'] ?? 30 );
-			return new \WP_REST_Response( array(
-				/* translators: %d: monthly run limit on the free plan. */
-				'message' => sprintf( __( 'Free plan includes %d workflow runs per month and the limit has been reached. Runs resume next month — upgrade to Pro for unlimited runs.', 'ai-marketing-expert' ), $limit ),
-			), 403 );
-		}
-
 		// Manual runs of event workflows may carry a sample payload so steps
 		// that read context['event'] (e.g. funnel enrolment) can be tested.
 		$event_payload = array();
 		$params        = $req->get_json_params() ?: array();
 		if ( 'event' === $wf->trigger_type && is_array( $params['event'] ?? null ) ) {
 			foreach ( $params['event'] as $key => $value ) {
+				$clean_key = sanitize_key( (string) $key );
 				if ( is_scalar( $value ) ) {
-					$event_payload[ sanitize_key( (string) $key ) ] = sanitize_text_field( (string) $value );
+					$event_payload[ $clean_key ] = ( 'single_item_links' === $clean_key )
+						? wp_kses_post( (string) $value )
+						: sanitize_textarea_field( (string) $value );
 				}
+			}
+			// Alias name <-> customer_name for WooCommerce cart recovery templates:
+			if ( ! empty( $event_payload['name'] ) && empty( $event_payload['customer_name'] ) ) {
+				$event_payload['customer_name'] = $event_payload['name'];
+			} elseif ( ! empty( $event_payload['customer_name'] ) && empty( $event_payload['name'] ) ) {
+				$event_payload['name'] = $event_payload['customer_name'];
 			}
 		}
 
@@ -698,9 +679,6 @@ class WorkflowRestController {
 			'workflow_status' => $this->repo->workflow_status_totals(),
 			'action_failures' => $failing,
 			'workflows'       => $workflows,
-			// Sent with the payload so the quota card does not cost a second
-			// request on a page whose whole job is one round trip.
-			'is_pro'          => aime_has_pro(),
 			'runs_usage'      => aime_usage_payload( 'workflow_runs_monthly', $this->repo->count_runs_this_month() ),
 		), 200 );
 	}
@@ -709,17 +687,14 @@ class WorkflowRestController {
 	 * Free-plan usage meters for the workflow module.
 	 */
 	public function usage(): \WP_REST_Response {
-		$limits = aime_free_limits();
-
 		return new \WP_REST_Response( array(
-			'is_pro' => aime_has_pro(),
 			'usage'  => array(
 				'workflows' => aime_usage_payload( 'workflows_active', $this->repo->count_active() ),
 				'runs'      => aime_usage_payload( 'workflow_runs_monthly', $this->repo->count_runs_this_month() ),
 			),
 			// Per-workflow cap, not a running total — the builder shows it against
 			// the step count of the workflow currently open.
-			'step_limit' => aime_has_pro() ? null : (int) ( $limits['workflow_steps'] ?? 3 ),
+			'step_limit' => null,
 		), 200 );
 	}
 
@@ -775,7 +750,6 @@ class WorkflowRestController {
 		if ( isset( $p['failure_policy'] ) ) {
 			$out['failure_policy'] = in_array( $p['failure_policy'], array( 'stop', 'skip', 'retry' ), true ) ? $p['failure_policy'] : 'stop';
 		}
-		$out['is_pro'] = aime_has_pro() ? 1 : 0;
 		return $out;
 	}
 
@@ -866,36 +840,6 @@ class WorkflowRestController {
 	 * response to send, or null when the payload is allowed.
 	 */
 	private function validate_steps_for_plan( array $params ): ?\WP_REST_Response {
-		if ( aime_has_pro() ) {
-			return null;
-		}
-
-		if ( isset( $params['schedule_type'] ) && ! in_array( $params['schedule_type'], array( 'once', 'weekly', 'monthly' ), true ) ) {
-			return new \WP_REST_Response( array( 'message' => __( 'Free plan supports one-time, weekly and monthly schedules only. Upgrade for daily and custom intervals.', 'ai-marketing-expert' ) ), 403 );
-		}
-
-		$steps = $params['steps'] ?? null;
-		if ( ! is_array( $steps ) ) {
-			return null;
-		}
-
-		$limits = aime_free_limits();
-		$max    = (int) ( $limits['workflow_steps'] ?? 3 );
-		if ( count( $steps ) > $max ) {
-			return new \WP_REST_Response( array(
-				/* translators: %d: maximum steps on the free plan. */
-				'message' => sprintf( __( 'Free plan allows up to %d steps per workflow. Upgrade for unlimited steps.', 'ai-marketing-expert' ), $max ),
-			), 403 );
-		}
-
-		foreach ( $steps as $step ) {
-			$action = (string) ( $step['action_type'] ?? '' );
-			$branch = (string) ( $step['branch'] ?? 'default' );
-			if ( 'condition' === $action || 'default' !== $branch ) {
-				return new \WP_REST_Response( array( 'message' => __( 'Conditional branching requires a Pro plan.', 'ai-marketing-expert' ) ), 403 );
-			}
-		}
-
 		return null;
 	}
 

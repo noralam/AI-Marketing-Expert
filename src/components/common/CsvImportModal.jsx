@@ -8,7 +8,6 @@
 import { useState, useRef, useCallback, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import useApi from '../../hooks/useApi';
-import { ProLabel } from './ProLock';
 
 const DELIMITER_OPTIONS = [
 	{ label: __( 'Comma Separated (,)', 'ai-marketing-expert' ), value: ',' },
@@ -59,7 +58,7 @@ const autoMap = ( header ) => {
 	return map[ h ] || '';
 };
 
-const CsvImportModal = ( { onClose, onImported, lists = [], tags = [], validation, onValidationChange, hasPro = !! window.aimeData?.hasPro } ) => {
+const CsvImportModal = ( { onClose, onImported, lists = [], tags = [], validation, onValidationChange } ) => {
 	const { post, loading } = useApi();
 	const fileRef = useRef( null );
 	const [ step, setStep ] = useState( 1 );
@@ -84,15 +83,11 @@ const CsvImportModal = ( { onClose, onImported, lists = [], tags = [], validatio
 		check_mx: false,
 	};
 	const updateValidation = ( key, value ) => {
-		if ( ! hasPro && [ 'skip_disposable', 'skip_role_based', 'skip_spam_patterns', 'check_mx' ].includes( key ) ) {
-			setImportError( __( 'Advanced import cleanup filters are available in Pro.', 'ai-marketing-expert' ) );
-			return;
-		}
 		if ( onValidationChange ) {
 			onValidationChange( { ...validationOptions, [ key ]: value } );
 		}
 	};
-	const validationForRequest = hasPro ? validationOptions : { ...validationOptions, skip_disposable: false, skip_role_based: false, skip_spam_patterns: false, check_mx: false };
+	const validationForRequest = validationOptions;
 
 	const parseCsv = useCallback( ( text, delim ) => {
 		const lines = text.split( /\r?\n/ ).filter( ( l ) => l.trim() );
@@ -374,11 +369,11 @@ const CsvImportModal = ( { onClose, onImported, lists = [], tags = [], validatio
 							<div className="aime-import-validation-options">
 								<label className="aime-premium-form-label">{ __( 'Validation & Cleanup', 'ai-marketing-expert' ) }</label>
 								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.skip_invalid_format } onChange={ ( e ) => updateValidation( 'skip_invalid_format', e.target.checked ) } /> <span>{ __( 'Skip invalid email format', 'ai-marketing-expert' ) }</span></label>
-								<label className="aime-checkbox-label"><input type="checkbox" checked={ hasPro && validationOptions.skip_disposable } disabled={ ! hasPro } onChange={ ( e ) => updateValidation( 'skip_disposable', e.target.checked ) } /> { hasPro ? <span>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</span> : <ProLabel>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</ProLabel> }</label>
+								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.skip_disposable } onChange={ ( e ) => updateValidation( 'skip_disposable', e.target.checked ) } /> <span>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</span></label>
 								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.skip_test_fake } onChange={ ( e ) => updateValidation( 'skip_test_fake', e.target.checked ) } /> <span>{ __( 'Skip test, fake, localhost, and placeholder emails', 'ai-marketing-expert' ) }</span></label>
-								<label className="aime-checkbox-label"><input type="checkbox" checked={ hasPro && validationOptions.skip_role_based } disabled={ ! hasPro } onChange={ ( e ) => updateValidation( 'skip_role_based', e.target.checked ) } /> { hasPro ? <span>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</span> : <ProLabel>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</ProLabel> }</label>
-								<label className="aime-checkbox-label"><input type="checkbox" checked={ hasPro && validationOptions.skip_spam_patterns } disabled={ ! hasPro } onChange={ ( e ) => updateValidation( 'skip_spam_patterns', e.target.checked ) } /> { hasPro ? <span>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</span> : <ProLabel>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</ProLabel> }</label>
-								<label className="aime-checkbox-label"><input type="checkbox" checked={ hasPro && validationOptions.check_mx } disabled={ ! hasPro } onChange={ ( e ) => updateValidation( 'check_mx', e.target.checked ) } /> { hasPro ? <span>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</span> : <ProLabel>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</ProLabel> }</label>
+								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.skip_role_based } onChange={ ( e ) => updateValidation( 'skip_role_based', e.target.checked ) } /> <span>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</span></label>
+								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.skip_spam_patterns } onChange={ ( e ) => updateValidation( 'skip_spam_patterns', e.target.checked ) } /> <span>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</span></label>
+								<label className="aime-checkbox-label"><input type="checkbox" checked={ validationOptions.check_mx } onChange={ ( e ) => updateValidation( 'check_mx', e.target.checked ) } /> <span>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</span></label>
 							</div>
 						</div>
 						<div className="aime-premium-modal-footer">

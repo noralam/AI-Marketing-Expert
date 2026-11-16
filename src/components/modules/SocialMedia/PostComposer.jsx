@@ -12,9 +12,8 @@ import LoadingBtn from '../../common/LoadingBtn';
 import AiNotice, { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import { ProUpgradeButton } from '../../common/ProLock';
 import { toast } from '../../common/Toast';
-import { SOCIAL_POST_STATUS, SOCIAL_CHAR_LIMITS, FREE_LIMITS } from '../../../utils/constants';
+import { SOCIAL_POST_STATUS, SOCIAL_CHAR_LIMITS } from '../../../utils/constants';
 import { browserToSiteWall, siteToBrowserWall, siteTimezone, tzDiffers } from '../../../utils/wallClock';
 
 const PostComposer = ( { id, onBack, onNavigate } ) => {
@@ -50,8 +49,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	const [ stockSearched, setStockSearched ] = useState( false );
 	const [ stockImportingId, setStockImportingId ] = useState( null );
 	const isEditing = !! id;
-	const hasPro = !! window.aimeData?.hasPro;
-	const scheduledLimit = FREE_LIMITS.social_scheduled_posts || 3;
 
 	// Fetch accounts for the dropdown.
 	const fetchAccounts = useCallback( async () => {
@@ -132,7 +129,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 	const hasLocalMedia = form.media_urls.some( ( url ) => /https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test( url ) );
 	const needsInstagramMedia = platform === 'instagram' && form.media_urls.length === 0;
 	const canPublishNow = ! isOverLimit && ! hasLocalMedia && ! needsInstagramMedia;
-	const scheduleLimitReached = ! hasPro && scheduledCount >= scheduledLimit && ! form.scheduled_at;
 	const platformLabel = selectedAccount?.platform === 'x'
 		? __( 'X', 'ai-marketing-expert' )
 		: selectedAccount?.platform
@@ -163,10 +159,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 		}
 		if ( publishNow && ! canPublishNow ) {
 			toast( __( 'Please fix platform requirements before publishing.', 'ai-marketing-expert' ), 'error' );
-			return;
-		}
-		if ( ! publishNow && form.scheduled_at && scheduleLimitReached ) {
-			toast( __( 'Free plan allows 3 scheduled posts at a time. Upgrade to Pro for unlimited scheduling.', 'ai-marketing-expert' ), 'error' );
 			return;
 		}
 
@@ -390,10 +382,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 					<h2 style={ { margin: 0 } }>{ isEditing ? __( 'Edit Post', 'ai-marketing-expert' ) : __( 'Create Post', 'ai-marketing-expert' ) }</h2>
 				</div>
 			</div>
-
-			{ ! hasPro && (
-				<Notice type="info" message={ sprintf( __( 'Free plan includes %1$d scheduled posts at a time. You currently have %2$d scheduled.', 'ai-marketing-expert' ), scheduledLimit, scheduledCount ) } />
-			) }
 
 			<div style={ { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 } }>
 				{ /* Main Editor */ }
@@ -675,14 +663,7 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 							<input
 								type="datetime-local"
 								value={ form.scheduled_at ? form.scheduled_at.replace( ' ', 'T' ).substring( 0, 16 ) : '' }
-								onChange={ ( e ) => {
-									if ( scheduleLimitReached && e.target.value ) {
-										toast( __( 'Free plan allows 3 scheduled posts at a time. Upgrade to Pro for unlimited scheduling.', 'ai-marketing-expert' ), 'error' );
-										return;
-									}
-									updateForm( 'scheduled_at', e.target.value || '' );
-								} }
-								disabled={ scheduleLimitReached }
+								onChange={ ( e ) => updateForm( 'scheduled_at', e.target.value || '' ) }
 								style={ { padding: '8px 12px', border: '1px solid var(--aime-border)', borderRadius: 6, fontSize: 14 } }
 							/>
 							{ tzDiffers() && (
@@ -694,7 +675,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 									) }
 								</p>
 							) }
-							{ scheduleLimitReached && <ProUpgradeButton /> }
 							{ form.scheduled_at && (
 								<Button variant="link" size="compact" onClick={ () => updateForm( 'scheduled_at', '' ) } style={ { marginLeft: 8 } }>
 									{ __( 'Clear', 'ai-marketing-expert' ) }
@@ -708,11 +688,6 @@ const PostComposer = ( { id, onBack, onNavigate } ) => {
 							{ hasLocalMedia && (
 								<p style={ { color: '#C62828', fontSize: 12, margin: '8px 0 0' } }>
 									{ __( 'Localhost media cannot be fetched by social platforms. Use a public media URL before publishing.', 'ai-marketing-expert' ) }
-								</p>
-							) }
-							{ scheduleLimitReached && (
-								<p style={ { color: '#C62828', fontSize: 12, margin: '8px 0 0' } }>
-									{ __( 'Schedule limit reached. Publish or clear an existing scheduled post, or upgrade to Pro.', 'ai-marketing-expert' ) }
 								</p>
 							) }
 						</div>

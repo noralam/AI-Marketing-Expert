@@ -457,7 +457,10 @@ const useChat = ( config ) => {
 	const giveConsent = useCallback( () => {
 		setConsentGiven( true );
 		setConsent( botId );
-	}, [ botId ] );
+		if ( ! conversationIdRef.current ) {
+			startConversation();
+		}
+	}, [ botId, startConversation ] );
 
 	/**
 	 * Dismiss lead form.

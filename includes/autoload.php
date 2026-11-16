@@ -65,6 +65,12 @@ spl_autoload_register( function ( $class ) {
 				return;
 			}
 
+			// Fallback: check includes/admin/ for admin classes in the root namespace.
+			if ( empty( $current_dir_parts ) && file_exists( AIME_PLUGIN_DIR . 'includes/admin/' . $filename ) ) {
+				require_once AIME_PLUGIN_DIR . 'includes/admin/' . $filename;
+				return;
+			}
+
 			// Try modules/ directory (for Modules\EmailMarketing\* namespace).
 			if ( ! empty( $current_dir_parts ) && 'modules' === $current_dir_parts[0] ) {
 				$module_parts = array_slice( $current_dir_parts, 1 );
@@ -91,6 +97,12 @@ spl_autoload_register( function ( $class ) {
 
 			if ( file_exists( $file ) ) {
 				require_once $file;
+				return;
+			}
+
+			// Fallback: check includes/admin/ for admin classes in the root namespace.
+			if ( empty( $current_dir_parts ) && file_exists( AIME_PLUGIN_DIR . 'includes/admin/' . $filename ) ) {
+				require_once AIME_PLUGIN_DIR . 'includes/admin/' . $filename;
 				return;
 			}
 		}

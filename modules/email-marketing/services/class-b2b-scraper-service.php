@@ -310,7 +310,7 @@ Return ONLY the raw JSON object with no markdown code fences or conversational t
 		$domain = preg_replace( '#^https?://#i', '', $domain );
 		$domain = trim( $domain, '/' );
 
-		if ( empty( $domain ) || ! str_contains( $domain, '.' ) ) {
+		if ( empty( $domain ) || ! str_contains( $domain, '.' ) || filter_var( $domain, FILTER_VALIDATE_IP ) ) {
 			return array();
 		}
 
@@ -324,10 +324,11 @@ Return ONLY the raw JSON object with no markdown code fences or conversational t
 		$extracted_emails = array();
 
 		foreach ( $urls_to_try as $url ) {
-			$response = wp_remote_get( $url, array(
-				'timeout'    => self::SCRAPE_TIMEOUT_SECONDS,
-				'user-agent' => self::SCRAPER_USER_AGENT,
-				'sslverify'  => false,
+			$response = wp_safe_remote_get( $url, array(
+				'timeout'            => self::SCRAPE_TIMEOUT_SECONDS,
+				'user-agent'         => self::SCRAPER_USER_AGENT,
+				'sslverify'          => true,
+				'reject_unsafe_urls' => true,
 			) );
 
 			if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {

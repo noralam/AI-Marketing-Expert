@@ -11,7 +11,6 @@ import Card from '../../common/Card';
 import { isAiConfigured, aiDisabledTitle } from '../../common/AiNotice';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
 import sanitizeHtml from '../../../utils/sanitizeHtml';
 import { formatDate } from '../../../utils/datetime';
 
@@ -63,8 +62,6 @@ const getTemplateImage = ( template ) => {
 const EmailTemplates = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
 	const slowWarning = useSlowWarning();
-	const hasPro = isProActive();
-	const freeTemplateLimit = Number( window.aimeData?.freeLimits?.email_template_imports_free || 4 );
 	const [ templates, setTemplates ] = useState( [] );
 	const [ search, setSearch ] = useState( '' );
 	const [ category, setCategory ] = useState( '' );
@@ -206,31 +203,23 @@ const EmailTemplates = ( { onNavigate } ) => {
 
 			{ ! loading && templates.length > 0 && (
 				<div className="aime-template-svg-grid">
-					{ templates.map( ( t, index ) => {
-						const isLocked = ! hasPro && index >= freeTemplateLimit;
-						return (
+					{ templates.map( ( t ) => (
 						<div key={ t.id } className="aime-template-svg-card">
-							<div className="aime-svg-card-preview" onClick={ () => handlePreview( t.id, isLocked ) }>
+							<div className="aime-svg-card-preview" onClick={ () => handlePreview( t.id ) }>
 								<img src={ getTemplateImage( t ) } alt={ t.title || t.name } loading="lazy" />
 								<div className="aime-svg-card-overlay">
-									{ isLocked ? (
-										<span className="aime-svg-overlay-btn aime-svg-overlay-btn--disabled"><ProLabel /></span>
-									) : (
-										<>
-											<button className="aime-svg-overlay-btn" onClick={ ( e ) => { e.stopPropagation(); handlePreview( t.id ); } }>
-												<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-												{ __( 'Preview', 'ai-marketing-expert' ) }
-											</button>
-											<button className="aime-svg-overlay-btn" onClick={ ( e ) => { e.stopPropagation(); handleDuplicate( t.id ); } }>
-												<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-												{ __( 'Duplicate', 'ai-marketing-expert' ) }
-											</button>
-										</>
-									) }
+									<button className="aime-svg-overlay-btn" onClick={ ( e ) => { e.stopPropagation(); handlePreview( t.id ); } }>
+										<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+										{ __( 'Preview', 'ai-marketing-expert' ) }
+									</button>
+									<button className="aime-svg-overlay-btn" onClick={ ( e ) => { e.stopPropagation(); handleDuplicate( t.id ); } }>
+										<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+										{ __( 'Duplicate', 'ai-marketing-expert' ) }
+									</button>
 								</div>
 							</div>
 							<div className="aime-svg-card-body">
-								<h4 className="aime-svg-card-title aime-pro-card-header">{ t.title || t.name }{ isLocked && <ProLabel /> }</h4>
+								<h4 className="aime-svg-card-title">{ t.title || t.name }</h4>
 								<div className="aime-svg-card-meta">
 									<span
 										className="aime-svg-card-category"
@@ -246,16 +235,15 @@ const EmailTemplates = ( { onNavigate } ) => {
 								</div>
 							</div>
 							<div className="aime-svg-card-footer">
-								<Button variant="secondary" size="small" disabled={ isLocked } onClick={ () => handlePreview( t.id ) }>
+								<Button variant="secondary" size="small" onClick={ () => handlePreview( t.id ) }>
 									{ __( 'Use Template', 'ai-marketing-expert' ) }
 								</Button>
-								{ isLocked && <ProUpgradeButton /> }
 								<Button isDestructive variant="tertiary" size="small" onClick={ () => handleDelete( t.id ) }>
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
 								</Button>
 							</div>
 						</div>
-					); } ) }
+					) ) }
 				</div>
 			) }
 

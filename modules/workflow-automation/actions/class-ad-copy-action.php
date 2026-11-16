@@ -80,7 +80,7 @@ class AdCopyAction extends BaseAction {
 	 * Priority:
 	 * 1. Manual product field (if not empty)
 	 * 2. WooCommerce product rotation (if products selected and WC active)
-	 * 3. Manual products rotation (Pro)
+	 * 3. Manual products rotation
 	 * 4. AI Brain selected topic
 	 * 5. Workflow topic
 	 *
@@ -102,7 +102,7 @@ class AdCopyAction extends BaseAction {
 				? array_filter( array_map( 'intval', $wc_product_ids ) )
 				: array();
 
-			if ( ! empty( $wc_product_ids ) && aime_has_pro() ) {
+			if ( ! empty( $wc_product_ids ) ) {
 				$state_key = (int) ( $context['workflow_id'] ?? 0 ) . ':' . (int) ( $context['step_id'] ?? 0 );
 				$product_id = self::rotate_wc_product( $wc_product_ids, $state_key );
 				if ( $product_id ) {
@@ -111,10 +111,6 @@ class AdCopyAction extends BaseAction {
 						return self::describe_wc_product( $wc_product );
 					}
 				}
-			} elseif ( ! empty( $wc_product_ids ) && ! aime_has_pro() ) {
-				// Make the free-tier skip visible in the run log instead of
-				// silently falling through to the next product source.
-				aime_log( 'Workflow ad copy: WooCommerce rotation is Pro — using the fallback product source for this run.', 'info', 'workflow-automation' );
 			}
 		}
 

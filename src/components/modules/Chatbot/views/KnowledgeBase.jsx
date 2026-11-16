@@ -7,14 +7,12 @@ import { __, sprintf } from '@wordpress/i18n';
 import { Button, SelectControl, SearchControl, TextControl, TextareaControl, Spinner } from '@aime/wp-components';
 import { edit, trash } from '@wordpress/icons';
 import useApi from '../../../../hooks/useApi';
-import usePro from '../../../../hooks/usePro';
 import useSlowWarning from '../../../../hooks/useSlowWarning';
 import Card from '../../../common/Card';
 import LoadingBtn from '../../../common/LoadingBtn';
 import Loader from '../../../common/Loader';
 import Notice from '../../../common/Notice';
 import ConfirmModal from '../../../common/ConfirmModal';
-import { ProUpgradeButton } from '../../../common/ProLock';
 import { toast } from '../../../common/Toast';
 import { PER_PAGE } from '../../../../utils/constants';
 
@@ -52,7 +50,6 @@ const DEFAULT_ENTRY = {
 
 const KnowledgeBase = ( { onNavigate } ) => {
 	const { get, post, put, del, loading } = useApi();
-	const { hasPro, freeLimits } = usePro();
 	const slowWarning = useSlowWarning();
 	const [ items, setItems ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );
@@ -184,8 +181,6 @@ const KnowledgeBase = ( { onNavigate } ) => {
 	};
 
 	const totalPages = Math.ceil( total / PER_PAGE );
-	const qaLimit = freeLimits?.chatbot_knowledge_qa || 50;
-	const wpContentLimit = freeLimits?.chatbot_knowledge_pages || 50;
 
 	const botOptions = [
 		{ label: __( 'Select Bot', 'ai-marketing-expert' ), value: '' },
@@ -209,9 +204,7 @@ const KnowledgeBase = ( { onNavigate } ) => {
 			{ /* Index actions */ }
 			<Card title={ __( 'Content Indexing', 'ai-marketing-expert' ) }>
 				<p className="description" style={ { marginBottom: 16 } }>
-					{ hasPro
-						? __( 'Index your WordPress content so the chatbot can answer questions about your site.', 'ai-marketing-expert' )
-						: sprintf( __( 'Free plan can index up to %d WordPress posts/pages. WooCommerce products, documents, URLs, and all-site indexing require Pro.', 'ai-marketing-expert' ), wpContentLimit ) }
+					{ __( 'Index your WordPress content and WooCommerce products so the chatbot can answer questions about your site.', 'ai-marketing-expert' ) }
 				</p>
 
 				{ ! botFilter && (
@@ -255,42 +248,28 @@ const KnowledgeBase = ( { onNavigate } ) => {
 								{ __( 'Index WordPress Content', 'ai-marketing-expert' ) }
 							</Button>
 						) }
-						{ hasPro ? (
-							<>
-								{ indexing ? (
-									<LoadingBtn>{ __( 'Indexing...', 'ai-marketing-expert' ) }</LoadingBtn>
-								) : (
-									<Button
-										variant="secondary"
-										onClick={ () => handleTriggerIndex( 'woo_product' ) }
-									>
-										{ __( 'Index WooCommerce Products', 'ai-marketing-expert' ) }
-									</Button>
-								) }
-								{ indexing ? (
-									<LoadingBtn primary>{ __( 'Indexing...', 'ai-marketing-expert' ) }</LoadingBtn>
-								) : (
-									<Button
-										variant="primary"
-										onClick={ async () => {
-											await handleTriggerIndex( 'wp_content' );
-											await handleTriggerIndex( 'woo_product' );
-										} }
-									>
-										{ __( 'Index All Website Data', 'ai-marketing-expert' ) }
-									</Button>
-								) }
-							</>
+						{ indexing ? (
+							<LoadingBtn>{ __( 'Indexing...', 'ai-marketing-expert' ) }</LoadingBtn>
 						) : (
-							<>
-								<Button variant="secondary" disabled>
-									{ __( 'Index Products (Pro)', 'ai-marketing-expert' ) }
-								</Button>
-								<Button variant="secondary" disabled>
-									{ __( 'Index All Website Data (Pro)', 'ai-marketing-expert' ) }
-								</Button>
-								<ProUpgradeButton />
-							</>
+							<Button
+								variant="secondary"
+								onClick={ () => handleTriggerIndex( 'woo_product' ) }
+							>
+								{ __( 'Index WooCommerce Products', 'ai-marketing-expert' ) }
+							</Button>
+						) }
+						{ indexing ? (
+							<LoadingBtn primary>{ __( 'Indexing...', 'ai-marketing-expert' ) }</LoadingBtn>
+						) : (
+							<Button
+								variant="primary"
+								onClick={ async () => {
+									await handleTriggerIndex( 'wp_content' );
+									await handleTriggerIndex( 'woo_product' );
+								} }
+							>
+								{ __( 'Index All Website Data', 'ai-marketing-expert' ) }
+							</Button>
 						) }
 					</div>
 				) }
@@ -298,9 +277,6 @@ const KnowledgeBase = ( { onNavigate } ) => {
 
 			{ /* Knowledge entries list */ }
 			<Card>
-				{ ! hasPro && (
-					<Notice type="info" message={ sprintf( __( 'Free plan includes up to %1$d manual Q&A entries and %2$d WordPress posts/pages. Document, URL, and WooCommerce knowledge sources require Pro.', 'ai-marketing-expert' ), qaLimit, wpContentLimit ) } />
-				) }
 				<div className="aime-table-toolbar">
 					<SearchControl
 						value={ search }

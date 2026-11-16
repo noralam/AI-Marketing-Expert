@@ -11,8 +11,6 @@ import Loader from '../../common/Loader';
 import ConfirmModal from '../../common/ConfirmModal';
 import LoadingBtn from '../../common/LoadingBtn';
 import TestRunModal from './TestRunModal';
-import UsageNotice from '../../common/UsageNotice';
-import usePro from '../../../hooks/usePro';
 import { formatDateTime } from '../../../utils/datetime';
 import { Button } from '../../common/WpComponents';
 import AiWorkflowModal from './AiWorkflowModal';
@@ -27,7 +25,6 @@ const STATUS_LABELS = {
 const formatDate = ( value ) => formatDateTime( value );
 
 const WorkflowList = ( { onNavigate } ) => {
-	const { proUrl } = usePro();
 	const [ loading, setLoading ] = useState( true );
 	const [ workflows, setWorkflows ] = useState( [] );
 	const [ usage, setUsage ] = useState( null );
@@ -199,20 +196,6 @@ const WorkflowList = ( { onNavigate } ) => {
 						{ __( 'New Workflow', 'ai-marketing-expert' ) }
 					</Button>
 				</div>
-			</div>
-
-			<div style={ { display: 'flex', gap: 10, flexWrap: 'wrap' } }>
-				<UsageNotice
-					usage={ usage?.workflows }
-					featureLabel={ __( 'active workflows', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-					kind="storage"
-				/>
-				<UsageNotice
-					usage={ usage?.runs }
-					featureLabel={ __( 'workflow run', 'ai-marketing-expert' ) }
-					proUrl={ proUrl }
-				/>
 			</div>
 
 			{ workflows.length === 0 ? (

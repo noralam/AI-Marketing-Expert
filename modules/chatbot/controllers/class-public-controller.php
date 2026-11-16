@@ -55,17 +55,6 @@ class PublicController {
 			return new \WP_REST_Response( array( 'message' => __( 'Chatbot is not available.', 'ai-marketing-expert' ) ), 404 );
 		}
 
-		// Check free conversation limit.
-		if ( ! aime_has_pro() ) {
-			$monthly = \WPSpace\AiMarketingExpert\Modules\Chatbot\ChatbotModule::get_monthly_conversation_count();
-			if ( aime_limit_reached( 'chatbot_conversations_monthly', $monthly ) ) {
-				return new \WP_REST_Response( array(
-					'message'       => __( 'The chatbot is currently unavailable. Please try again later.', 'ai-marketing-expert' ),
-					'limit_reached' => true,
-				), 429 );
-			}
-		}
-
 		// Check for existing active conversation for this visitor + bot.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Visitor start flow needs the current open conversation, if any.
 		$existing = $wpdb->get_row( $wpdb->prepare(

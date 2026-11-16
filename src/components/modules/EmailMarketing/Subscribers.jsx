@@ -10,8 +10,6 @@ import Card from '../../common/Card';
 import Loader from '../../common/Loader';
 import Notice from '../../common/Notice';
 import CsvImportModal from '../../common/CsvImportModal';
-import { isProActive, ProLabel, ProUpgradeButton } from '../../common/ProLock';
-import ProBadge from '../../Layout/ProBadge';
 
 const STATUS_OPTIONS = [
 	{ label: __( 'All Statuses', 'ai-marketing-expert' ), value: '' },
@@ -41,7 +39,6 @@ const DEFAULT_VALIDATION = {
 
 const Subscribers = ( { onNavigate } ) => {
 	const { get, post, del, loading, error, clearError } = useApi();
-	const hasPro = isProActive();
 	const [ items, setItems ] = useState( [] );
 	const [ total, setTotal ] = useState( 0 );
 	const [ page, setPage ] = useState( 1 );
@@ -76,20 +73,10 @@ const Subscribers = ( { onNavigate } ) => {
 	const [ importNewStatus, setImportNewStatus ] = useState( 'subscribed' );
 
 	const updateImportValidation = ( key, value ) => {
-		if ( ! hasPro && [ 'skip_disposable', 'skip_role_based', 'skip_spam_patterns', 'check_mx' ].includes( key ) ) {
-			setNotice( { type: 'warning', message: __( 'Advanced import cleanup filters are available in Pro.', 'ai-marketing-expert' ) } );
-			return;
-		}
 		setImportValidation( ( prev ) => ( { ...prev, [ key ]: value } ) );
 	};
 
-	const importValidationForRequest = () => hasPro ? importValidation : {
-		...importValidation,
-		skip_disposable: false,
-		skip_role_based: false,
-		skip_spam_patterns: false,
-		check_mx: false,
-	};
+	const importValidationForRequest = () => importValidation;
 
 	const resetImportOptions = () => {
 		setImportSource( '' );
@@ -142,10 +129,6 @@ const Subscribers = ( { onNavigate } ) => {
 
 	const handleBulk = async ( action, extras = {} ) => {
 		if ( ! selected.length && ! allMatchingSelected ) return;
-		if ( ! hasPro && [ 'complained', 'remove_tags', 'remove_lists' ].includes( action ) ) {
-			setNotice( { type: 'warning', message: __( 'This bulk action is available in Pro.', 'ai-marketing-expert' ) } );
-			return;
-		}
 
 		const count = allMatchingSelected ? total : selected.length;
 		if ( action === 'delete' && ! window.confirm( sprintf( __( 'Delete %d selected contact(s)? This cannot be undone.', 'ai-marketing-expert' ), count ) ) ) {
@@ -214,7 +197,7 @@ const Subscribers = ( { onNavigate } ) => {
 			} );
 			handleImport( res );
 		} catch ( e ) {
-			if ( hasPro && importValidation.check_mx ) {
+			if ( importValidation.check_mx ) {
 				clearError();
 				setShowImportModal( false );
 				resetImportOptions();
@@ -236,11 +219,6 @@ const Subscribers = ( { onNavigate } ) => {
 	};
 
 	const handleExport = async () => {
-		if ( ! hasPro ) {
-			setNotice( { type: 'warning', message: __( 'Export contacts is available in Pro.', 'ai-marketing-expert' ) } );
-			return;
-		}
-
 		const params = { per_page: 99999 };
 		let suffix = 'all';
 
@@ -323,13 +301,10 @@ const Subscribers = ( { onNavigate } ) => {
 				<h2>{ __( 'Contacts', 'ai-marketing-expert' ) } <span className="aime-count">({ total })</span></h2>
 				<div className="aime-page-header-actions">
 					<Button variant="secondary" onClick={ () => onNavigate && onNavigate( 'lead-finder' ) }>
-						<span className="aime-pro-inline-action">
-							{ __( 'Find Leads', 'ai-marketing-expert' ) }
-							{ ! hasPro && <ProBadge /> }
-						</span>
+						{ __( 'Find Leads', 'ai-marketing-expert' ) }
 					</Button>
-					<Button variant="secondary" onClick={ () => hasPro ? setShowExportModal( true ) : handleExport() }>
-						<span className="aime-pro-inline-action">{ __( 'Export Contacts', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+					<Button variant="secondary" onClick={ () => setShowExportModal( true ) }>
+						{ __( 'Export Contacts', 'ai-marketing-expert' ) }
 					</Button>
 					<Button variant="secondary" onClick={ () => setShowImportModal( true ) }>
 						{ __( 'Import Contacts', 'ai-marketing-expert' ) }
@@ -374,19 +349,19 @@ const Subscribers = ( { onNavigate } ) => {
 							{ __( 'Bounced', 'ai-marketing-expert' ) }
 						</Button>
 						<Button variant="secondary" size="small" onClick={ () => handleBulk( 'complained' ) }>
-							<span className="aime-pro-inline-action">{ __( 'Complained', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+							{ __( 'Complained', 'ai-marketing-expert' ) }
 						</Button>
 						<Button variant="secondary" size="small" onClick={ () => setShowBulkModal( 'assign_tags' ) }>
 							{ __( 'Assign Tags', 'ai-marketing-expert' ) }
 						</Button>
-						<Button variant="secondary" size="small" onClick={ () => hasPro ? setShowBulkModal( 'remove_tags' ) : handleBulk( 'remove_tags' ) }>
-							<span className="aime-pro-inline-action">{ __( 'Remove Tags', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+						<Button variant="secondary" size="small" onClick={ () => setShowBulkModal( 'remove_tags' ) }>
+							{ __( 'Remove Tags', 'ai-marketing-expert' ) }
 						</Button>
 						<Button variant="secondary" size="small" onClick={ () => setShowBulkModal( 'assign_lists' ) }>
 							{ __( 'Assign Lists', 'ai-marketing-expert' ) }
 						</Button>
-						<Button variant="secondary" size="small" onClick={ () => hasPro ? setShowBulkModal( 'remove_lists' ) : handleBulk( 'remove_lists' ) }>
-							<span className="aime-pro-inline-action">{ __( 'Remove Lists', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+						<Button variant="secondary" size="small" onClick={ () => setShowBulkModal( 'remove_lists' ) }>
+							{ __( 'Remove Lists', 'ai-marketing-expert' ) }
 						</Button>
 					</div>
 				) }
@@ -791,11 +766,9 @@ const Subscribers = ( { onNavigate } ) => {
 						</div>
 						<div className="aime-premium-modal-footer">
 							<button className="aime-btn-cancel" onClick={ () => setShowExportModal( false ) }>{ __( 'Cancel', 'ai-marketing-expert' ) }</button>
-							{ hasPro ? (
-								<button className="aime-btn-primary" disabled={ exporting || ( exportMode === 'list' && ! exportListId ) || ( exportMode === 'tag' && ! exportTagId ) } onClick={ handleExport }>
-									{ exporting ? __( 'Exporting...', 'ai-marketing-expert' ) : __( 'Download CSV', 'ai-marketing-expert' ) }
-								</button>
-							) : <ProUpgradeButton /> }
+							<button className="aime-btn-primary" disabled={ exporting || ( exportMode === 'list' && ! exportListId ) || ( exportMode === 'tag' && ! exportTagId ) } onClick={ handleExport }>
+								{ exporting ? __( 'Exporting...', 'ai-marketing-expert' ) : __( 'Download CSV', 'ai-marketing-expert' ) }
+							</button>
 						</div>
 					</div>
 				</div>
@@ -844,7 +817,6 @@ const Subscribers = ( { onNavigate } ) => {
 										<span className="dashicons dashicons-search" />
 										<span className="aime-import-source-title">
 											{ __( 'B2B Lead Finder', 'ai-marketing-expert' ) }
-											{ ! hasPro && <ProBadge /> }
 										</span>
 										<span className="aime-import-source-desc">{ __( 'Discover verified B2B prospects with AI', 'ai-marketing-expert' ) }</span>
 									</button>
@@ -896,11 +868,11 @@ const Subscribers = ( { onNavigate } ) => {
 								<div className="aime-import-validation-options">
 									<label className="aime-premium-form-label">{ __( 'Validation & Cleanup', 'ai-marketing-expert' ) }</label>
 									<CheckboxControl label={ __( 'Skip invalid email format', 'ai-marketing-expert' ) } checked={ importValidation.skip_invalid_format } onChange={ ( v ) => updateImportValidation( 'skip_invalid_format', v ) } />
-									<CheckboxControl label={ <ProLabel>{ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && importValidation.skip_disposable } onChange={ ( v ) => updateImportValidation( 'skip_disposable', v ) } disabled={ ! hasPro } />
+									<CheckboxControl label={ __( 'Skip disposable or temporary email', 'ai-marketing-expert' ) } checked={ importValidation.skip_disposable } onChange={ ( v ) => updateImportValidation( 'skip_disposable', v ) } />
 									<CheckboxControl label={ __( 'Skip test, fake, localhost, and placeholder emails', 'ai-marketing-expert' ) } checked={ importValidation.skip_test_fake } onChange={ ( v ) => updateImportValidation( 'skip_test_fake', v ) } />
-									<CheckboxControl label={ <ProLabel>{ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && importValidation.skip_role_based } onChange={ ( v ) => updateImportValidation( 'skip_role_based', v ) } disabled={ ! hasPro } />
-									<CheckboxControl label={ <ProLabel>{ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && importValidation.skip_spam_patterns } onChange={ ( v ) => updateImportValidation( 'skip_spam_patterns', v ) } disabled={ ! hasPro } />
-									<CheckboxControl label={ <ProLabel>{ __( 'Check MX records before import', 'ai-marketing-expert' ) }</ProLabel> } checked={ hasPro && importValidation.check_mx } onChange={ ( v ) => updateImportValidation( 'check_mx', v ) } disabled={ ! hasPro } />
+									<CheckboxControl label={ __( 'Skip role-based emails like info@, support@, admin@', 'ai-marketing-expert' ) } checked={ importValidation.skip_role_based } onChange={ ( v ) => updateImportValidation( 'skip_role_based', v ) } />
+									<CheckboxControl label={ __( 'Skip suspicious spam-pattern emails', 'ai-marketing-expert' ) } checked={ importValidation.skip_spam_patterns } onChange={ ( v ) => updateImportValidation( 'skip_spam_patterns', v ) } />
+									<CheckboxControl label={ __( 'Check MX records before import', 'ai-marketing-expert' ) } checked={ importValidation.check_mx } onChange={ ( v ) => updateImportValidation( 'check_mx', v ) } />
 								</div>
 							) }
 
@@ -929,7 +901,6 @@ const Subscribers = ( { onNavigate } ) => {
 					tags={ tags }
 					validation={ importValidation }
 					onValidationChange={ setImportValidation }
-					hasPro={ hasPro }
 					onClose={ () => { setShowCsvModal( false ); resetImportOptions(); } }
 					onImported={ handleImport }
 				/>

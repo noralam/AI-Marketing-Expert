@@ -18,12 +18,6 @@ class MessageController {
 	/* ── AGENT SEND — admin sends message in live chat ── */
 
 	public function agent_send( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Sending messages as an agent requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		global $wpdb;
 		$p                   = $wpdb->prefix;
 		$conversations_table = $p . 'aime_chatbot_conversations';

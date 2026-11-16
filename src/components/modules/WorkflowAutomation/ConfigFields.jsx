@@ -9,7 +9,8 @@
  */
 
 import { __, _n, sprintf } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
+import apiFetch from '@wordpress/api-fetch';
 import {
 	SelectControl,
 	CheckboxControl,
@@ -67,38 +68,42 @@ export const ConfigField = ( {
 	field,
 	value,
 	onChange: rawOnChange,
-	hasPro = false,
 	suggestions = [],
 	actionType = '',
 	legacyValue,
 } ) => {
-	// Per-field Pro gate: the field stays visible (discoverable) but edits
-	// are blocked with an upsell toast on the free tier.
-	const locked = !! field.is_pro && ! hasPro;
-	const label = ( field.label || field.key ) + ( locked ? ' (Pro)' : '' );
-	const onChange = locked
-		? () => toast( __( 'This setting requires Pro.', 'ai-marketing-expert' ), 'warning' )
-		: rawOnChange;
+	const locked = false;
+	const label = field.label || field.key;
+	const onChange = rawOnChange;
 	const val = value === undefined || value === null ? ( field.default ?? '' ) : value;
 	const [ libraryOpen, setLibraryOpen ] = useState( false );
 	const [ libraryMode, setLibraryMode ] = useState( 'prompts' );
+	const [ customSkills, setCustomSkills ] = useState( [] );
 
-	// Skills field: selection lives ONLY in the Skill library popup.
+	useEffect( () => {
+		if ( field.type !== 'skills' ) {
+			return;
+		}
+		apiFetch( { path: '/aime/v1/workflow-automation/skills' } )
+			.then( ( res ) => {
+				if ( Array.isArray( res?.skills ) ) {
+					const customs = res.skills.filter( ( s ) => !! s.custom || ! s.is_builtin );
+					setCustomSkills( customs );
+				}
+			} )
+			.catch( () => {} );
+	}, [ field.type ] );
+
+	// Skills field: selection lives in the Skill library popup.
 	// Sidebar shows a compact summary + browse button, no duplicated list.
-	// SEO + Readability are free; other skills require Pro (server enforces
-	// in SkillRegistry::resolve(), UI gates with upsell toast).
 	if ( field.type === 'skills' ) {
 		const rawList = Array.isArray( val )
 			? val
 			: typeof val === 'string' && val.trim() !== ''
 				? val.split( ',' ).map( ( s ) => s.trim() ).filter( Boolean )
 				: [];
-		const isSkillLocked = ( entry ) => !! entry.isPro && ! hasPro;
+		const isSkillLocked = () => false;
 		const toggleSkill = ( entry ) => {
-			if ( locked || isSkillLocked( entry ) ) {
-				toast( __( 'This skill requires Pro.', 'ai-marketing-expert' ), 'warning' );
-				return;
-			}
 			const next = rawList.includes( entry.id )
 				? rawList.filter( ( id ) => id !== entry.id )
 				: [ ...rawList, entry.id ];
@@ -108,9 +113,10 @@ export const ConfigField = ( {
 			setLibraryMode( 'skills' );
 			setLibraryOpen( true );
 		};
+		const allKnownSkills = [ ...SKILL_LIBRARY, ...customSkills ];
 		const selectedNames = rawList.map( ( id ) => {
-			const found = SKILL_LIBRARY.find( ( s ) => s.id === id );
-			return ( found ? `${ found.title }${ found.isPro ? ' (Pro)' : '' }` : id );
+			const found = allKnownSkills.find( ( s ) => s.id === id );
+			return ( found ? found.title : id );
 		} );
 		return (
 			<div className="aime-wf-skills">
@@ -140,7 +146,7 @@ export const ConfigField = ( {
 					actionType={ actionType }
 					mode={ libraryMode }
 					activeSkillIds={ rawList }
-					hasPro={ hasPro }
+					customSkills={ customSkills }
 					onClose={ () => setLibraryOpen( false ) }
 					onUse={ () => {} }
 					onToggleSkill={ toggleSkill }
@@ -153,10 +159,6 @@ export const ConfigField = ( {
 	// existing text is never destroyed silently — confirm to replace, or
 	// cancel to append below what is already there.
 	const applyPrompt = ( text ) => {
-		if ( locked ) {
-			toast( __( 'This setting requires Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		const current = typeof val === 'string' ? val : '';
 		if ( current.trim() !== '' && ! window.confirm(
 			__( 'Replace the existing prompt with this one?', 'ai-marketing-expert' )
@@ -215,14 +217,8 @@ export const ConfigField = ( {
 			<SelectControl
 				label={ label }
 				value={ val }
-				options={ toneSelectOptions( hasPro ) }
-				onChange={ ( v ) => {
-					if ( ! hasPro && PRO_TONES.includes( v ) ) {
-						toast( __( 'This tone is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-						return;
-					}
-					onChange( v );
-				} }
+				options={ toneSelectOptions() }
+				onChange={ ( v ) => onChange( v ) }
 				help={ field.help }
 			/>
 		);
@@ -358,10 +354,6 @@ export const ConfigField = ( {
 	}
 	// Append a clicked token at the end of the current value.
 	const insertToken = ( token ) => {
-		if ( locked ) {
-			toast( __( 'This setting requires Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		const current = typeof val === 'string' ? val : '';
 		onChange( current ? `${ current.replace( /\s+$/, '' ) } ${ token }` : token );
 	};
@@ -424,7 +416,7 @@ export const ConfigField = ( {
 };
 
 /** Render a full schema fields list against a config object. */
-const ConfigFields = ( { fields, config, onChange, hasPro = false, keywordSuggestions = [], tagSuggestions = [], parentActionType = '' } ) => {
+const ConfigFields = ( { fields, config, onChange, keywordSuggestions = [], tagSuggestions = [], parentActionType = '', stepActionType = '' } ) => {
 	// Filter fields based on visibility rules. Rules come in two shapes:
 	//  - string markers (legacy third-party serialization), e.g. 'not_parent_ai_brain'
 	//  - declarative objects the server cannot evaluate: { type: 'parent_not'|'parent_is', action }
@@ -471,13 +463,12 @@ const ConfigFields = ( { fields, config, onChange, hasPro = false, keywordSugges
 					value={ config?.[ field.key ] }
 					legacyValue={ field.legacy_key ? config?.[ field.legacy_key ] : undefined }
 					onChange={ ( v ) => onChange( field.key, v ) }
-					hasPro={ hasPro }
 					suggestions={
 						field.type === 'tokens'
 							? ( field.suggest === 'post_tags' ? tagSuggestions : keywordSuggestions )
 							: []
 					}
-					actionType={ parentActionType }
+					actionType={ stepActionType || parentActionType }
 				/>
 			) ) }
 		</>

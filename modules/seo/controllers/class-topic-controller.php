@@ -80,19 +80,6 @@ class TopicController {
 	}
 
 	public function store( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( aime_limit_reached( 'seo_topics', SeoModule::get_topic_count() ) ) {
-			$limit = aime_free_limits()['seo_topics'] ?? 10;
-			return new \WP_REST_Response( array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %d: topic limit on the free plan */
-					__( 'Free plan allows %d topics. Delete one or upgrade to Pro for unlimited topics.', 'ai-marketing-expert' ),
-					$limit
-				),
-				'limit_reached' => true,
-			), 403 );
-		}
-
 		global $wpdb;
 		$p = $wpdb->prefix;
 
@@ -254,39 +241,10 @@ class TopicController {
 		return new \WP_REST_Response( array( 'success' => true ) );
 	}
 
-	/* ── AI topical authority map generation (Pro) ────────── */
+	/* ── AI topical authority map generation ────────── */
 
 	public function generate_map( \WP_REST_Request $request ): \WP_REST_Response {
 		$max_topics = null;
-
-		if ( ! aime_has_pro() ) {
-			$gen_limit = aime_free_limits()['seo_topic_map_generate_monthly'] ?? 1;
-			if ( SeoModule::get_monthly_feature_count( 'topic_map_generate' ) >= $gen_limit ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: monthly map generation limit on the free plan */
-						__( 'Free plan allows %d AI topic map generation per month. Upgrade to Pro for unlimited generations.', 'ai-marketing-expert' ),
-						$gen_limit
-					),
-					'limit_reached' => true,
-				), 403 );
-			}
-
-			// Generated topics count against the same storage limit as manual ones.
-			$max_topics = aime_limit_remaining( 'seo_topics', SeoModule::get_topic_count() );
-			if ( ! $max_topics ) {
-				return new \WP_REST_Response( array(
-					'success' => false,
-					'message' => sprintf(
-						/* translators: %d: topic limit on the free plan */
-						__( 'You have reached the free plan limit of %d topics. Delete some topics or upgrade to Pro before generating a map.', 'ai-marketing-expert' ),
-						aime_free_limits()['seo_topics'] ?? 10
-					),
-					'limit_reached' => true,
-				), 403 );
-			}
-		}
 
 		$niche   = sanitize_text_field( $request->get_param( 'niche' ) ?? '' );
 		$pillar  = sanitize_text_field( $request->get_param( 'pillar_topic' ) ?? '' );
@@ -301,10 +259,6 @@ class TopicController {
 		$service = new TopicalAuthorityService();
 		$result  = $service->generate_topical_map( $niche, $pillar, $max_topics );
 
-		if ( $result['success'] && ! aime_has_pro() ) {
-			SeoModule::increment_monthly_feature( 'topic_map_generate' );
-		}
-
 		return new \WP_REST_Response( $result, $result['success'] ? 200 : 500 );
 	}
 
@@ -314,7 +268,6 @@ class TopicController {
 	public function topic_usage(): \WP_REST_Response {
 		return new \WP_REST_Response( array(
 			'success' => true,
-			'is_pro'  => aime_has_pro(),
 			'usage'   => array(
 				'topics'       => aime_usage_payload( 'seo_topics', SeoModule::get_topic_count() ),
 				'generate_map' => aime_usage_payload( 'seo_topic_map_generate_monthly', SeoModule::get_monthly_feature_count( 'topic_map_generate' ) ),

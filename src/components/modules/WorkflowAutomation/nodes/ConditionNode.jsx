@@ -1,11 +1,10 @@
 /**
- * ConditionNode — Pro branching step with two labeled source handles
+ * ConditionNode — Branching step with two labeled source handles
  * (id "yes" / id "no").
  */
 
 import { __ } from '@wordpress/i18n';
 import { Handle, Position } from '@xyflow/react';
-import ProBadge from '../../../Layout/ProBadge';
 import { actionIcon } from '../utils/icons';
 
 const ConditionNode = ( { data, selected } ) => {
@@ -25,7 +24,6 @@ const ConditionNode = ( { data, selected } ) => {
 				<strong>{ data.label || __( 'Condition', 'ai-marketing-expert' ) }</strong>
 				<span className="aime-wf-node__summary">{ data.summary || '—' }</span>
 			</div>
-			{ data.locked && <ProBadge /> }
 			{ data.invalid && (
 				<span className="aime-wf-node__badge aime-wf-node__badge--invalid" title={ __( 'This step has configuration issues.', 'ai-marketing-expert' ) }>!</span>
 			) }

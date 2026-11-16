@@ -37,7 +37,6 @@ import LeadFinder from './LeadFinder';
 import AiTools from './AiTools';
 import SmtpSettings from './SmtpSettings';
 import EmailSettings from './EmailSettings';
-import { isProActive } from '../../common/ProLock';
 
 const EmailMarketingPage = () => {
 	const parseHash = () => {
@@ -48,7 +47,6 @@ const EmailMarketingPage = () => {
 	};
 
 	const initial = parseHash();
-	const hasPro = isProActive();
 	const [ view, setView ] = useState( initial.key );
 	const [ viewParams, setViewParams ] = useState( initial.params );
 
@@ -73,7 +71,7 @@ const EmailMarketingPage = () => {
 		{ key: 'subscribers', label: __( 'Contacts', 'ai-marketing-expert' ), icon: people },
 		{ key: 'lists', label: __( 'Lists', 'ai-marketing-expert' ), icon: category },
 		{ key: 'tags', label: __( 'Tags', 'ai-marketing-expert' ), icon: tag },
-		{ key: 'lead-finder', label: __( 'Lead Finder', 'ai-marketing-expert' ), icon: search, badgeLabel: hasPro ? null : 'PRO' },
+		{ key: 'lead-finder', label: __( 'Lead Finder', 'ai-marketing-expert' ), icon: search },
 		{ key: 'campaigns', label: __( 'Campaigns', 'ai-marketing-expert' ), icon: megaphone },
 		{ key: 'templates', label: __( 'Templates', 'ai-marketing-expert' ), icon: page },
 		{ key: 'automations', label: __( 'Automations', 'ai-marketing-expert' ), icon: commentContent },

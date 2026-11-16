@@ -20,16 +20,13 @@ import {
 } from '@aime/wp-components';
 import { Icon, chevronLeft } from '@wordpress/icons';
 import useApi from '../../../hooks/useApi';
-import usePro from '../../../hooks/usePro';
 import useSlowWarning from '../../../hooks/useSlowWarning';
 import Card from '../../common/Card';
 import LoadingBtn from '../../common/LoadingBtn';
 import Loader from '../../common/Loader';
-// import ProGate from '../../common/ProGate';
 import { toast } from '../../common/Toast';
 import { ARTICLE_STATUS_LABELS } from '../../../utils/constants';
 import { consumePrefillData } from '../../../utils/seoContentBridge';
-import { ProLabel, ProUpgradeButton } from '../../common/ProLock';
 
 const TONES = [
 	{ label: 'Professional', value: 'professional' },
@@ -123,12 +120,10 @@ const ICON_UPLOAD = (
 
 const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	const { get, post, put, del, loading } = useApi( { toastErrors: true } );
-	const { hasPro, freeLimits } = usePro();
 	const slowWarning = useSlowWarning();
-	const freeMaxWords = Number( freeLimits?.content_max_words || 2000 );
 	const toneOptions = TONES.map( ( tone ) => ( {
 		...tone,
-		label: ! hasPro && PRO_TONES.includes( tone.value ) ? `${ tone.label } (PRO)` : tone.label,
+		label: tone.label,
 	} ) );
 
 	const aiConfigured = window.aimeData?.aiConfigured ?? false;
@@ -359,17 +354,6 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 	}, [ article.content ] );
 
 	const setField = ( key, value ) => {
-		if ( key === 'tone' && ! hasPro && PRO_TONES.includes( value ) ) {
-			toast( __( 'This tone is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
-		if ( key === 'word_count_target' && ! hasPro ) {
-			value = Math.min( Number( value ) || defaultArticle.word_count_target, freeMaxWords );
-		}
-		if ( key === 'brand_voice_id' && ! hasPro && value ) {
-			toast( __( 'Brand Voice is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		setArticle( ( prev ) => ( { ...prev, [ key ]: value } ) );
 	};
 
@@ -442,18 +426,18 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 			const payload = {
 				topic: article.topic,
 				keywords: article.keywords,
-				tone: ! hasPro && PRO_TONES.includes( article.tone ) ? 'professional' : article.tone,
-				word_count: ! hasPro ? Math.min( Number( article.word_count_target ) || defaultArticle.word_count_target, freeMaxWords ) : article.word_count_target,
+				tone: article.tone,
+				word_count: article.word_count_target,
 				language: article.language,
 				outline: article.outline,
 				serp_context: article.serp_outline_context,
-				include_table_of_contents: hasPro && !! article.include_table_of_contents,
+				include_table_of_contents: !! article.include_table_of_contents,
 				include_quick_answer: article.include_quick_answer !== false,
 				include_faq: article.include_faq !== false,
 				post_type: article.post_type || 'post',
 				category_ids: ( article.categories || [] ).map( Number ),
 				tag_ids: article.tags || [],
-				brand_voice_id: hasPro ? ( article.brand_voice_id || 0 ) : 0,
+				brand_voice_id: article.brand_voice_id || 0,
 				preset_id: article.preset_id || undefined,
 			};
 			const res = await post( '/content/generate', payload );
@@ -558,10 +542,6 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 
 	// Humanize content (rewrite to sound natural)
 	const handleHumanize = async () => {
-		if ( ! hasPro ) {
-			toast( __( 'Deep Humanize is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		const activeContent = ( editorReady.current && window.tinymce?.get( editorId )?.getContent() ) || article.content;
 		if ( ! activeContent || ! activeContent.trim() ) {
 			toast( __( 'Generate or write content first before humanizing.', 'ai-marketing-expert' ), 'error' );
@@ -570,8 +550,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 		setHumanizing( true );
 		slowWarning.start();
 		try {
-			const instruction = hasPro
-				? 'Deeply humanize this content to sound completely natural, as if written by an experienced human writer. '
+			const instruction = 'Deeply humanize this content to sound completely natural, as if written by an experienced human writer. '
 				  + 'CRITICAL RULES: 1) Preserve the ENTIRE article from the very beginning — keep all opening introductory paragraphs, lead-in text, and all sections. '
 				  + '2) Do NOT delete or skip the introduction or any paragraphs before headings or images. '
 				  + '3) Keep approximately the same word count — do NOT shorten or truncate the content. '
@@ -579,13 +558,6 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 				  + '5) Copy all placeholder markers (like [[AIME_...]]) in their exact places. '
 				  + '6) Vary sentence length, use natural transitions, and remove AI-like patterns. '
 				  + '7) Preserve the original meaning and all key points. '
-				  + 'Return ONLY the improved HTML content.'
-				: 'Lightly humanize this content: make it sound more natural and conversational. '
-				  + 'CRITICAL RULES: 1) Preserve the entire article from the very beginning — keep all opening intro paragraphs. '
-				  + '2) Keep ALL sections including the conclusion — do NOT remove any sections. '
-				  + '3) Keep approximately the same word count. '
-				  + '4) Keep the same HTML formatting and structure. '
-				  + '5) Copy all placeholder markers (like [[AIME_...]]) in their exact places. '
 				  + 'Return ONLY the improved HTML content.';
 
 			const res = await post( '/content/generate/improve', {
@@ -609,10 +581,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 						}
 					} ).catch( () => {} );
 				}
-				toast( hasPro
-					? __( 'Content deeply humanized!', 'ai-marketing-expert' )
-					: __( 'Content lightly humanized. Upgrade to Pro for deeper humanization.', 'ai-marketing-expert' ),
-				'success' );
+				toast( __( 'Content deeply humanized!', 'ai-marketing-expert' ), 'success' );
 			}
 		} catch ( e ) {
 			toast( e?.message || __( 'Humanize failed. Please try again.', 'ai-marketing-expert' ), 'error' );
@@ -624,10 +593,6 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 
 	// Generate outline
 	const handleGenerateOutline = async () => {
-		if ( ! hasPro ) {
-			toast( __( 'Generate Outline is available in Pro.', 'ai-marketing-expert' ), 'warning' );
-			return;
-		}
 		if ( ! validateGenFields() ) {
 			toast( __( 'Please fill in all required fields.', 'ai-marketing-expert' ), 'error' );
 			return;
@@ -983,7 +948,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								value={ article.word_count_target }
 								onChange={ ( v ) => setField( 'word_count_target', v ) }
 								min={ 300 }
-								max={ hasPro ? 5000 : freeMaxWords }
+								max={ 5000 }
 								step={ 100 }
 								withInputField
 							/>
@@ -994,11 +959,10 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 								onChange={ ( v ) => setField( 'preset_id', v ) }
 							/>
 							<SelectControl
-								label={ hasPro ? __( 'Brand Voice', 'ai-marketing-expert' ) : <ProLabel>{ __( 'Brand Voice', 'ai-marketing-expert' ) }</ProLabel> }
+								label={ __( 'Brand Voice', 'ai-marketing-expert' ) }
 								value={ String( article.brand_voice_id || '' ) }
 								options={ brandVoiceOptions }
 								onChange={ ( v ) => setField( 'brand_voice_id', v ) }
-								disabled={ ! hasPro }
 							/>
 						</div>
 
@@ -1041,7 +1005,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 									disabled={ ! aiConfigured || generating }
 									title={ ! aiConfigured ? aiDisabledTitle : undefined }
 								>
-									<span className="aime-pro-inline-action">{ __( 'Generate Outline', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+									{ __( 'Generate Outline', 'ai-marketing-expert' ) }
 								</Button>
 							) }
 							{ generating ? (
@@ -1158,10 +1122,9 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 										title={ ! aiConfigured ? aiDisabledTitle : undefined }
 										className="aime-btn-humanize"
 									>
-										<span className="aime-pro-inline-action">{ '\u2728 ' + __( 'Deep Humanize', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+										{ '\u2728 ' + __( 'Deep Humanize', 'ai-marketing-expert' ) }
 									</Button>
 								) }
-								{ ! hasPro && <ProUpgradeButton /> }
 							</div>
 						) }
 						{ article.content && showThinkingHint && (
@@ -1358,7 +1321,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 										className={ `aime-image-tabs__tab${ imageTab === 'ai' ? ' is-active' : '' }` }
 										onClick={ () => setImageTab( 'ai' ) }
 									>
-										<span className="aime-pro-inline-action"><span className="aime-image-tabs__icon" aria-hidden="true">{ ICON_SPARKLE }</span>{ __( 'AI Generate', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+										<span className="aime-image-tabs__icon" aria-hidden="true">{ ICON_SPARKLE }</span>
+										{ __( 'AI Generate', 'ai-marketing-expert' ) }
 									</button>
 									<button
 										type="button"
@@ -1443,7 +1407,7 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 											<>
 											<Button
 												variant="primary"
-												disabled={ ! hasPro || ! aiConfigured || ( ! article.title && ! article.content ) }
+												disabled={ ! aiConfigured || ( ! article.title && ! article.content ) }
 												title={ ! aiConfigured ? aiDisabledTitle : ( ! article.title && ! article.content ) ? __( 'Generate or write content first', 'ai-marketing-expert' ) : undefined }
 												onClick={ async () => {
 													setGeneratingImage( true );
@@ -1480,9 +1444,8 @@ const ArticleEditor = ( { id, onBack, onNavigate } ) => {
 													}
 												} }
 											>
-												<span className="aime-pro-inline-action">{ __( 'Generate Image', 'ai-marketing-expert' ) }{ ! hasPro && <ProLabel /> }</span>
+												{ __( 'Generate Image', 'ai-marketing-expert' ) }
 											</Button>
-											{ ! hasPro && <ProUpgradeButton /> }
 											</>
 										) }
 											{ imageError && (

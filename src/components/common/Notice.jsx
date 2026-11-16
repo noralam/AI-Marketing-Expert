@@ -4,12 +4,9 @@
 
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { isProActive, ProUpgradeButton } from './ProLock';
 
-const Notice = ( { type = 'info', message, dismissible = true, onDismiss, showUpgrade = false } ) => {
+const Notice = ( { type = 'info', message, dismissible = true, onDismiss } ) => {
 	const [ visible, setVisible ] = useState( true );
-	const messageText = typeof message === 'string' ? message : '';
-	const shouldShowUpgrade = showUpgrade || ( ! isProActive() && /\b(pro|upgrade)\b/i.test( messageText ) );
 
 	if ( ! visible ) {
 		return null;
@@ -25,18 +22,15 @@ const Notice = ( { type = 'info', message, dismissible = true, onDismiss, showUp
 	return (
 		<div className={ `aime-notice aime-notice-${ type }` }>
 			<p>{ message }</p>
-			<div className="aime-notice-actions">
-				{ shouldShowUpgrade && <ProUpgradeButton /> }
-				{ dismissible && (
-					<button
-						className="aime-notice-dismiss"
-						onClick={ handleDismiss }
-						aria-label={ __( 'Dismiss', 'ai-marketing-expert' ) }
-					>
-						×
-					</button>
-				) }
-			</div>
+			{ dismissible && (
+				<button
+					className="aime-notice-dismiss"
+					onClick={ handleDismiss }
+					aria-label={ __( 'Dismiss', 'ai-marketing-expert' ) }
+				>
+					×
+				</button>
+			) }
 		</div>
 	);
 };

@@ -61,12 +61,6 @@ class ConversationController {
 			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
 		)";
 
-		// Free tier: limit to last 7 days.
-		if ( ! aime_has_pro() ) {
-			$where .= ' AND c.created_at >= %s';
-			$args[] = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) );
-		}
-
 		$count_sql = "SELECT COUNT(*) FROM {$p}aime_chatbot_conversations c {$where}";
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$total = (int) ( $args ? $wpdb->get_var( $wpdb->prepare( $count_sql, ...$args ) ) : $wpdb->get_var( $count_sql ) );
@@ -173,15 +167,9 @@ class ConversationController {
 		return new \WP_REST_Response( $conversation );
 	}
 
-	/* ── HUMAN TAKEOVER (Pro) ────────────────────────── */
+	/* ── HUMAN TAKEOVER ─────────────────────────────── */
 
 	public function takeover( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Human takeover requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		global $wpdb;
 		$p  = $wpdb->prefix;
 		$id = absint( $request->get_param( 'id' ) );
@@ -290,15 +278,9 @@ class ConversationController {
 		return new \WP_REST_Response( array( 'message' => __( 'Conversation deleted.', 'ai-marketing-expert' ) ) );
 	}
 
-	/* ── EXPORT conversations (Pro) ──────────────────── */
+	/* ── EXPORT conversations ────────────────────────── */
 
 	public function export( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Exporting conversations requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		global $wpdb;
 		$p    = $wpdb->prefix;
 		$rows = array();
@@ -347,12 +329,6 @@ class ConversationController {
 	/* ── EXPORT SINGLE — single conversation CSV ─────── */
 
 	public function export_single( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Exporting conversations requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		$id = absint( $request->get_param( 'id' ) );
 
 		global $wpdb;
@@ -400,18 +376,8 @@ class ConversationController {
 		}
 
 		$action = sanitize_text_field( $request->get_param( 'action' ) );
-		if ( in_array( $action, array( 'make_public', 'make_private' ), true ) && ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Public discussions requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
 
 		if ( 'export_leads' === $action ) {
-			if ( ! aime_has_pro() ) {
-				return new \WP_REST_Response( array(
-					'message' => __( 'Exporting leads requires Pro.', 'ai-marketing-expert' ),
-				), 403 );
-			}
 			return $this->export_leads_csv( $ids );
 		}
 
@@ -472,7 +438,7 @@ class ConversationController {
 		) );
 	}
 
-	/* ── EXPORT LEADS from selected conversations (Pro) ── */
+	/* ── EXPORT LEADS from selected conversations ────────── */
 
 	/**
 	 * Build a leads CSV from the selected conversation IDs.
@@ -535,15 +501,9 @@ class ConversationController {
 		) );
 	}
 
-	/* ── TOGGLE PUBLIC visibility (Pro) ──────────────── */
+	/* ── TOGGLE PUBLIC visibility ───────────────────── */
 
 	public function toggle_public( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! aime_has_pro() ) {
-			return new \WP_REST_Response( array(
-				'message' => __( 'Public discussions requires Pro.', 'ai-marketing-expert' ),
-			), 403 );
-		}
-
 		global $wpdb;
 		$p  = $wpdb->prefix;
 		$id = absint( $request->get_param( 'id' ) );
