@@ -49,9 +49,6 @@ class Activator {
 		// Schedule cron events.
 		self::schedule_cron();
 
-		// Set activation flag for redirect.
-		set_transient( 'aime_activation_redirect', true, 30 );
-
 		// Flush rewrite rules.
 		flush_rewrite_rules();
 	}

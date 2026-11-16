@@ -44,7 +44,6 @@ class Admin {
 
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-		add_action( 'admin_init', array( $this, 'activation_redirect' ) );
 		add_action( 'admin_init', array( $this, 'redirect_inactive_module_pages' ) );
 		add_filter( 'plugin_action_links_' . AIME_PLUGIN_BASENAME, array( $this, 'plugin_action_links' ) );
 	}
@@ -400,24 +399,6 @@ class Admin {
 		}
 
 		echo '<div id="aime-app" class="aime-dashboard-wrap"></div>';
-	}
-
-	/**
-	 * Redirect to dashboard on first activation.
-	 */
-	public function activation_redirect(): void {
-		if ( ! get_transient( 'aime_activation_redirect' ) ) {
-			return;
-		}
-
-		delete_transient( 'aime_activation_redirect' );
-
-		if ( wp_doing_ajax() || is_network_admin() || isset( $_GET['activate-multi'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Standard WP activation redirect guard; value not used.
-			return;
-		}
-
-		wp_safe_redirect( admin_url( 'admin.php?page=ai-marketing-expert' ) );
-		exit;
 	}
 
 	/**

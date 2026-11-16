@@ -38,9 +38,6 @@ class Deactivator {
 		wp_clear_scheduled_hook( 'aime_process_bounce_mailbox' );
 		wp_clear_scheduled_hook( 'aime_run_ai_jobs' );
 
-		// Clear transients.
-		delete_transient( 'aime_activation_redirect' );
-
 		/*
 		 * Data deletion intentionally does NOT happen here. The
 		 * `delete_data_on_uninstall` option only applies on uninstall
