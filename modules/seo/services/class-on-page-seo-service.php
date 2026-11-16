@@ -429,6 +429,7 @@ class OnPageSeoService {
 			'label'   => __( 'Outbound External Links', 'ai-marketing-expert' ),
 			'status'  => $external >= 1 ? 'pass' : 'warning',
 			'message' => $external >= 1
+				/* translators: 1: total external link count, 2: dofollow external link count */
 				? sprintf( __( 'Found %1$d external links (%2$d dofollow). Good for authority.', 'ai-marketing-expert' ), $external, $dofollow_external )
 				: __( 'No external outbound links found. Linking to authoritative sources helps SEO.', 'ai-marketing-expert' ),
 			'value'   => array( 'external' => $external, 'dofollow' => $dofollow_external ),

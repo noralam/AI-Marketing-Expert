@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-16T10:54:36+00:00\n"
+"POT-Creation-Date: 2026-11-16T11:28:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: ai-marketing-expert\n"
@@ -47,7 +47,7 @@ msgstr ""
 msgid "AI Marketing Expert requires PHP %1$s or higher. You are running PHP %2$s."
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:210
+#: includes/admin/class-dashboard-widget.php:214
 #: src/components/modules/Chatbot/views/Analytics.jsx:381
 #: src/components/modules/Chatbot/views/Conversations.jsx:316
 #: src/components/modules/Chatbot/views/ConversationView.jsx:190
@@ -56,12 +56,12 @@ msgid "Visitor"
 msgstr ""
 
 #. translators: %s: human-readable time difference, e.g. "15 hours".
-#: includes/admin/class-dashboard-widget.php:218
+#: includes/admin/class-dashboard-widget.php:222
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:264
+#: includes/admin/class-dashboard-widget.php:268
 #: includes/class-admin.php:148
 #: includes/class-admin.php:149
 #: src/components/modules/Overview/OverviewPage.jsx:368
@@ -69,7 +69,7 @@ msgstr ""
 msgid "SEO Analyzer"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:265
+#: includes/admin/class-dashboard-widget.php:269
 #: includes/class-admin.php:153
 #: includes/class-admin.php:154
 #: modules/content-generator/class-content-generator-module.php:30
@@ -80,7 +80,7 @@ msgstr ""
 msgid "Content Generator"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:266
+#: includes/admin/class-dashboard-widget.php:270
 #: includes/class-admin.php:163
 #: includes/class-admin.php:164
 #: modules/social-media/class-social-media-module.php:28
@@ -92,16 +92,16 @@ msgid "Social Media"
 msgstr ""
 
 #. translators: %s: human-readable time difference
-#: includes/admin/class-dashboard-widget.php:273
+#: includes/admin/class-dashboard-widget.php:277
 #, php-format
 msgid "Updated %s ago"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:285
+#: includes/admin/class-dashboard-widget.php:289
 msgid "Help"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:289
+#: includes/admin/class-dashboard-widget.php:293
 #: src/components/modules/EmailMarketing/FunnelAnalytics.jsx:311
 #: src/components/modules/Seo/views/SeoAutomation.jsx:411
 #: src/components/modules/Settings/SettingsPage.jsx:1099
@@ -110,7 +110,7 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:311
+#: includes/admin/class-dashboard-widget.php:315
 #: includes/class-admin.php:158
 #: includes/class-admin.php:159
 #: src/components/modules/Overview/OverviewPage.jsx:304
@@ -118,46 +118,47 @@ msgid "Chatbot"
 msgstr ""
 
 #. translators: %d: number of active conversations
-#: includes/admin/class-dashboard-widget.php:318
+#: includes/admin/class-dashboard-widget.php:322
 #, php-format
 msgid "%d active"
 msgid_plural "%d active"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-dashboard-widget.php:328
+#: includes/admin/class-dashboard-widget.php:332
 #: src/components/modules/Chatbot/views/Analytics.jsx:160
 #: src/components/modules/Chatbot/views/BotList.jsx:111
 #: src/components/modules/Chatbot/views/Dashboard.jsx:54
 msgid "Active Now"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:332
+#: includes/admin/class-dashboard-widget.php:336
 msgid "Messages Today"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:336
+#: includes/admin/class-dashboard-widget.php:340
 msgid "Leads Today"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:345
+#. translators: %s: visitor name
+#: includes/admin/class-dashboard-widget.php:349
 #, php-format
 msgid "Open conversation with %s"
 msgstr ""
 
 #. translators: %d: number of messages
-#: includes/admin/class-dashboard-widget.php:355
+#: includes/admin/class-dashboard-widget.php:363
 #, php-format
 msgid "%d msg"
 msgid_plural "%d msgs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-dashboard-widget.php:368
+#: includes/admin/class-dashboard-widget.php:376
 msgid "View Live Dashboard"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:389
+#: includes/admin/class-dashboard-widget.php:397
 #: includes/class-admin.php:168
 #: includes/class-admin.php:169
 #: modules/workflow-automation/class-workflow-automation-module.php:56
@@ -168,38 +169,38 @@ msgstr ""
 msgid "Workflow Automation"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:394
+#: includes/admin/class-dashboard-widget.php:402
 #: src/components/modules/Overview/OverviewPage.jsx:437
 msgid "Active Workflows"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:404
+#: includes/admin/class-dashboard-widget.php:412
 msgid "Runs This Month"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:414
+#: includes/admin/class-dashboard-widget.php:422
 #: src/components/modules/Settings/SettingsPage.jsx:862
 msgid "Overdue"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:417
+#: includes/admin/class-dashboard-widget.php:425
 msgid "--"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:421
+#: includes/admin/class-dashboard-widget.php:429
 #: src/components/modules/Settings/SettingsPage.jsx:850
 msgid "Next Run"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:426
-#: includes/admin/class-dashboard-widget.php:466
-#: includes/admin/class-dashboard-widget.php:556
+#: includes/admin/class-dashboard-widget.php:434
+#: includes/admin/class-dashboard-widget.php:474
+#: includes/admin/class-dashboard-widget.php:564
 #: src/components/modules/Chatbot/views/Analytics.jsx:281
 #: src/components/modules/Chatbot/views/Dashboard.jsx:111
 msgid "Manage"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:446
+#: includes/admin/class-dashboard-widget.php:454
 #: includes/class-admin.php:143
 #: includes/class-admin.php:144
 #: modules/email-marketing/class-email-marketing-module.php:29
@@ -210,11 +211,11 @@ msgstr ""
 msgid "Email Marketing"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:451
+#: includes/admin/class-dashboard-widget.php:459
 msgid "Active Contacts"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:455
+#: includes/admin/class-dashboard-widget.php:463
 #: src/components/modules/EmailMarketing/Campaigns.jsx:83
 #: src/components/modules/EmailMarketing/EmailMarketingPage.jsx:75
 #: src/components/modules/Overview/OverviewPage.jsx:338
@@ -222,7 +223,7 @@ msgstr ""
 msgid "Campaigns"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:461
+#: includes/admin/class-dashboard-widget.php:469
 #: src/components/modules/EmailMarketing/CampaignProgress.jsx:454
 #: src/components/modules/EmailMarketing/Campaigns.jsx:106
 #: src/components/modules/EmailMarketing/FunnelAnalytics.jsx:165
@@ -230,21 +231,21 @@ msgstr ""
 msgid "Open Rate"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:482
+#: includes/admin/class-dashboard-widget.php:490
 #: src/components/modules/Seo/views/RankTracker.jsx:180
 #: src/components/modules/Seo/views/RankTracker.jsx:247
 msgid "Tracked Keywords"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:486
+#: includes/admin/class-dashboard-widget.php:494
 msgid "Avg Score"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:490
+#: includes/admin/class-dashboard-widget.php:498
 msgid "Backlinks"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:505
+#: includes/admin/class-dashboard-widget.php:513
 #: src/components/modules/ContentGenerator/ContentAnalytics.jsx:264
 #: src/components/modules/ContentGenerator/ContentAnalytics.jsx:347
 #: src/components/modules/EmailMarketing/AutomationEditor.jsx:670
@@ -257,16 +258,16 @@ msgstr ""
 msgid "Published"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:509
+#: includes/admin/class-dashboard-widget.php:517
 #: src/components/modules/Overview/OverviewPage.jsx:356
 msgid "Drafts"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:513
+#: includes/admin/class-dashboard-widget.php:521
 msgid "Avg SEO Score"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:528
+#: includes/admin/class-dashboard-widget.php:536
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:753
 #: src/components/modules/EmailMarketing/SmtpSettings.jsx:759
 #: src/components/modules/Settings/AiProvidersPage.jsx:532
@@ -275,11 +276,11 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:532
+#: includes/admin/class-dashboard-widget.php:540
 msgid "Posts This Month"
 msgstr ""
 
-#: includes/admin/class-dashboard-widget.php:536
+#: includes/admin/class-dashboard-widget.php:544
 #: src/components/modules/EmailMarketing/Campaigns.jsx:17
 #: src/components/modules/Overview/OverviewPage.jsx:416
 #: src/components/modules/Settings/SettingsPage.jsx:862
@@ -631,13 +632,13 @@ msgstr ""
 msgid "Every 15 Minutes"
 msgstr ""
 
-#: includes/class-cart-tracker.php:589
-#: includes/class-cart-tracker.php:590
+#: includes/class-cart-tracker.php:594
+#: includes/class-cart-tracker.php:595
 #: modules/workflow-automation/class-workflow-automation-module.php:1078
 msgid "Customer"
 msgstr ""
 
-#: includes/class-cart-tracker.php:723
+#: includes/class-cart-tracker.php:732
 msgid "Your saved cart link has expired, but you can continue shopping our latest collections below."
 msgstr ""
 
@@ -674,7 +675,8 @@ msgstr ""
 msgid "This email domain does not appear to accept mail."
 msgstr ""
 
-#: includes/class-imap-bounce-service.php:108
+#. translators: %s: IMAP username
+#: includes/class-imap-bounce-service.php:109
 #, php-format
 msgid "IMAP password for %s is missing or cannot be decrypted."
 msgstr ""
@@ -691,11 +693,11 @@ msgstr ""
 msgid "Could not queue the job."
 msgstr ""
 
-#: includes/class-job-queue.php:192
+#: includes/class-job-queue.php:193
 msgid "Unknown job type."
 msgstr ""
 
-#: includes/class-job-queue.php:214
+#: includes/class-job-queue.php:215
 msgid "Generation failed."
 msgstr ""
 
@@ -718,44 +720,47 @@ msgstr ""
 msgid "Failed to connect to IMAP server %1$s: %2$s (Code %3$d)"
 msgstr ""
 
-#: includes/class-pure-imap-client.php:102
+#. translators: %s: IMAP server greeting response
+#: includes/class-pure-imap-client.php:103
 #, php-format
 msgid "Unexpected IMAP server greeting: %s"
 msgstr ""
 
-#: includes/class-pure-imap-client.php:121
+#: includes/class-pure-imap-client.php:122
 msgid "STARTTLS negotiation failed."
 msgstr ""
 
-#: includes/class-pure-imap-client.php:137
+#: includes/class-pure-imap-client.php:138
 msgid "IMAP socket is not connected."
 msgstr ""
 
-#: includes/class-pure-imap-client.php:153
+#. translators: %s: IMAP server error response
+#: includes/class-pure-imap-client.php:155
 #, php-format
 msgid "IMAP authentication failed: %s"
 msgstr ""
 
-#: includes/class-pure-imap-client.php:175
+#. translators: 1: mailbox folder name, 2: IMAP server response
+#: includes/class-pure-imap-client.php:178
 #, php-format
 msgid "Could not select mailbox folder %1$s: %2$s"
 msgstr ""
 
-#: includes/class-pure-imap-client.php:306
+#: includes/class-pure-imap-client.php:312
 msgid "Host, username, and password are required for IMAP test."
 msgstr ""
 
 #. translators: 1: total messages, 2: unseen messages
-#: includes/class-pure-imap-client.php:346
+#: includes/class-pure-imap-client.php:352
 #, php-format
 msgid "IMAP connection successful! Found %1$d total messages (%2$d unread) in INBOX."
 msgstr ""
 
-#: includes/class-pure-imap-client.php:366
+#: includes/class-pure-imap-client.php:372
 msgid "Socket disconnected."
 msgstr ""
 
-#: includes/class-pure-imap-client.php:372
+#: includes/class-pure-imap-client.php:379
 msgid "Failed to write command to IMAP stream."
 msgstr ""
 
@@ -831,53 +836,53 @@ msgstr ""
 msgid "Image import failed."
 msgstr ""
 
-#: includes/class-rest-api.php:1219
+#: includes/class-rest-api.php:1220
 #: src/components/modules/Settings/SettingsPage.jsx:245
 msgid "Logs cleared."
 msgstr ""
 
-#: includes/class-rest-api.php:1306
+#: includes/class-rest-api.php:1307
 msgid "AI connection saved successfully."
 msgstr ""
 
-#: includes/class-rest-api.php:1323
+#: includes/class-rest-api.php:1324
 msgid "AI connection deleted."
 msgstr ""
 
-#: includes/class-rest-api.php:1358
+#: includes/class-rest-api.php:1359
 msgid "AI provider order could not be changed."
 msgstr ""
 
-#: includes/class-rest-api.php:1364
+#: includes/class-rest-api.php:1365
 #: src/components/modules/Settings/AiProvidersPage.jsx:430
 msgid "AI provider fallback order updated."
 msgstr ""
 
-#: includes/class-rest-api.php:1407
+#: includes/class-rest-api.php:1408
 msgid "Provider and API key are required."
 msgstr ""
 
-#: includes/class-rest-api.php:1512
+#: includes/class-rest-api.php:1513
 msgid "Job not found."
 msgstr ""
 
-#: includes/class-rest-api.php:1607
+#: includes/class-rest-api.php:1608
 msgid "Invalid import file. Expected an AI Marketing Expert settings export."
 msgstr ""
 
-#: includes/class-rest-api.php:1666
+#: includes/class-rest-api.php:1667
 msgid "Import complete."
 msgstr ""
 
-#: includes/class-rest-api.php:1691
+#: includes/class-rest-api.php:1692
 msgid "API key generated."
 msgstr ""
 
-#: includes/class-rest-api.php:1696
+#: includes/class-rest-api.php:1697
 msgid "Recommended: sign requests instead of sending the key. Send X-Aime-Timestamp (unix seconds) and X-Aime-Signature: sha256=HEX where HEX = HMAC-SHA256(\"{timestamp}.{raw_body}\", api_key). Plain X-API-Key header also accepted."
 msgstr ""
 
-#: includes/class-rest-api.php:1718
+#: includes/class-rest-api.php:1719
 #: src/components/modules/Settings/SettingsPage.jsx:204
 msgid "API key revoked."
 msgstr ""
@@ -1804,35 +1809,35 @@ msgstr ""
 msgid "Article not published or not found."
 msgstr ""
 
-#: modules/content-generator/services/class-stock-image-service.php:211
+#: modules/content-generator/services/class-stock-image-service.php:213
 msgid "Search query is empty."
 msgstr ""
 
-#: modules/content-generator/services/class-stock-image-service.php:227
+#: modules/content-generator/services/class-stock-image-service.php:229
 msgid "No stock image API key configured. Add one under Settings → Stock Photos."
 msgstr ""
 
-#: modules/content-generator/services/class-stock-image-service.php:350
+#: modules/content-generator/services/class-stock-image-service.php:352
 msgid "Pexels rejected the API key. Check it under Settings → Stock Photos."
 msgstr ""
 
 #. translators: %d: HTTP status code
-#: modules/content-generator/services/class-stock-image-service.php:352
+#: modules/content-generator/services/class-stock-image-service.php:354
 #, php-format
 msgid "Pexels API error (HTTP %d)."
 msgstr ""
 
-#: modules/content-generator/services/class-stock-image-service.php:411
+#: modules/content-generator/services/class-stock-image-service.php:413
 msgid "Pixabay rejected the API key. Check it under Settings → Stock Photos."
 msgstr ""
 
 #. translators: %d: HTTP status code
-#: modules/content-generator/services/class-stock-image-service.php:413
+#: modules/content-generator/services/class-stock-image-service.php:415
 #, php-format
 msgid "Pixabay API error (HTTP %d)."
 msgstr ""
 
-#: modules/content-generator/services/class-stock-image-service.php:587
+#: modules/content-generator/services/class-stock-image-service.php:589
 msgid "Image URL is not from a supported stock provider."
 msgstr ""
 
@@ -2136,7 +2141,8 @@ msgstr ""
 msgid "A/B variant created."
 msgstr ""
 
-#: modules/email-marketing/controllers/class-campaign-controller.php:563
+#. translators: %s: error message detail
+#: modules/email-marketing/controllers/class-campaign-controller.php:564
 #, php-format
 msgid "Processing error: %s"
 msgstr ""
@@ -3138,24 +3144,25 @@ msgstr ""
 msgid "Outbound External Links"
 msgstr ""
 
-#: modules/seo/services/class-on-page-seo-service.php:432
+#. translators: 1: total external link count, 2: dofollow external link count
+#: modules/seo/services/class-on-page-seo-service.php:433
 #, php-format
 msgid "Found %1$d external links (%2$d dofollow). Good for authority."
 msgstr ""
 
-#: modules/seo/services/class-on-page-seo-service.php:433
+#: modules/seo/services/class-on-page-seo-service.php:434
 msgid "No external outbound links found. Linking to authoritative sources helps SEO."
 msgstr ""
 
-#: modules/seo/services/class-on-page-seo-service.php:445
+#: modules/seo/services/class-on-page-seo-service.php:446
 msgid "FAQ & GEO Optimization"
 msgstr ""
 
-#: modules/seo/services/class-on-page-seo-service.php:448
+#: modules/seo/services/class-on-page-seo-service.php:449
 msgid "FAQ section found (optimized for AI Search Engines & Rich Snippets)."
 msgstr ""
 
-#: modules/seo/services/class-on-page-seo-service.php:449
+#: modules/seo/services/class-on-page-seo-service.php:450
 msgid "Optional: Adding an FAQ section helps ChatGPT, Perplexity, and Google cite your post."
 msgstr ""
 
@@ -3195,113 +3202,114 @@ msgstr ""
 msgid "Missing user access token from Meta."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:372
+#: modules/social-media/controllers/class-account-controller.php:373
 #, php-format
 msgid "Meta API Error: %s"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:378
+#: modules/social-media/controllers/class-account-controller.php:379
 msgid "No Facebook Pages found. Make sure you are an Admin of a Facebook Page and that you selected it during Facebook authorization."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:385
+#: modules/social-media/controllers/class-account-controller.php:387
 #, php-format
 msgid "No Instagram Business account was found linked to your Facebook Page(s) (\"%s\"). Make sure your Instagram account is switched to Business/Creator and connected to your Page. When connecting via Facebook, click \"Edit settings\" in the popup to ensure both your Page and Instagram account are checked."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:421
-#: modules/social-media/controllers/class-account-controller.php:649
+#: modules/social-media/controllers/class-account-controller.php:423
+#: modules/social-media/controllers/class-account-controller.php:654
 msgid "Failed to save account."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:428
-#: modules/social-media/controllers/class-account-controller.php:664
+#: modules/social-media/controllers/class-account-controller.php:430
+#: modules/social-media/controllers/class-account-controller.php:669
 msgid "Account connected successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:441
+#: modules/social-media/controllers/class-account-controller.php:443
 msgid "No accounts selected."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:448
+#: modules/social-media/controllers/class-account-controller.php:450
 msgid "Session expired or invalid. Please try connecting again."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:475
+#: modules/social-media/controllers/class-account-controller.php:477
 msgid "None of the selected accounts could be found."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:529
+#: modules/social-media/controllers/class-account-controller.php:532
 #, php-format
-msgid "Database error saving %s: %s"
+msgid "Database error saving %1$s: %2$s"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:551
+#: modules/social-media/controllers/class-account-controller.php:555
 #, php-format
 msgid "\"%s\" connected successfully!"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:552
+#. translators: 1: number of accounts, 2: comma-separated list of account names
+#: modules/social-media/controllers/class-account-controller.php:557
 #, php-format
-msgid "%d accounts connected: %s"
+msgid "%1$d accounts connected: %2$s"
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:580
+#: modules/social-media/controllers/class-account-controller.php:585
 #: src/components/modules/SocialMedia/ConnectAccountModal.jsx:352
 msgid "X API key, API secret, access token, and access token secret are required."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:599
-#: modules/social-media/controllers/class-account-controller.php:959
+#: modules/social-media/controllers/class-account-controller.php:604
+#: modules/social-media/controllers/class-account-controller.php:964
 msgid "Invalid X credentials."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:618
+#: modules/social-media/controllers/class-account-controller.php:623
 msgid "Invalid access token."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:684
-#: modules/social-media/controllers/class-account-controller.php:757
-#: modules/social-media/controllers/class-account-controller.php:803
-#: modules/social-media/controllers/class-account-controller.php:862
+#: modules/social-media/controllers/class-account-controller.php:689
+#: modules/social-media/controllers/class-account-controller.php:762
+#: modules/social-media/controllers/class-account-controller.php:808
+#: modules/social-media/controllers/class-account-controller.php:867
 #: modules/social-media/controllers/class-post-controller.php:315
 #: modules/social-media/controllers/class-post-controller.php:455
 msgid "Account not found."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:708
-#: modules/social-media/controllers/class-account-controller.php:722
+#: modules/social-media/controllers/class-account-controller.php:713
+#: modules/social-media/controllers/class-account-controller.php:727
 msgid "Failed to update account."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:736
+#: modules/social-media/controllers/class-account-controller.php:741
 msgid "Account updated successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:783
+#: modules/social-media/controllers/class-account-controller.php:788
 #: src/components/modules/SocialMedia/Accounts.jsx:56
 msgid "Account disconnected."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:813
+#: modules/social-media/controllers/class-account-controller.php:818
 msgid "This account was connected manually. Refresh is not available; reconnect the account with a new token when needed."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:825
+#: modules/social-media/controllers/class-account-controller.php:830
 msgid "Token refresh failed."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:842
+#: modules/social-media/controllers/class-account-controller.php:847
 #: src/components/modules/SocialMedia/Accounts.jsx:68
 msgid "Token refreshed successfully."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:868
+#: modules/social-media/controllers/class-account-controller.php:873
 #: src/components/modules/SocialMedia/Accounts.jsx:81
 msgid "Account connection verified."
 msgstr ""
 
-#: modules/social-media/controllers/class-account-controller.php:868
+#: modules/social-media/controllers/class-account-controller.php:873
 #: src/components/modules/SocialMedia/Accounts.jsx:84
 msgid "Account connection test failed."
 msgstr ""
@@ -3659,14 +3667,13 @@ msgstr ""
 msgid "Ad copy generated but could not be saved."
 msgstr ""
 
-#. translators: %d: count
-#: modules/workflow-automation/actions/class-ad-copy-action.php:72
+#: modules/workflow-automation/actions/class-ad-copy-action.php:73
 #, php-format
 msgid "Generated %d ad-copy variations (saved as draft)."
 msgstr ""
 
 #. translators: %s: product price
-#: modules/workflow-automation/actions/class-ad-copy-action.php:154
+#: modules/workflow-automation/actions/class-ad-copy-action.php:156
 #, php-format
 msgid "Price: %s"
 msgstr ""
@@ -3702,33 +3709,33 @@ msgid "Article generated but could not be saved."
 msgstr ""
 
 #. translators: %s: article title
-#: modules/workflow-automation/actions/class-blog-post-action.php:375
+#: modules/workflow-automation/actions/class-blog-post-action.php:376
 #, php-format
 msgid "Generated article: %s"
 msgstr ""
 
 #. translators: %s: article title
-#: modules/workflow-automation/actions/class-blog-post-action.php:391
+#: modules/workflow-automation/actions/class-blog-post-action.php:393
 #, php-format
 msgid "Published article: %s"
 msgstr ""
 
 #. translators: %s: article title
-#: modules/workflow-automation/actions/class-blog-post-action.php:393
+#: modules/workflow-automation/actions/class-blog-post-action.php:396
 #, php-format
 msgid "Draft saved: %s"
 msgstr ""
 
-#: modules/workflow-automation/actions/class-blog-post-action.php:397
+#: modules/workflow-automation/actions/class-blog-post-action.php:400
 msgid "(could not create WordPress post; article saved in Content module)"
 msgstr ""
 
-#: modules/workflow-automation/actions/class-blog-post-action.php:428
+#: modules/workflow-automation/actions/class-blog-post-action.php:431
 #: src/components/modules/ContentGenerator/ArticleEditor.jsx:971
 msgid "Table of Contents"
 msgstr ""
 
-#: modules/workflow-automation/actions/class-blog-post-action.php:436
+#: modules/workflow-automation/actions/class-blog-post-action.php:439
 msgid "Further reading"
 msgstr ""
 
@@ -3795,7 +3802,7 @@ msgid "Campaign draft could not be saved."
 msgstr ""
 
 #. translators: %s: subject
-#: modules/workflow-automation/actions/class-email-campaign-action.php:97
+#: modules/workflow-automation/actions/class-email-campaign-action.php:98
 #, php-format
 msgid "Draft campaign created — subject: %s"
 msgstr ""
@@ -3940,14 +3947,14 @@ msgstr ""
 msgid "Social post could not be saved."
 msgstr ""
 
-#. translators: %s: platform
-#: modules/workflow-automation/actions/class-social-post-action.php:134
+#. translators: %s: social media platform
+#: modules/workflow-automation/actions/class-social-post-action.php:135
 #, php-format
 msgid "Scheduled %s post (publisher cron will send it)."
 msgstr ""
 
-#. translators: %s: platform
-#: modules/workflow-automation/actions/class-social-post-action.php:135
+#. translators: %s: social media platform
+#: modules/workflow-automation/actions/class-social-post-action.php:137
 #, php-format
 msgid "Saved %s post as draft for review."
 msgstr ""
@@ -5077,45 +5084,45 @@ msgstr ""
 
 #. translators: 1: error message, 2: file, 3: line.
 #: modules/workflow-automation/includes/class-workflow-engine.php:258
-#: modules/workflow-automation/includes/class-workflow-engine.php:531
+#: modules/workflow-automation/includes/class-workflow-engine.php:532
 #, php-format
 msgid "Workflow engine error: %1$s (%2$s:%3$d)"
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:273
-#: modules/workflow-automation/includes/class-workflow-engine.php:541
+#: modules/workflow-automation/includes/class-workflow-engine.php:542
 msgid "Skipped: workflow halted."
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:273
-#: modules/workflow-automation/includes/class-workflow-engine.php:541
-#: modules/workflow-automation/includes/class-workflow-engine.php:627
+#: modules/workflow-automation/includes/class-workflow-engine.php:542
+#: modules/workflow-automation/includes/class-workflow-engine.php:628
 msgid "Skipped: branch not taken."
 msgstr ""
 
 #: modules/workflow-automation/includes/class-workflow-engine.php:295
-#: modules/workflow-automation/includes/class-workflow-engine.php:559
+#: modules/workflow-automation/includes/class-workflow-engine.php:560
 msgid "Stopped after the first failure (failure policy: stop)."
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:748
+#: modules/workflow-automation/includes/class-workflow-engine.php:749
 msgid "Step failed without reporting a reason."
 msgstr ""
 
 #. translators: %d: number of additional errors not shown.
-#: modules/workflow-automation/includes/class-workflow-engine.php:777
+#: modules/workflow-automation/includes/class-workflow-engine.php:778
 #, php-format
 msgid "…and %d more."
 msgstr ""
 
 #. translators: 1: site name, 2: workflow name, 3: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:782
+#: modules/workflow-automation/includes/class-workflow-engine.php:783
 #, php-format
 msgid "[%1$s] Workflow issue: %2$s (%3$s)"
 msgstr ""
 
 #. translators: 1: workflow name, 2: run status
-#: modules/workflow-automation/includes/class-workflow-engine.php:790
+#: modules/workflow-automation/includes/class-workflow-engine.php:791
 #, php-format
 msgid ""
 "The workflow \"%1$s\" finished with status: %2$s.\n"
@@ -5124,7 +5131,7 @@ msgid ""
 "%3$s"
 msgstr ""
 
-#: modules/workflow-automation/includes/class-workflow-engine.php:796
+#: modules/workflow-automation/includes/class-workflow-engine.php:797
 msgid "Open the workflow history for details:"
 msgstr ""
 

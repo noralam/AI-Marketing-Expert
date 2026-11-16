@@ -560,6 +560,7 @@ class CampaignController {
 				"{$p}aime_campaigns",
 				array(
 					'status'     => 'failed',
+					/* translators: %s: error message detail */
 					'note'       => sprintf( __( 'Processing error: %s', 'ai-marketing-expert' ), $e->getMessage() ),
 					'updated_at' => current_time( 'mysql', true ),
 				),

@@ -372,7 +372,8 @@ class BlogPostAction extends BaseAction {
 			'preset_id'        => $preset_id,
 			'brand_voice_id'   => $brand_voice_id,
 		);
-		$preview   = sprintf( /* translators: %s: article title */ __( 'Generated article: %s', 'ai-marketing-expert' ), $title );
+		/* translators: %s: article title */
+		$preview   = sprintf( __( 'Generated article: %s', 'ai-marketing-expert' ), $title );
 
 		// Publish per config: draft (default) or publish (immediate).
 		$post_status = sanitize_key( (string) ( $config['post_status'] ?? 'draft' ) );
@@ -388,9 +389,11 @@ class BlogPostAction extends BaseAction {
 				$reference['link'] = (string) $pub['edit_url'];
 			}
 			if ( 'publish' === $post_status ) {
-				$preview = sprintf( /* translators: %s: article title */ __( 'Published article: %s', 'ai-marketing-expert' ), $title );
+				/* translators: %s: article title */
+				$preview = sprintf( __( 'Published article: %s', 'ai-marketing-expert' ), $title );
 			} else {
-				$preview = sprintf( /* translators: %s: article title */ __( 'Draft saved: %s', 'ai-marketing-expert' ), $title );
+				/* translators: %s: article title */
+				$preview = sprintf( __( 'Draft saved: %s', 'ai-marketing-expert' ), $title );
 			}
 		} else {
 			// Non-fatal: article still exists in the content module.

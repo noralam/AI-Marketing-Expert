@@ -56,13 +56,13 @@ class SeoFrontendService {
 		if ( '' !== $desc ) {
 			echo '<meta name="description" content="' . esc_attr( mb_substr( $desc, 0, 160 ) ) . "\">\n";
 		}
-		echo '<link rel="canonical" href="' . $canonical . "\">\n";
+		echo '<link rel="canonical" href="' . esc_url( $canonical ) . "\">\n";
 		echo '<meta property="og:type" content="article">' . "\n";
 		echo '<meta property="og:title" content="' . esc_attr( mb_substr( $title, 0, 60 ) ) . "\">\n";
 		if ( '' !== $desc ) {
 			echo '<meta property="og:description" content="' . esc_attr( mb_substr( $desc, 0, 160 ) ) . "\">\n";
 		}
-		echo '<meta property="og:url" content="' . $canonical . "\">\n";
+		echo '<meta property="og:url" content="' . esc_url( $canonical ) . "\">\n";
 		echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
 		// Title tag is left to the theme (title-tag support); OG covers sharing.
 	}
@@ -129,6 +129,7 @@ class SeoFrontendService {
 
 		if ( $json ) {
 			echo "\n<!-- AI Marketing Expert FAQ Schema (GEO / AEO) -->\n";
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON-LD script block encoded with wp_json_encode and JSON_HEX_TAG.
 			echo '<script type="application/ld+json">' . $json . "</script>\n";
 		}
 	}

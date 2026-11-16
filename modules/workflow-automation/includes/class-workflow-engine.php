@@ -527,6 +527,7 @@ class WorkflowEngine {
 		} catch ( \Throwable $e ) {
 			$halted        = true;
 			$engine_error  = true;
+			/* translators: 1: error message, 2: file name, 3: line number */
 			$step_errors[] = sprintf(
 				__( 'Workflow engine error: %1$s (%2$s:%3$d)', 'ai-marketing-expert' ),
 				$e->getMessage(),

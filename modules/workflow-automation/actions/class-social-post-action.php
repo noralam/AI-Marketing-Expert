@@ -131,8 +131,10 @@ class SocialPostAction extends BaseAction {
 
 		$post_id = (int) $wpdb->insert_id;
 		$preview = $schedule
-			? sprintf( /* translators: %s: platform */ __( 'Scheduled %s post (publisher cron will send it).', 'ai-marketing-expert' ), $platform )
-			: sprintf( /* translators: %s: platform */ __( 'Saved %s post as draft for review.', 'ai-marketing-expert' ), $platform );
+			/* translators: %s: social media platform */
+			? sprintf( __( 'Scheduled %s post (publisher cron will send it).', 'ai-marketing-expert' ), $platform )
+			/* translators: %s: social media platform */
+			: sprintf( __( 'Saved %s post as draft for review.', 'ai-marketing-expert' ), $platform );
 
 		$reference = array( 'social_post_id' => $post_id, 'status' => $status, 'link' => self::module_link( 'social' ) );
 		// Carry the promoted article's identifiers downstream (tokens/conditions)

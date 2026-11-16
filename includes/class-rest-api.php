@@ -1125,8 +1125,9 @@ class RestApi {
 				$where = 'AND ' . $def['where'];
 			}
 
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$rows = $wpdb->get_results(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Column and where clause safely defined in internal schema.
 				$wpdb->prepare(
 					"SELECT DATE({$col}) AS day, COUNT(*) AS total FROM %i WHERE DATE({$col}) BETWEEN %s AND %s {$where} GROUP BY DATE({$col})",
 					$table,

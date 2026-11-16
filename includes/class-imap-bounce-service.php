@@ -105,6 +105,7 @@ class ImapBounceService {
 		$password   = ! empty( $settings['password'] ) ? Encryption::decrypt( $settings['password'] ) : '';
 
 		if ( empty( $password ) ) {
+			/* translators: %s: IMAP username */
 			$result['errors'][] = sprintf( __( 'IMAP password for %s is missing or cannot be decrypted.', 'ai-marketing-expert' ), $username );
 			return $result;
 		}

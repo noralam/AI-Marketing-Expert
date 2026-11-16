@@ -99,6 +99,7 @@ class PureImapClient {
 		$greeting = $this->read_line();
 		if ( null === $greeting || ( false === strpos( $greeting, '* OK' ) && false === strpos( $greeting, '* PREAUTH' ) ) ) {
 			$this->disconnect();
+			/* translators: %s: IMAP server greeting response */
 			return new \WP_Error( 'imap_invalid_greeting', sprintf( __( 'Unexpected IMAP server greeting: %s', 'ai-marketing-expert' ), (string) $greeting ) );
 		}
 
@@ -150,6 +151,7 @@ class PureImapClient {
 		}
 
 		if ( false === strpos( $response, $tag . ' OK' ) ) {
+			/* translators: %s: IMAP server error response */
 			return new \WP_Error( 'imap_login_failed', sprintf( __( 'IMAP authentication failed: %s', 'ai-marketing-expert' ), trim( $response ) ) );
 		}
 
@@ -172,6 +174,7 @@ class PureImapClient {
 		}
 
 		if ( false === strpos( $response, $tag . ' OK' ) ) {
+			/* translators: 1: mailbox folder name, 2: IMAP server response */
 			return new \WP_Error( 'imap_select_failed', sprintf( __( 'Could not select mailbox folder %1$s: %2$s', 'ai-marketing-expert' ), $mailbox, $response ) );
 		}
 
@@ -277,11 +280,14 @@ class PureImapClient {
 		if ( $this->socket ) {
 			try {
 				$tag = $this->next_tag();
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Socket connection stream, not a file.
 				@fwrite( $this->socket, $tag . " EXPUNGE\r\n" );
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Socket connection stream, not a file.
 				@fwrite( $this->socket, $tag . " LOGOUT\r\n" );
 			} catch ( \Throwable $t ) {
 				// Ignore disconnect exceptions.
 			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Socket connection stream, not a file.
 			@fclose( $this->socket );
 			$this->socket = null;
 		}
@@ -367,6 +373,7 @@ class PureImapClient {
 		}
 
 		$payload = $command . "\r\n";
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Socket connection stream, not a file.
 		$written = @fwrite( $this->socket, $payload );
 		if ( false === $written || 0 === $written ) {
 			return new \WP_Error( 'imap_write_failed', __( 'Failed to write command to IMAP stream.', 'ai-marketing-expert' ) );

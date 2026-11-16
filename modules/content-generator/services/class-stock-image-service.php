@@ -121,6 +121,7 @@ class StockImageService {
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
 			return array();
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$rows = $wpdb->get_col( $wpdb->prepare(
 			"SELECT DISTINCT CONCAT(provider, ':', provider_image_id) FROM {$table}
 			 WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) LIMIT 500",
@@ -158,6 +159,7 @@ class StockImageService {
 			);
 			// Opportunistic prune: keep the log bounded (1-in-20 chance per record).
 			if ( 1 === wp_rand( 1, 20 ) ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 				$wpdb->query(
 					$wpdb->prepare(
 						"DELETE FROM {$table} WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",

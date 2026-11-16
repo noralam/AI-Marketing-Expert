@@ -143,6 +143,7 @@ class JobQueue {
 
 		while ( time() < $deadline ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$candidate = (int) $wpdb->get_var( "SELECT id FROM {$table} WHERE status = 'pending' ORDER BY id ASC LIMIT 1" );
 			if ( ! $candidate ) {
 				break; // Nothing pending.

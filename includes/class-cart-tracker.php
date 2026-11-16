@@ -287,6 +287,7 @@ class CartTracker {
 		$table = self::get_table_name();
 
 		// Check if active record exists for this token.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$existing = $wpdb->get_row( $wpdb->prepare(
 			"SELECT id, email, customer_name, recovery_token, status FROM {$table} WHERE cart_token = %s ORDER BY id DESC LIMIT 1",
 			$cart_token
@@ -450,6 +451,7 @@ class CartTracker {
 		global $wpdb;
 		$table = self::get_table_name();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$existing_id = $wpdb->get_var( $wpdb->prepare(
 			"SELECT id FROM {$table} WHERE cart_token = %s AND status = %s ORDER BY id DESC LIMIT 1",
 			$cart_token,
@@ -459,6 +461,7 @@ class CartTracker {
 		if ( ! $existing_id ) {
 			// In case cart row wasn't recorded yet (e.g. direct Buy Now redirect), record it now from active session.
 			$this->on_cart_updated();
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 			$existing_id = $wpdb->get_var( $wpdb->prepare(
 				"SELECT id FROM {$table} WHERE cart_token = %s AND status = %s ORDER BY id DESC LIMIT 1",
 				$cart_token,
@@ -500,6 +503,7 @@ class CartTracker {
 		$cutoff_time = gmdate( 'Y-m-d H:i:s', time() - ( $cutoff_minutes * MINUTE_IN_SECONDS ) );
 
 		// Only carts with captured email and status = in_progress are eligible for recovery workflows.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$abandoned_rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT * FROM {$table} WHERE status = %s AND email != '' AND updated_at < %s LIMIT 50",
 			self::STATUS_IN_PROGRESS,
@@ -514,6 +518,7 @@ class CartTracker {
 
 		foreach ( $abandoned_rows as $row ) {
 			// Atomic claim: only proceed if this process transitioned status from in_progress to abandoned.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 			$claimed = $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE {$table} SET status = %s, abandoned_at = %s WHERE id = %d AND status = %s",
@@ -634,6 +639,7 @@ class CartTracker {
 		$table = self::get_table_name();
 
 		// Find most recent cart for this user/token/email.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$cart_id = $wpdb->get_var( $wpdb->prepare(
 			"SELECT id FROM {$table} WHERE (cart_token = %s OR email = %s) AND status IN (%s, %s) ORDER BY id DESC LIMIT 1",
 			$cart_token,
@@ -681,10 +687,12 @@ class CartTracker {
 	 * single-item purchase (?item_id=PRODUCT_ID).
 	 */
 	public function handle_cart_restore_redirect(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public recovery link from customer email.
 		if ( ! isset( $_GET['aime_restore_cart'] ) || empty( $_GET['aime_restore_cart'] ) ) {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public recovery link from customer email.
 		$token = sanitize_text_field( wp_unslash( $_GET['aime_restore_cart'] ) );
 		if ( ! preg_match( '/^[a-zA-Z0-9_-]{16,64}$/', $token ) ) {
 			return;
@@ -693,6 +701,7 @@ class CartTracker {
 		global $wpdb;
 		$table = self::get_table_name();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$cart_row = $wpdb->get_row( $wpdb->prepare(
 			"SELECT * FROM {$table} WHERE recovery_token = %s LIMIT 1",
 			$token
@@ -739,9 +748,11 @@ class CartTracker {
 		}
 
 		// Optional item filter: if item_id (product or variation ID) is passed, restore only that specific item.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public GET query parameter from email recovery link.
 		$filter_item_id = isset( $_GET['item_id'] ) ? absint( $_GET['item_id'] ) : ( isset( $_GET['product_id'] ) ? absint( $_GET['product_id'] ) : 0 );
 
 		// Optional quantity override: if qty is specified (e.g. qty=1), override quantity.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public GET query parameter from email recovery link.
 		$override_qty = isset( $_GET['qty'] ) ? max( 1, absint( $_GET['qty'] ) ) : 0;
 
 		// Empty current cart to prevent duplicate items.

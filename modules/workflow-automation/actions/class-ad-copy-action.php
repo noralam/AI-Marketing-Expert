@@ -68,8 +68,9 @@ class AdCopyAction extends BaseAction {
 			return self::fail( __( 'Ad copy generated but could not be saved.', 'ai-marketing-expert' ) );
 		}
 
+		/* translators: %d: count */
 		return self::ok(
-			sprintf( /* translators: %d: count */ __( 'Generated %d ad-copy variations (saved as draft).', 'ai-marketing-expert' ), $variations ),
+			sprintf( __( 'Generated %d ad-copy variations (saved as draft).', 'ai-marketing-expert' ), $variations ),
 			array( 'article_id' => $article_id, 'link' => self::module_link( 'content', 'articles' ) )
 		);
 	}
@@ -151,7 +152,8 @@ class AdCopyAction extends BaseAction {
 
 		$price = $product->get_price_html();
 		if ( $price ) {
-			$lines[] = sprintf( /* translators: %s: product price */ __( 'Price: %s', 'ai-marketing-expert' ), wp_strip_all_tags( $price ) );
+			/* translators: %s: product price */
+			$lines[] = sprintf( __( 'Price: %s', 'ai-marketing-expert' ), wp_strip_all_tags( $price ) );
 		}
 
 		$short = $product->get_short_description();

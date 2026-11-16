@@ -29,6 +29,7 @@ class AnalyticsController {
 
 		// Only real chats count: the visitor must have written at least one message.
 		// Bot greetings alone do not make a conversation.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $real is an internal hardcoded subquery fragment.
 		$real = "EXISTS (
 			SELECT 1 FROM {$messages_table} mv
 			WHERE mv.conversation_id = c.id AND mv.sender_type = 'visitor'
@@ -128,6 +129,7 @@ class AnalyticsController {
 				)
 			);
 		}
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return new \WP_REST_Response( array(
 			'period'                  => $days,

@@ -133,6 +133,7 @@ class DashboardWidget {
 
 		// Only count conversations where the visitor has sent at least one message.
 		// A session with only a bot greeting (system/ai sender) is not truly "active".
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names safely derived from $wpdb->prefix.
 		$active_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$conversations} c
@@ -148,6 +149,7 @@ class DashboardWidget {
 		);
 
 		// Only count visitor messages so welcome/system/AI messages don't inflate the total.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$messages_today = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$messages} WHERE created_at >= %s AND sender_type = %s",
@@ -156,6 +158,7 @@ class DashboardWidget {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$leads_today = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$conversations} WHERE lead_captured = %d AND created_at >= %s",
@@ -164,12 +167,13 @@ class DashboardWidget {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name safely derived from $wpdb->prefix.
 		$total_bots = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$bots}" );
 
 		// Fetch recent conversations (last 5) with last message preview.
 		$recent = array();
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $messages ) ) ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table/column names interpolated.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names safely derived from $wpdb->prefix.
 			// Only show conversations where the visitor has actually written something;
 			// msg_count reflects visitor messages only so "1 msg" always means real engagement.
 			$rows = $wpdb->get_results(
@@ -339,10 +343,14 @@ class DashboardWidget {
 			<?php if ( ! empty( $recent ) ) : ?>
 				<div class="aime-dw__feed" id="aime-dw-chatbot-feed">
 					<?php foreach ( $recent as $conv ) : ?>
-						<?php $conv_url = admin_url( 'admin.php?page=ai-marketing-expert-chatbot#conversation/' . (int) $conv['id'] ); ?>
+						<?php
+						$conv_url = admin_url( 'admin.php?page=ai-marketing-expert-chatbot#conversation/' . (int) $conv['id'] );
+						/* translators: %s: visitor name */
+						$title_tip = sprintf( __( 'Open conversation with %s', 'ai-marketing-expert' ), $conv['visitor_name'] );
+						?>
 						<a href="<?php echo esc_url( $conv_url ); ?>"
 						   class="aime-dw__feed-item <?php echo 'human_takeover' === $conv['status'] ? 'aime-dw__feed-item--attention' : ''; ?>"
-						   title="<?php echo esc_attr( sprintf( __( 'Open conversation with %s', 'ai-marketing-expert' ), $conv['visitor_name'] ) ); ?>">
+						   title="<?php echo esc_attr( $title_tip ); ?>">
 							<span class="aime-dw__feed-dot <?php echo 'active' === $conv['status'] ? 'aime-dw__feed-dot--green' : 'aime-dw__feed-dot--orange'; ?>"></span>
 							<span class="aime-dw__feed-name"><?php echo esc_html( $conv['visitor_name'] ); ?></span>
 							<?php if ( $conv['page_url'] ) : ?>

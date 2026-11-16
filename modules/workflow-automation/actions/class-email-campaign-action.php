@@ -94,7 +94,8 @@ class EmailCampaignAction extends BaseAction {
 		}
 
 		$campaign_id = (int) $wpdb->insert_id;
-		$preview     = sprintf( /* translators: %s: subject */ __( 'Draft campaign created — subject: %s', 'ai-marketing-expert' ), $subject );
+		/* translators: %s: subject */
+		$preview     = sprintf( __( 'Draft campaign created — subject: %s', 'ai-marketing-expert' ), $subject );
 
 		return self::ok( $preview, array( 'campaign_id' => $campaign_id, 'link' => self::module_link( 'email' ) ) );
 	}

@@ -192,6 +192,7 @@ final class Plugin {
 		}
 
 		// Direct external server cron execution (?aime_cron=1&token=...).
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- External server cron request authenticated via secret token.
 		if ( isset( $_GET['aime_cron'] ) && ! empty( $_GET['token'] ) ) {
 			$this->handle_external_cron_request();
 		}
@@ -223,6 +224,7 @@ final class Plugin {
 	 * Handle direct external server cron request (?aime_cron=1&token=...).
 	 */
 	private function handle_external_cron_request(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- External server cron request authenticated via secret token.
 		$token    = sanitize_text_field( wp_unslash( $_GET['token'] ?? '' ) );
 		$expected = get_option( 'aime_cron_secret_token' );
 		if ( empty( $expected ) ) {
