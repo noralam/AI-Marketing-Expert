@@ -59,8 +59,7 @@ class Admin {
 			'manage_options',
 			'ai-marketing-expert',
 			array( $this, 'render_app' ),
-			'dashicons-megaphone',
-			30
+			'dashicons-megaphone'
 		);
 
 		$this->hook_suffixes[] = $this->hook_suffix;

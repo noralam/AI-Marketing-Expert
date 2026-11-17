@@ -124,7 +124,7 @@ const pluginUrl = window.aimeData?.pluginUrl || '';
 // Feature flag: Enable 1-Click OAuth for Meta (Facebook & Instagram).
 // Set to false while Meta App Review is pending so Facebook & Instagram use direct manual token setup.
 // Set to true once Meta approves the app to re-enable 1-Click Connect for Facebook & Instagram.
-const ENABLE_META_OAUTH = true;
+const ENABLE_META_OAUTH = false;
 
 const platforms = [
 	{
