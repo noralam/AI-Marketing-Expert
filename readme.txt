@@ -489,7 +489,7 @@ AI Marketing Expert connects to external services to deliver AI generation, soci
 * Improved: Workflow Blog Post & Ad Copy Actions — Added Brand Voice selection, Content Presets, word count ceilings, multi-category taxonomy search, author assignment, and WooCommerce product rotation.
 * Improved: Facebook Publishing & Error #200 Hints — Explicit actionable guidance for Facebook permissions (pages_manage_posts, pages_read_engagement), Page Access Token detection, and separated Instagram validation.
 * New: AI Chatbot Safe Product Links & Configurable Buy Now — Product recommendations now default safely to direct product page permalinks to prevent empty cart errors on stores without cart AJAX endpoints, with an optional "Direct Checkout / Buy Now Link" toggle in bot settings for stores preferring direct checkout.
-* Improved: AI Chatbot Pro Branding — "Powered by AI Marketing Expert" footer dynamically links to the site's home URL for Pro users while retaining plugin branding on Free installations.
+* Improved: AI Chatbot Branding — "Powered by" footer dynamically links to the site's home URL.
 * Fixed: Email Campaign Sending & 500 Error — Resolved a critical fatal error in the campaign queue processor where missing web-view helper caused campaigns to get stuck in "sending" state with HTTP 500.
 * New: Email Web-View Browser Display — Added dedicated web-view handler (?aime_track=web_view) allowing recipients to view rich email designs directly in their browser.
 * Improved: Email Sender Resilience — Added defensive parameter validation and error boundaries in campaign dispatcher so invalid recipient addresses or transient SMTP timeouts fail gracefully without stalling the entire batch.
@@ -515,7 +515,7 @@ AI Marketing Expert connects to external services to deliver AI generation, soci
 * Compatibility: Tested up to WordPress 7.1.
 
 = 1.2.3 =
-* New: AI Brain Skills — reusable rule blocks (SEO Strategist, Readability Coach free; Image Director, Link Planner, WordPress Expert, Social Hook Writer plus custom skills on Pro) merged into the strategist prompt; Skill library popup and per-workflow selection.
+* New: AI Brain Skills — reusable rule blocks (SEO Strategist, Readability Coach, Image Director, Link Planner, WordPress Expert, Social Hook Writer, plus custom skills) merged into the strategist prompt; Skill library popup and per-workflow selection.
 * New: Universal SEO contract for generated posts — AI Brain now outputs focus keyword, SEO title, meta description, short slug and image queries; the writer enforces keyword placement, TOC, link minimums and keyword image alts so RankMath/Yoast score green.
 * New: Global SEO adapter — canonical SEO store synced to Yoast, Rank Math, All in One SEO, SEOPress, Slim SEO and The SEO Framework, with aime_seo_sync hook for any other plugin; lightweight frontend meta fallback when no SEO plugin is active.
 * New: Stock image controls — landscape orientation filter, automatic portrait skipping, duplicate avoidance within a configurable reuse window (new usage log table), and max-width display hardening.
