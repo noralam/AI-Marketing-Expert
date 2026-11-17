@@ -4,7 +4,7 @@ Tags: email marketing, lead finder, ai marketing, b2b leads, ai chatbot
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.11
+Stable tag: 1.2.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,6 +437,15 @@ AI Marketing Expert connects to external services to deliver AI generation, soci
 8. Subscriber management with segmentation
 
 == Changelog ==
+
+= 1.2.12 =
+* Security: Hardened REST API routes (`/system/cron-runner`, `/email/webhook/subscribe`, `/workflow-automation/webhook`) with strict capability and token-based authentication.
+* Privacy & GDPR: Removed raw visitor IP address logging in cart tracker; added checkout opt-in consent checkbox and settings toggle for guest cart recovery.
+* Compliance: Documented complete Terms of Service and Privacy Policy references for Meta, LinkedIn, X, Gmail SMTP, and Microsoft 365 SMTP services.
+* Compliance: Removed post-activation automated redirect to comply with WordPress.org guidelines.
+* Admin UX: Removed fixed top-level menu position to allow WordPress core natural menu ordering.
+* Social Media: Switched Meta (Facebook & Instagram) connection modal to direct manual token entry pending Meta App Review.
+* Code Quality: Resolved PHP escaping and translators comment warnings across dashboard widgets and templates.
 
 = 1.2.11 =
 * Removed all artificial usage limits, quotas, and Pro gates: all built-in features (custom presets, keyword vault, rank tracking, email campaigns, chatbot, and workflows) are 100% free and fully functional.
