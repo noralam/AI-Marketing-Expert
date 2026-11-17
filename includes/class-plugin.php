@@ -25,16 +25,16 @@ final class Plugin {
 	/**
 	 * Module manager instance.
 	 *
-	 * @var ModuleManager
+	 * @var ModuleManager|null
 	 */
-	private ModuleManager $modules;
+	private ?ModuleManager $modules = null;
 
 	/**
 	 * Admin handler.
 	 *
-	 * @var Admin
+	 * @var Admin|null
 	 */
-	private Admin $admin;
+	private ?Admin $admin = null;
 
 	/**
 	 * Dashboard widget handler.
@@ -53,9 +53,9 @@ final class Plugin {
 	/**
 	 * REST API handler.
 	 *
-	 * @var RestApi
+	 * @var RestApi|null
 	 */
-	private RestApi $rest_api;
+	private ?RestApi $rest_api = null;
 
 	/**
 	 * Whether active modules have been initialized.
@@ -139,8 +139,10 @@ final class Plugin {
 	 */
 	public function on_plugins_loaded(): void {
 		// Discover modules early so admin and REST handlers can reference them.
-		$this->modules = new ModuleManager();
-		$this->modules->discover_modules();
+		if ( null === $this->modules ) {
+			$this->modules = new ModuleManager();
+			$this->modules->discover_modules();
+		}
 
 		// Initialize admin if in admin context.
 		if ( is_admin() ) {
@@ -395,12 +397,12 @@ final class Plugin {
 	/**
 	 * Initialize active modules once translations are available.
 	 */
-	private function init_active_modules(): void {
+	public function init_active_modules(): void {
 		if ( $this->modules_initialized ) {
 			return;
 		}
 
-		$this->modules->init_active_modules();
+		$this->modules()->init_active_modules();
 		$this->modules_initialized = true;
 	}
 
@@ -410,6 +412,10 @@ final class Plugin {
 	 * @return ModuleManager
 	 */
 	public function modules(): ModuleManager {
+		if ( null === $this->modules ) {
+			$this->modules = new ModuleManager();
+			$this->modules->discover_modules();
+		}
 		return $this->modules;
 	}
 
@@ -420,6 +426,6 @@ final class Plugin {
 	 * @return Module|null
 	 */
 	public function module( string $module_id ): ?Module {
-		return $this->modules->get( $module_id );
+		return $this->modules()->get( $module_id );
 	}
 }

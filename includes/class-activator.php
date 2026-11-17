@@ -31,12 +31,15 @@ class Activator {
 			);
 		}
 
+		// Create core database tables first.
+		Database::migrate();
+
 		// Ensure active modules are initialized so their table creation hooks are registered.
 		if ( class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
-			Plugin::instance()->modules()->init_active_modules();
+			Plugin::instance()->init_active_modules();
 		}
 
-		// Create database tables.
+		// Run migrations again so all module tables registered via hooks are created.
 		Database::migrate();
 
 		// Set default options.
