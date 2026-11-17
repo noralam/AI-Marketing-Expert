@@ -4,7 +4,7 @@ Tags: email marketing, lead finder, ai marketing, b2b leads, ai chatbot
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.12
+Stable tag: 1.2.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -438,24 +438,16 @@ AI Marketing Expert connects to external services to deliver AI generation, soci
 
 == Changelog ==
 
-= 1.2.12 =
-* Security: Hardened REST API routes (`/system/cron-runner`, `/email/webhook/subscribe`, `/workflow-automation/webhook`) with strict capability and token-based authentication.
-* Privacy & GDPR: Removed raw visitor IP address logging in cart tracker; added checkout opt-in consent checkbox and settings toggle for guest cart recovery.
-* Compliance: Documented complete Terms of Service and Privacy Policy references for Meta, LinkedIn, X, Gmail SMTP, and Microsoft 365 SMTP services.
-* Compliance: Removed post-activation automated redirect to comply with WordPress.org guidelines.
-* Admin UX: Removed fixed top-level menu position to allow WordPress core natural menu ordering.
-* Social Media: Switched Meta (Facebook & Instagram) connection modal to direct manual token entry pending Meta App Review.
-* Code Quality: Resolved PHP escaping and translators comment warnings across dashboard widgets and templates.
-
-= 1.2.11 =
-* Removed all artificial usage limits, quotas, and Pro gates: all built-in features (custom presets, keyword vault, rank tracking, email campaigns, chatbot, and workflows) are 100% free and fully functional.
-* Included unminified human-readable source code in `src/` and documented public GitHub repository and build instructions in readme.txt for Guideline 4 compliance.
-* Chatbot visitor privacy: GDPR opt-in consent notice enabled by default; personal visitor email addresses are never transmitted to third-party AI providers.
-* Security: Hardened REST API status webhooks with strict authentication validation in permission_callback.
-* Changed admin menu position from 2 to standard 30 to respect core WordPress navigation hierarchy.
-* Removed set_time_limit(0) across background retry and workflow engines.
-* Added comprehensive External Services documentation covering all API integrations, terms of service, and privacy policies.
-* Fixed broken Pexels terms link in readme.txt to official terms-of-service URL.
+= 1.2.10 =
+* Security: Hardened REST API routes (`/system/cron-runner`, `/email/webhook/subscribe`, `/workflow-automation/webhook`) with strict authentication and token-based permission callbacks.
+* Privacy & GDPR: Ceased raw visitor IP address logging in cart tracker; added checkout opt-in consent checkbox and settings toggle for guest cart recovery.
+* Compliance: Removed post-activation automated redirect to comply fully with WordPress.org guidelines.
+* Compliance: Documented complete Terms of Service and Privacy Policy references for all external services (Meta, LinkedIn, X, Gmail SMTP, Microsoft 365 SMTP, OpenAI, Claude, Gemini, OpenRouter, Unsplash, Pexels, Pixabay).
+* Compliance: Removed all artificial usage limits, quotas, and Pro gates; ensured all built-in features are 100% free and fully functional.
+* Compliance: Included unminified human-readable source code in `src/` and documented public GitHub repository and reproducible build instructions in readme.txt for Guideline 4 compliance.
+* Admin UX: Removed fixed top-level menu position to respect WordPress core natural menu ordering.
+* Social Media: Switched Meta (Facebook & Instagram) connection modal to direct manual token entry pending external Meta App Review.
+* Code Quality: Resolved PHP output escaping and translators comment warnings across dashboard widgets and templates; verified 0 errors with Plugin Check (PCP).
 
 = 1.2.9 =
 * Fix: Important security update.
